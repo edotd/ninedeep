@@ -61,7 +61,7 @@ export const MARKETS = [
 
 export const AI_NAMES = ['Ironclad Capital', 'Harborline Holdings', 'Vantage Point Group', 'Steel & Sycamore', 'Continental Ledger Co.', 'Northgate Ventures', 'Granite Peak Partners', 'Meridian Sports Partners', 'Cobalt Ridge Capital'];
 export const CHAMPIONSHIP_BAR_MULT = 1.10;
-export const INJURY_CHANCE = 0.12;
+export const INJURY_CHANCE = 0.03;
 
 // Matchup Modifier cards: one drawn per team per season, kept all season, cannot be traded/returned.
 // "playable" cards require an explicit play action against a target during a specific matchup.
