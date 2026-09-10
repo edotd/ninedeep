@@ -7,8 +7,8 @@ export default function PlayerCard({ card, onClick, selected, draftStyle, roster
     <div className={'card pos-' + card.position + (selected ? ' selected' : '')} onClick={onClick}>
       <div className="card-top">
         <div>
-          <div className="card-name">{card.archetype} <span className="tier-pill">{card.tierName}</span></div>
-          <div className="card-sub">{card.position}</div>
+          <div className="card-name card-name-lg">{card.archetype}</div>
+          <div className="card-sub">{card.position} · <span className="tier-pill">{card.tierName}</span></div>
         </div>
         <div className="pill-stack">
           {pillLabel && <div className={pillClass}>{pillLabel}</div>}

@@ -1,5 +1,10 @@
-import { ARCHETYPES, TIERS, COACH_ARCHETYPES, COACH_MODIFIERS, FANBASE_TYPES, MATCHUP_MODIFIER_TYPES } from '../game/constants';
+import { ARCHETYPES, POSITIONS, POSITION_MOD, TIERS, COACH_ARCHETYPES, COACH_MODIFIERS, FANBASE_TYPES, MATCHUP_MODIFIER_TYPES } from '../game/constants';
 import { formatCoins } from '../game/economy';
+
+function archetypeStatRange(archetype, stat) {
+  const values = POSITIONS.map((p) => archetype.base[stat] + POSITION_MOD[p][stat]);
+  return [Math.min(...values), Math.max(...values)];
+}
 
 const STAT_NAMES = { SCO: 'Scoring', PLM: 'Playmaking', REB: 'Rebounding', DEF: 'Defense' };
 
@@ -17,18 +22,47 @@ export default function GlossaryScreen({ actions }) {
         <p className="lede">Before every playoff matchup, each team has a small independent chance (12%) that a random active player is injured for that game. A same-position bench card subs in automatically if you have one; otherwise the team plays that matchup one player short.</p>
         <p className="lede">Each team's 4 bench players also contribute directly to that matchup's score — their combined stat total (scaled down, same as the Offense/Defense modifiers) is added on top of the dice roll. A deep bench is worth points even when it isn't on the floor.</p>
 
+        <h2>How Matchup Scoring Works</h2>
+        <p className="lede">Every playoff matchup comes down to one number per team: the higher score wins (an exact tie is a coin flip). Each side's score is built from four pieces:</p>
+        <div className="matchup-box">
+          <div className="matchup-title">🏀 Offense</div>
+          <p className="lede" style={{ margin: '0 0 8px' }}>Offense Die + Offense Modifier</p>
+          <div className="statusline">Modifier = round((Scoring + Playmaking of your active five) × (1 + Coach Off Bonus) ÷ 20)</div>
+        </div>
+        <div className="matchup-box">
+          <div className="matchup-title">🛡️ Defense</div>
+          <p className="lede" style={{ margin: '0 0 8px' }}>Defense Die + Defense Modifier</p>
+          <div className="statusline">Modifier = round((Defense + Rebounding of your active five) × (1 + Coach Def Bonus) ÷ 20)</div>
+        </div>
+        <div className="matchup-box">
+          <div className="matchup-title">🪑 Bench</div>
+          <p className="lede" style={{ margin: '0 0 8px' }}>round(combined stat total of your 4 bench players ÷ 20) — added flat, no dice involved. Team Chemistry boosts this 50%.</p>
+        </div>
+        <div className="matchup-box">
+          <div className="matchup-title">Total Score</div>
+          <p className="lede" style={{ margin: 0 }}>Offense Total + Defense Total + Bench Score + League Modifier (from a played Divine Intervention card, if any).</p>
+        </div>
+        <p className="lede">Die size (d6 by default) and the Off/Def bonus percentages all come from your Coach card — a bigger die and higher bonus mean a stronger, swingier team. The Die Hard fanbase ability, if used, rolls each die twice and keeps the higher result. Matchup Modifier cards (see below) can shift these numbers up or down before the roll, and a 12% independent injury chance per team can pull a random active player out beforehand.</p>
+
         <h2>Archetypes</h2>
-        {Object.entries(ARCHETYPES).map(([name, a]) => (
-          <div key={name} className="matchup-box">
-            <div className="matchup-title">{name} <span style={{ color: 'var(--muted)' }}>— peak stat: {a.peak}</span></div>
-            <div className="stat-grid">
-              <div className="stat"><b>{a.base.SCO}</b><span>Scoring</span></div>
-              <div className="stat"><b>{a.base.PLM}</b><span>Playmaking</span></div>
-              <div className="stat"><b>{a.base.REB}</b><span>Rebounding</span></div>
-              <div className="stat"><b>{a.base.DEF}</b><span>Defense</span></div>
+        <p className="lede">Ranges below show how each archetype's stats shift by position (Guard/Forward/Big) before any tier multiplier or the final ±1 roll are applied.</p>
+        {Object.entries(ARCHETYPES).map(([name, a]) => {
+          const sco = archetypeStatRange(a, 'SCO');
+          const plm = archetypeStatRange(a, 'PLM');
+          const reb = archetypeStatRange(a, 'REB');
+          const def = archetypeStatRange(a, 'DEF');
+          return (
+            <div key={name} className="matchup-box">
+              <div className="matchup-title">{name} <span style={{ color: 'var(--muted)' }}>— peak stat: {a.peak}</span></div>
+              <div className="stat-grid">
+                <div className="stat"><b>{sco[0]}–{sco[1]}</b><span>Scoring</span></div>
+                <div className="stat"><b>{plm[0]}–{plm[1]}</b><span>Playmaking</span></div>
+                <div className="stat"><b>{reb[0]}–{reb[1]}</b><span>Rebounding</span></div>
+                <div className="stat"><b>{def[0]}–{def[1]}</b><span>Defense</span></div>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         <h2>Player Modifiers</h2>
         {TIERS.map((t) => {
