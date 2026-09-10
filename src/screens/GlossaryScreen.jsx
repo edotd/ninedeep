@@ -1,0 +1,116 @@
+import { ARCHETYPES, TIERS, COACH_ARCHETYPES, COACH_MODIFIERS, FANBASE_TYPES, MATCHUP_MODIFIER_TYPES } from '../game/constants';
+import { formatCoins } from '../game/economy';
+
+const STAT_NAMES = { SCO: 'Scoring', PLM: 'Playmaking', REB: 'Rebounding', DEF: 'Defense' };
+
+function GlossaryStat({ label, val }) {
+  return <div className="meta-cell"><b>{val}</b><span>{label}</span></div>;
+}
+
+export default function GlossaryScreen({ actions }) {
+  return (
+    <>
+      <div className="screen">
+        <h1>Glossary</h1>
+        <p className="lede">Base stats shown are before position adjustment and tier multiplier. Each stat gets a small ±1 roll applied after the tier bonus, so the tier's effect always comes through. Coach bonuses and Hall of Fame's die size are rolled fresh within their range each time the card is pulled. Coach, Fanbase, and Market are pulled once and kept for the whole era.</p>
+        <p className="lede">Every 9-card hand splits into 5 starters and 4 bench players. There is no draft — hands are dealt automatically once your Coach, Fanbase, and Market cards are set.</p>
+        <p className="lede">Before every playoff matchup, each team has a small independent chance (12%) that a random active player is injured for that game. A same-position bench card subs in automatically if you have one; otherwise the team plays that matchup one player short.</p>
+        <p className="lede">Each team's 4 bench players also contribute directly to that matchup's score — their combined stat total (scaled down, same as the Offense/Defense modifiers) is added on top of the dice roll. A deep bench is worth points even when it isn't on the floor.</p>
+
+        <h2>Archetypes</h2>
+        {Object.entries(ARCHETYPES).map(([name, a]) => (
+          <div key={name} className="matchup-box">
+            <div className="matchup-title">{name} <span style={{ color: 'var(--muted)' }}>— peak stat: {a.peak}</span></div>
+            <div className="stat-grid">
+              <div className="stat"><b>{a.base.SCO}</b><span>Scoring</span></div>
+              <div className="stat"><b>{a.base.PLM}</b><span>Playmaking</span></div>
+              <div className="stat"><b>{a.base.REB}</b><span>Rebounding</span></div>
+              <div className="stat"><b>{a.base.DEF}</b><span>Defense</span></div>
+            </div>
+          </div>
+        ))}
+
+        <h2>Player Modifiers</h2>
+        {TIERS.map((t) => {
+          const contractMin = Math.max(1, t.contract - 1), contractMax = t.contract + 1;
+          return (
+            <div key={t.name} className="matchup-box">
+              <div className="matchup-title">{t.name}</div>
+              <div className="meta-row" style={{ borderTop: 'none', paddingTop: 0 }}>
+                <GlossaryStat label="Uniform" val={'x' + t.uniform.toFixed(2)} />
+                <GlossaryStat label="Peak Stat" val={'x' + t.peak.toFixed(2)} />
+                <GlossaryStat label="Contract" val={`${contractMin}–${contractMax}yr`} />
+                <GlossaryStat label="In Pool" val={t.count} />
+              </div>
+              {t.forceStat && <div className="statusline" style={{ marginTop: 8 }}>Always boosts: {STAT_NAMES[t.forceStat]} (regardless of archetype)</div>}
+              {t.allowedPositions && <div className="statusline" style={{ marginTop: 4 }}>Only appears at: {t.allowedPositions.join(', ')}</div>}
+              <div className="statusline" style={{ marginTop: 4 }}>A shorter-than-typical roll costs more per season; a longer roll costs less.</div>
+            </div>
+          );
+        })}
+
+        <h2>Coach Archetypes</h2>
+        {Object.entries(COACH_ARCHETYPES).map(([name, a]) => (
+          <div key={name} className="matchup-box">
+            <div className="matchup-title">{name}</div>
+            <div className="meta-row" style={{ borderTop: 'none', paddingTop: 0 }}>
+              <GlossaryStat label="Base Off" val={a.offBase + '%'} />
+              <GlossaryStat label="Base Def" val={a.defBase + '%'} />
+            </div>
+          </div>
+        ))}
+
+        <h2>Coach Modifiers</h2>
+        {COACH_MODIFIERS.map((m) => (
+          <div key={m.name} className="matchup-box">
+            <div className="matchup-title">{m.name}</div>
+            <div className="meta-row" style={{ borderTop: 'none', paddingTop: 0 }}>
+              <GlossaryStat label="Multiplier" val={'x' + m.mult.toFixed(2)} />
+              <GlossaryStat label="Die" val={m.hofDie ? 'd6–d9' : 'd' + m.die} />
+              <GlossaryStat label="Salary" val={formatCoins(m.salary)} />
+            </div>
+            {m.ability && <div className="statusline" style={{ marginTop: 8 }}>Ability: {m.ability}</div>}
+          </div>
+        ))}
+
+        <h2>Fanbase</h2>
+        <p className="lede">Attendance drifts ±1-2% each season based on how your average playoff score compares to the league. It applies a small multiplier to your cap (0.9x–1.1x). Die Hard downgrades to Invested if your team scores below league average for the season.</p>
+        {FANBASE_TYPES.map((f) => (
+          <div key={f.name} className="matchup-box">
+            <div className="matchup-title">{f.name}</div>
+            <div className="meta-row" style={{ borderTop: 'none', paddingTop: 0 }}>
+              <GlossaryStat label="Base Attendance" val={Math.round(f.attendanceBase * 100) + '%'} />
+              <GlossaryStat label="Draw Odds" val={f.weight + 'w'} />
+            </div>
+            {f.ability && <div className="statusline" style={{ marginTop: 8 }}>Ability: {f.ability}</div>}
+          </div>
+        ))}
+
+        <h2>Matchup Modifier Cards</h2>
+        <p className="lede">Every team pulls one card each season, right after the Front Office pull. It stays for the whole season — it can't be traded or returned — and a new one is dealt next season.</p>
+        {MATCHUP_MODIFIER_TYPES.map((t) => {
+          const catColor = t.category === 'debuff' ? 'var(--bad)' : 'var(--good)';
+          let roleNote;
+          if (t.reactive) roleNote = 'Reactive — auto-triggers if targeted by Injury.';
+          else if (t.passive === 'bench') roleNote = 'Passive — boosts bench score all season.';
+          else if (t.passive === 'seeding') roleNote = 'Passive — boosts seeding roll this season.';
+          else roleNote = 'Playable — choose when to use it against an opponent.';
+          return (
+            <div key={t.name} className="matchup-box">
+              <div className="matchup-title">{t.name} <span className="tier-pill" style={{ color: catColor, borderColor: catColor }}>{t.category === 'debuff' ? 'Debuff' : 'Buff'}</span></div>
+              <p className="lede" style={{ margin: '8px 0' }}>{t.flavor}</p>
+              <div className="meta-row" style={{ borderTop: 'none', paddingTop: 0 }}>
+                <GlossaryStat label="Draw Odds" val={t.weight + 'w'} />
+                {t.needsValue && <GlossaryStat label="Value" val={`1–${t.valueDie || 10}`} />}
+              </div>
+              <div className="statusline" style={{ marginTop: 4 }}>{roleNote}</div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="bottombar">
+        <button className="primary" onClick={actions.closeGlossary}>Back</button>
+      </div>
+    </>
+  );
+}

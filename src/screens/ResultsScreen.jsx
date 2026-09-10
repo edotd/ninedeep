@@ -1,0 +1,33 @@
+import MatchupBox from '../components/MatchupBox';
+import { effectiveRating } from '../game/roster';
+import { CHAMPIONSHIP_BAR_MULT } from '../game/constants';
+
+export default function ResultsScreen({ state, actions }) {
+  const r = state.lastResult;
+  const team = state.teams[0];
+  return (
+    <>
+      <div className="screen">
+        <h1>Season {state.season} Results</h1>
+        <h2>Standings</h2>
+        {r.seeds.map((s) => (
+          <div key={s.t.name} className={'standing-row' + (s.t === team ? ' you' : '')}>
+            <span>#{s.t.seed} {s.t.name}{s.t.seed > 8 && <span style={{ color: 'var(--muted)' }}> — out</span>}</span>
+            <span>{Math.round(effectiveRating(s.t))}</span>
+          </div>
+        ))}
+        <div className="statusline">Championship bar this season: <b>{Math.round(r.bar)}</b> rating (league average {Math.round(r.leagueAvg)} &times; {CHAMPIONSHIP_BAR_MULT})</div>
+        <h2>Playoffs</h2>
+        {r.matches.map((m, i) => <MatchupBox key={i} title={m.label} m={m.result} />)}
+        <div className={'banner ' + (r.champion ? 'good' : 'bad')}>
+          {r.champion
+            ? `${r.champion.name} wins the championship! Rating ${Math.round(effectiveRating(r.champion))} cleared the ${Math.round(r.bar)} bar.`
+            : `No champion this season. ${r.winner.name} won the Finals with a rating of ${Math.round(effectiveRating(r.winner))}, short of the ${Math.round(r.bar)} championship bar.`}
+        </div>
+      </div>
+      <div className="bottombar">
+        <button className="primary" onClick={actions.proceedFromResults}>Continue</button>
+      </div>
+    </>
+  );
+}
