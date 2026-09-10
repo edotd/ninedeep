@@ -1,6 +1,5 @@
 import MatchupBox from '../components/MatchupBox';
 import { effectiveRating } from '../game/roster';
-import { CHAMPIONSHIP_BAR_MULT } from '../game/constants';
 
 export default function ResultsScreen({ state, actions }) {
   const r = state.lastResult;
@@ -16,7 +15,7 @@ export default function ResultsScreen({ state, actions }) {
             <span>{Math.round(effectiveRating(s.t))}</span>
           </div>
         ))}
-        <div className="statusline">Championship bar this season: <b>{Math.round(r.bar)}</b> rating (league average {Math.round(r.leagueAvg)} &times; {CHAMPIONSHIP_BAR_MULT})</div>
+        <div className="statusline">Championship bar this season: <b>{Math.round(r.bar)}</b> rating (playoff-field average {Math.round(r.leagueAvg)} &times; {r.barMult})</div>
         <h2>Playoffs</h2>
         {r.matches.map((m, i) => <MatchupBox key={i} title={m.label} m={m.result} />)}
         <div className={'banner ' + (r.champion ? 'good' : 'bad')}>

@@ -24,12 +24,12 @@ export default function PlayerCard({ card, onClick, selected, draftStyle, roster
         <div className="meta-row">
           <div style={{ flex: 1 }}>
             <div className="card-sub" style={{ marginBottom: 3 }}>Contract Requested</div>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 14 }}>{card.contract} year{card.contract === 1 ? '' : 's'}, {formatCoins(card.salary)} / 5</div>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 14 }}>{card.contract} Turn{card.contract === 1 ? '' : 's'}, {formatCoins(card.salary)} / 5</div>
           </div>
         </div>
       ) : (
         <div className="meta-row">
-          <div className="meta-cell"><b>{card.contract}</b><span>Contract</span></div>
+          <div className="meta-cell"><b>{card.contract} Turn{card.contract === 1 ? '' : 's'}</b><span>Contract</span></div>
           <div className="meta-cell"><b>{formatCoins(card.salary)}</b><span>Salary</span></div>
         </div>
       )}

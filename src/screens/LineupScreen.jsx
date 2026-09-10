@@ -1,6 +1,7 @@
 import PlayerCard from '../components/PlayerCard';
 import { rosterSalary, formatCoins } from '../game/economy';
-import { validateLineup } from '../game/roster';
+import { validateLineup, offenseStatSum, defenseStatSum } from '../game/roster';
+import { teamOutput } from '../game/matchup';
 import { coachSummary, fanbaseSummary } from '../game/summaries';
 
 export default function LineupScreen({ state, actions }) {
@@ -13,6 +14,12 @@ export default function LineupScreen({ state, actions }) {
   const v = validateLineup(team);
   const starters = team.hand.filter((c) => activeSet.has(c.id));
   const bench = team.hand.filter((c) => !activeSet.has(c.id));
+  const benchIds = bench.map((c) => c.id);
+  const output = teamOutput(team);
+  const startersOff = offenseStatSum(team, team.activeIds);
+  const startersDef = defenseStatSum(team, team.activeIds);
+  const benchOff = offenseStatSum(team, benchIds);
+  const benchDef = defenseStatSum(team, benchIds);
 
   return (
     <>
@@ -25,15 +32,20 @@ export default function LineupScreen({ state, actions }) {
         </div>
         {team.matchupCard && (
           <div className="statusline">
-            🃏 Matchup Card: <b>{team.matchupCard.name}</b> ({team.matchupCard.category === 'debuff' ? 'Debuff' : 'Buff'}{team.matchupCard.value !== null ? `, value ${team.matchupCard.value}` : ''}){team.matchupCard.used ? ' — used' : ''}
+            🃏 Matchup Card: <b>{team.matchupCard.name}</b>{team.matchupCard.value !== null ? ` (value ${team.matchupCard.value})` : ''}{team.matchupCard.used ? ' — used' : ''}
           </div>
         )}
-        <h2>Your Active Five ({team.activeIds.length}/5)</h2>
+        <h2>Your Active Team ({team.activeIds.length}/5)</h2>
         {team.activeIds.length ? (
-          <div className="chip-row">
+          <div className="active-tile-row">
             {team.activeIds.map((id) => {
               const c = team.hand.find((h) => h.id === id);
-              return <div key={id} className={'chip pos-' + c.position}>{c.archetype} <span>{c.position.slice(0, 1)}</span></div>;
+              return (
+                <div key={id} className={'active-tile pos-' + c.position}>
+                  <div className="active-tile-pos">{c.position.slice(0, 1)}</div>
+                  <div className="active-tile-name">{c.archetype}</div>
+                </div>
+              );
             })}
           </div>
         ) : (
@@ -43,7 +55,12 @@ export default function LineupScreen({ state, actions }) {
         <div className={'statusline' + (overCap ? ' bad' : '')}>
           Roster salary: {formatCoins(total9)} / {formatCoins(team.seasonCap)} cap{overCap ? ' — luxury tax will apply' : ''}
         </div>
+        <div className="statusline">
+          Team Output: <b>{output.total}</b> (Off {output.off} · Def {output.def} · Bench {output.bench}) — players + coach
+        </div>
         <div className="statusline">Active {team.activeIds.length}/5 — Guard {counts.Guard}, Forward {counts.Forward}, Big {counts.Big}</div>
+        <div className="statusline">Starters — Offense {startersOff}, Defense {startersDef}</div>
+        <div className="statusline">Bench — Offense {benchOff}, Defense {benchDef}</div>
         <h2>Starters ({starters.length}/5)</h2>
         {starters.length ? starters.map((c) => (
           <PlayerCard key={c.id} card={c} selected rosterLabel="Starter" onClick={() => actions.toggleActive(c.id)} />

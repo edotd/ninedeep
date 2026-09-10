@@ -12,14 +12,15 @@ function GlossaryStat({ label, val }) {
   return <div className="meta-cell"><b>{val}</b><span>{label}</span></div>;
 }
 
-export default function GlossaryScreen({ actions }) {
+export default function GlossaryScreen({ state, actions }) {
+  const injuryPct = Math.round(state.settings.injuryChance * 100);
   return (
     <>
       <div className="screen">
         <h1>Glossary</h1>
         <p className="lede">Base stats shown are before position adjustment and tier multiplier. Each stat gets a small ±1 roll applied after the tier bonus, so the tier's effect always comes through. Coach bonuses and Hall of Fame's die size are rolled fresh within their range each time the card is pulled. Coach, Fanbase, and Market are pulled once and kept for the whole era.</p>
         <p className="lede">Every 9-card hand splits into 5 starters and 4 bench players. There is no draft — hands are dealt automatically once your Coach, Fanbase, and Market cards are set.</p>
-        <p className="lede">Before every playoff matchup, each team has a small independent chance (12%) that a random active player is injured for that game. A same-position bench card subs in automatically if you have one; otherwise the team plays that matchup one player short.</p>
+        <p className="lede">Before every playoff matchup, each team has a small independent chance ({injuryPct}%, adjustable in Settings) that a random active player is injured for that game. A same-position bench card subs in automatically if you have one; otherwise the team plays that matchup one player short.</p>
         <p className="lede">Each team's 4 bench players also contribute directly to that matchup's score — their combined stat total (scaled down, same as the Offense/Defense modifiers) is added on top of the dice roll. A deep bench is worth points even when it isn't on the floor.</p>
 
         <h2>How Matchup Scoring Works</h2>
@@ -42,23 +43,26 @@ export default function GlossaryScreen({ actions }) {
           <div className="matchup-title">Total Score</div>
           <p className="lede" style={{ margin: 0 }}>Offense Total + Defense Total + Bench Score + League Modifier (from a played Divine Intervention card, if any).</p>
         </div>
-        <p className="lede">Die size (d6 by default) and the Off/Def bonus percentages all come from your Coach card — a bigger die and higher bonus mean a stronger, swingier team. The Die Hard fanbase ability, if used, rolls each die twice and keeps the higher result. Matchup Modifier cards (see below) can shift these numbers up or down before the roll, and a 12% independent injury chance per team can pull a random active player out beforehand.</p>
+        <p className="lede">Die size (d6 by default) and the Off/Def bonus percentages all come from your Coach card — a bigger die and higher bonus mean a stronger, swingier team. The Die Hard fanbase ability, if used, rolls each die twice and keeps the higher result. Matchup Modifier cards (see below) can shift these numbers up or down before the roll, and a {injuryPct}% independent injury chance per team can pull a random active player out beforehand.</p>
 
         <h2>Archetypes</h2>
         <p className="lede">Ranges below show how each archetype's stats shift by position (Guard/Forward/Big) before any tier multiplier or the final ±1 roll are applied.</p>
         {Object.entries(ARCHETYPES).map(([name, a]) => {
-          const sco = archetypeStatRange(a, 'SCO');
-          const plm = archetypeStatRange(a, 'PLM');
-          const reb = archetypeStatRange(a, 'REB');
-          const def = archetypeStatRange(a, 'DEF');
+          const ranges = {
+            SCO: archetypeStatRange(a, 'SCO'),
+            PLM: archetypeStatRange(a, 'PLM'),
+            REB: archetypeStatRange(a, 'REB'),
+            DEF: archetypeStatRange(a, 'DEF'),
+          };
+          const peakStyle = { color: 'var(--good)' };
           return (
             <div key={name} className="matchup-box">
               <div className="matchup-title">{name} <span style={{ color: 'var(--muted)' }}>— peak stat: {a.peak}</span></div>
               <div className="stat-grid">
-                <div className="stat"><b>{sco[0]}–{sco[1]}</b><span>Scoring</span></div>
-                <div className="stat"><b>{plm[0]}–{plm[1]}</b><span>Playmaking</span></div>
-                <div className="stat"><b>{reb[0]}–{reb[1]}</b><span>Rebounding</span></div>
-                <div className="stat"><b>{def[0]}–{def[1]}</b><span>Defense</span></div>
+                <div className="stat"><b style={a.peak === 'SCO' ? peakStyle : undefined}>{ranges.SCO[0]}–{ranges.SCO[1]}</b><span>Scoring</span></div>
+                <div className="stat"><b style={a.peak === 'PLM' ? peakStyle : undefined}>{ranges.PLM[0]}–{ranges.PLM[1]}</b><span>Playmaking</span></div>
+                <div className="stat"><b style={a.peak === 'REB' ? peakStyle : undefined}>{ranges.REB[0]}–{ranges.REB[1]}</b><span>Rebounding</span></div>
+                <div className="stat"><b style={a.peak === 'DEF' ? peakStyle : undefined}>{ranges.DEF[0]}–{ranges.DEF[1]}</b><span>Defense</span></div>
               </div>
             </div>
           );
@@ -73,7 +77,7 @@ export default function GlossaryScreen({ actions }) {
               <div className="meta-row" style={{ borderTop: 'none', paddingTop: 0 }}>
                 <GlossaryStat label="Uniform" val={'x' + t.uniform.toFixed(2)} />
                 <GlossaryStat label="Peak Stat" val={'x' + t.peak.toFixed(2)} />
-                <GlossaryStat label="Contract" val={`${contractMin}–${contractMax}yr`} />
+                <GlossaryStat label="Contract" val={`${contractMin}–${contractMax} Turns`} />
                 <GlossaryStat label="In Pool" val={t.count} />
               </div>
               {t.forceStat && <div className="statusline" style={{ marginTop: 8 }}>Always boosts: {STAT_NAMES[t.forceStat]} (regardless of archetype)</div>}
@@ -125,13 +129,13 @@ export default function GlossaryScreen({ actions }) {
         {MATCHUP_MODIFIER_TYPES.map((t) => {
           const catColor = t.category === 'debuff' ? 'var(--bad)' : 'var(--good)';
           let roleNote;
-          if (t.reactive) roleNote = 'Reactive — auto-triggers if targeted by Injury.';
+          if (t.reactive) roleNote = "Reactive — its holder decides whether to hold it ready before a matchup; if targeted by an Injury card while ready, it blocks the removal (when its value clears the Injury's).";
           else if (t.passive === 'bench') roleNote = 'Passive — boosts bench score all season.';
           else if (t.passive === 'seeding') roleNote = 'Passive — boosts seeding roll this season.';
           else roleNote = 'Playable — choose when to use it against an opponent.';
           return (
             <div key={t.name} className="matchup-box">
-              <div className="matchup-title">{t.name} <span className="tier-pill" style={{ color: catColor, borderColor: catColor }}>{t.category === 'debuff' ? 'Debuff' : 'Buff'}</span></div>
+              <div className="matchup-title" style={{ color: catColor }}>{t.name}</div>
               <p className="lede" style={{ margin: '8px 0' }}>{t.flavor}</p>
               <div className="meta-row" style={{ borderTop: 'none', paddingTop: 0 }}>
                 <GlossaryStat label="Draw Odds" val={t.weight + 'w'} />

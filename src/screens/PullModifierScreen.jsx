@@ -1,14 +1,13 @@
 function ModifierCard({ card }) {
   const catColor = card.category === 'debuff' ? 'var(--bad)' : 'var(--good)';
-  const catLabel = card.category === 'debuff' ? 'Debuff' : 'Buff';
   let roleNote;
-  if (card.reactive) roleNote = 'Reactive — auto-triggers if an opponent targets you with Injury.';
+  if (card.reactive) roleNote = "Reactive — hold it ready before a matchup; if you're targeted by an Injury card while ready, it blocks the removal (when its value clears the Injury's).";
   else if (card.passive === 'bench') roleNote = 'Passive — boosts your bench score every matchup this season.';
   else if (card.passive === 'seeding') roleNote = 'Passive — boosts your seeding roll this season.';
   else roleNote = 'Playable — choose to use it against your opponent during a playoff matchup.';
   return (
     <div className="matchup-box">
-      <div className="matchup-title">{card.name} <span className="tier-pill" style={{ color: catColor, borderColor: catColor }}>{catLabel}</span></div>
+      <div className="matchup-title" style={{ color: catColor }}>{card.name}</div>
       <p className="lede" style={{ margin: '8px 0' }}>{card.flavor}</p>
       {card.value !== null && (
         <div className="meta-row" style={{ borderTop: 'none', paddingTop: 0 }}>

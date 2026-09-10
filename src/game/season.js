@@ -1,4 +1,4 @@
-import { TIERS, REPLACEMENT_TIER, AI_NAMES, POSITIONS, CHAMPIONSHIP_BAR_MULT, FANBASE_TYPES, MARKETS } from './constants';
+import { TIERS, REPLACEMENT_TIER, AI_NAMES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_TYPES, MARKETS } from './constants';
 import { shuffle, weightedPick } from './rng';
 import { makeCard, randomArch, cardTotal, neededPosition, drawCoachCard, applyCoachRetention, drawMatchupModifierCard } from './cards';
 import { finalizeCap, rosterSalary } from './economy';
@@ -14,6 +14,10 @@ export function newEraState() {
     lastExpiredPlayers: [],
     log: [],
     cardCounter: 0,
+    settings: {
+      injuryChance: INJURY_CHANCE,
+      championshipBarMult: CHAMPIONSHIP_BAR_MULT,
+    },
   };
 }
 
@@ -143,8 +147,11 @@ export function lockSeasonAndSeed(state) {
   seeds.forEach((s, rank) => { s.t.seed = rank + 1; });
   state.seeds = seeds;
   state.playoffTeams = seeds.slice(0, 8).map((s) => s.t);
-  state.leagueAvg = state.teams.reduce((s, t) => s + effectiveRating(t), 0) / state.teams.length;
-  state.bar = state.leagueAvg * CHAMPIONSHIP_BAR_MULT;
+  // Championship bar is set from the playoff field only — teams that missed the cut don't
+  // drag the bar down (or up) for the teams that actually have a shot at the title.
+  state.leagueAvg = state.playoffTeams.reduce((s, t) => s + effectiveRating(t), 0) / state.playoffTeams.length;
+  state.barMult = (state.settings && state.settings.championshipBarMult) || CHAMPIONSHIP_BAR_MULT;
+  state.bar = state.leagueAvg * state.barMult;
   state.phase = 'standings';
 }
 
@@ -154,6 +161,7 @@ export function startPlayoffs(state) {
     stage: 0,
     useAdvantage: false,
     useCard: false,
+    useInjuryPrevention: false,
     matches: [
       { label: 'Quarterfinal 1', a: seedTeam(state, 1), b: seedTeam(state, 8), result: null },
       { label: 'Quarterfinal 2', a: seedTeam(state, 4), b: seedTeam(state, 5), result: null },
@@ -194,7 +202,7 @@ export function finishPlayoffs(state) {
   const champion = winnerRating >= state.bar ? winner : null;
   if (champion) champion.titles++;
 
-  state.lastResult = { seeds: state.seeds, matches: state.playoff.matches, winner, leagueAvg: state.leagueAvg, bar: state.bar, champion };
+  state.lastResult = { seeds: state.seeds, matches: state.playoff.matches, winner, leagueAvg: state.leagueAvg, bar: state.bar, barMult: state.barMult, champion };
   state.log.push({ season: state.season, champion: champion ? champion.name : null, bar: Math.round(state.bar), winner: winner.name });
   state.phase = 'results';
 }

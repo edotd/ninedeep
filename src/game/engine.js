@@ -85,6 +85,7 @@ export function beginPlayoffs(state) {
 
 export function toggleAdvantage(state) { state.playoff.useAdvantage = !state.playoff.useAdvantage; }
 export function toggleCardPlay(state) { state.playoff.useCard = !state.playoff.useCard; }
+export function toggleInjuryPrevention(state) { state.playoff.useInjuryPrevention = !state.playoff.useInjuryPrevention; }
 
 export function rollCurrentMatchup(state) {
   const m = state.playoff.matches[state.playoff.stage];
@@ -96,8 +97,9 @@ export function rollCurrentMatchup(state) {
   const advB = wantsAdvantage(m.b, state.playoff);
   if (advA) m.a.advantageAvailable = false;
   if (advB) m.b.advantageAvailable = false;
-  const injA = checkInjury(m.a);
-  const injB = checkInjury(m.b);
+  const injuryChance = state.settings.injuryChance;
+  const injA = checkInjury(m.a, injuryChance);
+  const injB = checkInjury(m.b, injuryChance);
   let idsA = injA.ids, idsB = injB.ids;
   const extraA = { offDelta: 0, defDelta: 0, leagueMod: 0 };
   const extraB = { offDelta: 0, defDelta: 0, leagueMod: 0 };
@@ -108,14 +110,14 @@ export function rollCurrentMatchup(state) {
   const bPlays = eligible(m.b) && (m.b.human ? state.playoff.useCard : true);
 
   if (aPlays) {
-    const res = playCardEffect(m.a, m.b, idsB);
+    const res = playCardEffect(m.a, m.b, idsB, state.playoff);
     idsB = res.targetIds;
     extraA.offDelta += res.userOffDelta; extraA.defDelta += res.userDefDelta; extraA.leagueMod += res.userLeagueMod;
     extraB.offDelta += res.targetOffDelta; extraB.defDelta += res.targetDefDelta;
     if (res.note) cardNotes.push(res.note);
   }
   if (bPlays) {
-    const res = playCardEffect(m.b, m.a, idsA);
+    const res = playCardEffect(m.b, m.a, idsA, state.playoff);
     idsA = res.targetIds;
     extraB.offDelta += res.userOffDelta; extraB.defDelta += res.userDefDelta; extraB.leagueMod += res.userLeagueMod;
     extraA.offDelta += res.targetOffDelta; extraA.defDelta += res.targetDefDelta;
@@ -128,6 +130,7 @@ export function rollCurrentMatchup(state) {
   m.result.cardNotes = cardNotes;
   state.playoff.useAdvantage = false;
   state.playoff.useCard = false;
+  state.playoff.useInjuryPrevention = false;
 }
 
 export function advancePlayoff(state) {
@@ -142,4 +145,25 @@ export function openGlossary(state) {
 }
 export function closeGlossary(state) {
   state.phase = state.returnPhase || 'setup';
+}
+
+export function openLeague(state) {
+  if (state.phase === 'league') return;
+  state.returnPhase = state.phase;
+  state.phase = 'league';
+}
+export function closeLeague(state) {
+  state.phase = state.returnPhase || 'setup';
+}
+
+export function openSettings(state) {
+  if (state.phase === 'settings') return;
+  state.returnPhase = state.phase;
+  state.phase = 'settings';
+}
+export function closeSettings(state) {
+  state.phase = state.returnPhase || 'setup';
+}
+export function updateSettings(state, patch) {
+  state.settings = { ...state.settings, ...patch };
 }

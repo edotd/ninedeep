@@ -16,8 +16,8 @@ export function forceRemovePlayer(team, ids) {
   return { ids: newIds, out: picked, sub };
 }
 
-export function checkInjury(team) {
-  if (Math.random() > INJURY_CHANCE) return { ids: team.activeIds.slice(), out: null, sub: null };
+export function checkInjury(team, chance = INJURY_CHANCE) {
+  if (Math.random() > chance) return { ids: team.activeIds.slice(), out: null, sub: null };
   return forceRemovePlayer(team, team.activeIds);
 }
 
@@ -27,6 +27,15 @@ export function benchScore(team, idsOverride) {
   let sum = benchCards.reduce((s, c) => s + cardTotal(c), 0);
   if (team.matchupCard && team.matchupCard.name === 'Team Chemistry') { sum *= 1.5; }
   return Math.round(sum / 20);
+}
+
+// The deterministic (no-dice) portion of a team's matchup score — used for the Standings
+// tab and the Lineup screen so players can compare teams without waiting for a roll.
+export function teamOutput(team) {
+  const off = offenseModifier(team);
+  const def = defenseModifier(team);
+  const bench = benchScore(team);
+  return { off, def, bench, total: off + def + bench };
 }
 
 export function playMatchup(a, b, advA, advB, idsA, idsB, extraA, extraB) {
@@ -59,27 +68,41 @@ export function wantsAdvantage(team, playoff) {
   return true; // AI uses its Die Hard advantage the first chance it gets
 }
 
-export function playCardEffect(user, target, targetIds) {
+// Injury Prevention no longer blocks automatically — its holder must choose to hold it ready
+// for the matchup (human: via the playoff.useInjuryPrevention toggle; AI: always holds it ready).
+export function wantsInjuryPrevention(team, playoff) {
+  const card = team.matchupCard;
+  if (!card || card.used || card.name !== 'Injury Prevention') return false;
+  if (team.human) return !!(playoff && playoff.useInjuryPrevention);
+  return true;
+}
+
+function isInjuryCard(name) {
+  return name === 'Injury (Minor)' || name === 'Injury (Major)';
+}
+
+export function playCardEffect(user, target, targetIds, playoff) {
   const card = user.matchupCard;
   card.used = true;
   const result = { targetIds, userOffDelta: 0, userDefDelta: 0, userLeagueMod: 0, targetOffDelta: 0, targetDefDelta: 0, note: null };
 
-  if (card.name === 'Injury') {
+  if (isInjuryCard(card.name)) {
     const ip = target.matchupCard;
-    if (ip && !ip.used && ip.name === 'Injury Prevention' && ip.value >= card.value) {
+    const ipReady = ip && ip.name === 'Injury Prevention' && wantsInjuryPrevention(target, playoff);
+    if (ipReady && ip.value >= card.value) {
       ip.used = true;
-      result.note = user.name + ' played Injury on ' + target.name + ' — blocked by Injury Prevention (' + ip.value + ' ≥ ' + card.value + ').';
+      result.note = user.name + ' played ' + card.name + ' on ' + target.name + ' — blocked by Injury Prevention (' + ip.value + ' ≥ ' + card.value + ').';
     } else {
       const removal = forceRemovePlayer(target, targetIds);
       result.targetIds = removal.ids;
-      result.note = user.name + ' played Injury on ' + target.name + ' — ' + removal.out.archetype + ' (' + removal.out.position + ') is out' + (removal.sub ? ', ' + removal.sub.archetype + ' subs in.' : ', no bench coverage.');
+      result.note = user.name + ' played ' + card.name + ' on ' + target.name + ' — ' + removal.out.archetype + ' (' + removal.out.position + ') is out' + (removal.sub ? ', ' + removal.sub.archetype + ' subs in.' : ', no bench coverage.');
     }
-  } else if (card.name === 'External Distraction') {
+  } else if (card.name === 'Distraction (External)' || card.name === 'Distraction (Internal)') {
     const pct = card.value;
     const hitOffense = Math.random() < 0.5;
     if (hitOffense) { result.targetOffDelta = -Math.round((offenseModifier(target, targetIds) * pct) / 100); }
     else { result.targetDefDelta = -Math.round((defenseModifier(target, targetIds) * pct) / 100); }
-    result.note = user.name + ' played External Distraction on ' + target.name + ' — ' + (hitOffense ? 'Offense' : 'Defense') + ' down ' + pct + '%.';
+    result.note = user.name + ' played ' + card.name + ' on ' + target.name + ' — ' + (hitOffense ? 'Offense' : 'Defense') + ' down ' + pct + '%.';
   } else if (card.name === 'Player Suspension') {
     const roll = 1 + Math.floor(Math.random() * 10);
     if (roll < card.value) {

@@ -48,10 +48,10 @@ export const COACH_MODIFIERS = [
   { name: 'Hall of Fame', mult: 2.0, hofDie: true, weight: 8, salary: 1.5, ability: '' },
 ];
 export const FANBASE_TYPES = [
-  { name: 'Basic', attendanceBase: 0.45, weight: 40 },
-  { name: 'Casual', attendanceBase: 0.55, weight: 30 },
-  { name: 'Invested', attendanceBase: 0.70, weight: 20 },
-  { name: 'Die Hard', attendanceBase: 0.85, weight: 10, ability: 'Once per season: gain Advantage on a matchup — roll twice on both dice and keep the higher of each.' },
+  { name: 'Casual', attendanceBase: 0.65, weight: 30 },
+  { name: 'Basic', attendanceBase: 0.75, weight: 40 },
+  { name: 'Invested', attendanceBase: 0.85, weight: 20 },
+  { name: 'Die Hard', attendanceBase: 0.95, weight: 10, ability: 'Once per season: gain Advantage on a matchup — roll twice on both dice and keep the higher of each.' },
 ];
 export const MARKETS = [
   { name: 'Large', weight: 20, capAdj: 1.5 },
@@ -66,10 +66,13 @@ export const INJURY_CHANCE = 0.12;
 // Matchup Modifier cards: one drawn per team per season, kept all season, cannot be traded/returned.
 // "playable" cards require an explicit play action against a target during a specific matchup.
 // "passive" cards apply automatically for as long as they're held (bench score boost, seeding boost).
-// Injury Prevention is "reactive" — it isn't played by its holder, it auto-triggers when targeted by Injury.
+// Injury Prevention is "reactive" — its holder chooses whether to hold it ready before each matchup
+// (see wantsInjuryPrevention in game/matchup.js); it no longer triggers automatically.
 export const MATCHUP_MODIFIER_TYPES = [
-  { name: 'Injury', category: 'debuff', weight: 2, flavor: 'The most unfortunate part of the game.', playable: true, needsValue: true, valueDie: 10 },
-  { name: 'External Distraction', category: 'debuff', weight: 3, flavor: 'Their focus is wavering under the weight of outside noise.', playable: true, needsValue: true, valueDie: 10 },
+  { name: 'Injury (Minor)', category: 'debuff', weight: 3, flavor: 'A quick tweak — should be fine by tip-off.', playable: true, needsValue: true, valueDie: 6 },
+  { name: 'Injury (Major)', category: 'debuff', weight: 1, flavor: 'This one looks serious.', playable: true, needsValue: true, valueDie: 10 },
+  { name: 'Distraction (External)', category: 'debuff', weight: 2, flavor: 'Their focus is wavering under the weight of outside noise.', playable: true, needsValue: true, valueDie: 10 },
+  { name: 'Distraction (Internal)', category: 'debuff', weight: 2, flavor: 'Internal strife is starting to come between them.', playable: true, needsValue: true, valueDie: 10 },
   { name: 'Player Suspension', category: 'debuff', weight: 2, flavor: 'The league has made a decision and a suspension is imminent.', playable: true, needsValue: true, valueDie: 10 },
   { name: 'Biased Officiating', category: 'debuff', weight: 2, flavor: 'The officials seem to have a favorite tonight.', playable: true, needsValue: false },
   { name: 'Injury Prevention', category: 'buff', weight: 2, flavor: "Your team's medical staff has proven to be exceptional.", playable: false, reactive: true, needsValue: true, valueDie: 10 },

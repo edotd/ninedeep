@@ -37,6 +37,14 @@ export default function PlayoffsScreen({ state, actions }) {
               </div>
             </div>
           )}
+          {humanInMatch && human.matchupCard && !human.matchupCard.used && human.matchupCard.name === 'Injury Prevention' && (
+            <div className={'pull-slot' + (p.useInjuryPrevention ? ' revealed' : '')} style={{ cursor: 'pointer' }} onClick={actions.toggleInjuryPrevention}>
+              <div className="pull-label">Injury Prevention (value {human.matchupCard.value})</div>
+              <div className="pull-value" style={{ fontSize: 15 }}>
+                {p.useInjuryPrevention ? '✓ Held ready — will block a lower-value Injury card this matchup' : 'Tap to hold ready this matchup'}
+              </div>
+            </div>
+          )}
           <button className="primary" style={{ width: '100%', padding: 18, margin: '16px 0', fontSize: 16 }} onClick={actions.rollCurrentMatchup}>Roll Dice</button>
         </>
       ) : (

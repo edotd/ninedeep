@@ -15,7 +15,8 @@ export default function SetupScreen({ actions }) {
           value={teamName}
           onChange={(e) => setTeamName(e.target.value)}
         />
-        <button className="secondary" style={{ width: '100%' }} onClick={actions.openGlossary}>View Glossary</button>
+        <button className="secondary" style={{ width: '100%', marginBottom: 10 }} onClick={actions.openGlossary}>View Glossary</button>
+        <button className="secondary" style={{ width: '100%' }} onClick={actions.openSettings}>Settings</button>
       </div>
       <div className="bottombar">
         <button className="primary" onClick={() => actions.startEra(teamName)}>Start Era</button>
