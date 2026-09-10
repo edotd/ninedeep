@@ -3,6 +3,7 @@ import { rosterSalary, formatCoins } from '../game/economy';
 import { validateLineup, offenseStatSum, defenseStatSum } from '../game/roster';
 import { teamOutput } from '../game/matchup';
 import { coachSummary, fanbaseSummary } from '../game/summaries';
+import { teamExperience } from '../game/aging';
 
 export default function LineupScreen({ state, actions }) {
   const team = state.teams[0];
@@ -16,6 +17,7 @@ export default function LineupScreen({ state, actions }) {
   const bench = team.hand.filter((c) => !activeSet.has(c.id));
   const benchIds = bench.map((c) => c.id);
   const output = teamOutput(team);
+  const experience = teamExperience(team);
   const startersOff = offenseStatSum(team, team.activeIds);
   const startersDef = defenseStatSum(team, team.activeIds);
   const benchOff = offenseStatSum(team, benchIds);
@@ -58,6 +60,7 @@ export default function LineupScreen({ state, actions }) {
         <div className="statusline">
           Team Output: <b>{output.total}</b> (Off {output.off} · Def {output.def} · Bench {output.bench}) — players + coach
         </div>
+        {experience !== null && <div className="statusline">Team Experience: <b>{experience}/10</b></div>}
         <div className="statusline">Active {team.activeIds.length}/5 — Guard {counts.Guard}, Forward {counts.Forward}, Big {counts.Big}</div>
         <div className="statusline">Starters — Offense {startersOff}, Defense {startersDef}</div>
         <div className="statusline">Bench — Offense {benchOff}, Defense {benchDef}</div>

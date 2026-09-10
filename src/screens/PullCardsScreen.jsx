@@ -15,6 +15,8 @@ function CoachCard({ coach }) {
         <div className="stat"><b>+{Math.round(coach.defBonus * 100)}%</b><span>Def Bonus</span></div>
         <div className="stat"><b>d{coach.offDie}</b><span>Off Die</span></div>
         <div className="stat"><b>d{coach.defDie}</b><span>Def Die</span></div>
+        <div className="stat"><b>{coach.age}</b><span>Age</span></div>
+        <div className="stat"><b>{coach.playerRelationship}/10</b><span>Relationship</span></div>
       </div>
       <div className="meta-row"><div className="meta-cell"><b>{formatCoins(coach.salary)}</b><span>Salary</span></div></div>
       {coach.ability && <div className="statusline" style={{ marginTop: 8 }}>Ability: {coach.ability}</div>}

@@ -1,12 +1,13 @@
-import { retentionBonus, retentionDieBump } from './cards';
+import { retentionBonus, retentionDieBump, relationshipBonus } from './cards';
 import { formatCoins } from './economy';
 
 export function coachSummary(team) {
-  const bonus = retentionBonus(team);
+  const bonus = retentionBonus(team) + relationshipBonus(team);
   const dieBump = retentionDieBump(team);
   const offPct = Math.round((team.coach.offBonus + bonus) * 100);
   const defPct = Math.round((team.coach.defBonus + bonus) * 100);
   let s = '+' + offPct + '% Off / +' + defPct + '% Def · d' + (team.coach.offDie + dieBump) + ' Off die, d' + (team.coach.defDie + dieBump) + ' Def die · ' + formatCoins(team.coach.salary);
+  s += ' · Age ' + team.coach.age + ' · Relationship ' + team.coach.playerRelationship + '/10';
   if (team.coach.modifier === 'Collegiate Success' && (team.retainedStreak || 0) > 0) {
     s += ' · Retained ' + team.retainedStreak + ' season' + (team.retainedStreak === 1 ? '' : 's') + ' — ability active';
   } else if (team.coach.ability) {

@@ -63,6 +63,21 @@ export const AI_NAMES = ['Ironclad Capital', 'Harborline Holdings', 'Vantage Poi
 export const CHAMPIONSHIP_BAR_MULT = 1.10;
 export const INJURY_CHANCE = 0.03;
 
+// Aging — players 20-40 with a 26-35 "prime" window peaking at 30-32; coaches 40-65 with
+// no prime curve of their own. See game/aging.js for the performance curve this drives.
+export const PLAYER_AGE_MIN = 20;
+export const PLAYER_AGE_MAX = 40;
+export const PLAYER_PRIME_START = 26;
+export const PLAYER_PEAK_START = 30;
+export const PLAYER_PEAK_END = 32;
+export const PLAYER_PRIME_BASE_END = 35; // where prime tapers off at Extended Prime = 1
+export const COACH_AGE_MIN = 40;
+export const COACH_AGE_MAX = 65;
+export const EXTENDED_PRIME_MIN = 1;
+export const EXTENDED_PRIME_MAX = 10;
+export const PLAYER_RELATIONSHIP_MIN = 1;
+export const PLAYER_RELATIONSHIP_MAX = 10;
+
 // Matchup Modifier cards: one drawn per team per season, kept all season, cannot be traded/returned.
 // "playable" cards require an explicit play action against a target during a specific matchup.
 // "passive" cards apply automatically for as long as they're held (bench score boost, seeding boost).

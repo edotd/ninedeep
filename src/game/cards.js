@@ -1,5 +1,6 @@
-import { ARCHETYPES, POSITIONS, POSITION_MOD, COACH_ARCHETYPES, COACH_MODIFIERS, MATCHUP_MODIFIER_TYPES } from './constants';
+import { ARCHETYPES, POSITIONS, POSITION_MOD, COACH_ARCHETYPES, COACH_MODIFIERS, MATCHUP_MODIFIER_TYPES, PLAYER_RELATIONSHIP_MIN, PLAYER_RELATIONSHIP_MAX } from './constants';
 import { rollWithVariance, weightedPick } from './rng';
+import { randomPlayerAge, randomCoachAge, randomExtendedPrime, ageMultiplier } from './aging';
 
 // Card ids are generated from a counter stored on the shared game state (not a module-level
 // variable) so they stay unique across reconnects/reloads once state lives in Firestore.
@@ -41,6 +42,8 @@ export function makeCard(state, archName, position, tier) {
     salary,
     contract,
     maxContract: contract,
+    age: randomPlayerAge(),
+    extendedPrime: randomExtendedPrime(),
   };
 }
 
@@ -51,8 +54,11 @@ export function randomArch() {
 export function randomPos() {
   return POSITIONS[Math.floor(Math.random() * 3)];
 }
+// Current effective ability, not raw talent: scaled by the player's age/Extended Prime
+// curve, so a card's on-court output rises and falls across the era as they age.
 export function cardTotal(c) {
-  return c.stats.SCO + c.stats.PLM + c.stats.REB + c.stats.DEF;
+  const raw = c.stats.SCO + c.stats.PLM + c.stats.REB + c.stats.DEF;
+  return Math.round(raw * ageMultiplier(c.age, c.extendedPrime));
 }
 
 export function neededPosition(team) {
@@ -90,6 +96,8 @@ export function drawCoachCard() {
     defBonus,
     offDie,
     defDie,
+    age: randomCoachAge(),
+    playerRelationship: PLAYER_RELATIONSHIP_MIN + Math.floor(Math.random() * (PLAYER_RELATIONSHIP_MAX - PLAYER_RELATIONSHIP_MIN + 1)),
   };
 }
 
@@ -102,6 +110,11 @@ export function retentionBonus(team) {
 }
 export function retentionDieBump(team) {
   return team.coach.modifier === 'Collegiate Success' ? team.retainedStreak || 0 : 0;
+}
+// A coach who relates well to the roster gets a small Off/Def bonus, same shape as
+// retentionBonus: +0.5% per Player Relationship point, up to +5% at the max of 10.
+export function relationshipBonus(team) {
+  return team.coach.playerRelationship ? team.coach.playerRelationship * 0.005 : 0;
 }
 
 export function drawMatchupModifierCard() {

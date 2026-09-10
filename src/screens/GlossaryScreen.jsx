@@ -1,4 +1,4 @@
-import { ARCHETYPES, POSITIONS, POSITION_MOD, TIERS, COACH_ARCHETYPES, COACH_MODIFIERS, FANBASE_TYPES, MATCHUP_MODIFIER_TYPES } from '../game/constants';
+import { ARCHETYPES, POSITIONS, POSITION_MOD, TIERS, COACH_ARCHETYPES, COACH_MODIFIERS, FANBASE_TYPES, MATCHUP_MODIFIER_TYPES, PLAYER_AGE_MIN, PLAYER_AGE_MAX, PLAYER_PRIME_START, PLAYER_PEAK_START, PLAYER_PEAK_END, PLAYER_PRIME_BASE_END, COACH_AGE_MIN, COACH_AGE_MAX } from '../game/constants';
 import { formatCoins } from '../game/economy';
 
 function archetypeStatRange(archetype, stat) {
@@ -86,6 +86,22 @@ export default function GlossaryScreen({ state, actions }) {
             </div>
           );
         })}
+
+        <h2>Aging &amp; Experience</h2>
+        <p className="lede">Players are {PLAYER_AGE_MIN}–{PLAYER_AGE_MAX} years old. Their prime runs {PLAYER_PRIME_START}–{PLAYER_PRIME_BASE_END}, peaking at {PLAYER_PEAK_START}–{PLAYER_PEAK_END} — below {PLAYER_PRIME_START} they're still developing, above their prime they're declining. This shows up directly in a player's actual on-court output (their printed stat numbers never change, but how much they count for in matchups and seeding does), not just flavor text.</p>
+        <div className="matchup-box">
+          <div className="matchup-title">Extended Prime <span className="tier-pill">1–10</span></div>
+          <p className="lede" style={{ margin: '8px 0' }}>Every player card also carries an Extended Prime rating. The higher it is, the longer that player holds their peak form before declining — at 10, a player can stay near their best all the way to {PLAYER_AGE_MAX}; at 1, they taper off starting at {PLAYER_PRIME_BASE_END}.</p>
+        </div>
+        <p className="lede">Coaches are {COACH_AGE_MIN}–{COACH_AGE_MAX} years old, but don't have a prime curve of their own — age is just one input into a team's overall Experience rating (below).</p>
+        <div className="matchup-box">
+          <div className="matchup-title">Player Relationship <span className="tier-pill">1–10</span></div>
+          <p className="lede" style={{ margin: '8px 0' }}>Every coach has a Player Relationship rating — how well they connect with the roster. It adds a small Off/Def bonus on top of the coach's base bonuses: +0.5% per point, up to +5% at the maximum of 10.</p>
+        </div>
+        <div className="matchup-box">
+          <div className="matchup-title">Team Experience <span className="tier-pill">1–10</span></div>
+          <p className="lede" style={{ margin: '8px 0' }}>A scouting-style rating for the whole team, blending average roster + coach age (older/more veteran counts higher) with your title count and how many seasons you've made the playoffs. Visible on the Standings tab and your Lineup screen once hands are dealt.</p>
+        </div>
 
         <h2>Coach Archetypes</h2>
         {Object.entries(COACH_ARCHETYPES).map(([name, a]) => (

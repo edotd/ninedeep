@@ -1,4 +1,4 @@
-import { TIERS, REPLACEMENT_TIER, AI_NAMES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_TYPES, MARKETS } from './constants';
+import { TIERS, REPLACEMENT_TIER, AI_NAMES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_TYPES, MARKETS, PLAYER_AGE_MAX, COACH_AGE_MAX } from './constants';
 import { shuffle, weightedPick } from './rng';
 import { makeCard, randomArch, cardTotal, neededPosition, drawCoachCard, applyCoachRetention, drawMatchupModifierCard } from './cards';
 import { finalizeCap, rosterSalary } from './economy';
@@ -41,6 +41,7 @@ export function buildTeams(state, teamSeats) {
     ownerUid: seat.ownerUid ?? null,
     hand: [],
     titles: 0,
+    playoffAppearances: 0,
     lastOverage: 0,
     retainedStreak: 0,
     lastCoachName: null,
@@ -119,6 +120,7 @@ export function startNewSeasonRoster(state) {
     refreshAdvantage(team);
     finalizeCap(team, state.season);
     team.activeIds = autoSelectFive(team.hand);
+    team.coach.age = Math.min(COACH_AGE_MAX, team.coach.age + 1);
   });
   initSeasonModifierCards(state);
 }
@@ -147,6 +149,7 @@ export function lockSeasonAndSeed(state) {
   seeds.forEach((s, rank) => { s.t.seed = rank + 1; });
   state.seeds = seeds;
   state.playoffTeams = seeds.slice(0, 8).map((s) => s.t);
+  state.playoffTeams.forEach((t) => { t.playoffAppearances = (t.playoffAppearances || 0) + 1; });
   // Championship bar is set from the playoff field only — teams that missed the cut don't
   // drag the bar down (or up) for the teams that actually have a shot at the title.
   state.leagueAvg = state.playoffTeams.reduce((s, t) => s + effectiveRating(t), 0) / state.playoffTeams.length;
@@ -214,6 +217,7 @@ export function proceedFromResults(state) {
     const kept = [];
     team.hand.forEach((c) => {
       c.contract--;
+      c.age = Math.min(PLAYER_AGE_MAX, c.age + 1);
       if (c.contract <= 0) {
         state.freeAgents.push(Object.assign({}, c, { contract: c.maxContract }));
         if (team.human) state.lastExpiredPlayers.push(c);
