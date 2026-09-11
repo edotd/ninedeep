@@ -19,7 +19,7 @@ export function buildMatchEvents(m) {
 }
 
 function dieText(roll, sides) {
-  return '🎲 ' + roll + (sides !== 6 ? ` d${sides}` : '');
+  return '🎲 ' + roll + ` 1d${sides}`;
 }
 
 function eventLogEntry(m, ev) {
