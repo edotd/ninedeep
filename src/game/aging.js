@@ -9,6 +9,11 @@ export function randomPlayerAge() {
 export function randomCoachAge() {
   return COACH_AGE_MIN + Math.floor(Math.random() * (COACH_AGE_MAX - COACH_AGE_MIN + 1));
 }
+// League Accolade tiers (other than Generational Talent) only roll on players whose age
+// falls within the Prime window — you don't win these before or after your prime.
+export function randomPrimeAge() {
+  return PLAYER_PRIME_START + Math.floor(Math.random() * (PLAYER_PRIME_BASE_END - PLAYER_PRIME_START + 1));
+}
 
 // Career Level: a player's age bucket, each with its own output bonus range. A player's
 // exact spot within their bucket's range is fixed for their career (see careerRoll below,

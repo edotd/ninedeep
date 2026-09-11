@@ -1,4 +1,4 @@
-import { TIERS, REPLACEMENT_TIER, AI_NAMES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_TYPES, MARKETS, PLAYER_AGE_MAX, COACH_AGE_MAX } from './constants';
+import { TIERS, LEAGUE_ACCOLADES, REPLACEMENT_TIER, AI_NAMES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_TYPES, MARKETS, PLAYER_AGE_MAX, COACH_AGE_MAX } from './constants';
 import { shuffle, weightedPick } from './rng';
 import { makeCard, randomArch, cardTotal, neededPosition, drawCoachCard, applyCoachRetention, drawMatchupModifierCard } from './cards';
 import { finalizeCap, rosterSalary, rollMarketCapAdj } from './economy';
@@ -23,7 +23,7 @@ export function newEraState() {
 
 export function buildStarPool(state) {
   state.starPool = [];
-  TIERS.forEach((tier) => {
+  [...TIERS, ...LEAGUE_ACCOLADES].forEach((tier) => {
     for (let i = 0; i < tier.count; i++) {
       const posPool = tier.allowedPositions || POSITIONS;
       const pos = posPool[Math.floor(Math.random() * posPool.length)];

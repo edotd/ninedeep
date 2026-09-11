@@ -19,21 +19,31 @@ export const POSITION_MOD = {
   Big:     { SCO: -1, PLM: -2, REB: 2, DEF: 1 },
 };
 
+// Base Player Modifiers — quality/trait tiers with no age restriction on who can roll them.
 export const TIERS = [
   { name: 'Role Player', uniform: 1.00, peak: 1.00, contract: 7, count: 7 },
   { name: 'Bench Player', uniform: 1.05, peak: 1.10, contract: 6, count: 4 },
   { name: 'All-Star', uniform: 1.10, peak: 1.20, contract: 4, count: 4 },
-  { name: 'All-League Defensive Team', uniform: 1.10, peak: 1.30, contract: 4, count: 3 },
-  { name: 'All-League 2nd Team', uniform: 1.15, peak: 1.30, contract: 4, count: 4 },
-  { name: 'All-League 1st Team', uniform: 1.20, peak: 1.40, contract: 3, count: 3 },
-  { name: 'Defensive Player of the Year', uniform: 1.15, peak: 1.50, contract: 2, count: 2 },
-  { name: 'Scoring Champion', uniform: 1.15, peak: 1.50, contract: 2, count: 2, forceStat: 'SCO' },
-  { name: 'Rebounding Champion', uniform: 1.15, peak: 1.50, contract: 2, count: 2, forceStat: 'REB', allowedPositions: ['Forward', 'Big'] },
-  { name: 'Assist Leader', uniform: 1.15, peak: 1.50, contract: 2, count: 2, forceStat: 'PLM' },
-  { name: 'MVP Candidate', uniform: 1.25, peak: 1.55, contract: 2, count: 3 },
-  { name: 'Generational Talent', uniform: 1.30, peak: 1.65, contract: 2, count: 2 },
+  { name: 'High IQ', uniform: 1.10, peak: 1.20, contract: 4, count: 4, forceStat: 'PLM' },
+  { name: 'Hustler', uniform: 1.10, peak: 1.20, contract: 4, count: 4, forceStats: ['DEF', 'REB'] },
 ];
 export const REPLACEMENT_TIER = { name: 'Undrafted', uniform: 1, peak: 1, contract: 6 };
+
+// League Accolades — elite, statistical-distinction tiers. These can only roll on a player
+// whose age falls within the Prime Career Level window (26-35), since you don't win these
+// before or after your prime — with one exception: Generational Talent (primeExempt) can
+// appear at any age, since it marks a player's ceiling, not a given season's form.
+export const LEAGUE_ACCOLADES = [
+  { name: 'All-League Defensive Team', uniform: 1.10, peak: 1.30, contract: 4, count: 3, accolade: true },
+  { name: 'All-League 2nd Team', uniform: 1.15, peak: 1.30, contract: 4, count: 4, accolade: true },
+  { name: 'All-League 1st Team', uniform: 1.20, peak: 1.40, contract: 3, count: 3, accolade: true },
+  { name: 'Defensive Player of the Year', uniform: 1.15, peak: 1.50, contract: 2, count: 2, accolade: true },
+  { name: 'Scoring Champion', uniform: 1.15, peak: 1.50, contract: 2, count: 2, forceStat: 'SCO', accolade: true },
+  { name: 'Rebounding Champion', uniform: 1.15, peak: 1.50, contract: 2, count: 2, forceStat: 'REB', allowedPositions: ['Forward', 'Big'], accolade: true },
+  { name: 'Assist Leader', uniform: 1.15, peak: 1.50, contract: 2, count: 2, forceStat: 'PLM', accolade: true },
+  { name: 'MVP Candidate', uniform: 1.25, peak: 1.55, contract: 2, count: 3, accolade: true },
+  { name: 'Generational Talent', uniform: 1.30, peak: 1.65, contract: 2, count: 2, accolade: true, primeExempt: true },
+];
 
 export const COACH_ARCHETYPES = {
   'Offensive Minded': { offBase: 10, defBase: 2 },
@@ -45,6 +55,7 @@ export const COACH_MODIFIERS = [
   { name: 'Former Player', mult: 1.6, die: 6, weight: 25, salary: 1.0, ability: '' },
   { name: 'Collegiate Success', mult: 1.1, die: 6, weight: 25, salary: 0.5, ability: '+3% Off/Def and +1 die size for every consecutive season retained (stacks).' },
   { name: 'Hot Headed', mult: 1.4, die: 7, weight: 12, salary: 0.5, ability: '' },
+  { name: 'Genius', mult: 1.5, die: 6, weight: 10, salary: 1.25, ability: '' },
   { name: 'Hall of Fame', mult: 2.0, hofDie: true, weight: 8, salary: 1.5, ability: '' },
 ];
 export const FANBASE_TYPES = [

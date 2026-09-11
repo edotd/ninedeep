@@ -1,6 +1,6 @@
 import { ARCHETYPES, POSITIONS, POSITION_MOD, COACH_ARCHETYPES, COACH_MODIFIERS, MATCHUP_MODIFIER_TYPES, PLAYER_RELATIONSHIP_MIN, PLAYER_RELATIONSHIP_MAX } from './constants';
 import { rollWithVariance, weightedPick } from './rng';
-import { randomPlayerAge, randomCoachAge, careerMultiplier } from './aging';
+import { randomPlayerAge, randomPrimeAge, randomCoachAge, careerMultiplier } from './aging';
 
 // Card ids are generated from a counter stored on the shared game state (not a module-level
 // variable) so they stay unique across reconnects/reloads once state lives in Firestore.
@@ -16,13 +16,13 @@ export function statsToCoins(total) {
 
 export function makeCard(state, archName, position, tier) {
   const arch = ARCHETYPES[archName];
-  const peakKey = tier.forceStat || arch.peak;
+  const peakKeys = tier.forceStats || (tier.forceStat ? [tier.forceStat] : [arch.peak]);
   const stats = {};
   let total = 0;
   ['SCO', 'PLM', 'REB', 'DEF'].forEach((k) => {
     const base = arch.base[k] + POSITION_MOD[position][k];
     let v = base * tier.uniform;
-    if (k === peakKey) v *= tier.peak;
+    if (peakKeys.includes(k)) v *= tier.peak;
     v = Math.round(v);
     v = rollWithVariance(v, 1);
     v = Math.max(1, v);
@@ -33,6 +33,8 @@ export function makeCard(state, archName, position, tier) {
   const contractDeviation = tier.contract - contract; // positive = shorter than typical for this tier
   let salary = statsToCoins(total) * (1 + contractDeviation * 0.15);
   salary = Math.max(0, Math.round(salary * 2) / 2);
+  // League Accolade tiers only roll on players in their prime, except Generational Talent.
+  const age = tier.accolade && !tier.primeExempt ? randomPrimeAge() : randomPlayerAge();
   return {
     id: nextCardId(state),
     archetype: archName,
@@ -42,7 +44,7 @@ export function makeCard(state, archName, position, tier) {
     salary,
     contract,
     maxContract: contract,
-    age: randomPlayerAge(),
+    age,
     careerRoll: Math.random(),
   };
 }

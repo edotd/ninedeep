@@ -91,6 +91,8 @@ p.lede{color:var(--muted);font-size:14px;line-height:1.5;margin:0 0 14px;}
 .dice-cell{text-align:center;min-width:42px;}
 .roll-line{display:flex;justify-content:center;align-items:baseline;gap:5px;font-family:var(--mono);}
 .die-val{font-size:12px;color:var(--ink);}
+@keyframes dice-spin{0%{transform:rotate(0deg) scale(1);}50%{transform:rotate(180deg) scale(1.25);}100%{transform:rotate(360deg) scale(1);}}
+.dice-rolling{display:inline-block;animation:dice-spin .6s linear infinite;}
 .die-val i{font-style:normal;color:var(--muted);font-size:9px;}
 .mod-val{font-size:12px;color:var(--accent);}
 .dice-cell span{display:block;font-size:9px;color:var(--muted);margin-top:3px;}

@@ -1,4 +1,4 @@
-import { ARCHETYPES, POSITIONS, POSITION_MOD, TIERS, COACH_ARCHETYPES, COACH_MODIFIERS, FANBASE_TYPES, MATCHUP_MODIFIER_TYPES, PLAYER_AGE_MIN, PLAYER_AGE_MAX, PLAYER_PRIME_START, PLAYER_PRIME_BASE_END, COACH_AGE_MIN, COACH_AGE_MAX } from '../game/constants';
+import { ARCHETYPES, POSITIONS, POSITION_MOD, TIERS, LEAGUE_ACCOLADES, COACH_ARCHETYPES, COACH_MODIFIERS, FANBASE_TYPES, MATCHUP_MODIFIER_TYPES, PLAYER_AGE_MIN, PLAYER_AGE_MAX, PLAYER_PRIME_START, PLAYER_PRIME_BASE_END, COACH_AGE_MIN, COACH_AGE_MAX } from '../game/constants';
 import { formatCoins } from '../game/economy';
 import { CAREER_LEVELS } from '../game/aging';
 
@@ -11,6 +11,35 @@ const STAT_NAMES = { SCO: 'Scoring', PLM: 'Playmaking', REB: 'Rebounding', DEF: 
 
 function GlossaryStat({ label, val }) {
   return <div className="meta-cell"><b>{val}</b><span>{label}</span></div>;
+}
+
+function forceStatNames(t) {
+  const keys = t.forceStats || (t.forceStat ? [t.forceStat] : null);
+  return keys ? keys.map((k) => STAT_NAMES[k]).join(' + ') : null;
+}
+
+function TierBlock({ t }) {
+  const contractMin = Math.max(1, t.contract - 1), contractMax = t.contract + 1;
+  const boosts = forceStatNames(t);
+  return (
+    <div className="matchup-box">
+      <div className="matchup-title">{t.name}</div>
+      <div className="meta-row" style={{ borderTop: 'none', paddingTop: 0 }}>
+        <GlossaryStat label="Base" val={'x' + t.uniform.toFixed(2)} />
+        <GlossaryStat label="Peak Stat" val={'x' + t.peak.toFixed(2)} />
+        <GlossaryStat label="Contract" val={`${contractMin}–${contractMax} Turns`} />
+        <GlossaryStat label="In Pool" val={t.count} />
+      </div>
+      {boosts && <div className="statusline" style={{ marginTop: 8 }}>Always boosts: {boosts} (regardless of archetype)</div>}
+      {t.allowedPositions && <div className="statusline" style={{ marginTop: 4 }}>Only appears at: {t.allowedPositions.join(', ')}</div>}
+      {t.accolade && (
+        <div className="statusline" style={{ marginTop: 4 }}>
+          {t.primeExempt ? 'Can roll on a player at any age.' : 'Only rolls on a player currently in their Prime Career Level.'}
+        </div>
+      )}
+      <div className="statusline" style={{ marginTop: 4 }}>A shorter-than-typical roll costs more per season; a longer roll costs less.</div>
+    </div>
+  );
 }
 
 export default function GlossaryScreen({ state, actions }) {
@@ -70,23 +99,12 @@ export default function GlossaryScreen({ state, actions }) {
         })}
 
         <h2>Player Modifiers</h2>
-        {TIERS.map((t) => {
-          const contractMin = Math.max(1, t.contract - 1), contractMax = t.contract + 1;
-          return (
-            <div key={t.name} className="matchup-box">
-              <div className="matchup-title">{t.name}</div>
-              <div className="meta-row" style={{ borderTop: 'none', paddingTop: 0 }}>
-                <GlossaryStat label="Base" val={'x' + t.uniform.toFixed(2)} />
-                <GlossaryStat label="Peak Stat" val={'x' + t.peak.toFixed(2)} />
-                <GlossaryStat label="Contract" val={`${contractMin}–${contractMax} Turns`} />
-                <GlossaryStat label="In Pool" val={t.count} />
-              </div>
-              {t.forceStat && <div className="statusline" style={{ marginTop: 8 }}>Always boosts: {STAT_NAMES[t.forceStat]} (regardless of archetype)</div>}
-              {t.allowedPositions && <div className="statusline" style={{ marginTop: 4 }}>Only appears at: {t.allowedPositions.join(', ')}</div>}
-              <div className="statusline" style={{ marginTop: 4 }}>A shorter-than-typical roll costs more per season; a longer roll costs less.</div>
-            </div>
-          );
-        })}
+        <p className="lede">Base quality/trait tiers — no age restriction on who can roll them.</p>
+        {TIERS.map((t) => <TierBlock key={t.name} t={t} />)}
+
+        <h2>League Accolades</h2>
+        <p className="lede">Elite, statistical-distinction tiers. These only roll on a player currently in their Prime Career Level ({PLAYER_PRIME_START}–{PLAYER_PRIME_BASE_END}) — you don't win these before or after your prime. Generational Talent is the one exception: it marks a player's ceiling rather than a given season's form, so it can appear at any age.</p>
+        {LEAGUE_ACCOLADES.map((t) => <TierBlock key={t.name} t={t} />)}
 
         <h2>Aging &amp; Experience</h2>
         <p className="lede">Players are {PLAYER_AGE_MIN}–{PLAYER_AGE_MAX} years old. Career Level tracks where they are in their arc — Young (below {PLAYER_PRIME_START}), Prime ({PLAYER_PRIME_START}–{PLAYER_PRIME_BASE_END}), or Declining (above {PLAYER_PRIME_BASE_END}) — and each brings its own output bonus range. This shows up directly in a player's actual on-court output (their printed stat numbers never change, but how much they count for in matchups and seeding does), not just a label on the card.</p>
