@@ -1,7 +1,7 @@
 import { effectiveRating } from '../game/roster';
 
-export default function StandingsScreen({ state, actions }) {
-  const team = state.teams[0];
+export default function StandingsScreen({ state, actions, myTeamId }) {
+  const team = state.teams[myTeamId];
   return (
     <>
       <div className="screen">

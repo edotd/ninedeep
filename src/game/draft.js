@@ -70,7 +70,7 @@ function bestCardFor(team, pool) {
 function assignPick(state, team, card) {
   state.draft.pool = state.draft.pool.filter((c) => c.id !== card.id);
   team.hand.push(card);
-  state.draft.picks.unshift({ teamName: team.name, human: team.human, card });
+  state.draft.picks.unshift({ teamId: team.id, teamName: team.name, human: team.human, card });
   state.draft.queue.shift();
 }
 
@@ -88,9 +88,11 @@ function resolveAiPicksUntilHuman(state) {
   finishDraftIfDone(state);
 }
 
-export function draftPick(state, cardId) {
+// teamIdx is the acting player's own seat — the pick only applies if it's actually that
+// team's turn (queue[0]), so one player can never draft on another's behalf.
+export function draftPick(state, teamIdx, cardId) {
   const team = state.draft.queue[0];
-  if (!team || !team.human) return;
+  if (!team || !team.human || team.id !== state.teams[teamIdx].id) return;
   const card = state.draft.pool.find((c) => c.id === cardId);
   if (!card) return;
   assignPick(state, team, card);
@@ -101,10 +103,10 @@ export function draftPick(state, cardId) {
 // a team picking later, taking that later slot in exchange for a cap bonus next season —
 // a simplified stand-in for a real multi-asset trade negotiation (no other tradable
 // resource — draft picks, future cap space — exists in the game yet).
-export function tradeDown(state, partnerTeamIndex) {
+export function tradeDown(state, teamIdx, partnerTeamIndex) {
   const queue = state.draft.queue;
   const human = queue[0];
-  if (!human || !human.human) return;
+  if (!human || !human.human || human.id !== state.teams[teamIdx].id) return;
   const partner = state.teams[partnerTeamIndex];
   const partnerSlot = queue.findIndex((t, i) => i > 0 && t === partner);
   if (partnerSlot < 0) return;

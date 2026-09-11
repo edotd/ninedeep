@@ -2,15 +2,16 @@ import PlayerCard from '../components/PlayerCard';
 import { cardTotal } from '../game/cards';
 import { formatCoins } from '../game/economy';
 
-export default function DraftScreen({ state, actions }) {
+export default function DraftScreen({ state, actions, myTeamId }) {
   const draft = state.draft;
-  const human = state.teams[0];
+  const myTeam = state.teams[myTeamId];
   const sortedPool = [...draft.pool].sort((a, b) => cardTotal(b) - cardTotal(a));
+  const onTheClock = draft.queue[0] === myTeam;
 
   const laterTeams = [];
   const seen = new Set();
   draft.queue.forEach((t, i) => {
-    if (i > 0 && t !== human && !seen.has(t)) {
+    if (i > 0 && t !== myTeam && !seen.has(t)) {
       seen.add(t);
       laterTeams.push({ team: t, slotsAway: i });
     }
@@ -19,14 +20,19 @@ export default function DraftScreen({ state, actions }) {
   return (
     <div className="screen">
       <h1>Draft — Season {state.season}</h1>
-      <p className="lede">Every team fills its open roster spots from this shared pool, worst record first. You're on the clock — draft a card, or trade your pick down to another team for a cap bonus next season.</p>
+      <p className="lede">
+        Every team fills its open roster spots from this shared pool, worst record first.{' '}
+        {onTheClock
+          ? "You're on the clock — draft a card, or trade your pick down to another team for a cap bonus next season."
+          : draft.queue[0] ? `Waiting on ${draft.queue[0].name} to pick…` : ''}
+      </p>
       <div className="statusline">{draft.queue.length} pick{draft.queue.length === 1 ? '' : 's'} remaining · {draft.pool.length} card{draft.pool.length === 1 ? '' : 's'} in the pool</div>
 
       {draft.picks.length > 0 && (
         <>
           <h2>Recent Picks</h2>
           {draft.picks.slice(0, 5).map((p, i) => (
-            <div key={i} className={'standing-row' + (p.human ? ' you' : '')}>
+            <div key={i} className={'standing-row' + (p.teamId === myTeamId ? ' you' : '')}>
               <span>{p.teamName}</span>
               <span>{p.card.archetype} · {p.card.tierName}</span>
             </div>
@@ -34,7 +40,7 @@ export default function DraftScreen({ state, actions }) {
         </>
       )}
 
-      {laterTeams.length > 0 && (
+      {onTheClock && laterTeams.length > 0 && (
         <>
           <h2>Trade Down</h2>
           {laterTeams.map(({ team, slotsAway }) => (
@@ -42,7 +48,7 @@ export default function DraftScreen({ state, actions }) {
               key={team.name}
               className="pull-slot"
               style={{ cursor: 'pointer' }}
-              onClick={() => actions.tradeDown(state.teams.indexOf(team))}
+              onClick={() => actions.tradeDown(myTeamId, state.teams.indexOf(team))}
             >
               <div className="pull-label">Swap with {team.name}</div>
               <div className="pull-value" style={{ fontSize: 15 }}>
@@ -55,7 +61,7 @@ export default function DraftScreen({ state, actions }) {
 
       <h2>Available Cards ({sortedPool.length})</h2>
       {sortedPool.map((c) => (
-        <PlayerCard key={c.id} card={c} onClick={() => actions.draftPick(c.id)} />
+        <PlayerCard key={c.id} card={c} onClick={onTheClock ? () => actions.draftPick(myTeamId, c.id) : undefined} />
       ))}
     </div>
   );

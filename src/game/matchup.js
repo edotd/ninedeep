@@ -76,18 +76,25 @@ export function playMatchup(a, b, advA, advB, idsA, idsB, extraA, extraB) {
   };
 }
 
+// A human team's in-matchup choices (Advantage / play matchup card / hold Injury Prevention
+// ready) are keyed by team id on state.playoff.cardChoices — not a single flat flag — since a
+// matchup can have a human on both sides, each making their own independent choice.
+export function cardChoicesFor(playoff, team) {
+  return (playoff && playoff.cardChoices && playoff.cardChoices[team.id]) || { useAdvantage: false, useCard: false, useInjuryPrevention: false };
+}
+
 export function wantsAdvantage(team, playoff) {
   if (!team.advantageAvailable) return false;
-  if (team.human) return playoff.useAdvantage;
+  if (team.human) return cardChoicesFor(playoff, team).useAdvantage;
   return true; // AI uses its Die Hard advantage the first chance it gets
 }
 
 // Injury Prevention no longer blocks automatically — its holder must choose to hold it ready
-// for the matchup (human: via the playoff.useInjuryPrevention toggle; AI: always holds it ready).
+// for the matchup (human: via their own cardChoices.useInjuryPrevention; AI: always ready).
 export function wantsInjuryPrevention(team, playoff) {
   const card = team.matchupCard;
   if (!card || card.used || card.name !== 'Injury Prevention') return false;
-  if (team.human) return !!(playoff && playoff.useInjuryPrevention);
+  if (team.human) return cardChoicesFor(playoff, team).useInjuryPrevention;
   return true;
 }
 

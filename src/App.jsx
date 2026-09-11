@@ -29,9 +29,10 @@ const SCREENS = {
 };
 
 export default function App() {
-  const { state, actions } = useLocalGame();
+  const { state, actions, myTeamId } = useLocalGame();
   const headerProps = {
     state,
+    myTeamId,
     onGlossary: actions.openGlossary,
     onStandings: actions.openLeague,
     onSettings: actions.openSettings,
@@ -62,7 +63,7 @@ export default function App() {
     return (
       <>
         <Header {...headerProps} />
-        <LeagueScreen state={state} actions={actions} />
+        <LeagueScreen state={state} actions={actions} myTeamId={myTeamId} />
       </>
     );
   }
@@ -81,7 +82,7 @@ export default function App() {
   return (
     <>
       <Header {...headerProps} />
-      <Screen state={state} actions={actions} />
+      <Screen state={state} actions={actions} myTeamId={myTeamId} />
     </>
   );
 }

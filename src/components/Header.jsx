@@ -1,7 +1,7 @@
 import { formatCoins } from '../game/economy';
 
-export default function Header({ state, onGlossary, onStandings, onSettings, onNewEra }) {
-  const team = state.teams[0];
+export default function Header({ state, myTeamId, onGlossary, onStandings, onSettings, onNewEra }) {
+  const team = state.teams[myTeamId];
   return (
     <div className="topbar">
       <div className="topbar-title">{team.name}</div>

@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import MatchupBox, { buildMatchEvents } from '../components/MatchupBox';
-import { matchTeams } from '../game/matchup';
+import { matchTeams, cardChoicesFor } from '../game/matchup';
 import { ACTION_LOG_SPEEDS } from '../game/constants';
 
-export default function PlayoffSeriesScreen({ state, actions }) {
+export default function PlayoffSeriesScreen({ state, actions, myTeamId }) {
   const p = state.playoff;
   const idx = p.activeMatchIndex;
   const m = p.matches[idx];
@@ -18,8 +18,9 @@ export default function PlayoffSeriesScreen({ state, actions }) {
   // Derive the resolved teams for display without mutating match state during render —
   // actions.rollCurrentMatchup is what actually commits m.a/m.b once the dice are rolled.
   const { a: teamA, b: teamB } = matchTeams(p.matches, m);
-  const human = state.teams[0];
-  const humanInMatch = teamA === human || teamB === human;
+  const myTeam = state.teams[myTeamId];
+  const humanInMatch = teamA === myTeam || teamB === myTeam;
+  const myChoices = humanInMatch ? cardChoicesFor(p, myTeam) : null;
 
   const handleRoll = () => {
     actions.rollCurrentMatchup();
@@ -54,27 +55,27 @@ export default function PlayoffSeriesScreen({ state, actions }) {
       </div>
       {!m.result ? (
         <>
-          {humanInMatch && human.advantageAvailable && (
-            <div className={'pull-slot' + (p.useAdvantage ? ' revealed' : '')} style={{ cursor: 'pointer' }} onClick={actions.toggleAdvantage}>
+          {humanInMatch && myTeam.advantageAvailable && (
+            <div className={'pull-slot' + (myChoices.useAdvantage ? ' revealed' : '')} style={{ cursor: 'pointer' }} onClick={() => actions.toggleAdvantage(myTeamId)}>
               <div className="pull-label">Die Hard Ability — once per season</div>
               <div className="pull-value" style={{ fontSize: 15 }}>
-                {p.useAdvantage ? '✓ Advantage will be used this matchup' : 'Tap to use Advantage — roll twice, keep the higher'}
+                {myChoices.useAdvantage ? '✓ Advantage will be used this matchup' : 'Tap to use Advantage — roll twice, keep the higher'}
               </div>
             </div>
           )}
-          {humanInMatch && human.matchupCard && !human.matchupCard.used && human.matchupCard.playable && (
-            <div className={'pull-slot' + (p.useCard ? ' revealed' : '')} style={{ cursor: 'pointer' }} onClick={actions.toggleCardPlay}>
-              <div className="pull-label">Matchup Card — {human.matchupCard.name}</div>
+          {humanInMatch && myTeam.matchupCard && !myTeam.matchupCard.used && myTeam.matchupCard.playable && (
+            <div className={'pull-slot' + (myChoices.useCard ? ' revealed' : '')} style={{ cursor: 'pointer' }} onClick={() => actions.toggleCardPlay(myTeamId)}>
+              <div className="pull-label">Matchup Card — {myTeam.matchupCard.name}</div>
               <div className="pull-value" style={{ fontSize: 15 }}>
-                {p.useCard ? `✓ Will be played against ${(teamA === human ? teamB : teamA).name}` : `Tap to play against ${(teamA === human ? teamB : teamA).name}`}
+                {myChoices.useCard ? `✓ Will be played against ${(teamA === myTeam ? teamB : teamA).name}` : `Tap to play against ${(teamA === myTeam ? teamB : teamA).name}`}
               </div>
             </div>
           )}
-          {humanInMatch && human.matchupCard && !human.matchupCard.used && human.matchupCard.name === 'Injury Prevention' && (
-            <div className={'pull-slot' + (p.useInjuryPrevention ? ' revealed' : '')} style={{ cursor: 'pointer' }} onClick={actions.toggleInjuryPrevention}>
-              <div className="pull-label">Injury Prevention (value {human.matchupCard.value})</div>
+          {humanInMatch && myTeam.matchupCard && !myTeam.matchupCard.used && myTeam.matchupCard.name === 'Injury Prevention' && (
+            <div className={'pull-slot' + (myChoices.useInjuryPrevention ? ' revealed' : '')} style={{ cursor: 'pointer' }} onClick={() => actions.toggleInjuryPrevention(myTeamId)}>
+              <div className="pull-label">Injury Prevention (value {myTeam.matchupCard.value})</div>
               <div className="pull-value" style={{ fontSize: 15 }}>
-                {p.useInjuryPrevention ? '✓ Held ready — will block a lower-value Injury card this matchup' : 'Tap to hold ready this matchup'}
+                {myChoices.useInjuryPrevention ? '✓ Held ready — will block a lower-value Injury card this matchup' : 'Tap to hold ready this matchup'}
               </div>
             </div>
           )}

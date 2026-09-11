@@ -42,8 +42,8 @@ function Slot({ label, value, onPull, extra }) {
   );
 }
 
-export default function PullCardsScreen({ state, actions }) {
-  const team = state.teams[0];
+export default function PullCardsScreen({ state, actions, myTeamId }) {
+  const team = state.teams[myTeamId];
   const allPulled = team.coach && team.fanbase && team.market;
   const marketExtra = team.market ? `+${formatCoins(team.market.capAdj)} to cap each season` : '';
   const fanbaseExtra = team.fanbase ? fanbaseSummary(team) + (team.fanbase.ability ? ' · ' + team.fanbase.ability : '') : '';
@@ -61,11 +61,11 @@ export default function PullCardsScreen({ state, actions }) {
         ) : (
           <div className="pull-slot">
             <div className="pull-label">Coach</div>
-            <button className="secondary" style={{ width: '100%' }} onClick={actions.pullCoach}>Pull Card</button>
+            <button className="secondary" style={{ width: '100%' }} onClick={() => actions.pullCoach(myTeamId)}>Pull Card</button>
           </div>
         )}
-        <Slot label="Fanbase" value={team.fanbase} onPull={actions.pullFanbase} extra={fanbaseExtra} />
-        <Slot label="Market" value={team.market} onPull={actions.pullMarket} extra={marketExtra} />
+        <Slot label="Fanbase" value={team.fanbase} onPull={() => actions.pullFanbase(myTeamId)} extra={fanbaseExtra} />
+        <Slot label="Market" value={team.market} onPull={() => actions.pullMarket(myTeamId)} extra={marketExtra} />
       </div>
       <div className="bottombar">
         <button className="primary" disabled={!allPulled} onClick={actions.proceedToSeason1}>Deal Hands</button>

@@ -1,7 +1,7 @@
 import PlayerCard from '../components/PlayerCard';
 
-export default function PullHandScreen({ state, actions }) {
-  const team = state.teams[0];
+export default function PullHandScreen({ state, actions, myTeamId }) {
+  const team = state.teams[myTeamId];
   return (
     <>
       <div className="screen">

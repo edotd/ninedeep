@@ -5,8 +5,8 @@ import { teamOutput } from '../game/matchup';
 import { coachSummary, fanbaseSummary } from '../game/summaries';
 import { teamExperience } from '../game/aging';
 
-export default function LineupScreen({ state, actions }) {
-  const team = state.teams[0];
+export default function LineupScreen({ state, actions, myTeamId }) {
+  const team = state.teams[myTeamId];
   const activeSet = new Set(team.activeIds);
   const counts = { Guard: 0, Forward: 0, Big: 0 };
   team.activeIds.forEach((id) => { const c = team.hand.find((h) => h.id === id); counts[c.position]++; });
@@ -22,6 +22,8 @@ export default function LineupScreen({ state, actions }) {
   const startersDef = defenseStatSum(team, team.activeIds);
   const benchOff = offenseStatSum(team, benchIds);
   const benchDef = defenseStatSum(team, benchIds);
+  const otherHumans = state.teams.filter((t) => t.human && t.id !== team.id);
+  const waitingOn = otherHumans.filter((t) => !t.lineupConfirmed);
 
   return (
     <>
@@ -66,19 +68,24 @@ export default function LineupScreen({ state, actions }) {
         <div className="statusline">Bench — Offense {benchOff}, Defense {benchDef}</div>
         <h2>Starters ({starters.length}/5)</h2>
         {starters.length ? starters.map((c) => (
-          <PlayerCard key={c.id} card={c} selected rosterLabel="Starter" onClick={() => actions.toggleActive(c.id)} />
+          <PlayerCard key={c.id} card={c} selected rosterLabel="Starter" onClick={() => actions.toggleActive(myTeamId, c.id)} />
         )) : <p className="lede">No starters yet.</p>}
         <h2>Bench ({bench.length}/4)</h2>
         {bench.length ? bench.map((c) => (
-          <PlayerCard key={c.id} card={c} selected={false} rosterLabel="Bench" onClick={() => actions.toggleActive(c.id)} />
+          <PlayerCard key={c.id} card={c} selected={false} rosterLabel="Bench" onClick={() => actions.toggleActive(myTeamId, c.id)} />
         )) : <p className="lede">Bench is empty.</p>}
       </div>
+      {team.lineupConfirmed && waitingOn.length > 0 && (
+        <div className="screen" style={{ paddingTop: 0 }}>
+          <div className="statusline">Lineup locked — waiting on {waitingOn.map((t) => t.name).join(', ')}…</div>
+        </div>
+      )}
       <div className="bottombar">
-        <button className="secondary" onClick={actions.autoSetHuman}>Auto-Set</button>
-        <button className="primary" disabled={!v.valid} onClick={() => {
-          const res = actions.confirmLineup();
+        <button className="secondary" disabled={team.lineupConfirmed} onClick={() => actions.autoSetHuman(myTeamId)}>Auto-Set</button>
+        <button className="primary" disabled={!v.valid || team.lineupConfirmed} onClick={() => {
+          const res = actions.confirmLineup(myTeamId);
           if (res && res.valid === false) alert(res.msg);
-        }}>Lock Lineup</button>
+        }}>{team.lineupConfirmed ? 'Waiting…' : 'Lock Lineup'}</button>
       </div>
     </>
   );

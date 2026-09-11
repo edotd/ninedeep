@@ -1,9 +1,9 @@
 import MatchupBox from '../components/MatchupBox';
 import { effectiveRating } from '../game/roster';
 
-export default function ResultsScreen({ state, actions }) {
+export default function ResultsScreen({ state, actions, myTeamId }) {
   const r = state.lastResult;
-  const team = state.teams[0];
+  const team = state.teams[myTeamId];
   return (
     <>
       <div className="screen">

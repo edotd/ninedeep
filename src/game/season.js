@@ -36,8 +36,13 @@ export function buildStarPool(state) {
 }
 
 // teamSeats: array of { name, human, ownerUid } — seat 0 is always the primary/local seat in solo mode.
+// Every team gets a stable `id` (its seat index) — once state round-trips through Firestore
+// as JSON, object identity (team === otherTeam) no longer holds, so anything that needs to
+// reference "this team" elsewhere in state (playoff matches, draft queue, seeds) must use
+// this id instead. See game/rehydrate.js, which relinks object references by id after sync.
 export function buildTeams(state, teamSeats) {
-  state.teams = teamSeats.map((seat) => ({
+  state.teams = teamSeats.map((seat, id) => ({
+    id,
     name: seat.name,
     human: seat.human,
     ownerUid: seat.ownerUid ?? null,
@@ -165,9 +170,7 @@ export function startPlayoffs(state) {
   state.phase = 'playoffs';
   state.playoff = {
     activeMatchIndex: null,
-    useAdvantage: false,
-    useCard: false,
-    useInjuryPrevention: false,
+    cardChoices: {},
     matches: [
       { label: 'Quarterfinal 1', a: seedTeam(state, 1), b: seedTeam(state, 8), result: null },
       { label: 'Quarterfinal 2', a: seedTeam(state, 4), b: seedTeam(state, 5), result: null },

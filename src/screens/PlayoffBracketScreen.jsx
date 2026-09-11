@@ -1,6 +1,6 @@
 import { matchTeams, isMatchUnlocked, teamOutput } from '../game/matchup';
 
-function TeamColumn({ team }) {
+function TeamColumn({ team, isMine }) {
   if (!team) {
     return <div style={{ flex: 1, minWidth: 0 }}><p className="lede" style={{ marginBottom: 0 }}>TBD</p></div>;
   }
@@ -8,7 +8,7 @@ function TeamColumn({ team }) {
   const starters = team.activeIds.map((id) => team.hand.find((h) => h.id === id));
   return (
     <div style={{ flex: 1, minWidth: 0 }}>
-      <div className="card-name-lg" style={{ marginBottom: 6, fontSize: 16 }}>{team.name}</div>
+      <div className="card-name-lg" style={{ marginBottom: 6, fontSize: 16, color: isMine ? 'var(--accent)' : undefined }}>{team.name}</div>
       <div className="active-tile-row" style={{ marginBottom: 8, gap: 5 }}>
         {starters.map((c) => (
           <div key={c.id} className={'active-tile pos-' + c.position} style={{ width: 50, height: 50, borderRadius: 10 }}>
@@ -27,7 +27,7 @@ function TeamColumn({ team }) {
   );
 }
 
-export default function PlayoffBracketScreen({ state, actions }) {
+export default function PlayoffBracketScreen({ state, actions, myTeamId }) {
   const matches = state.playoff.matches;
   const allDone = matches.every((m) => m.result);
 
@@ -46,8 +46,8 @@ export default function PlayoffBracketScreen({ state, actions }) {
             ) : (
               <>
                 <div style={{ display: 'flex', gap: 14 }}>
-                  <TeamColumn team={a} />
-                  <TeamColumn team={b} />
+                  <TeamColumn team={a} isMine={a && a.id === myTeamId} />
+                  <TeamColumn team={b} isMine={b && b.id === myTeamId} />
                 </div>
                 {m.result ? (
                   <>

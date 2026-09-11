@@ -1,8 +1,8 @@
 import PlayerCard from '../components/PlayerCard';
 import { rosterSalary, formatCoins } from '../game/economy';
 
-export default function FreeAgencyScreen({ state, actions }) {
-  const team = state.teams[0];
+export default function FreeAgencyScreen({ state, actions, myTeamId }) {
+  const team = state.teams[myTeamId];
   const openSlots = 9 - team.hand.length;
   const total9 = rosterSalary(team);
   const overCap = total9 > team.seasonCap;
@@ -28,13 +28,13 @@ export default function FreeAgencyScreen({ state, actions }) {
           </>
         )}
         <button className="secondary" style={{ width: '100%', marginBottom: 14 }} onClick={() => {
-          const res = actions.signReplacement();
+          const res = actions.signReplacement(myTeamId);
           if (res && res.ok === false) alert(res.msg);
         }}>Sign Undrafted Talent</button>
         <h2>Free Agent Pool ({state.freeAgents.length})</h2>
         {state.freeAgents.length ? state.freeAgents.map((c) => (
           <PlayerCard key={c.id} card={c} draftStyle onClick={() => {
-            const res = actions.signFreeAgent(c.id);
+            const res = actions.signFreeAgent(c.id, myTeamId);
             if (res && res.ok === false) alert(res.msg);
           }} />
         )) : <p className="lede">Pool is empty right now.</p>}

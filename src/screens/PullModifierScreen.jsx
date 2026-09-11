@@ -21,15 +21,15 @@ function ModifierCard({ card }) {
   );
 }
 
-export default function PullModifierScreen({ state, actions }) {
-  const team = state.teams[0];
+export default function PullModifierScreen({ state, actions, myTeamId }) {
+  const team = state.teams[myTeamId];
   return (
     <>
       <div className="screen">
         <h1>Matchup Card — Season {state.season}</h1>
         <p className="lede">Pull one Matchup Modifier card for the season. It stays with you the whole season, can't be traded or returned, and a fresh one is dealt next season.</p>
         {!team.matchupCard ? (
-          <button className="primary" style={{ width: '100%', padding: 18, margin: '16px 0', fontSize: 16 }} onClick={actions.pullMatchupCard}>Pull Card</button>
+          <button className="primary" style={{ width: '100%', padding: 18, margin: '16px 0', fontSize: 16 }} onClick={() => actions.pullMatchupCard(myTeamId)}>Pull Card</button>
         ) : (
           <ModifierCard card={team.matchupCard} />
         )}
