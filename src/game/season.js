@@ -163,7 +163,7 @@ export function lockSeasonAndSeed(state) {
 export function startPlayoffs(state) {
   state.phase = 'playoffs';
   state.playoff = {
-    stage: 0,
+    activeMatchIndex: null,
     useAdvantage: false,
     useCard: false,
     useInjuryPrevention: false,

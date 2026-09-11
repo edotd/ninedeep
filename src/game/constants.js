@@ -104,6 +104,6 @@ export const MATCHUP_MODIFIER_TYPES = [
   { name: 'Focused Film Session', category: 'buff', weight: 1, flavor: 'Extra film study sharpens the defense.', playable: true, needsValue: false },
   { name: 'Favorable Schedule', category: 'buff', weight: 1, flavor: 'An easier slate lies ahead.', playable: false, passive: 'seeding' },
   { name: 'Team Chemistry', category: 'buff', weight: 1, flavor: 'This roster just clicks.', playable: false, passive: 'bench' },
-  { name: 'Strategy Advantage', category: 'buff', weight: 1, flavor: 'A tactical edge, prepared well in advance.', playable: true, needsValue: false },
+  { name: 'Strategic Advantage', category: 'buff', weight: 1, flavor: 'A tactical edge, prepared well in advance.', playable: true, needsValue: false },
   { name: 'Divine Intervention', category: 'buff', weight: 1, flavor: 'The basketball gods are in your favor.', playable: true, needsValue: true, valueDie: 10 },
 ];

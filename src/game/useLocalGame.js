@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useReducer, useRef } from 'react';
-import { newEraState, signFreeAgent, signReplacement, finishFreeAgency, proceedFromResults } from './season';
+import { newEraState, signFreeAgent, signReplacement, finishFreeAgency, proceedFromResults, finishPlayoffs } from './season';
 import { draftPick, tradeDown } from './draft';
 import * as engine from './engine';
 
@@ -36,7 +36,9 @@ export function useLocalGame() {
       toggleCardPlay: wrap(engine.toggleCardPlay),
       toggleInjuryPrevention: wrap(engine.toggleInjuryPrevention),
       rollCurrentMatchup: wrap(engine.rollCurrentMatchup),
-      advancePlayoff: wrap(engine.advancePlayoff),
+      openSeries: wrap(engine.openSeries),
+      closeSeries: wrap(engine.closeSeries),
+      finishPlayoffs: wrap(finishPlayoffs),
       openGlossary: wrap(engine.openGlossary),
       closeGlossary: wrap(engine.closeGlossary),
       openLeague: wrap(engine.openLeague),

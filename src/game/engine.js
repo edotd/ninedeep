@@ -10,7 +10,7 @@ import { finalizeCap, rollMarketCapAdj } from './economy';
 import { autoSelectFive, validateLineup } from './roster';
 import {
   buildStarPool, buildTeams, defaultSoloSeats, dealHands, initFrontOffice,
-  initSeasonModifierCards, lockSeasonAndSeed, startPlayoffs, finishPlayoffs,
+  initSeasonModifierCards, lockSeasonAndSeed, startPlayoffs,
 } from './season';
 import { checkInjury, playCardEffect, playMatchup, wantsAdvantage } from './matchup';
 
@@ -88,12 +88,19 @@ export function beginPlayoffs(state) {
   startPlayoffs(state);
 }
 
+export function openSeries(state, matchIndex) {
+  state.playoff.activeMatchIndex = matchIndex;
+}
+export function closeSeries(state) {
+  state.playoff.activeMatchIndex = null;
+}
+
 export function toggleAdvantage(state) { state.playoff.useAdvantage = !state.playoff.useAdvantage; }
 export function toggleCardPlay(state) { state.playoff.useCard = !state.playoff.useCard; }
 export function toggleInjuryPrevention(state) { state.playoff.useInjuryPrevention = !state.playoff.useInjuryPrevention; }
 
 export function rollCurrentMatchup(state) {
-  const m = state.playoff.matches[state.playoff.stage];
+  const m = state.playoff.matches[state.playoff.activeMatchIndex];
   if (m.from) {
     m.a = state.playoff.matches[m.from[0]].result.winner;
     m.b = state.playoff.matches[m.from[1]].result.winner;
@@ -136,11 +143,6 @@ export function rollCurrentMatchup(state) {
   state.playoff.useAdvantage = false;
   state.playoff.useCard = false;
   state.playoff.useInjuryPrevention = false;
-}
-
-export function advancePlayoff(state) {
-  state.playoff.stage++;
-  if (state.playoff.stage >= state.playoff.matches.length) { finishPlayoffs(state); }
 }
 
 export function openGlossary(state) {

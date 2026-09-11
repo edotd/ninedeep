@@ -38,6 +38,20 @@ export function teamOutput(team) {
   return { off, def, bench, total: off + def + bench };
 }
 
+// Resolves a bracket match's teams for display without mutating state — a semifinal/final
+// shows its real teams once both feeder matchups are decided, even before it's been opened.
+export function matchTeams(matches, m) {
+  const a = m.a || (m.from && matches[m.from[0]].result ? matches[m.from[0]].result.winner : null);
+  const b = m.b || (m.from && matches[m.from[1]].result ? matches[m.from[1]].result.winner : null);
+  return { a, b };
+}
+
+// A match is playable once it has no dependency (quarterfinals) or both of its feeder
+// matches have results (semifinals/final) — matches within a round can be played in any order.
+export function isMatchUnlocked(matches, m) {
+  return !m.from || (!!matches[m.from[0]].result && !!matches[m.from[1]].result);
+}
+
 export function playMatchup(a, b, advA, advB, idsA, idsB, extraA, extraB) {
   extraA = extraA || { offDelta: 0, defDelta: 0, leagueMod: 0 };
   extraB = extraB || { offDelta: 0, defDelta: 0, leagueMod: 0 };
@@ -118,10 +132,10 @@ export function playCardEffect(user, target, targetIds, playoff) {
   } else if (card.name === 'Focused Film Session') {
     result.userDefDelta = 2;
     result.note = user.name + ' played Focused Film Session — Defense up.';
-  } else if (card.name === 'Strategy Advantage') {
+  } else if (card.name === 'Strategic Advantage') {
     result.userOffDelta = 2;
     result.userDefDelta = 2;
-    result.note = user.name + ' played Strategy Advantage — Offense and Defense up.';
+    result.note = user.name + ' played Strategic Advantage — Offense and Defense up.';
   } else if (card.name === 'Divine Intervention') {
     result.userLeagueMod = card.value;
     result.note = user.name + ' played Divine Intervention — +' + card.value + ' League Modifier.';

@@ -34,7 +34,7 @@ const PLAYABLE_CARD_NOTES = {
   'Player Suspension': "Playable — target an opponent: rolls a d10 against the card's value, and on a low roll forces one of their random active players out for this matchup (bench subs in if available).",
   'Biased Officiating': 'Playable — target an opponent to cut their Offense or Defense (whichever gets hit is random) by a flat 2.',
   'Focused Film Session': 'Playable — play it on your own team to add +2 to your Defense for this matchup.',
-  'Strategy Advantage': 'Playable — play it on your own team to add +2 to both your Offense and Defense for this matchup.',
+  'Strategic Advantage': 'Playable — play it on your own team to add +2 to both your Offense and Defense for this matchup.',
   'Divine Intervention': "Playable — play it on your own team to add the card's value as a flat League Modifier to your final score.",
 };
 
