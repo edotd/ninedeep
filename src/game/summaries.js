@@ -23,3 +23,21 @@ export function fanbaseSummary(team) {
   }
   return s;
 }
+
+// Plain-language description of what a playable Matchup Modifier card actually does,
+// matching its implementation in game/matchup.js's playCardEffect.
+const PLAYABLE_CARD_NOTES = {
+  'Injury (Minor)': 'Playable — target an opponent to force one of their random active players out for this matchup (a same-position bench player subs in if they have one). Blocked only if the target holds an Injury Prevention card ready with a high enough value.',
+  'Injury (Major)': 'Playable — target an opponent to force one of their random active players out for this matchup (a same-position bench player subs in if they have one). Blocked only if the target holds an Injury Prevention card ready with a high enough value.',
+  'Distraction (External)': "Playable — target an opponent to cut their Offense or Defense modifier (whichever gets hit is random) by the card's value percent.",
+  'Distraction (Internal)': "Playable — target an opponent to cut their Offense or Defense modifier (whichever gets hit is random) by the card's value percent.",
+  'Player Suspension': "Playable — target an opponent: rolls a d10 against the card's value, and on a low roll forces one of their random active players out for this matchup (bench subs in if available).",
+  'Biased Officiating': 'Playable — target an opponent to cut their Offense or Defense (whichever gets hit is random) by a flat 2.',
+  'Focused Film Session': 'Playable — play it on your own team to add +2 to your Defense for this matchup.',
+  'Strategy Advantage': 'Playable — play it on your own team to add +2 to both your Offense and Defense for this matchup.',
+  'Divine Intervention': "Playable — play it on your own team to add the card's value as a flat League Modifier to your final score.",
+};
+
+export function matchupCardEffectNote(card) {
+  return PLAYABLE_CARD_NOTES[card.name] || 'Playable — choose when to use it against an opponent.';
+}

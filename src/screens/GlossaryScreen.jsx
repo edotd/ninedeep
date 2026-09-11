@@ -1,6 +1,7 @@
 import { ARCHETYPES, POSITIONS, POSITION_MOD, TIERS, LEAGUE_ACCOLADES, COACH_ARCHETYPES, COACH_MODIFIERS, FANBASE_TYPES, MATCHUP_MODIFIER_TYPES, PLAYER_AGE_MIN, PLAYER_AGE_MAX, PLAYER_PRIME_START, PLAYER_PRIME_BASE_END, COACH_AGE_MIN, COACH_AGE_MAX } from '../game/constants';
 import { formatCoins } from '../game/economy';
 import { CAREER_LEVELS } from '../game/aging';
+import { matchupCardEffectNote } from '../game/summaries';
 
 function archetypeStatRange(archetype, stat) {
   const values = POSITIONS.map((p) => archetype.base[stat] + POSITION_MOD[p][stat]);
@@ -172,7 +173,7 @@ export default function GlossaryScreen({ state, actions }) {
           if (t.reactive) roleNote = "Reactive — its holder decides whether to hold it ready before a matchup; if targeted by an Injury card while ready, it blocks the removal (when its value clears the Injury's).";
           else if (t.passive === 'bench') roleNote = 'Passive — boosts bench score all season.';
           else if (t.passive === 'seeding') roleNote = 'Passive — boosts seeding roll this season.';
-          else roleNote = 'Playable — choose when to use it against an opponent.';
+          else roleNote = matchupCardEffectNote(t);
           return (
             <div key={t.name} className="matchup-box">
               <div className="matchup-title" style={{ color: catColor }}>{t.name}</div>

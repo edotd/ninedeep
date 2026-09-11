@@ -1,10 +1,12 @@
+import { matchupCardEffectNote } from '../game/summaries';
+
 function ModifierCard({ card }) {
   const catColor = card.category === 'debuff' ? 'var(--bad)' : 'var(--good)';
   let roleNote;
   if (card.reactive) roleNote = "Reactive — hold it ready before a matchup; if you're targeted by an Injury card while ready, it blocks the removal (when its value clears the Injury's).";
   else if (card.passive === 'bench') roleNote = 'Passive — boosts your bench score every matchup this season.';
   else if (card.passive === 'seeding') roleNote = 'Passive — boosts your seeding roll this season.';
-  else roleNote = 'Playable — choose to use it against your opponent during a playoff matchup.';
+  else roleNote = matchupCardEffectNote(card);
   return (
     <div className="matchup-box">
       <div className="matchup-title" style={{ color: catColor }}>{card.name}</div>
