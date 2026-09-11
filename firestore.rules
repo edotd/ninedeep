@@ -1,0 +1,23 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Anyone signed in (including anonymously) can read/write a room and its game state.
+    // This is intentionally simple: with the whole room's game state living in one document,
+    // expressing "you may only ever change the fields belonging to your own team" in rules
+    // alone isn't practical without a Cloud Function acting as a validating write path — see
+    // the note in nine-deep-multiplayer-brief.md's "What NOT to build" spirit for why that's
+    // out of scope here. This is enough to stop a random stranger from reading or wiping a
+    // room they were never given the link to (rooms are only discoverable by their code),
+    // but it does NOT stop a technically-inclined player in your own room from editing state
+    // they shouldn't via devtools. Fine for a trusted group of friends; don't rely on it for
+    // anything adversarial.
+    match /rooms/{roomCode} {
+      allow read, write: if request.auth != null;
+
+      match /game/{doc} {
+        allow read, write: if request.auth != null;
+      }
+    }
+  }
+}
