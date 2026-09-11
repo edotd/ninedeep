@@ -77,6 +77,15 @@ export const AI_NAMES = ['Ironclad Capital', 'Harborline Holdings', 'Vantage Poi
 export const CHAMPIONSHIP_BAR_MULT = 1.10;
 export const INJURY_CHANCE = 0.03;
 
+// Delay (ms) between successive Action Log entries appearing while a matchup rolls out.
+// "instant" reveals everything the moment Roll Dice is clicked, no animation at all.
+export const ACTION_LOG_SPEEDS = {
+  slow: 650,
+  normal: 400,
+  fast: 175,
+  instant: 0,
+};
+
 // Aging — players 20-40 with a 26-35 "Prime" Career Level window; coaches 40-65 with no
 // Career Level curve of their own. See game/aging.js for the bonus this drives.
 export const PLAYER_AGE_MIN = 20;

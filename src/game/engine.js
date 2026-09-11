@@ -140,6 +140,8 @@ export function rollCurrentMatchup(state) {
   m.result.injA = injA;
   m.result.injB = injB;
   m.result.cardNotes = cardNotes;
+  m.result.aExtra = extraA;
+  m.result.bExtra = extraB;
   state.playoff.useAdvantage = false;
   state.playoff.useCard = false;
   state.playoff.useInjuryPrevention = false;

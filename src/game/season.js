@@ -18,6 +18,7 @@ export function newEraState() {
     settings: {
       injuryChance: INJURY_CHANCE,
       championshipBarMult: CHAMPIONSHIP_BAR_MULT,
+      actionLogSpeed: 'normal',
     },
   };
 }

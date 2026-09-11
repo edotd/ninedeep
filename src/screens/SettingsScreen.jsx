@@ -1,3 +1,10 @@
+const ACTION_LOG_SPEED_OPTIONS = [
+  { value: 'slow', label: 'Slow' },
+  { value: 'normal', label: 'Normal' },
+  { value: 'fast', label: 'Fast' },
+  { value: 'instant', label: 'Instant' },
+];
+
 export default function SettingsScreen({ state, actions }) {
   const s = state.settings;
   return (
@@ -38,6 +45,22 @@ export default function SettingsScreen({ state, actions }) {
             }}
           />
           <div className="pull-extra">The Finals winner's rating must clear (playoff-field average rating × this multiplier) to be crowned champion.</div>
+        </div>
+        <div className="pull-slot">
+          <div className="pull-label">Action Log Speed</div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {ACTION_LOG_SPEED_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                className={s.actionLogSpeed === opt.value ? 'primary' : 'secondary'}
+                style={{ flex: 1, padding: '10px 6px', fontSize: 13 }}
+                onClick={() => actions.updateSettings({ actionLogSpeed: opt.value })}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          <div className="pull-extra">How quickly a playoff matchup's Action Log plays out entries — from dice rolls to injuries to card plays. Instant skips the animation entirely.</div>
         </div>
       </div>
       <div className="bottombar">

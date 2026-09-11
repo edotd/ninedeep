@@ -1,21 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
-import MatchupBox, { FULL_REVEAL } from '../components/MatchupBox';
+import MatchupBox, { buildMatchEvents } from '../components/MatchupBox';
 import { matchTeams } from '../game/matchup';
-
-// Delays (ms after clicking Roll Dice) at which each successive reveal stage appears —
-// die, then its bonus, category by category, so the roll reads as a sequence rather than
-// a single instant result.
-const STAGE_DELAYS = [300, 650, 1000, 1350, 1700, 2050];
+import { ACTION_LOG_SPEEDS } from '../game/constants';
 
 export default function PlayoffSeriesScreen({ state, actions }) {
   const p = state.playoff;
   const idx = p.activeMatchIndex;
   const m = p.matches[idx];
-  const [revealStage, setRevealStage] = useState(m.result ? FULL_REVEAL : 0);
+  const [revealIndex, setRevealIndex] = useState(m.result ? Infinity : 0);
   const timersRef = useRef([]);
 
   useEffect(() => {
-    setRevealStage(m.result ? FULL_REVEAL : 0);
+    setRevealIndex(m.result ? Infinity : 0);
     return () => timersRef.current.forEach(clearTimeout);
   }, [idx]);
 
@@ -27,12 +23,25 @@ export default function PlayoffSeriesScreen({ state, actions }) {
 
   const handleRoll = () => {
     actions.rollCurrentMatchup();
-    setRevealStage(0);
+    // m is the same match object React already holds a reference to — rollCurrentMatchup
+    // mutates m.result in place, so it's already populated here, before the next render.
+    const events = buildMatchEvents(m.result);
+    const delay = ACTION_LOG_SPEEDS[state.settings.actionLogSpeed] ?? ACTION_LOG_SPEEDS.normal;
     timersRef.current.forEach(clearTimeout);
-    timersRef.current = STAGE_DELAYS.map((delay, i) => setTimeout(() => setRevealStage(i + 1), delay));
+    if (delay === 0) {
+      setRevealIndex(events.length);
+    } else {
+      setRevealIndex(0);
+      timersRef.current = events.map((_, i) => setTimeout(() => setRevealIndex(i + 1), delay * (i + 1)));
+    }
   };
 
-  const rolling = m.result && revealStage < FULL_REVEAL;
+  const handleSkip = () => {
+    timersRef.current.forEach(clearTimeout);
+    setRevealIndex(Infinity);
+  };
+
+  const rolling = m.result && revealIndex < buildMatchEvents(m.result).length;
 
   return (
     <div className="screen">
@@ -73,7 +82,7 @@ export default function PlayoffSeriesScreen({ state, actions }) {
         </>
       ) : (
         <>
-          <MatchupBox title={m.label} m={m.result} revealStage={revealStage} />
+          <MatchupBox title={m.label} m={m.result} revealIndex={revealIndex} onSkip={rolling ? handleSkip : undefined} />
           <button
             className="primary"
             disabled={rolling}
