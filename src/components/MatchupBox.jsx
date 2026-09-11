@@ -68,9 +68,21 @@ export default function MatchupBox({ title, m, revealStage = FULL_REVEAL }) {
         side={{ OffDie: m.bOffDie, OffMod: m.bOffMod, OffSides: m.bOffSides, DefDie: m.bDefDie, DefMod: m.bDefMod, DefSides: m.bDefSides, Bench: m.bBench, LeagueMod: m.bLeagueMod, Sum: m.bSum }}
         name={m.b.name} isWinner={m.winner === m.b} advantage={m.advB} injury={m.injB} revealStage={revealStage}
       />
-      {revealStage >= FULL_REVEAL && m.cardNotes && m.cardNotes.length > 0 && m.cardNotes.map((n, i) => (
-        <div key={i} className="statusline bad" style={{ marginTop: 6 }}>🃏 {n}</div>
-      ))}
+      {revealStage >= FULL_REVEAL && m.cardNotes && m.cardNotes.length > 0 && (
+        <div className="card-log">
+          {m.cardNotes.map((n, i) => {
+            const idx = n.text.indexOf(n.cardName);
+            const before = idx >= 0 ? n.text.slice(0, idx) : n.text;
+            const after = idx >= 0 ? n.text.slice(idx + n.cardName.length) : '';
+            return (
+              <div key={i} className="card-log-entry">
+                <span className="card-log-bullet">🃏</span>
+                <span>{before}<span className="card-log-name">{n.cardName}</span>{after}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

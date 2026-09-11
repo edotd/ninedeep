@@ -11,6 +11,7 @@ import LineupScreen from './screens/LineupScreen';
 import StandingsScreen from './screens/StandingsScreen';
 import PlayoffsScreen from './screens/PlayoffsScreen';
 import ResultsScreen from './screens/ResultsScreen';
+import DraftScreen from './screens/DraftScreen';
 import FreeAgencyScreen from './screens/FreeAgencyScreen';
 import EraEndScreen from './screens/EraEndScreen';
 
@@ -22,6 +23,7 @@ const SCREENS = {
   standings: StandingsScreen,
   playoffs: PlayoffsScreen,
   results: ResultsScreen,
+  draft: DraftScreen,
   freeagency: FreeAgencyScreen,
   era_end: EraEndScreen,
 };

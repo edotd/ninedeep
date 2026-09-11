@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useReducer, useRef } from 'react';
 import { newEraState, signFreeAgent, signReplacement, finishFreeAgency, proceedFromResults } from './season';
+import { draftPick, tradeDown } from './draft';
 import * as engine from './engine';
 
 // Solo-mode game hook: holds a single mutable state object (mirrors the original `G`) in a
@@ -44,6 +45,8 @@ export function useLocalGame() {
       closeSettings: wrap(engine.closeSettings),
       updateSettings: wrap(engine.updateSettings),
       proceedFromResults: wrap(proceedFromResults),
+      draftPick: wrap(draftPick),
+      tradeDown: wrap(tradeDown),
       signFreeAgent: wrap((state, cardId) => signFreeAgent(state, cardId, 0)),
       signReplacement: wrap((state) => signReplacement(state, 0)),
       finishFreeAgency: wrap(finishFreeAgency),

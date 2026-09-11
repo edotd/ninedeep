@@ -3,6 +3,7 @@ import { shuffle, weightedPick } from './rng';
 import { makeCard, randomArch, cardTotal, neededPosition, drawCoachCard, applyCoachRetention, drawMatchupModifierCard } from './cards';
 import { finalizeCap, rosterSalary, rollMarketCapAdj } from './economy';
 import { autoSelectFive, effectiveRating } from './roster';
+import { startDraft } from './draft';
 
 export function newEraState() {
   return {
@@ -226,7 +227,7 @@ export function proceedFromResults(state) {
     });
     team.hand = kept;
   });
-  state.phase = 'freeagency';
+  startDraft(state);
 }
 
 export function signFreeAgent(state, cardId, teamIdx) {

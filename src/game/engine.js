@@ -119,14 +119,14 @@ export function rollCurrentMatchup(state) {
     idsB = res.targetIds;
     extraA.offDelta += res.userOffDelta; extraA.defDelta += res.userDefDelta; extraA.leagueMod += res.userLeagueMod;
     extraB.offDelta += res.targetOffDelta; extraB.defDelta += res.targetDefDelta;
-    if (res.note) cardNotes.push(res.note);
+    if (res.note) cardNotes.push({ text: res.note, cardName: res.cardName });
   }
   if (bPlays) {
     const res = playCardEffect(m.b, m.a, idsA, state.playoff);
     idsA = res.targetIds;
     extraB.offDelta += res.userOffDelta; extraB.defDelta += res.userDefDelta; extraB.leagueMod += res.userLeagueMod;
     extraA.offDelta += res.targetOffDelta; extraA.defDelta += res.targetDefDelta;
-    if (res.note) cardNotes.push(res.note);
+    if (res.note) cardNotes.push({ text: res.note, cardName: res.cardName });
   }
 
   m.result = playMatchup(m.a, m.b, advA, advB, idsA, idsB, extraA, extraB);

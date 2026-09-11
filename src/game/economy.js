@@ -18,11 +18,12 @@ export function rollMarketCapAdj(market) {
 export function finalizeCap(team, season) {
   const base = baseCap(season);
   const attendanceMult = 0.9 + (team.attendance !== undefined ? team.attendance : 0.5) * 0.2;
-  let cap = (base + (team.market ? team.market.capAdj : 0)) * attendanceMult - (team.lastOverage || 0);
+  let cap = (base + (team.market ? team.market.capAdj : 0) + (team.draftTradeBonus || 0)) * attendanceMult - (team.lastOverage || 0);
   cap = Math.max(cap, Math.round(base * 0.7));
   cap = Math.round(cap * 2) / 2;
   team.seasonCap = cap;
   team.lastOverage = 0;
+  team.draftTradeBonus = 0;
 }
 
 export function rosterSalary(team) {

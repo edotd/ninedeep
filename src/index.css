@@ -99,6 +99,12 @@ p.lede{color:var(--muted);font-size:14px;line-height:1.5;margin:0 0 14px;}
 .dice-cell.total b{color:var(--ink);font-size:15px;font-family:var(--mono);}
 .dice-row.winner .dice-cell.total b{color:var(--accent);}
 
+.card-log{margin-top:8px;padding:6px 10px;background:var(--panel2);border:1px solid var(--line);border-radius:4px;}
+.card-log-entry{display:flex;align-items:flex-start;gap:7px;font-size:12px;color:var(--ink);padding:4px 0;}
+.card-log-entry + .card-log-entry{border-top:1px dashed var(--line);}
+.card-log-bullet{flex-shrink:0;}
+.card-log-name{color:var(--accent);font-weight:700;}
+
 .banner{padding:14px;border-radius:4px;font-family:var(--serif);font-size:16px;text-align:center;margin:14px 0;border:1px solid;}
 .banner.good{background:rgba(111,162,135,.12);border-color:var(--good);color:var(--good);}
 .banner.bad{background:rgba(181,86,63,.12);border-color:var(--bad);color:var(--bad);}

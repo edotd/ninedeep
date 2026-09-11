@@ -84,7 +84,7 @@ function isInjuryCard(name) {
 export function playCardEffect(user, target, targetIds, playoff) {
   const card = user.matchupCard;
   card.used = true;
-  const result = { targetIds, userOffDelta: 0, userDefDelta: 0, userLeagueMod: 0, targetOffDelta: 0, targetDefDelta: 0, note: null };
+  const result = { targetIds, userOffDelta: 0, userDefDelta: 0, userLeagueMod: 0, targetOffDelta: 0, targetDefDelta: 0, note: null, cardName: card.name };
 
   if (isInjuryCard(card.name)) {
     const ip = target.matchupCard;
