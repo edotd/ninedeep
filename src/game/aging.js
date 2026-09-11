@@ -1,6 +1,6 @@
 import {
-  PLAYER_AGE_MIN, PLAYER_AGE_MAX, PLAYER_PRIME_START, PLAYER_PEAK_START, PLAYER_PEAK_END,
-  PLAYER_PRIME_BASE_END, COACH_AGE_MIN, COACH_AGE_MAX, EXTENDED_PRIME_MIN, EXTENDED_PRIME_MAX,
+  PLAYER_AGE_MIN, PLAYER_AGE_MAX, PLAYER_PRIME_START, PLAYER_PRIME_BASE_END,
+  COACH_AGE_MIN, COACH_AGE_MAX,
 } from './constants';
 
 export function randomPlayerAge() {
@@ -9,57 +9,34 @@ export function randomPlayerAge() {
 export function randomCoachAge() {
   return COACH_AGE_MIN + Math.floor(Math.random() * (COACH_AGE_MAX - COACH_AGE_MIN + 1));
 }
-export function randomExtendedPrime() {
-  return EXTENDED_PRIME_MIN + Math.floor(Math.random() * (EXTENDED_PRIME_MAX - EXTENDED_PRIME_MIN + 1));
-}
 
-// Extended Prime (1-10) pushes back the age where prime tapers into decline — at the
-// minimum value prime ends at PLAYER_PRIME_BASE_END (35); at the maximum it holds all
-// the way to PLAYER_AGE_MAX (40).
-function primeEnd(extendedPrime) {
-  const span = PLAYER_AGE_MAX - PLAYER_PRIME_BASE_END;
-  const t = (extendedPrime - EXTENDED_PRIME_MIN) / (EXTENDED_PRIME_MAX - EXTENDED_PRIME_MIN);
-  return PLAYER_PRIME_BASE_END + Math.round(t * span);
+// Career Level: a player's age bucket, each with its own output bonus range. A player's
+// exact spot within their bucket's range is fixed for their career (see careerRoll below,
+// rolled once at creation) — this is what used to be a separate "Extended Prime" stat;
+// it now shows up only as part of the Career Level bonus itself, not its own number.
+export const CAREER_LEVELS = {
+  Young: { min: 0.10, max: 0.40 },
+  Prime: { min: 0.50, max: 1.00 },
+  Declining: { min: -0.65, max: -0.10 },
+};
+
+export function careerLevel(age) {
+  if (age < PLAYER_PRIME_START) return 'Young';
+  if (age <= PLAYER_PRIME_BASE_END) return 'Prime';
+  return 'Declining';
 }
 
 function lerp(a, b, t) { return a + (b - a) * t; }
 
-// Performance multiplier applied to a player's stats based on age: ramps up approaching
-// prime, peaks at 30-32, then tapers — with Extended Prime stretching how long the taper
-// takes to arrive. Exact curve shape (0.80 at 20, 1.15 at peak, 0.70 at 40) is a design
-// choice, not something the original prototype specified.
-const YOUNG_MULT = 0.80;
-const PRIME_EDGE_MULT = 1.00;
-const PEAK_MULT = 1.15;
-const OLD_MULT = 0.70;
-
-export function ageMultiplier(age, extendedPrime) {
-  const a = Math.max(PLAYER_AGE_MIN, Math.min(PLAYER_AGE_MAX, age));
-  const end = primeEnd(extendedPrime);
-  if (a <= PLAYER_PRIME_START) {
-    const t = (a - PLAYER_AGE_MIN) / (PLAYER_PRIME_START - PLAYER_AGE_MIN);
-    return lerp(YOUNG_MULT, PRIME_EDGE_MULT, t);
-  }
-  if (a <= PLAYER_PEAK_START) {
-    const t = (a - PLAYER_PRIME_START) / (PLAYER_PEAK_START - PLAYER_PRIME_START);
-    return lerp(PRIME_EDGE_MULT, PEAK_MULT, t);
-  }
-  if (a <= PLAYER_PEAK_END) return PEAK_MULT;
-  if (a <= end) {
-    const t = (a - PLAYER_PEAK_END) / Math.max(1, end - PLAYER_PEAK_END);
-    return lerp(PEAK_MULT, PRIME_EDGE_MULT, t);
-  }
-  const t = (a - end) / Math.max(1, PLAYER_AGE_MAX - end);
-  return lerp(PRIME_EDGE_MULT, OLD_MULT, t);
+// careerRoll is a fixed 0-1 "quality" trait rolled once per card — higher always means a
+// better outcome for that bucket (least decline when Declining, most bonus when Young/Prime).
+export function careerBonus(age, careerRoll) {
+  const { min, max } = CAREER_LEVELS[careerLevel(age)];
+  return lerp(min, max, careerRoll);
 }
 
-// Display label for a player's current age phase.
-export function agePhase(age, extendedPrime) {
-  const end = primeEnd(extendedPrime);
-  if (age < PLAYER_PRIME_START) return 'Rising';
-  if (age >= PLAYER_PEAK_START && age <= PLAYER_PEAK_END) return 'Peak';
-  if (age <= end) return 'Prime';
-  return 'Declining';
+export function careerMultiplier(age, careerRoll) {
+  return 1 + careerBonus(age, careerRoll);
 }
 
 function clamp01(x) { return Math.max(0, Math.min(1, x)); }

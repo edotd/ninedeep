@@ -1,26 +1,26 @@
 import { formatCoins } from '../game/economy';
-import { agePhase } from '../game/aging';
+import { careerLevel, careerBonus } from '../game/aging';
 
-const PHASE_COLOR = {
-  Rising: 'var(--muted)',
-  Prime: 'var(--accent)',
-  Peak: 'var(--good)',
+const LEVEL_COLOR = {
+  Young: 'var(--muted)',
+  Prime: 'var(--good)',
   Declining: 'var(--bad)',
 };
 
 export default function PlayerCard({ card, onClick, selected, draftStyle, rosterLabel }) {
   const pillLabel = rosterLabel || (selected ? 'Selected' : null);
   const pillClass = rosterLabel === 'Bench' ? 'bench-pill' : 'active-pill';
-  const phase = agePhase(card.age, card.extendedPrime);
-  const phaseColor = PHASE_COLOR[phase];
+  const level = careerLevel(card.age);
+  const bonus = careerBonus(card.age, card.careerRoll);
+  const levelColor = LEVEL_COLOR[level];
   return (
     <div className={'card pos-' + card.position + (selected ? ' selected' : '')} onClick={onClick}>
       <div className="card-top">
         <div>
           <div className="card-name card-name-lg">{card.archetype}</div>
-          <div className="card-sub">
-            {card.position} · Age {card.age} <span className="tier-pill">{card.tierName}</span>{' '}
-            <span className="tier-pill" style={{ color: phaseColor, borderColor: phaseColor }}>{phase}</span>
+          <div className="card-sub">{card.position} · Age {card.age} <span className="tier-pill">{card.tierName}</span></div>
+          <div className="card-sub" style={{ marginTop: 2 }}>
+            Career Level: <span style={{ color: levelColor, fontWeight: 600 }}>{level} ({bonus >= 0 ? '+' : ''}{bonus.toFixed(2)})</span>
           </div>
         </div>
         <div className="pill-stack">
@@ -44,7 +44,6 @@ export default function PlayerCard({ card, onClick, selected, draftStyle, roster
         <div className="meta-row">
           <div className="meta-cell"><b>{card.contract} Turn{card.contract === 1 ? '' : 's'}</b><span>Contract</span></div>
           <div className="meta-cell"><b>{formatCoins(card.salary)}</b><span>Salary</span></div>
-          <div className="meta-cell"><b>{card.extendedPrime}/10</b><span>Ext. Prime</span></div>
         </div>
       )}
     </div>

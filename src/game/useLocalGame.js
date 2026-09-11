@@ -24,6 +24,7 @@ export function useLocalGame() {
       pullFanbase: wrap(engine.pullFanbase),
       pullMarket: wrap(engine.pullMarket),
       proceedToSeason1: wrap(engine.proceedToSeason1),
+      proceedFromHand: wrap(engine.proceedFromHand),
       pullMatchupCard: wrap(engine.pullMatchupCard),
       proceedToLineupFromModifier: wrap(engine.proceedToLineupFromModifier),
       toggleActive: wrap(engine.toggleActive),

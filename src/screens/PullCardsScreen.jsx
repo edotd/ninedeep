@@ -16,7 +16,7 @@ function CoachCard({ coach }) {
         <div className="stat"><b>d{coach.offDie}</b><span>Off Die</span></div>
         <div className="stat"><b>d{coach.defDie}</b><span>Def Die</span></div>
         <div className="stat"><b>{coach.age}</b><span>Age</span></div>
-        <div className="stat"><b>{coach.playerRelationship}/10</b><span>Relationship</span></div>
+        <div className="stat"><b>{coach.playerRelationship}</b><span>Relationship</span></div>
       </div>
       <div className="meta-row"><div className="meta-cell"><b>{formatCoins(coach.salary)}</b><span>Salary</span></div></div>
       {coach.ability && <div className="statusline" style={{ marginTop: 8 }}>Ability: {coach.ability}</div>}
@@ -45,9 +45,7 @@ function Slot({ label, value, onPull, extra }) {
 export default function PullCardsScreen({ state, actions }) {
   const team = state.teams[0];
   const allPulled = team.coach && team.fanbase && team.market;
-  const marketExtra = team.market
-    ? (team.market.capAdj >= 0 ? `+${formatCoins(team.market.capAdj)} to cap each season` : `-${formatCoins(Math.abs(team.market.capAdj))} from cap each season`)
-    : '';
+  const marketExtra = team.market ? `+${formatCoins(team.market.capAdj)} to cap each season` : '';
   const fanbaseExtra = team.fanbase ? fanbaseSummary(team) + (team.fanbase.ability ? ' · ' + team.fanbase.ability : '') : '';
 
   return (
@@ -70,7 +68,7 @@ export default function PullCardsScreen({ state, actions }) {
         <Slot label="Market" value={team.market} onPull={actions.pullMarket} extra={marketExtra} />
       </div>
       <div className="bottombar">
-        <button className="primary" disabled={!allPulled} onClick={actions.proceedToSeason1}>Deal Hands &amp; Start Season 1</button>
+        <button className="primary" disabled={!allPulled} onClick={actions.proceedToSeason1}>Deal Hands</button>
       </div>
     </>
   );

@@ -8,6 +8,13 @@ export function formatCoins(n) {
   return '🪙' + text;
 }
 
+// Market size only ever helps the cap — roll a concrete boost within the market's range
+// once, at pull time, so it stays fixed for the rest of the era.
+export function rollMarketCapAdj(market) {
+  const v = market.capAdjMin + Math.random() * (market.capAdjMax - market.capAdjMin);
+  return Math.round(v * 2) / 2;
+}
+
 export function finalizeCap(team, season) {
   const base = baseCap(season);
   const attendanceMult = 0.9 + (team.attendance !== undefined ? team.attendance : 0.5) * 0.2;

@@ -1,6 +1,6 @@
 import { ARCHETYPES, POSITIONS, POSITION_MOD, COACH_ARCHETYPES, COACH_MODIFIERS, MATCHUP_MODIFIER_TYPES, PLAYER_RELATIONSHIP_MIN, PLAYER_RELATIONSHIP_MAX } from './constants';
 import { rollWithVariance, weightedPick } from './rng';
-import { randomPlayerAge, randomCoachAge, randomExtendedPrime, ageMultiplier } from './aging';
+import { randomPlayerAge, randomCoachAge, careerMultiplier } from './aging';
 
 // Card ids are generated from a counter stored on the shared game state (not a module-level
 // variable) so they stay unique across reconnects/reloads once state lives in Firestore.
@@ -43,7 +43,7 @@ export function makeCard(state, archName, position, tier) {
     contract,
     maxContract: contract,
     age: randomPlayerAge(),
-    extendedPrime: randomExtendedPrime(),
+    careerRoll: Math.random(),
   };
 }
 
@@ -54,11 +54,11 @@ export function randomArch() {
 export function randomPos() {
   return POSITIONS[Math.floor(Math.random() * 3)];
 }
-// Current effective ability, not raw talent: scaled by the player's age/Extended Prime
-// curve, so a card's on-court output rises and falls across the era as they age.
+// Current effective ability, not raw talent: scaled by the player's Career Level bonus,
+// so a card's on-court output rises and falls across the era as they age.
 export function cardTotal(c) {
   const raw = c.stats.SCO + c.stats.PLM + c.stats.REB + c.stats.DEF;
-  return Math.round(raw * ageMultiplier(c.age, c.extendedPrime));
+  return Math.round(raw * careerMultiplier(c.age, c.careerRoll));
 }
 
 export function neededPosition(team) {
@@ -97,8 +97,16 @@ export function drawCoachCard() {
     offDie,
     defDie,
     age: randomCoachAge(),
-    playerRelationship: PLAYER_RELATIONSHIP_MIN + Math.floor(Math.random() * (PLAYER_RELATIONSHIP_MAX - PLAYER_RELATIONSHIP_MIN + 1)),
+    playerRelationship: rollPlayerRelationship(mod.name),
   };
+}
+
+// A coach who's a Former Player relates to the roster better than most — bias their
+// baseline relationship roll up instead of drawing from the full 1-10 range.
+function rollPlayerRelationship(modifierName) {
+  const min = modifierName === 'Former Player' ? PLAYER_RELATIONSHIP_MIN + 3 : PLAYER_RELATIONSHIP_MIN;
+  const roll = min + Math.floor(Math.random() * (PLAYER_RELATIONSHIP_MAX - min + 1));
+  return Math.min(PLAYER_RELATIONSHIP_MAX, roll);
 }
 
 export function applyCoachRetention(team, coach) {

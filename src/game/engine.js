@@ -6,7 +6,7 @@
 import { drawCoachCard, applyCoachRetention, drawMatchupModifierCard } from './cards';
 import { weightedPick } from './rng';
 import { MARKETS, FANBASE_TYPES } from './constants';
-import { finalizeCap } from './economy';
+import { finalizeCap, rollMarketCapAdj } from './economy';
 import { autoSelectFive, validateLineup } from './roster';
 import {
   buildStarPool, buildTeams, defaultSoloSeats, dealHands, initFrontOffice,
@@ -38,7 +38,8 @@ export function pullFanbase(state) {
 export function pullMarket(state) {
   const team = state.teams[0];
   if (team.market) return;
-  team.market = weightedPick(MARKETS);
+  const def = weightedPick(MARKETS);
+  team.market = { name: def.name, capAdj: rollMarketCapAdj(def) };
   finalizeCap(team, state.season);
 }
 
@@ -47,6 +48,10 @@ export function proceedToSeason1(state) {
   if (!(team.coach && team.fanbase && team.market)) return;
   dealHands(state);
   state.teams.forEach((t) => { t.activeIds = autoSelectFive(t.hand); });
+  state.phase = 'pullhand';
+}
+
+export function proceedFromHand(state) {
   initSeasonModifierCards(state);
 }
 

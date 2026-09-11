@@ -9,7 +9,7 @@ export const ARCHETYPES = {
   'Playmaker':  { base: { SCO: 6, PLM: 9, REB: 2, DEF: 4 }, peak: 'PLM' },
   'Balanced':   { base: { SCO: 6, PLM: 6, REB: 6, DEF: 6 }, peak: 'SCO' },
   'Sniper':     { base: { SCO: 9, PLM: 2, REB: 2, DEF: 4 }, peak: 'SCO' },
-  'Board Man':  { base: { SCO: 3, PLM: 2, REB: 10, DEF: 5 }, peak: 'REB' },
+  'Rebounder':  { base: { SCO: 3, PLM: 2, REB: 10, DEF: 5 }, peak: 'REB' },
   'Defender':   { base: { SCO: 2, PLM: 3, REB: 5, DEF: 10 }, peak: 'DEF' },
 };
 
@@ -53,28 +53,27 @@ export const FANBASE_TYPES = [
   { name: 'Invested', attendanceBase: 0.85, weight: 20 },
   { name: 'Die Hard', attendanceBase: 0.95, weight: 10, ability: 'Once per season: gain Advantage on a matchup — roll twice on both dice and keep the higher of each.' },
 ];
+// Market size only ever adds to the cap — Small is the smallest boost, Large the biggest.
+// The actual capAdj on a team's market card is rolled within this range at pull time
+// (see economy.js rollMarketCapAdj), not a fixed number.
 export const MARKETS = [
-  { name: 'Large', weight: 20, capAdj: 1.5 },
-  { name: 'Basic', weight: 55, capAdj: 0 },
-  { name: 'Small', weight: 25, capAdj: -1.5 },
+  { name: 'Large', weight: 20, capAdjMin: 2.0, capAdjMax: 3.0 },
+  { name: 'Basic', weight: 55, capAdjMin: 1.0, capAdjMax: 2.0 },
+  { name: 'Small', weight: 25, capAdjMin: 0.5, capAdjMax: 1.0 },
 ];
 
 export const AI_NAMES = ['Ironclad Capital', 'Harborline Holdings', 'Vantage Point Group', 'Steel & Sycamore', 'Continental Ledger Co.', 'Northgate Ventures', 'Granite Peak Partners', 'Meridian Sports Partners', 'Cobalt Ridge Capital'];
 export const CHAMPIONSHIP_BAR_MULT = 1.10;
 export const INJURY_CHANCE = 0.03;
 
-// Aging — players 20-40 with a 26-35 "prime" window peaking at 30-32; coaches 40-65 with
-// no prime curve of their own. See game/aging.js for the performance curve this drives.
+// Aging — players 20-40 with a 26-35 "Prime" Career Level window; coaches 40-65 with no
+// Career Level curve of their own. See game/aging.js for the bonus this drives.
 export const PLAYER_AGE_MIN = 20;
 export const PLAYER_AGE_MAX = 40;
 export const PLAYER_PRIME_START = 26;
-export const PLAYER_PEAK_START = 30;
-export const PLAYER_PEAK_END = 32;
-export const PLAYER_PRIME_BASE_END = 35; // where prime tapers off at Extended Prime = 1
+export const PLAYER_PRIME_BASE_END = 35;
 export const COACH_AGE_MIN = 40;
 export const COACH_AGE_MAX = 65;
-export const EXTENDED_PRIME_MIN = 1;
-export const EXTENDED_PRIME_MAX = 10;
 export const PLAYER_RELATIONSHIP_MIN = 1;
 export const PLAYER_RELATIONSHIP_MAX = 10;
 

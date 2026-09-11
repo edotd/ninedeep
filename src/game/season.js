@@ -1,7 +1,7 @@
 import { TIERS, REPLACEMENT_TIER, AI_NAMES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_TYPES, MARKETS, PLAYER_AGE_MAX, COACH_AGE_MAX } from './constants';
 import { shuffle, weightedPick } from './rng';
 import { makeCard, randomArch, cardTotal, neededPosition, drawCoachCard, applyCoachRetention, drawMatchupModifierCard } from './cards';
-import { finalizeCap, rosterSalary } from './economy';
+import { finalizeCap, rosterSalary, rollMarketCapAdj } from './economy';
 import { autoSelectFive, effectiveRating } from './roster';
 
 export function newEraState() {
@@ -90,7 +90,8 @@ export function initFrontOffice(state) {
       team.fanbase = weightedPick(FANBASE_TYPES);
       team.attendance = team.fanbase.attendanceBase;
       refreshAdvantage(team);
-      team.market = weightedPick(MARKETS);
+      const marketDef = weightedPick(MARKETS);
+      team.market = { name: marketDef.name, capAdj: rollMarketCapAdj(marketDef) };
       finalizeCap(team, state.season);
     } else {
       team.coach = null;

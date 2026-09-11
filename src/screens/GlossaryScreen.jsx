@@ -1,5 +1,6 @@
-import { ARCHETYPES, POSITIONS, POSITION_MOD, TIERS, COACH_ARCHETYPES, COACH_MODIFIERS, FANBASE_TYPES, MATCHUP_MODIFIER_TYPES, PLAYER_AGE_MIN, PLAYER_AGE_MAX, PLAYER_PRIME_START, PLAYER_PEAK_START, PLAYER_PEAK_END, PLAYER_PRIME_BASE_END, COACH_AGE_MIN, COACH_AGE_MAX } from '../game/constants';
+import { ARCHETYPES, POSITIONS, POSITION_MOD, TIERS, COACH_ARCHETYPES, COACH_MODIFIERS, FANBASE_TYPES, MATCHUP_MODIFIER_TYPES, PLAYER_AGE_MIN, PLAYER_AGE_MAX, PLAYER_PRIME_START, PLAYER_PRIME_BASE_END, COACH_AGE_MIN, COACH_AGE_MAX } from '../game/constants';
 import { formatCoins } from '../game/economy';
+import { CAREER_LEVELS } from '../game/aging';
 
 function archetypeStatRange(archetype, stat) {
   const values = POSITIONS.map((p) => archetype.base[stat] + POSITION_MOD[p][stat]);
@@ -75,7 +76,7 @@ export default function GlossaryScreen({ state, actions }) {
             <div key={t.name} className="matchup-box">
               <div className="matchup-title">{t.name}</div>
               <div className="meta-row" style={{ borderTop: 'none', paddingTop: 0 }}>
-                <GlossaryStat label="Uniform" val={'x' + t.uniform.toFixed(2)} />
+                <GlossaryStat label="Base" val={'x' + t.uniform.toFixed(2)} />
                 <GlossaryStat label="Peak Stat" val={'x' + t.peak.toFixed(2)} />
                 <GlossaryStat label="Contract" val={`${contractMin}–${contractMax} Turns`} />
                 <GlossaryStat label="In Pool" val={t.count} />
@@ -88,12 +89,17 @@ export default function GlossaryScreen({ state, actions }) {
         })}
 
         <h2>Aging &amp; Experience</h2>
-        <p className="lede">Players are {PLAYER_AGE_MIN}–{PLAYER_AGE_MAX} years old. Their prime runs {PLAYER_PRIME_START}–{PLAYER_PRIME_BASE_END}, peaking at {PLAYER_PEAK_START}–{PLAYER_PEAK_END} — below {PLAYER_PRIME_START} they're still developing, above their prime they're declining. This shows up directly in a player's actual on-court output (their printed stat numbers never change, but how much they count for in matchups and seeding does), not just flavor text.</p>
-        <div className="matchup-box">
-          <div className="matchup-title">Extended Prime <span className="tier-pill">1–10</span></div>
-          <p className="lede" style={{ margin: '8px 0' }}>Every player card also carries an Extended Prime rating. The higher it is, the longer that player holds their peak form before declining — at 10, a player can stay near their best all the way to {PLAYER_AGE_MAX}; at 1, they taper off starting at {PLAYER_PRIME_BASE_END}.</p>
-        </div>
-        <p className="lede">Coaches are {COACH_AGE_MIN}–{COACH_AGE_MAX} years old, but don't have a prime curve of their own — age is just one input into a team's overall Experience rating (below).</p>
+        <p className="lede">Players are {PLAYER_AGE_MIN}–{PLAYER_AGE_MAX} years old. Career Level tracks where they are in their arc — Young (below {PLAYER_PRIME_START}), Prime ({PLAYER_PRIME_START}–{PLAYER_PRIME_BASE_END}), or Declining (above {PLAYER_PRIME_BASE_END}) — and each brings its own output bonus range. This shows up directly in a player's actual on-court output (their printed stat numbers never change, but how much they count for in matchups and seeding does), not just a label on the card.</p>
+        {Object.entries(CAREER_LEVELS).map(([name, r]) => (
+          <div key={name} className="matchup-box">
+            <div className="matchup-title">{name}</div>
+            <div className="meta-row" style={{ borderTop: 'none', paddingTop: 0 }}>
+              <GlossaryStat label="Bonus Range" val={`${r.min >= 0 ? '+' : ''}${r.min.toFixed(2)} to ${r.max >= 0 ? '+' : ''}${r.max.toFixed(2)}`} />
+            </div>
+          </div>
+        ))}
+        <p className="lede">Every player's exact spot within their bracket's range is fixed for their career — a strong Young prospect stays a strong performer once they hit Prime, and a graceful decliner falls off more slowly than most.</p>
+        <p className="lede">Coaches are {COACH_AGE_MIN}–{COACH_AGE_MAX} years old, but don't have a Career Level of their own — age is just one input into a team's overall Experience rating (below).</p>
         <div className="matchup-box">
           <div className="matchup-title">Player Relationship <span className="tier-pill">1–10</span></div>
           <p className="lede" style={{ margin: '8px 0' }}>Every coach has a Player Relationship rating — how well they connect with the roster. It adds a small Off/Def bonus on top of the coach's base bonuses: +0.5% per point, up to +5% at the maximum of 10.</p>

@@ -5,6 +5,7 @@ import GlossaryScreen from './screens/GlossaryScreen';
 import LeagueScreen from './screens/LeagueScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import PullCardsScreen from './screens/PullCardsScreen';
+import PullHandScreen from './screens/PullHandScreen';
 import PullModifierScreen from './screens/PullModifierScreen';
 import LineupScreen from './screens/LineupScreen';
 import StandingsScreen from './screens/StandingsScreen';
@@ -15,6 +16,7 @@ import EraEndScreen from './screens/EraEndScreen';
 
 const SCREENS = {
   pullcards: PullCardsScreen,
+  pullhand: PullHandScreen,
   pullmodifier: PullModifierScreen,
   lineup: LineupScreen,
   standings: StandingsScreen,
