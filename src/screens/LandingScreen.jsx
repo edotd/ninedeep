@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createRoom, joinRoom } from '../firebase/rooms';
 import { firebaseReady } from '../firebase/config';
 
@@ -9,6 +9,17 @@ export default function LandingScreen({ pendingJoinCode, onSolo, onEnterRoom }) 
   const [joinCode, setJoinCode] = useState(pendingJoinCode || '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+
+  // pendingJoinCode arrives from a URL query param, which App.jsx only reads after the
+  // initial render (inside an effect) — so it can still be empty on this component's first
+  // render. Sync tab/joinCode once it actually shows up, instead of only seeding useState's
+  // one-time initial value.
+  useEffect(() => {
+    if (pendingJoinCode) {
+      setTab('join');
+      setJoinCode(pendingJoinCode);
+    }
+  }, [pendingJoinCode]);
 
   const handleCreate = async () => {
     setError('');

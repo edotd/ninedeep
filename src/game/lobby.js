@@ -2,12 +2,18 @@
 // (phase: 'lobby', seats: [...]) rather than the full in-era game state, so they live
 // outside game/actionMap.js (which is shared with solo mode, which has no lobby at all).
 import { AI_NAMES } from './constants';
-import { buildStarPool, buildTeams, initFrontOffice } from './season';
+import { newEraState, buildStarPool, buildTeams, initFrontOffice } from './season';
 
+// One identity can only ever hold one seat — release any other seat this uid already
+// claimed first (a real player never has a reason to hold two; this mostly guards against
+// two browser tabs on the same device silently sharing one anonymous auth session).
 export function claimSeat(state, seatIndex, uid, name) {
   const seat = state.seats[seatIndex];
   if (!seat) return;
   if (seat.ownerUid && seat.ownerUid !== uid) return; // already taken by someone else
+  state.seats.forEach((s) => {
+    if (s.seatIndex !== seatIndex && s.ownerUid === uid) { s.ownerUid = null; s.name = ''; }
+  });
   seat.ownerUid = uid;
   seat.name = (name || '').trim().slice(0, 32) || `Player ${seatIndex + 1}`;
 }
@@ -30,6 +36,16 @@ export function startEraOnline(state, hostUid) {
   if (state.hostUid !== hostUid) return; // only the host can start the era
   if (!state.seats.some((s) => s.ownerUid)) return; // need at least one claimed seat
   const seats = teamSeatsFromLobby(state.seats);
+  // The lobby doc only ever had {phase, hostUid, seatCount, seats, settings} — fill in the
+  // rest of the base fields newEraState() normally provides (season, freeAgents, log,
+  // cardCounter) before running the same season-1 setup solo mode uses. Keep the lobby's
+  // settings rather than overwriting them with fresh defaults.
+  const base = newEraState();
+  state.season = base.season;
+  state.freeAgents = base.freeAgents;
+  state.lastExpiredPlayers = base.lastExpiredPlayers;
+  state.log = base.log;
+  state.cardCounter = base.cardCounter;
   buildStarPool(state);
   buildTeams(state, seats);
   initFrontOffice(state);
