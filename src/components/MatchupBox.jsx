@@ -4,6 +4,8 @@
 // MatchupRow and the Action Log below it, so the two stay in lockstep.
 export function buildMatchEvents(m) {
   const events = [];
+  if (m.hcaA) events.push({ kind: 'hca', team: 'a' });
+  if (m.hcaB) events.push({ kind: 'hca', team: 'b' });
   if (m.advA) events.push({ kind: 'advantage', team: 'a' });
   if (m.advB) events.push({ kind: 'advantage', team: 'b' });
   if (m.injA && m.injA.out) events.push({ kind: 'injury', team: 'a' });
@@ -13,7 +15,8 @@ export function buildMatchEvents(m) {
   events.push({ kind: 'roll', team: 'b', stat: 'off' });
   events.push({ kind: 'roll', team: 'a', stat: 'def' });
   events.push({ kind: 'roll', team: 'b', stat: 'def' });
-  events.push({ kind: 'bench' });
+  events.push({ kind: 'bench', team: 'a' });
+  events.push({ kind: 'bench', team: 'b' });
   events.push({ kind: 'total' });
   return events;
 }
@@ -23,6 +26,10 @@ function dieText(roll, sides) {
 }
 
 function eventLogEntry(m, ev) {
+  if (ev.kind === 'hca') {
+    const team = ev.team === 'a' ? m.a : m.b;
+    return { icon: '🏟️', text: `${team.name} has Home Court Advantage this matchup — +2 Offense, +2 Defense.`, highlight: team.name };
+  }
   if (ev.kind === 'advantage') {
     const team = ev.team === 'a' ? m.a : m.b;
     return { icon: '⚡', text: `${team.name} rolls with Advantage this matchup — best of two on each die.`, highlight: team.name };
@@ -46,7 +53,9 @@ function eventLogEntry(m, ev) {
     return { icon: '🎲', text: `${team.name} rolls ${dieText(die, sides)} on ${label} — +${mod} = ${die + mod}.`, highlight: team.name };
   }
   if (ev.kind === 'bench') {
-    return { icon: '🪑', text: `Bench contributes +${m.aBench} for ${m.a.name} and +${m.bBench} for ${m.b.name}.`, highlight: null };
+    const team = ev.team === 'a' ? m.a : m.b;
+    const bench = ev.team === 'a' ? m.aBench : m.bBench;
+    return { icon: '🪑', text: `Bench contributes +${bench} for ${team.name}.`, highlight: team.name };
   }
   // total
   return { icon: '🏆', text: `Final: ${m.a.name} ${m.aSum} — ${m.bSum} ${m.b.name}. ${m.winner.name} wins!`, highlight: m.winner.name };
@@ -113,7 +122,8 @@ export default function MatchupBox({ title, m, revealIndex = Infinity, onSkip })
   const bOffIdx = idxOf((e) => e.kind === 'roll' && e.team === 'b' && e.stat === 'off');
   const aDefIdx = idxOf((e) => e.kind === 'roll' && e.team === 'a' && e.stat === 'def');
   const bDefIdx = idxOf((e) => e.kind === 'roll' && e.team === 'b' && e.stat === 'def');
-  const benchIdx = idxOf((e) => e.kind === 'bench');
+  const aBenchIdx = idxOf((e) => e.kind === 'bench' && e.team === 'a');
+  const bBenchIdx = idxOf((e) => e.kind === 'bench' && e.team === 'b');
   const totalIdx = idxOf((e) => e.kind === 'total');
 
   const logEntries = events.slice(0, shown).map((ev) => eventLogEntry(m, ev));
@@ -124,12 +134,12 @@ export default function MatchupBox({ title, m, revealIndex = Infinity, onSkip })
       <MatchupRow
         m={m} name={m.a.name} isWinner={m.winner === m.a} advantage={m.advA} extra={m.aExtra}
         side={{ OffDie: m.aOffDie, OffMod: m.aOffMod, OffSides: m.aOffSides, DefDie: m.aDefDie, DefMod: m.aDefMod, DefSides: m.aDefSides, Bench: m.aBench, LeagueMod: m.aLeagueMod, Sum: m.aSum }}
-        showOff={shown > aOffIdx} showDef={shown > aDefIdx} showBench={shown > benchIdx} showTotal={shown > totalIdx}
+        showOff={shown > aOffIdx} showDef={shown > aDefIdx} showBench={shown > aBenchIdx} showTotal={shown > totalIdx}
       />
       <MatchupRow
         m={m} name={m.b.name} isWinner={m.winner === m.b} advantage={m.advB} extra={m.bExtra}
         side={{ OffDie: m.bOffDie, OffMod: m.bOffMod, OffSides: m.bOffSides, DefDie: m.bDefDie, DefMod: m.bDefMod, DefSides: m.bDefSides, Bench: m.bBench, LeagueMod: m.bLeagueMod, Sum: m.bSum }}
-        showOff={shown > bOffIdx} showDef={shown > bDefIdx} showBench={shown > benchIdx} showTotal={shown > totalIdx}
+        showOff={shown > bOffIdx} showDef={shown > bDefIdx} showBench={shown > bBenchIdx} showTotal={shown > totalIdx}
       />
       {logEntries.length > 0 && (
         <div className="card-log">
