@@ -6,7 +6,7 @@ function safeOutput(team) {
   return teamOutput(team);
 }
 
-export default function LeagueScreen({ state, actions, myTeamId }) {
+export default function LeagueScreen({ state, myTeamId, onBack }) {
   const rows = state.teams.map((t) => ({ t, out: safeOutput(t), exp: teamExperience(t) }));
   rows.sort((a, b) => (b.out ? b.out.total : -Infinity) - (a.out ? a.out.total : -Infinity));
 
@@ -14,7 +14,7 @@ export default function LeagueScreen({ state, actions, myTeamId }) {
     <>
       <div className="screen">
         <h1>Standings</h1>
-        <p className="lede">Every team's current coach and matchup output — the deterministic part of their score (offense modifier + defense modifier + bench), before dice are rolled — plus Team Experience (1-10, from roster/coach age and title/playoff history). Not visible until hands are dealt for the season.</p>
+        <p className="lede">Every team's current coach and matchup output — the deterministic part of their score (offense modifier + defense modifier + bench), before dice are rolled — plus Chemistry (1-10, from roster/coach age and title/playoff history). Not visible until hands are dealt for the season.</p>
         {rows.map(({ t, out, exp }) => (
           <div key={t.name} className={'standing-row' + (t.id === myTeamId ? ' you' : '')} style={{ alignItems: 'center' }}>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -24,14 +24,14 @@ export default function LeagueScreen({ state, actions, myTeamId }) {
             <div style={{ display: 'flex', gap: 14, fontFamily: 'var(--mono)', alignItems: 'baseline' }}>
               <span style={{ color: 'var(--muted)', fontSize: 12 }}>Off {out ? out.off : '—'}</span>
               <span style={{ color: 'var(--muted)', fontSize: 12 }}>Def {out ? out.def : '—'}</span>
-              <span style={{ color: 'var(--muted)', fontSize: 12 }}>Exp {exp !== null ? exp : '—'}</span>
+              <span style={{ color: 'var(--muted)', fontSize: 12 }}>Chem {exp !== null ? exp : '—'}</span>
               <b>{out ? out.total : '—'}</b>
             </div>
           </div>
         ))}
       </div>
       <div className="bottombar">
-        <button className="primary" onClick={actions.closeLeague}>Back</button>
+        <button className="primary" onClick={onBack}>Back</button>
       </div>
     </>
   );

@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
 import { createRoom, joinRoom } from '../firebase/rooms';
 import { firebaseReady } from '../firebase/config';
+import BallMark from '../components/BallMark';
+import { useDarkMode } from '../hooks/useDarkMode';
 
 export default function LandingScreen({ pendingJoinCode, onSolo, onEnterRoom }) {
+  const { darkMode } = useDarkMode();
   const [tab, setTab] = useState(pendingJoinCode ? 'join' : 'host');
   const [hostName, setHostName] = useState('');
   const [seatCount, setSeatCount] = useState(4);
@@ -50,7 +53,10 @@ export default function LandingScreen({ pendingJoinCode, onSolo, onEnterRoom }) 
 
   return (
     <div className="screen">
-      <h1>Nine Deep</h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
+        <BallMark size={56} variant={darkMode ? 'onInk' : 'onFile'} />
+        <h1 style={{ margin: 0, fontSize: 52 }}><span className="wordmark-ink">NINE</span> <span style={{ color: 'var(--stamp)' }}>DEEP</span></h1>
+      </div>
       <p className="lede">Play solo against AI ownership groups, or start an online room and play an era with friends.</p>
 
       <button className="secondary" style={{ width: '100%', marginBottom: 18 }} onClick={onSolo}>Play Solo</button>

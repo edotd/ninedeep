@@ -1,44 +1,53 @@
-import { matchupCardEffectNote } from '../game/summaries';
+import { useEffect, useRef, useState } from 'react';
+import MatchupCard from '../components/MatchupCard';
+import { ACTION_LOG_SPEEDS } from '../game/constants';
 
-function ModifierCard({ card }) {
-  const catColor = card.category === 'debuff' ? 'var(--bad)' : 'var(--good)';
-  let roleNote;
-  if (card.reactive) roleNote = "Reactive — hold it ready before a matchup; if you're targeted by an Injury card while ready, it blocks the removal (when its value clears the Injury's).";
-  else if (card.passive === 'bench') roleNote = 'Passive — boosts your bench score every matchup this season.';
-  else if (card.passive === 'seeding') roleNote = 'Passive — boosts your seeding roll this season.';
-  else roleNote = matchupCardEffectNote(card);
-  return (
-    <div className="matchup-box">
-      <div className="matchup-title" style={{ color: catColor }}>{card.name}</div>
-      <p className="lede" style={{ margin: '8px 0' }}>{card.flavor}</p>
-      {card.value !== null && (
-        <div className="meta-row" style={{ borderTop: 'none', paddingTop: 0 }}>
-          <div className="meta-cell"><b>{card.value}</b><span>Value</span></div>
-        </div>
-      )}
-      <div className="statusline" style={{ marginTop: 4 }}>{roleNote}</div>
-    </div>
-  );
-}
-
+// Matchup cards are now dealt automatically the moment the player advances from the Hand
+// screen (see initSeasonModifierCards) — this screen just reveals them one by one in a
+// centered row, same pattern as Front Office and Hand. No pull button.
 export default function PullModifierScreen({ state, actions, myTeamId }) {
   const team = state.teams[myTeamId];
+  const cards = team.matchupCards || [];
+  const [dealtCount, setDealtCount] = useState(0);
+  const timersRef = useRef([]);
+
+  useEffect(() => {
+    if (!cards.length) return;
+    const delay = ACTION_LOG_SPEEDS[state.settings.actionLogSpeed] ?? ACTION_LOG_SPEEDS.normal;
+    if (delay === 0) {
+      setDealtCount(cards.length);
+      return;
+    }
+    timersRef.current = cards.map((_, i) => setTimeout(() => setDealtCount(i + 1), delay * (i + 1)));
+    return () => timersRef.current.forEach(clearTimeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const dealing = dealtCount < cards.length;
+  const handleSkip = () => {
+    timersRef.current.forEach(clearTimeout);
+    setDealtCount(cards.length);
+  };
+
   return (
     <>
       <div className="screen">
-        <h1>Matchup Card — Season {state.season}</h1>
-        <p className="lede">Pull one Matchup Modifier card for the season. It stays with you the whole season, can't be traded or returned, and a fresh one is dealt next season.</p>
-        {!team.matchupCard ? (
-          <button className="primary" style={{ width: '100%', padding: 18, margin: '16px 0', fontSize: 16 }} onClick={() => actions.pullMatchupCard(myTeamId)}>Pull Card</button>
-        ) : (
-          <ModifierCard card={team.matchupCard} />
-        )}
-      </div>
-      {team.matchupCard && (
-        <div className="bottombar">
-          <button className="primary" onClick={actions.proceedToLineupFromModifier}>Continue to Lineup</button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+          <h1>Matchup Cards — Season {state.season}</h1>
+          {dealing && <button className="reset-link" style={{ flexShrink: 0, marginLeft: 10 }} onClick={handleSkip}>Skip ▸▸</button>}
         </div>
-      )}
+        <p className="lede">Your {cards.length} Matchup Modifier cards for the season. They stay with you the whole season, can't be traded or returned, and a fresh set is dealt next season.</p>
+        <div className="mu-deal-row">
+          {cards.slice(0, dealtCount).map((c, i) => (
+            <div key={c.id ?? i} className="card-deal-in"><MatchupCard card={c} /></div>
+          ))}
+        </div>
+      </div>
+      <div className="bottombar">
+        <button className="primary" disabled={dealing} onClick={actions.proceedToLineupFromModifier}>
+          {dealing ? 'Dealing…' : 'Continue'}
+        </button>
+      </div>
     </>
   );
 }
