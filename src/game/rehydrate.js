@@ -16,6 +16,7 @@ export function rehydrateState(state) {
     state.playoff.matches.forEach((m) => {
       m.a = relink(m.a);
       m.b = relink(m.b);
+      if (m.turn && m.turn.order) { m.turn.order = m.turn.order.map(relink); }
       if (m.result) {
         m.result.a = relink(m.result.a);
         m.result.b = relink(m.result.b);
