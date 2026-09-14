@@ -1,4 +1,4 @@
-import { ARCHETYPES, POSITIONS, POSITION_MOD, COACH_ARCHETYPES, COACH_MODIFIERS, MATCHUP_MODIFIER_TYPES, PLAYER_RELATIONSHIP_MIN, PLAYER_RELATIONSHIP_MAX } from './constants';
+import { ARCHETYPES, POSITIONS, POSITION_MOD, COACH_ARCHETYPES, COACH_MODIFIERS, MATCHUP_MODIFIER_TYPES, PLAYER_RELATIONSHIP_MIN, PLAYER_RELATIONSHIP_MAX, LEAGUE_ACCOLADES } from './constants';
 import { rollWithVariance, weightedPick } from './rng';
 import { randomPlayerAge, randomPrimeAge, randomCoachAge, careerMultiplier } from './aging';
 
@@ -7,6 +7,26 @@ import { randomPlayerAge, randomPrimeAge, randomCoachAge, careerMultiplier } fro
 export function nextCardId(state) {
   state.cardCounter = (state.cardCounter || 0) + 1;
   return 'c' + state.cardCounter;
+}
+
+const ACCOLADE_NAMES = new Set(LEAGUE_ACCOLADES.map((t) => t.name));
+
+// Card tier per the brand handoff: A (franchise) = League Accolade tiers, D (depth) =
+// Undrafted replacements, EXP (expiring) overrides everything in a player's final contract
+// year, everything else is B (standard). Shared by PlayerCard and the persistent bar's
+// player slots so a card's tier reads the same everywhere it appears.
+export function cardTier(card) {
+  if (card.contract <= 1) return 'EXP';
+  if (ACCOLADE_NAMES.has(card.tierName)) return 'A';
+  if (card.tierName === 'Undrafted') return 'D';
+  return 'B';
+}
+
+// The big number on a player card / slot — the unmodified sum of its four stats, before
+// career-level age adjustment (see cardTotal below for the age-adjusted version used in
+// actual matchups).
+export function rawOverall(card) {
+  return card.stats.SCO + card.stats.PLM + card.stats.REB + card.stats.DEF;
 }
 
 export function statsToCoins(total) {
@@ -127,8 +147,8 @@ export function relationshipBonus(team) {
   return team.coach.playerRelationship ? team.coach.playerRelationship * 0.005 : 0;
 }
 
-export function drawMatchupModifierCard() {
+export function drawMatchupModifierCard(state) {
   const t = weightedPick(MATCHUP_MODIFIER_TYPES);
   const value = t.needsValue ? 1 + Math.floor(Math.random() * (t.valueDie || 10)) : null;
-  return { name: t.name, category: t.category, flavor: t.flavor, playable: !!t.playable, reactive: !!t.reactive, passive: t.passive || null, value, used: false };
+  return { id: nextCardId(state), name: t.name, category: t.category, flavor: t.flavor, playable: !!t.playable, reactive: !!t.reactive, passive: t.passive || null, targetsPlayer: !!t.targetsPlayer, valueDie: t.valueDie || 10, value, used: false };
 }

@@ -18,14 +18,18 @@ export function autoSelectFive(hand) {
 
 export function validateLineup(team) {
   if (team.activeIds.length !== 5) return { valid: false, msg: 'Select exactly 5 players for your active roster.' };
-  const positions = new Set(team.activeIds.map((id) => team.hand.find((h) => h.id === id).position));
+  const positions = new Set(team.activeIds.map((id) => team.hand.find((h) => h.id === id)?.position).filter(Boolean));
   if (!positions.has('Guard') || !positions.has('Forward') || !positions.has('Big'))
     return { valid: false, msg: 'Your active five needs at least one Guard, Forward, and Big.' };
   return { valid: true };
 }
 
+// team.activeIds can briefly point at cards no longer in team.hand — e.g. between the
+// playoffs ending and the next season's lineup lock, once an expired contract has been
+// removed from hand but activeIds hasn't been recomputed yet — so every lookup here has to
+// tolerate a miss instead of assuming team.hand.find(...) always succeeds.
 export function activeStatSum(team) {
-  return team.activeIds.reduce((s, id) => { const c = team.hand.find((h) => h.id === id); return s + cardTotal(c); }, 0);
+  return team.activeIds.reduce((s, id) => { const c = team.hand.find((h) => h.id === id); return c ? s + cardTotal(c) : s; }, 0);
 }
 export function effectiveRating(team) {
   const bonus = retentionBonus(team) + relationshipBonus(team);
@@ -39,6 +43,7 @@ export function offenseStatSum(team, idsOverride) {
   const ids = idsOverride || team.activeIds;
   const sum = ids.reduce((s, id) => {
     const c = team.hand.find((h) => h.id === id);
+    if (!c) return s;
     return s + (c.stats.SCO + c.stats.PLM) * careerMultiplier(c.age, c.careerRoll);
   }, 0);
   return Math.round(sum);
@@ -47,6 +52,7 @@ export function defenseStatSum(team, idsOverride) {
   const ids = idsOverride || team.activeIds;
   const sum = ids.reduce((s, id) => {
     const c = team.hand.find((h) => h.id === id);
+    if (!c) return s;
     return s + (c.stats.DEF + c.stats.REB) * careerMultiplier(c.age, c.careerRoll);
   }, 0);
   return Math.round(sum);

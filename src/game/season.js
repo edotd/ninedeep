@@ -1,9 +1,11 @@
-import { TIERS, LEAGUE_ACCOLADES, REPLACEMENT_TIER, AI_NAMES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_TYPES, MARKETS, PLAYER_AGE_MAX, COACH_AGE_MAX } from './constants';
+import { TIERS, LEAGUE_ACCOLADES, REPLACEMENT_TIER, AI_NAMES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_ARCHETYPES, MARKETS, PLAYER_AGE_MAX, COACH_AGE_MAX, MATCHUP_CARD_DRAW_COUNT, FINANCE_STARTING_BALANCE } from './constants';
 import { shuffle, weightedPick } from './rng';
 import { makeCard, randomArch, cardTotal, neededPosition, drawCoachCard, applyCoachRetention, drawMatchupModifierCard } from './cards';
 import { finalizeCap, rosterSalary, rollMarketCapAdj } from './economy';
 import { autoSelectFive, effectiveRating } from './roster';
 import { startDraft } from './draft';
+import { initAttendance, rollFanbaseMod, recomputeSeasonAttendance, applyPlayoffBerthMilestone, applyHomeCourtMilestone, applyChampionshipMilestone } from './fanbase';
+import { accrueSeasonFinances } from './finances';
 
 export function newEraState() {
   return {
@@ -19,6 +21,8 @@ export function newEraState() {
       injuryChance: INJURY_CHANCE,
       championshipBarMult: CHAMPIONSHIP_BAR_MULT,
       actionLogSpeed: 'normal',
+      winCondition: 'bar', // 'bar' = must clear the championship bar; 'outright' = winning the Finals is enough
+      matchupCardsEnabled: true,
     },
   };
 }
@@ -52,7 +56,13 @@ export function buildTeams(state, teamSeats) {
     lastOverage: 0,
     retainedStreak: 0,
     lastCoachName: null,
-    matchupCard: null,
+    matchupCards: [],
+    finances: FINANCE_STARTING_BALANCE,
+    fanbaseBaseline: 0,
+    financeBoostUsedThisSeason: false,
+    // One entry pushed per season in proceedFromResults, feeding the Season Recap screen's
+    // era ledger (result reached, cap used, players under contract) — see seasonResultForTeam.
+    seasonHistory: [],
   }));
 }
 
@@ -81,7 +91,7 @@ export function dealHands(state) {
 }
 
 export function refreshAdvantage(team) {
-  team.advantageAvailable = !!(team.fanbase && team.fanbase.name === 'Die Hard');
+  team.advantageAvailable = !!(team.fanbaseArchetype && team.fanbaseArchetype.name === 'Die Hard');
 }
 
 // Runs once, right after team setup and before hands are dealt. Coach, Fanbase, and Market are
@@ -94,16 +104,16 @@ export function initFrontOffice(state) {
     if (!team.human) {
       team.coach = drawCoachCard();
       applyCoachRetention(team, team.coach);
-      team.fanbase = weightedPick(FANBASE_TYPES);
-      team.attendance = team.fanbase.attendanceBase;
-      refreshAdvantage(team);
+      team.fanbaseArchetype = weightedPick(FANBASE_ARCHETYPES);
       const marketDef = weightedPick(MARKETS);
       team.market = { name: marketDef.name, capAdj: rollMarketCapAdj(marketDef) };
+      initAttendance(team);
+      refreshAdvantage(team);
       finalizeCap(team, state.season);
     } else {
       team.coach = null;
-      team.fanbase = null;
-      team.attendance = 0.5;
+      team.fanbaseArchetype = null;
+      team.attendance = undefined;
       team.advantageAvailable = false;
       team.market = null;
       team.seasonCap = undefined;
@@ -112,11 +122,19 @@ export function initFrontOffice(state) {
 }
 
 export function initSeasonModifierCards(state) {
-  state.phase = 'pullmodifier';
   state.bar = undefined;
   state.leagueAvg = undefined;
+  // Fanbase mods are re-rolled every season for every team, independent of the Matchup
+  // Cards setting — they're a fanbase mechanic, not a matchup one.
+  state.teams.forEach((team) => { rollFanbaseMod(team); });
+  if (state.settings && state.settings.matchupCardsEnabled === false) {
+    state.teams.forEach((team) => { team.matchupCards = []; });
+    state.phase = 'constructing';
+    return;
+  }
+  state.phase = 'pullmodifier';
   state.teams.forEach((team) => {
-    team.matchupCard = team.human ? null : drawMatchupModifierCard();
+    team.matchupCards = Array.from({ length: MATCHUP_CARD_DRAW_COUNT }, () => drawMatchupModifierCard(state));
   });
 }
 
@@ -126,9 +144,12 @@ export function startNewSeasonRoster(state) {
   state.teams.forEach((team) => {
     applyCoachRetention(team, team.coach);
     refreshAdvantage(team);
+    accrueSeasonFinances(team);
     finalizeCap(team, state.season);
     team.activeIds = autoSelectFive(team.hand);
     team.coach.age = Math.min(COACH_AGE_MAX, team.coach.age + 1);
+    team.lineupConfirmed = false;
+    team.financeBoostUsedThisSeason = false;
   });
   initSeasonModifierCards(state);
 }
@@ -150,20 +171,26 @@ export function lockSeasonAndSeed(state) {
   const seeds = state.teams
     .map((t) => {
       let val = effectiveRating(t) * (0.9 + Math.random() * 0.2);
-      if (t.matchupCard && t.matchupCard.name === 'Favorable Schedule') { val *= 1.10; }
+      if ((t.matchupCards || []).some((c) => c.name === 'Favorable Schedule' && !c.used)) { val *= 1.10; }
       return { t, val };
     })
     .sort((a, b) => b.val - a.val);
   seeds.forEach((s, rank) => { s.t.seed = rank + 1; });
   state.seeds = seeds;
   state.playoffTeams = seeds.slice(0, 8).map((s) => s.t);
-  state.playoffTeams.forEach((t) => { t.playoffAppearances = (t.playoffAppearances || 0) + 1; });
+  state.playoffTeams.forEach((t) => {
+    t.playoffAppearances = (t.playoffAppearances || 0) + 1;
+    applyPlayoffBerthMilestone(t);
+    if (t.seed <= 4) applyHomeCourtMilestone(t);
+  });
   // Championship bar is set from the playoff field only — teams that missed the cut don't
   // drag the bar down (or up) for the teams that actually have a shot at the title.
   state.leagueAvg = state.playoffTeams.reduce((s, t) => s + effectiveRating(t), 0) / state.playoffTeams.length;
   state.barMult = (state.settings && state.settings.championshipBarMult) || CHAMPIONSHIP_BAR_MULT;
   state.bar = state.leagueAvg * state.barMult;
-  state.phase = 'standings';
+  // Standings appear after a themed "Simulating Season" loading beat, not instantly — see
+  // SimulatingSeasonScreen / finishSeasonSimulation in engine.js.
+  state.phase = 'simulating';
 }
 
 export function startPlayoffs(state) {
@@ -193,31 +220,53 @@ export function seasonAvgScoreForTeam(state, team) {
   return games ? total / games : 0;
 }
 
-export function updateAttendanceAndFanbase(state) {
-  state.teams.forEach((team) => { team.lastSeasonAvgScore = seasonAvgScoreForTeam(state, team); });
-  const leagueAvgScore = state.teams.reduce((s, t) => s + t.lastSeasonAvgScore, 0) / state.teams.length;
-  state.teams.forEach((team) => {
-    const delta = (team.lastSeasonAvgScore - leagueAvgScore) * 0.01;
-    team.attendance = Math.max(0, Math.min(1, (team.attendance !== undefined ? team.attendance : 0.5) + delta));
-    if (team.fanbase.name === 'Die Hard' && team.lastSeasonAvgScore < leagueAvgScore) {
-      team.fanbase = FANBASE_TYPES.find((f) => f.name === 'Invested');
-    }
-  });
-}
-
 export function finishPlayoffs(state) {
   const winner = state.playoff.matches[state.playoff.matches.length - 1].result.winner;
-  const winnerRating = effectiveRating(winner);
-  const champion = winnerRating >= state.bar ? winner : null;
-  if (champion) champion.titles++;
+  const outright = state.settings && state.settings.winCondition === 'outright';
+  const champion = outright ? winner : (effectiveRating(winner) >= state.bar ? winner : null);
+  if (champion) { champion.titles++; applyChampionshipMilestone(champion); }
 
-  state.lastResult = { seeds: state.seeds, matches: state.playoff.matches, winner, leagueAvg: state.leagueAvg, bar: state.bar, barMult: state.barMult, champion };
+  state.lastResult = { seeds: state.seeds, matches: state.playoff.matches, winner, leagueAvg: state.leagueAvg, bar: state.bar, barMult: state.barMult, champion, outright };
   state.log.push({ season: state.season, champion: champion ? champion.name : null, bar: Math.round(state.bar), winner: winner.name });
   state.phase = 'results';
 }
 
+// How far a team got this postseason, for the Season Recap era ledger — 'MISSED' the
+// playoffs entirely, 'R1'/'R2' lost in that round, 'FINALS' lost the Final, 'TITLE' won it
+// and cleared the championship bar. Read from state.playoff/state.lastResult before
+// startPlayoffs re-initializes them for the next season.
+function seasonResultForTeam(state, team) {
+  if (!state.playoffTeams || !state.playoffTeams.includes(team)) return 'MISSED';
+  const matches = state.playoff.matches;
+  const final = matches[matches.length - 1];
+  if (final.result && final.result.winner === team) {
+    return state.lastResult && state.lastResult.champion === team ? 'TITLE' : 'FINALS';
+  }
+  for (let i = matches.length - 1; i >= 0; i--) {
+    const m = matches[i];
+    if (m.result && (m.result.a === team || m.result.b === team) && m.result.winner !== team) {
+      if (i <= 3) return 'R1';
+      if (i <= 5) return 'R2';
+      return 'FINALS';
+    }
+  }
+  return 'MISSED';
+}
+
 export function proceedFromResults(state) {
-  updateAttendanceAndFanbase(state);
+  state.teams.forEach((team) => { team.lastSeasonAvgScore = seasonAvgScoreForTeam(state, team); });
+  recomputeSeasonAttendance(state);
+  // Filed once, before contracts move — captures the season exactly as it was played
+  // (result reached, full committed cap, all nine still on the roster).
+  state.teams.forEach((team) => {
+    team.seasonHistory ||= [];
+    team.seasonHistory.push({
+      season: state.season,
+      result: seasonResultForTeam(state, team),
+      capUsed: team.total9Salary !== undefined ? team.total9Salary : rosterSalary(team),
+      underContract: team.hand.length,
+    });
+  });
   state.lastExpiredPlayers = [];
   state.teams.forEach((team) => {
     const kept = [];
@@ -231,6 +280,12 @@ export function proceedFromResults(state) {
     });
     team.hand = kept;
   });
+  // Season Recap (the era ledger) is filed here, between Results and the Draft — see
+  // proceedFromSeasonRecap below, which is what actually calls startDraft.
+  state.phase = 'seasonrecap';
+}
+
+export function proceedFromSeasonRecap(state) {
   startDraft(state);
 }
 

@@ -1,4 +1,4 @@
-import { ARCHETYPES, POSITIONS, POSITION_MOD, TIERS, LEAGUE_ACCOLADES, COACH_ARCHETYPES, COACH_MODIFIERS, FANBASE_TYPES, MATCHUP_MODIFIER_TYPES, PLAYER_AGE_MIN, PLAYER_AGE_MAX, PLAYER_PRIME_START, PLAYER_PRIME_BASE_END, COACH_AGE_MIN, COACH_AGE_MAX } from '../game/constants';
+import { ARCHETYPES, POSITIONS, POSITION_MOD, TIERS, LEAGUE_ACCOLADES, COACH_ARCHETYPES, COACH_MODIFIERS, FANBASE_ARCHETYPES, FANBASE_MODS, MARKETS, MATCHUP_MODIFIER_TYPES, PLAYER_AGE_MIN, PLAYER_AGE_MAX, PLAYER_PRIME_START, PLAYER_PRIME_BASE_END, COACH_AGE_MIN, COACH_AGE_MAX } from '../game/constants';
 import { formatCoins } from '../game/economy';
 import { CAREER_LEVELS } from '../game/aging';
 import { matchupCardEffectNote } from '../game/summaries';
@@ -43,7 +43,7 @@ function TierBlock({ t }) {
   );
 }
 
-export default function GlossaryScreen({ state, actions }) {
+export default function GlossaryScreen({ state, onBack }) {
   const injuryPct = Math.round(state.settings.injuryChance * 100);
   return (
     <>
@@ -75,6 +75,10 @@ export default function GlossaryScreen({ state, actions }) {
           <p className="lede" style={{ margin: 0 }}>Offense Total + Defense Total + Bench Score + League Modifier (from a played Divine Intervention card, if any).</p>
         </div>
         <p className="lede">Die size (d6 by default) and the Off/Def bonus percentages all come from your Coach card — a bigger die and higher bonus mean a stronger, swingier team. The Die Hard fanbase ability, if used, rolls each die twice and keeps the higher result. Matchup Modifier cards (see below) can shift these numbers up or down before the roll, and a {injuryPct}% independent injury chance per team can pull a random active player out beforehand.</p>
+        <div className="matchup-box">
+          <div className="matchup-title">🏟️ Home Court Advantage</div>
+          <p className="lede" style={{ margin: 0 }}>The top 4 seeds get a flat +2 Offense / +2 Defense in every playoff matchup they play.</p>
+        </div>
 
         <h2>Archetypes</h2>
         <p className="lede">Ranges below show how each archetype's stats shift by position (Guard/Forward/Big) before any tier multiplier or the final ±1 roll are applied.</p>
@@ -120,12 +124,12 @@ export default function GlossaryScreen({ state, actions }) {
         <p className="lede">Every player's exact spot within their bracket's range is fixed for their career — a strong Young prospect stays a strong performer once they hit Prime, and a graceful decliner falls off more slowly than most.</p>
         <p className="lede">Coaches are {COACH_AGE_MIN}–{COACH_AGE_MAX} years old, but don't have a Career Level of their own — age is just one input into a team's overall Experience rating (below).</p>
         <div className="matchup-box">
-          <div className="matchup-title">Player Relationship <span className="tier-pill">1–10</span></div>
-          <p className="lede" style={{ margin: '8px 0' }}>Every coach has a Player Relationship rating — how well they connect with the roster. It adds a small Off/Def bonus on top of the coach's base bonuses: +0.5% per point, up to +5% at the maximum of 10.</p>
+          <div className="matchup-title">Player Relations <span className="tier-pill">1–10</span></div>
+          <p className="lede" style={{ margin: '8px 0' }}>Every coach has a Player Relations rating — how well they connect with the roster. It adds a small Off/Def bonus on top of the coach's base bonuses: +0.5% per point, up to +5% at the maximum of 10.</p>
         </div>
         <div className="matchup-box">
-          <div className="matchup-title">Team Experience <span className="tier-pill">1–10</span></div>
-          <p className="lede" style={{ margin: '8px 0' }}>A scouting-style rating for the whole team, blending average roster + coach age (older/more veteran counts higher) with your title count and how many seasons you've made the playoffs. Visible on the Standings tab and your Lineup screen once hands are dealt.</p>
+          <div className="matchup-title">Chemistry <span className="tier-pill">1–10</span></div>
+          <p className="lede" style={{ margin: '8px 0' }}>A scouting-style rating for the whole team, blending average roster + coach age (older/more veteran counts higher) with your title count and how many seasons you've made the playoffs. Visible on the Standings tab and your Team screen once hands are dealt.</p>
         </div>
 
         <h2>Coach Archetypes</h2>
@@ -153,24 +157,60 @@ export default function GlossaryScreen({ state, actions }) {
         ))}
 
         <h2>Fanbase</h2>
-        <p className="lede">Attendance drifts ±1-2% each season based on how your average playoff score compares to the league. It applies a small multiplier to your cap (0.9x–1.1x). Die Hard downgrades to Invested if your team scores below league average for the season.</p>
-        {FANBASE_TYPES.map((f) => (
+        <p className="lede">Your Fanbase Archetype is drawn once and holds for the whole era, like Coach. Attendance itself is recalculated at the end of every season from your archetype's formula, your Market's floor, and how you finished — then a permanent, small baseline (built up from season milestones and any Finance investment) is added on top. Attendance applies a small multiplier to your cap (0.9x–1.1x) and feeds your Team Finances income every season.</p>
+        {FANBASE_ARCHETYPES.map((f) => (
           <div key={f.name} className="matchup-box">
             <div className="matchup-title">{f.name}</div>
             <div className="meta-row" style={{ borderTop: 'none', paddingTop: 0 }}>
-              <GlossaryStat label="Base Attendance" val={Math.round(f.attendanceBase * 100) + '%'} />
               <GlossaryStat label="Draw Odds" val={f.weight + 'w'} />
             </div>
-            {f.ability && <div className="statusline" style={{ marginTop: 8 }}>Ability: {f.ability}</div>}
+            <div className="statusline" style={{ marginTop: 8 }}>
+              {f.name === 'Steady' && 'Attendance sits at your market floor plus a share of that band based on how you performed — predictable, no randomness.'}
+              {f.name === 'Fair Weather' && 'Same market floor, but the swing band widens the worse you perform, and the actual number is rolled at random within it — boom or bust.'}
+              {f.name === 'Die Hard' && 'Always a near-sellout — a flat 90–100% roll every season, regardless of market or performance.'}
+            </div>
           </div>
         ))}
+
+        <h2>Season Milestones</h2>
+        <p className="lede">Small, permanent additions to your fanbase baseline — they never expire and never decrease. Season End scales with your final seed (best at #1, nothing if you miss the playoffs); the rest are flat: Playoff Berth, Home Court Clinch (seed ≤ 4), a Playoff Win (each series won), and a Championship.</p>
+
+        <h2>Fanbase Mods</h2>
+        <p className="lede">Re-rolled every season for every team, from one shared pool. Team Pride can only roll for a Steady or Die Hard fanbase.</p>
+        {FANBASE_MODS.map((m) => (
+          <div key={m.name} className="matchup-box">
+            <div className="matchup-title">{m.name}</div>
+            <div className="meta-row" style={{ borderTop: 'none', paddingTop: 0 }}>
+              <GlossaryStat label="Draw Odds" val={m.weight + 'w'} />
+              {m.needsValue && <GlossaryStat label="Value" val={`1–${m.valueDie}`} />}
+            </div>
+            {m.restrictTo && <div className="statusline" style={{ marginTop: 4 }}>Only rolls for: {m.restrictTo.join(', ')}</div>}
+            <div className="statusline" style={{ marginTop: 4 }}>{m.flavor}</div>
+          </div>
+        ))}
+
+        <h2>Market</h2>
+        <p className="lede">Sets your attendance floor and a cap boost, rolled within range at pull time. Team Finances can relocate you to any market size for a fee that scales with how many tiers you're jumping — see the Team screen.</p>
+        {MARKETS.map((m) => (
+          <div key={m.name} className="matchup-box">
+            <div className="matchup-title">{m.name}</div>
+            <div className="meta-row" style={{ borderTop: 'none', paddingTop: 0 }}>
+              <GlossaryStat label="Attendance Floor" val={Math.round(m.attendanceFloor * 100) + '%'} />
+              <GlossaryStat label="Cap Boost" val={`+${formatCoins(m.capAdjMin)}–${formatCoins(m.capAdjMax)}`} />
+              <GlossaryStat label="Draw Odds" val={m.weight + 'w'} />
+            </div>
+          </div>
+        ))}
+
+        <h2>Team Finances</h2>
+        <p className="lede">A currency separate from the salary cap — cap money buys the roster, finances buy front-office moves. Funded by a flat per-season stipend plus income scaled off last season's attendance. Spend it to fire and replace your coach (pays off both salaries — no guaranteed upgrade), relocate to a new market, or invest a small permanent bump into your fanbase baseline (once per season). See the Team screen for exact costs.</p>
 
         <h2>Matchup Modifier Cards</h2>
         <p className="lede">Every team pulls one card each season, right after the Front Office pull. It stays for the whole season — it can't be traded or returned — and a new one is dealt next season.</p>
         {MATCHUP_MODIFIER_TYPES.map((t) => {
           const catColor = t.category === 'debuff' ? 'var(--bad)' : 'var(--good)';
           let roleNote;
-          if (t.reactive) roleNote = "Reactive — its holder decides whether to hold it ready before a matchup; if targeted by an Injury card while ready, it blocks the removal (when its value clears the Injury's).";
+          if (t.reactive) roleNote = "Reactive — its holder may play it in response to being targeted; playing it consumes it whether or not it works. If the attacking card needs a value, the reaction only blocks it on a roll that meets or beats that value.";
           else if (t.passive === 'bench') roleNote = 'Passive — boosts bench score all season.';
           else if (t.passive === 'seeding') roleNote = 'Passive — boosts seeding roll this season.';
           else roleNote = matchupCardEffectNote(t);
@@ -182,13 +222,14 @@ export default function GlossaryScreen({ state, actions }) {
                 <GlossaryStat label="Draw Odds" val={t.weight + 'w'} />
                 {t.needsValue && <GlossaryStat label="Value" val={`1–${t.valueDie || 10}`} />}
               </div>
+              {t.targetsPlayer && <div className="statusline" style={{ marginTop: 4 }}>You choose which of the opponent's active players this targets.</div>}
               <div className="statusline" style={{ marginTop: 4 }}>{roleNote}</div>
             </div>
           );
         })}
       </div>
       <div className="bottombar">
-        <button className="primary" onClick={actions.closeGlossary}>Back</button>
+        <button className="primary" onClick={onBack}>Back</button>
       </div>
     </>
   );

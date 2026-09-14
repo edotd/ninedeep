@@ -10,14 +10,18 @@
 // game/useLocalGame.js and game/useRoomGame.js for the two callers.
 import { drawCoachCard, applyCoachRetention, drawMatchupModifierCard } from './cards';
 import { weightedPick } from './rng';
-import { MARKETS, FANBASE_TYPES } from './constants';
+import { MARKETS, FANBASE_ARCHETYPES, MATCHUP_CARD_DRAW_COUNT, HOME_COURT_BONUS } from './constants';
 import { finalizeCap, rollMarketCapAdj } from './economy';
 import { autoSelectFive, validateLineup } from './roster';
 import {
   buildStarPool, buildTeams, defaultSoloSeats, dealHands, initFrontOffice,
   initSeasonModifierCards, lockSeasonAndSeed, startPlayoffs,
 } from './season';
-import { checkInjury, playCardEffect, playMatchup, wantsAdvantage, cardChoicesFor } from './matchup';
+import {
+  checkInjury, playCardEffect, playMatchup, wantsAdvantage, cardChoicesFor, playableCards,
+  isMatchUnlocked, hasHomeCourt, applyLiveFanbaseMod,
+} from './matchup';
+import { initAttendance, applyPlayoffWinMilestone } from './fanbase';
 
 function humanTeams(state) {
   return state.teams.filter((t) => t.human);
@@ -31,7 +35,19 @@ export function startEra(state, teamNameRaw) {
   state.teamName = val.length ? val.slice(0, 32) : 'Your Franchise';
   buildStarPool(state);
   buildTeams(state, defaultSoloSeats(state.teamName));
-  initFrontOffice(state);
+  // "Before the Deal" (design brand handoff, 3A) — a one-time overview of the three card
+  // types, shown before any dealing starts. No per-team gating: it's read-only, so any one
+  // Continue click (in a shared room) advances everyone the same way Constructing does.
+  state.phase = 'cardoverview';
+}
+
+// Deals the 9-card hand first — see proceedFromHand/proceedToSeason1 below for why Front
+// Office now comes after the hand instead of before it (players, then front office, then
+// matchup cards, per the reordered deal sequence).
+export function proceedFromCardOverview(state) {
+  dealHands(state);
+  state.teams.forEach((t) => { t.activeIds = autoSelectFive(t.hand); });
+  state.phase = 'pullhand';
 }
 
 export function pullCoach(state, teamIdx) {
@@ -42,51 +58,78 @@ export function pullCoach(state, teamIdx) {
 }
 export function pullFanbase(state, teamIdx) {
   const team = state.teams[teamIdx];
-  if (team.fanbase) return;
-  team.fanbase = weightedPick(FANBASE_TYPES);
-  team.attendance = team.fanbase.attendanceBase;
-  team.advantageAvailable = team.fanbase.name === 'Die Hard';
+  if (team.fanbaseArchetype) return;
+  team.fanbaseArchetype = weightedPick(FANBASE_ARCHETYPES);
+  team.advantageAvailable = team.fanbaseArchetype.name === 'Die Hard';
 }
 export function pullMarket(state, teamIdx) {
   const team = state.teams[teamIdx];
   if (team.market) return;
   const def = weightedPick(MARKETS);
   team.market = { name: def.name, capAdj: rollMarketCapAdj(def) };
+  // Attendance needs both the fanbase archetype and the market floor, so it's only ever
+  // computed here — after both are guaranteed to exist — not in pullFanbase.
+  if (team.fanbaseArchetype) initAttendance(team);
   finalizeCap(team, state.season);
 }
-
-// Only deals hands once every human-controlled team has pulled its Front Office cards.
-export function proceedToSeason1(state) {
-  if (!allHumansReady(state, (t) => t.coach && t.fanbase && t.market)) return;
-  dealHands(state);
-  state.teams.forEach((t) => { t.activeIds = autoSelectFive(t.hand); });
-  state.phase = 'pullhand';
+// One-click Front Office pull — deals Coach, Fanbase and Market together instead of the
+// player pulling each individually.
+export function pullFrontOffice(state, teamIdx) {
+  pullCoach(state, teamIdx);
+  pullFanbase(state, teamIdx);
+  pullMarket(state, teamIdx);
 }
 
+// The hand is already dealt (see proceedFromCardOverview) — Front Office is pulled next.
 export function proceedFromHand(state) {
+  initFrontOffice(state);
+}
+
+// Only moves on to Matchup Cards once every human-controlled team has pulled its Front
+// Office cards.
+export function proceedToSeason1(state) {
+  if (!allHumansReady(state, (t) => t.coach && t.fanbaseArchetype && t.market)) return;
   initSeasonModifierCards(state);
 }
 
 export function pullMatchupCard(state, teamIdx) {
   const team = state.teams[teamIdx];
-  if (team.matchupCard) return;
-  team.matchupCard = drawMatchupModifierCard();
+  team.matchupCards ||= [];
+  if (team.matchupCards.length >= MATCHUP_CARD_DRAW_COUNT) return;
+  team.matchupCards.push(drawMatchupModifierCard(state));
 }
-
-// Only moves to the lineup screen once every human-controlled team has its matchup card.
-export function proceedToLineupFromModifier(state) {
-  if (!allHumansReady(state, (t) => !!t.matchupCard)) return;
-  state.phase = 'lineup';
-}
-
-export function toggleActive(state, teamIdx, cardId) {
+// One-click Matchup Cards pull — deals all MATCHUP_CARD_DRAW_COUNT at once.
+export function pullAllMatchupCards(state, teamIdx) {
   const team = state.teams[teamIdx];
-  const idx = team.activeIds.indexOf(cardId);
-  if (idx >= 0) { team.activeIds.splice(idx, 1); }
-  else if (team.activeIds.length < 5) { team.activeIds.push(cardId); }
+  team.matchupCards ||= [];
+  while (team.matchupCards.length < MATCHUP_CARD_DRAW_COUNT) {
+    team.matchupCards.push(drawMatchupModifierCard(state));
+  }
 }
-export function autoSetHuman(state, teamIdx) {
-  state.teams[teamIdx].activeIds = autoSelectFive(state.teams[teamIdx].hand);
+
+// Only moves on once every human-controlled team has pulled all its cards — into the
+// "constructing" loading screen, not straight to the lineup, so there's a beat before the
+// persistent bar (which stays empty through the whole Front Office / Hand / Matchup Cards
+// sequence) populates with the finished roster.
+export function proceedToLineupFromModifier(state) {
+  if (!allHumansReady(state, (t) => (t.matchupCards || []).length >= MATCHUP_CARD_DRAW_COUNT)) return;
+  state.phase = 'constructing';
+}
+
+// Called automatically by the constructing screen's loading sequence once it finishes —
+// not a user action, just the final step of the onboarding flow. Team Summary (1a, "the
+// file") is shown next, after Matchup Cards and the loading beat — its own Continue button
+// calls confirmLineup directly on the auto-selected five (see below); there's no separate
+// manual lineup-picking screen any more.
+export function finishConstruction(state) {
+  state.phase = 'teamsummary';
+}
+
+// Called automatically by the simulating-season screen's loading sequence once it finishes.
+// The actual seeding/cap-lock work already happened synchronously in lockSeasonAndSeed (see
+// confirmLineup) — this is just the final step of that themed pause before Standings appears.
+export function finishSeasonSimulation(state) {
+  state.phase = 'standings';
 }
 
 // Each human team confirms its own lineup independently; AI lineups are auto-set and the
@@ -117,21 +160,17 @@ export function closeSeries(state) {
 function myChoices(state, teamIdx) {
   state.playoff.cardChoices ||= {};
   const team = state.teams[teamIdx];
-  return (state.playoff.cardChoices[team.id] ||= { useAdvantage: false, useCard: false, useInjuryPrevention: false });
+  return (state.playoff.cardChoices[team.id] ||= { useAdvantage: false, selectedCardId: null, selectedTargetId: null, useInjuryPrevention: false });
 }
 export function toggleAdvantage(state, teamIdx) {
   const c = myChoices(state, teamIdx);
   c.useAdvantage = !c.useAdvantage;
 }
-export function toggleCardPlay(state, teamIdx) {
-  const c = myChoices(state, teamIdx);
-  c.useCard = !c.useCard;
-}
-export function toggleInjuryPrevention(state, teamIdx) {
-  const c = myChoices(state, teamIdx);
-  c.useInjuryPrevention = !c.useInjuryPrevention;
-}
 
+// The instant, one-shot resolver — used only by simulateAllPlayoffs' fast-forward now that a
+// human-watched match plays out turn by turn instead (see game/turn.js's beginTurn/advanceTurn,
+// wired up in PlayoffSeriesScreen). Produces the same m.result shape either way, since
+// MatchupBox/ResultsScreen/SeasonRecapScreen read it without caring which path produced it.
 export function rollCurrentMatchup(state) {
   const m = state.playoff.matches[state.playoff.activeMatchIndex];
   if (m.from) {
@@ -150,21 +189,37 @@ export function rollCurrentMatchup(state) {
   const extraB = { offDelta: 0, defDelta: 0, leagueMod: 0 };
   const cardNotes = [];
 
+  const hcaA = hasHomeCourt(m.a);
+  const hcaB = hasHomeCourt(m.b);
+  if (hcaA) { extraA.offDelta += HOME_COURT_BONUS; extraA.defDelta += HOME_COURT_BONUS; }
+  if (hcaB) { extraB.offDelta += HOME_COURT_BONUS; extraB.defDelta += HOME_COURT_BONUS; }
+
+  idsB = applyLiveFanbaseMod(m.a, m.b, extraA, idsB, cardNotes);
+  idsA = applyLiveFanbaseMod(m.b, m.a, extraB, idsA, cardNotes);
+
   const choicesA = cardChoicesFor(state.playoff, m.a);
   const choicesB = cardChoicesFor(state.playoff, m.b);
-  function eligible(team) { return team.matchupCard && !team.matchupCard.used && team.matchupCard.playable; }
-  const aPlays = eligible(m.a) && (m.a.human ? choicesA.useCard : true);
-  const bPlays = eligible(m.b) && (m.b.human ? choicesB.useCard : true);
+  // AI plays the first eligible card it's holding, targeting a random opposing player when the
+  // card needs one; a human plays whichever one (and whichever target) they selected in the UI.
+  function cardToPlay(team, choices) {
+    const options = playableCards(team);
+    if (!options.length) return { card: null, targetId: null };
+    if (!team.human) return { card: options[0], targetId: null };
+    const card = options.find((c) => c.id === choices.selectedCardId) || null;
+    return { card, targetId: card ? choices.selectedTargetId : null };
+  }
+  const a = cardToPlay(m.a, choicesA);
+  const b = cardToPlay(m.b, choicesB);
 
-  if (aPlays) {
-    const res = playCardEffect(m.a, m.b, idsB, state.playoff);
+  if (a.card) {
+    const res = playCardEffect(m.a, m.b, idsB, state.playoff, a.card, a.targetId);
     idsB = res.targetIds;
     extraA.offDelta += res.userOffDelta; extraA.defDelta += res.userDefDelta; extraA.leagueMod += res.userLeagueMod;
     extraB.offDelta += res.targetOffDelta; extraB.defDelta += res.targetDefDelta;
     if (res.note) cardNotes.push({ text: res.note, cardName: res.cardName });
   }
-  if (bPlays) {
-    const res = playCardEffect(m.b, m.a, idsA, state.playoff);
+  if (b.card) {
+    const res = playCardEffect(m.b, m.a, idsA, state.playoff, b.card, b.targetId);
     idsA = res.targetIds;
     extraB.offDelta += res.userOffDelta; extraB.defDelta += res.userDefDelta; extraB.leagueMod += res.userLeagueMod;
     extraA.offDelta += res.targetOffDelta; extraA.defDelta += res.targetDefDelta;
@@ -177,37 +232,30 @@ export function rollCurrentMatchup(state) {
   m.result.cardNotes = cardNotes;
   m.result.aExtra = extraA;
   m.result.bExtra = extraB;
+  m.result.hcaA = hcaA;
+  m.result.hcaB = hcaB;
+  applyPlayoffWinMilestone(m.result.winner);
   state.playoff.cardChoices ||= {};
-  state.playoff.cardChoices[m.a.id] = { useAdvantage: false, useCard: false, useInjuryPrevention: false };
-  state.playoff.cardChoices[m.b.id] = { useAdvantage: false, useCard: false, useInjuryPrevention: false };
+  state.playoff.cardChoices[m.a.id] = { useAdvantage: false, selectedCardId: null, selectedTargetId: null, useInjuryPrevention: false };
+  state.playoff.cardChoices[m.b.id] = { useAdvantage: false, selectedCardId: null, selectedTargetId: null, useInjuryPrevention: false };
 }
 
-export function openGlossary(state) {
-  if (state.phase === 'glossary') return;
-  state.returnPhase = state.phase;
-  state.phase = 'glossary';
-}
-export function closeGlossary(state) {
-  state.phase = state.returnPhase || 'setup';
-}
-
-export function openLeague(state) {
-  if (state.phase === 'league') return;
-  state.returnPhase = state.phase;
-  state.phase = 'league';
-}
-export function closeLeague(state) {
-  state.phase = state.returnPhase || 'setup';
+// Resolves every remaining playoff match automatically, round by round — a fast-forward for
+// players who don't want to click through each series. Any card/advantage choice a human
+// already queued up for the match currently open is used; every other match (including any
+// human match reached along the way) rolls with no cards played and no advantage used, same
+// as an AI team with nothing selected. Leaves the bracket screen showing final results.
+export function simulateAllPlayoffs(state) {
+  const matches = state.playoff.matches;
+  while (matches.some((m) => !m.result)) {
+    const idx = matches.findIndex((m) => !m.result && isMatchUnlocked(matches, m));
+    if (idx < 0) break; // shouldn't happen — every remaining match is eventually unlocked
+    state.playoff.activeMatchIndex = idx;
+    rollCurrentMatchup(state);
+  }
+  state.playoff.activeMatchIndex = null;
 }
 
-export function openSettings(state) {
-  if (state.phase === 'settings') return;
-  state.returnPhase = state.phase;
-  state.phase = 'settings';
-}
-export function closeSettings(state) {
-  state.phase = state.returnPhase || 'setup';
-}
 export function updateSettings(state, patch) {
   state.settings = { ...state.settings, ...patch };
 }
