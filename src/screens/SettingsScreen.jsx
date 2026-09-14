@@ -1,3 +1,6 @@
+import EraSettingsFields from '../components/EraSettingsFields';
+import { useDarkMode } from '../hooks/useDarkMode';
+
 const ACTION_LOG_SPEED_OPTIONS = [
   { value: 'slow', label: 'Slow' },
   { value: 'normal', label: 'Normal' },
@@ -5,13 +8,27 @@ const ACTION_LOG_SPEED_OPTIONS = [
   { value: 'instant', label: 'Instant' },
 ];
 
-export default function SettingsScreen({ state, actions }) {
+export default function SettingsScreen({ state, actions, onBack, onNewEra }) {
   const s = state.settings;
+  const winCondition = s.winCondition || 'bar';
+  const { darkMode, setDarkMode } = useDarkMode();
   return (
     <>
       <div className="screen">
         <h1>Settings</h1>
         <p className="lede">House rules for this era. Changes apply immediately — to the next dice roll and the next season's championship bar.</p>
+        <div className="pull-slot">
+          <div className="pull-label">Display</div>
+          <button
+            className={darkMode ? 'primary' : 'secondary'}
+            style={{ width: '100%' }}
+            onClick={() => setDarkMode((d) => !d)}
+          >
+            {darkMode ? 'Dark Mode — On' : 'Dark Mode — Off'}
+          </button>
+          <div className="pull-extra">A darker app background — this device only, doesn't sync to other players in a room.</div>
+        </div>
+        <EraSettingsFields settings={s} actions={actions} />
         <div className="pull-slot">
           <div className="pull-label">Injury Chance (per team, per matchup)</div>
           <input
@@ -44,7 +61,11 @@ export default function SettingsScreen({ state, actions }) {
               actions.updateSettings({ championshipBarMult: mult });
             }}
           />
-          <div className="pull-extra">The Finals winner's rating must clear (playoff-field average rating × this multiplier) to be crowned champion.</div>
+          <div className="pull-extra">
+            {winCondition === 'outright'
+              ? "Not used while Win Condition is set to Win Playoffs Outright."
+              : "The Finals winner's rating must clear (playoff-field average rating × this multiplier) to be crowned champion."}
+          </div>
         </div>
         <div className="pull-slot">
           <div className="pull-label">Action Log Speed</div>
@@ -62,9 +83,22 @@ export default function SettingsScreen({ state, actions }) {
           </div>
           <div className="pull-extra">How quickly a playoff matchup's Action Log plays out entries — from dice rolls to injuries to card plays. Instant skips the animation entirely.</div>
         </div>
+        {onNewEra && (
+          <div className="pull-slot">
+            <div className="pull-label">Danger Zone</div>
+            <button
+              className="secondary"
+              style={{ width: '100%' }}
+              onClick={() => { if (confirm('Start a new era? Current progress will be lost.')) onNewEra(); }}
+            >
+              New Era
+            </button>
+            <div className="pull-extra">Resets the era for everyone. Current progress will be lost.</div>
+          </div>
+        )}
       </div>
       <div className="bottombar">
-        <button className="primary" onClick={actions.closeSettings}>Back</button>
+        <button className="primary" onClick={onBack}>Back</button>
       </div>
     </>
   );

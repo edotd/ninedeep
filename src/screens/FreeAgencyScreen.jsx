@@ -32,12 +32,16 @@ export default function FreeAgencyScreen({ state, actions, myTeamId }) {
           if (res && res.ok === false) alert(res.msg);
         }}>Sign Undrafted Talent</button>
         <h2>Free Agent Pool ({state.freeAgents.length})</h2>
-        {state.freeAgents.length ? state.freeAgents.map((c) => (
-          <PlayerCard key={c.id} card={c} draftStyle onClick={() => {
-            const res = actions.signFreeAgent(c.id, myTeamId);
-            if (res && res.ok === false) alert(res.msg);
-          }} />
-        )) : <p className="lede">Pool is empty right now.</p>}
+        {state.freeAgents.length ? (
+          <div className="fa-grid">
+            {state.freeAgents.map((c) => (
+              <PlayerCard key={c.id} card={c} draftStyle onClick={() => {
+                const res = actions.signFreeAgent(c.id, myTeamId);
+                if (res && res.ok === false) alert(res.msg);
+              }} />
+            ))}
+          </div>
+        ) : <p className="lede">Pool is empty right now.</p>}
       </div>
       <div className="bottombar">
         <button className="primary" onClick={actions.finishFreeAgency}>

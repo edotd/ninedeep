@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import SoloGame from './SoloGame';
 import OnlineGame from './OnlineGame';
 import LandingScreen from './screens/LandingScreen';
+import { DarkModeProvider } from './hooks/useDarkMode';
 
-export default function App() {
+function AppInner() {
   const [mode, setMode] = useState(null); // null | 'solo' | { roomCode, uid }
   const [pendingJoinCode, setPendingJoinCode] = useState('');
 
@@ -24,5 +25,13 @@ export default function App() {
       onSolo={() => setMode('solo')}
       onEnterRoom={(roomCode, uid) => setMode({ roomCode, uid })}
     />
+  );
+}
+
+export default function App() {
+  return (
+    <DarkModeProvider>
+      <AppInner />
+    </DarkModeProvider>
   );
 }
