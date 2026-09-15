@@ -16,18 +16,30 @@ const SEASON_SIM_GAMES = 100;
 // or matchup-specific, not standing passive bonuses, and there's no opponent to play against
 // here anyway. Nothing here is shown to the player as a "game" — it's averaged into two
 // numbers before anyone sees it.
+//
+// Bench score is folded in (split evenly across the two sides) so Off Avg + Def Avg lands on
+// the same basis as teamOutput's Projected Output (the persistent bar / tip-off screen) —
+// bench is a fixed, non-random contributor to both, so it's added after the dice average
+// rather than rolled for. Leaving it out made the two numbers measure different things: a
+// team with a strong bench and an ordinary coach die would show a simulated average several
+// points *below* its projected output, and a Hall-of-Fame die with a thin bench would show one
+// several points *above* it — same team, no real inconsistency, just two mismatched formulas.
 export function simulateSeasonOutput(team, games = SEASON_SIM_GAMES) {
   if (!team.coach || !team.activeIds || team.activeIds.length === 0) return { off: null, def: null };
   const offSides = offenseDieSize(team);
   const defSides = defenseDieSize(team);
   const offMod = offenseModifier(team);
   const defMod = defenseModifier(team);
+  const benchHalf = benchScore(team) / 2;
   let offTotal = 0, defTotal = 0;
   for (let i = 0; i < games; i++) {
     offTotal += rollDie(offSides) + offMod;
     defTotal += rollDie(defSides) + defMod;
   }
-  return { off: Math.round((offTotal / games) * 10) / 10, def: Math.round((defTotal / games) * 10) / 10 };
+  return {
+    off: Math.round((offTotal / games + benchHalf) * 10) / 10,
+    def: Math.round((defTotal / games + benchHalf) * 10) / 10,
+  };
 }
 
 // Rolls for a pre-matchup injury, or removes a specifically chosen player when a matchup
@@ -57,11 +69,16 @@ export function benchScore(team, idsOverride) {
   return Math.round(sum / 20);
 }
 
-// The deterministic (no-dice) portion of a team's matchup score — used for the Standings
-// tab and the Lineup screen so players can compare teams without waiting for a roll.
+// A team's expected matchup score — shown everywhere as "Projected Output" (persistent bar,
+// tip-off, bracket, team screens). Folds in the *expected value* of the offense/defense dice
+// (avg of 1..sides is (sides+1)/2) rather than skipping them, so a team with a bigger coach
+// die actually projects higher than one with the same modifiers and a smaller die — and so
+// this lines up with simulateSeasonOutput's real-dice average below (that one converges to
+// this exact number as its 100-game sample grows; the two used to disagree because this
+// ignored dice entirely while that only averaged dice, each missing what the other had).
 export function teamOutput(team) {
-  const off = offenseModifier(team);
-  const def = defenseModifier(team);
+  const off = Math.round(offenseModifier(team) + (offenseDieSize(team) + 1) / 2);
+  const def = Math.round(defenseModifier(team) + (defenseDieSize(team) + 1) / 2);
   const bench = benchScore(team);
   return { off, def, bench, total: off + def + bench };
 }
