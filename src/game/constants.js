@@ -4,11 +4,11 @@
 export const POSITIONS = ['Guard', 'Forward', 'Big'];
 
 export const ARCHETYPES = {
-  'Dimer':      { base: { SCO: 4, PLM: 10, REB: 3, DEF: 5 }, peak: 'PLM' },
+  'Pass-First': { base: { SCO: 4, PLM: 10, REB: 3, DEF: 5 }, peak: 'PLM' },
   'Scorer':     { base: { SCO: 10, PLM: 4, REB: 3, DEF: 4 }, peak: 'SCO' },
   'Playmaker':  { base: { SCO: 6, PLM: 9, REB: 2, DEF: 4 }, peak: 'PLM' },
   'Balanced':   { base: { SCO: 6, PLM: 6, REB: 6, DEF: 6 }, peak: 'SCO' },
-  'Sniper':     { base: { SCO: 9, PLM: 2, REB: 2, DEF: 4 }, peak: 'SCO' },
+  'Marksman':   { base: { SCO: 9, PLM: 2, REB: 2, DEF: 4 }, peak: 'SCO' },
   'Rebounder':  { base: { SCO: 3, PLM: 2, REB: 10, DEF: 5 }, peak: 'REB' },
   'Defender':   { base: { SCO: 2, PLM: 3, REB: 5, DEF: 10 }, peak: 'DEF' },
 };
