@@ -1,6 +1,7 @@
 import { formatCoins } from '../game/economy';
 import { careerLevel, careerBonus } from '../game/aging';
 import { cardTier, rawOverall } from '../game/cards';
+import CardTypeMark from './CardTypeMark';
 
 export default function PlayerCard({ card, onClick, selected, draftStyle, rosterLabel, compact }) {
   const pillLabel = rosterLabel || (selected ? 'Selected' : null);
@@ -17,8 +18,15 @@ export default function PlayerCard({ card, onClick, selected, draftStyle, roster
 
   return (
     <div className={`pcard tier-${tier}${compact ? ' pcard-compact' : ''}${selected ? ' selected' : ''}`} onClick={onClick}>
+      <CardTypeMark
+        type="player"
+        size={compact ? 90 : 170}
+        className="pcard-watermark"
+        color={tier === 'EXP' ? 'var(--ink-rule)' : 'var(--depth-nontext)'}
+      />
       <div className="pcard-header">
         <span className="pcard-header-pos">{card.position} · {card.archetype}</span>
+        <CardTypeMark type="player" size={16} />
       </div>
       <div className="pcard-name-block">
         <div className="pcard-jersey">{rawOverall(card)}</div>

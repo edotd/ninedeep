@@ -230,7 +230,16 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 }
 
 /* ---------- Player Card (see brand handoff, "Component: Player Card") ---------- */
-.pcard{background:var(--form);border:2px solid var(--ink);width:100%;max-width:264px;margin:0 auto 14px;cursor:pointer;font-family:var(--font-mono);}
+.pcard{position:relative;overflow:hidden;background:var(--form);border:2px solid var(--ink);width:100%;max-width:264px;margin:0 auto 14px;cursor:pointer;font-family:var(--font-mono);}
+/* The type mark, ghosted large in a bottom corner — per the brand handoff's "Pre-deal
+   landing (3A)", the same watermark treatment behind each card-type section, brought onto
+   the cards themselves. z-index:-1 keeps it behind every in-flow child without needing to
+   touch each of those children's own stacking. */
+/* Anchored mid-card (not bottom) — the header and footer strips are both opaque and would
+   otherwise clip most of a bottom-anchored mark; the contract/stats bands in between have no
+   background of their own, so the mark actually shows through there. */
+.pcard-watermark{position:absolute;right:-22px;top:140px;z-index:-1;opacity:.16;pointer-events:none;}
+.pcard-compact .pcard-watermark{top:auto;bottom:-10px;right:-14px;}
 .pcard.selected{outline:3px solid var(--franchise);outline-offset:2px;}
 .pcard-header{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:var(--ink);color:var(--file);}
 .pcard-header-pos{font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;}
@@ -366,8 +375,10 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 
 /* ================= Front Office card (see brand handoff, "Components: Front Office &
    Matchup Cards") — landscape, ink ground, distinct silhouette from the player card. ============= */
-.fo2-card{background:var(--ink);border:2px solid var(--ink);width:100%;max-width:340px;margin:0 auto 14px;font-family:var(--font-mono);}
+.fo2-card{position:relative;overflow:hidden;background:var(--ink);border:2px solid var(--ink);width:100%;max-width:340px;margin:0 auto 14px;font-family:var(--font-mono);}
+.fo2-watermark{position:absolute;right:-20px;bottom:-18px;z-index:-1;opacity:.16;pointer-events:none;}
 .fo2-header{display:flex;justify-content:space-between;align-items:center;padding:10px 13px;border-bottom:1px solid var(--ink-rule);}
+.fo2-kind-group{display:inline-flex;align-items:center;gap:8px;color:var(--file);}
 .fo2-kind-label{font-family:var(--font-display);font-size:26px;line-height:1;letter-spacing:.02em;text-transform:uppercase;color:var(--file);}
 .fo2-kind-badge{font-family:var(--font-label);font-size:9px;letter-spacing:.06em;}
 .fo2-kind-badge.franchise{color:var(--franchise);}
@@ -387,9 +398,11 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .fo2-footer{display:flex;justify-content:space-between;padding:7px 13px;background:var(--ink-deep);font-size:9px;letter-spacing:.06em;color:var(--ink-muted);text-transform:uppercase;}
 
 /* ================= Matchup card — square, form ground, torn stamp edge. ================= */
-.mu2-card{background:var(--form);border:3px solid var(--stamp);width:100%;max-width:280px;margin:0 auto 14px;display:flex;flex-direction:column;font-family:var(--font-mono);}
+.mu2-card{position:relative;overflow:hidden;background:var(--form);border:3px solid var(--stamp);width:100%;max-width:280px;margin:0 auto 14px;display:flex;flex-direction:column;font-family:var(--font-mono);}
+.mu2-watermark{position:absolute;right:-18px;bottom:-14px;z-index:-1;opacity:.14;pointer-events:none;}
 .mu2-header{display:flex;justify-content:space-between;align-items:center;padding:7px 12px;background:var(--stamp);}
-.mu2-header span:first-child{font-family:var(--font-label);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--form);}
+.mu2-header span:first-child,.mu2-kind-group{font-family:var(--font-label);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--form);}
+.mu2-kind-group{display:inline-flex;align-items:center;gap:6px;}
 .mu2-header span:last-child{font-family:var(--font-mono);font-size:10px;color:var(--stamp-plate-text);}
 .mu2-name{font-family:var(--font-display);font-size:34px;line-height:.85;color:var(--ink);padding:14px 12px 6px;margin:0;}
 .mu2-statement{font-size:11px;line-height:1.45;color:var(--file-body);padding:0 12px;margin:0 0 12px;}

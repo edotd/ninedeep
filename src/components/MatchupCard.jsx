@@ -1,3 +1,5 @@
+import CardTypeMark from './CardTypeMark';
+
 // Matchup card, per the brand handoff's "Components: Front Office & Matchup Cards" — square,
 // stamp-bordered, torn bottom edge. The spec's two fixed bottom rows ("IF UNANSWERED" /
 // "COUNTER") are written for a card imposed on you by an opponent; in this game every
@@ -25,8 +27,9 @@ export default function MatchupCard({ card, playoff }) {
   return (
     <div className="mu2-wrap">
       <div className={'mu2-card' + (playoff ? ' playoff' : '')}>
+        <CardTypeMark type="matchup" className="mu2-watermark" color={playoff ? 'var(--ink-rule)' : 'var(--file-rule)'} size={170} />
         <div className="mu2-header">
-          <span>Matchup</span>
+          <span className="mu2-kind-group"><CardTypeMark type="matchup" size={16} />Matchup</span>
           <span>One Game</span>
         </div>
         <div className="mu2-name">{card.name}</div>

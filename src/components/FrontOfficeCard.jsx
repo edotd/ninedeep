@@ -1,5 +1,6 @@
 import { formatCoins } from '../game/economy';
 import { retentionBonus, relationshipBonus } from '../game/cards';
+import CardTypeMark from './CardTypeMark';
 
 // Front Office card, per the brand handoff's "Components: Front Office & Matchup Cards" —
 // landscape, ink ground, told apart from a Player card by shape alone. One component covers
@@ -83,8 +84,12 @@ export default function FrontOfficeCard({ kind, team }) {
   return (
     <div className="fo2-wrap">
       <div className="fo2-card">
+        <CardTypeMark type="frontoffice" className="fo2-watermark" color="var(--ink-rule)" size={190} />
         <div className="fo2-header">
-          <span className="fo2-kind-label">{meta.label}</span>
+          <span className="fo2-kind-group">
+            <CardTypeMark type="frontoffice" size={16} />
+            <span className="fo2-kind-label">{meta.label}</span>
+          </span>
           <span className={'fo2-kind-badge ' + content.badgeTone}>{meta.badge}</span>
         </div>
         <div className="fo2-name-row">
