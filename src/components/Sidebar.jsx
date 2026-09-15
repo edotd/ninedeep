@@ -47,7 +47,7 @@ export default function Sidebar({ state, myTeamId, overlay, onNav }) {
         </div>
         <div className="sidebar-titles">
           <span className="sidebar-titles-value">{team.titles}</span>
-          <span className="sidebar-titles-label">Championship{team.titles === 1 ? '' : 's'} Filed</span>
+          <span className="sidebar-titles-label">Championship{team.titles === 1 ? '' : 's'}</span>
         </div>
       </div>
     </div>

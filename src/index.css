@@ -532,13 +532,17 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
    padding-free like .ts-screen/.sr-screen so .tipoff-inner controls the actual gutter and the
    background always fills whatever width the shell gives it. ================= */
 .tipoff-screen{background:var(--ink);padding:0;}
+.desktop-content .tipoff-screen{padding:0;max-width:none;margin:0;}
 .tipoff-inner{padding:20px 16px 28px;}
 @media (min-width:700px){.tipoff-inner{padding:24px 28px 32px;}}
+@media (min-width:1000px){.tipoff-inner{max-width:1080px;margin:0 auto;}}
 .tipoff-header-row{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--ink-rule);padding-bottom:12px;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
 .tipoff-label{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;color:var(--ink-muted);text-transform:uppercase;}
 .tipoff-tipoff-tag{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;color:var(--ink-muted);text-transform:uppercase;}
-.tipoff-row{display:flex;align-items:stretch;gap:20px;margin-bottom:24px;}
-.tipoff-vs{font-family:var(--font-display);font-size:32px;color:var(--stamp-ink);flex-shrink:0;align-self:center;}
+.tipoff-row{display:flex;align-items:stretch;justify-content:center;gap:20px;margin-bottom:24px;}
+.tipoff-vs{position:relative;width:88px;height:70px;flex-shrink:0;align-self:center;display:flex;align-items:center;justify-content:center;}
+.tipoff-vs-text,.tipoff-vs-logo{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:68px;color:var(--stamp-ink);transition:opacity .4s ease;}
+.tipoff-vs-text.hidden,.tipoff-vs-logo.hidden{opacity:0;}
 .tipoff-team{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;}
 .tipoff-team.away{align-items:flex-end;text-align:right;}
 .tipoff-team-tags{display:flex;gap:10px;align-items:center;}
@@ -551,18 +555,12 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .tipoff-output{font-family:var(--font-display);font-size:64px;line-height:.8;color:var(--file);}
 .tipoff-output.mine{color:var(--franchise);}
 .tipoff-substats{font-family:var(--font-mono);font-size:11px;color:var(--ink-muted);}
-.tipoff-dots{display:flex;align-items:center;gap:5px;margin-top:2px;}
-.tipoff-team.away .tipoff-dots{flex-direction:row-reverse;}
-.tipoff-dot{width:10px;height:10px;border-radius:50%;background:var(--file);}
-.tipoff-dot:not(.filled){background:none;box-shadow:inset 0 0 0 1.5px var(--depth-nontext);}
-.tipoff-dots-label{font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;color:var(--ink-muted);margin:0 6px;text-transform:uppercase;}
-.tipoff-cards-row{display:flex;gap:32px;border-top:1px solid var(--ink-rule);padding-top:20px;flex-wrap:wrap;}
+.tipoff-cards-row{display:flex;gap:32px;border-top:1px solid var(--ink-rule);padding-top:20px;flex-wrap:wrap;justify-content:center;}
 .tipoff-cards-col{flex:1;min-width:260px;display:flex;flex-direction:column;gap:12px;}
-.tipoff-cards-heading{display:flex;justify-content:space-between;gap:10px;font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--ink-muted);text-transform:uppercase;}
-.tipoff-cards-heading span:first-child{font-family:var(--font-label);color:var(--file);letter-spacing:.12em;}
-.tipoff-cards-col:last-child .tipoff-cards-heading span:last-child{font-family:var(--font-label);color:var(--file);letter-spacing:.12em;}
-.tipoff-cards-col:last-child .tipoff-cards-heading span:first-child{font-family:var(--font-mono);color:var(--ink-muted);}
+.tipoff-cards-col.away{align-items:flex-end;text-align:right;}
+.tipoff-cards-heading{font-family:var(--font-label);font-size:10px;letter-spacing:.12em;color:var(--file);text-transform:uppercase;}
 .tipoff-cards-list{display:flex;gap:12px;flex-wrap:wrap;}
+.tipoff-cards-col.away .tipoff-cards-list{justify-content:flex-end;}
 .tipoff-card{width:140px;font-family:var(--font-mono);font-size:11px;}
 .tipoff-card.faceup{background:var(--form);border:3px solid var(--stamp);display:flex;flex-direction:column;}
 .tipoff-card.facedown{background:var(--ink-deep);box-shadow:inset 0 0 0 1px var(--ink-rule);display:flex;flex-direction:column;}
@@ -576,8 +574,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .tipoff-facedown-dots{display:grid;grid-template-columns:repeat(3,7px);gap:6px;justify-content:center;padding:16px 8px;}
 .tipoff-facedown-dot{width:7px;height:7px;border-radius:50%;background:var(--ink-muted);}
 .tipoff-facedown-dot.centre{background:var(--franchise);}
-.tipoff-fineprint{font-family:var(--font-mono);font-size:10px;line-height:1.5;color:var(--ink-muted);margin:18px 0 0;}
-@media (max-width:480px){.tipoff-name{font-size:26px;}.tipoff-output{font-size:40px;}.tipoff-row{flex-direction:column;}.tipoff-team.away{align-items:flex-start;text-align:left;}.tipoff-team.away .tipoff-team-tags,.tipoff-team.away .tipoff-dots{flex-direction:row;}.tipoff-vs{align-self:flex-start;}}
+@media (max-width:480px){.tipoff-name{font-size:26px;}.tipoff-output{font-size:40px;}.tipoff-row{flex-direction:column;}.tipoff-team.away{align-items:flex-start;text-align:left;}.tipoff-team.away .tipoff-team-tags{flex-direction:row;}.tipoff-cards-col.away{align-items:flex-start;text-align:left;}.tipoff-cards-col.away .tipoff-cards-list{justify-content:flex-start;}.tipoff-vs{align-self:flex-start;}}
 
 /* ================= The Turn (2C) — brand handoff Screens: Playoffs & Match Play. Ink ground.
    Design doc lays this out as three desktop columns (rail / stage panel / game log); this app
@@ -666,6 +663,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .bracket-team-name.muted{color:var(--file-muted);}
 .bracket-team-name.mine{color:var(--stamp-text);}
 .bracket-team-proj{font-family:var(--font-display);font-size:19px;color:var(--ink);flex-shrink:0;}
+.bracket-team-tbd{padding:22px 11px;text-align:center;font-family:var(--font-display);font-size:18px;color:var(--file-muted);}
 .bracket-footer{margin-top:16px;}
 
 /* The bracket tree itself — two symmetric halves (each QF1+QF2 or QF3+QF4 converging on a
@@ -703,6 +701,27 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .bracket-node.final .bracket-match-header{background:var(--stamp);color:var(--stamp-plate-text);}
 .bracket-node-btn{width:calc(100% - 16px) !important;margin:8px !important;padding:9px 10px !important;font-size:10px !important;}
 @media (max-width:480px){.bracket-title{font-size:30px;}}
+/* The bracket screen fills the full window height on desktop now (no capped 900px pane), so
+   the tree gets scaled up ~1.35x to use the extra vertical room instead of leaving empty space
+   at the bottom — same proportions as the base sizing above, just larger. */
+@media (min-width:1000px){
+  .bracket-half{min-width:280px;height:460px;}
+  .bracket-centre{flex:0 0 240px;height:460px;}
+  .bracket-node-slot.bottom{top:250px;}
+  .bracket-sf-slot{top:125px;width:29%;}
+  .bracket-line-h.top{top:99px;}
+  .bracket-line-h.bottom{top:348px;}
+  .bracket-line-v{top:99px;height:250px;}
+  .bracket-line-h.mid{top:223px;}
+  .bracket-line-h.to-final{top:223px;}
+  .bracket-team-row{padding:14px 14px;}
+  .bracket-team-seed{font-size:28px;width:24px;}
+  .bracket-team-name{font-size:24px;}
+  .bracket-team-proj{font-size:26px;}
+  .bracket-match-header{padding:10px 14px;font-size:11px;}
+  .bracket-team-tbd{font-size:24px;padding:32px 14px;}
+  .bracket-node-btn{font-size:13px !important;padding:12px 10px !important;}
+}
 
 /* ================= Dark mode — a device-level display preference (Settings screen),
    independent of any game state. Flips the app CANVAS from file (cream) to ink (navy) using

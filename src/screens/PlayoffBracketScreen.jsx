@@ -25,10 +25,9 @@ function TeamRow({ seed, team, isMine, output }) {
 }
 
 // A quarterfinal, semifinal, or the Final — same node shape throughout the tree, per the
-// design doc's bracket (2A). A semifinal/Final not yet fed by its earlier round shows a named
-// placeholder ("Winner QF1") instead of the plain "TBD" a first-round node uses when somehow
-// still locked.
-function BracketNode({ label, m, matches, index, myTeamId, actions, pendingA, pendingB, big, narrow }) {
+// design doc's bracket (2A). A semifinal/Final not yet fed by its earlier round shows a
+// single centered "TBD" until both feeder matches are decided.
+function BracketNode({ label, m, matches, index, myTeamId, actions, big, narrow }) {
   const { a, b } = matchTeams(matches, m);
   const unlocked = isMatchUnlocked(matches, m);
   const isFinal = m.label === 'Final';
@@ -39,10 +38,7 @@ function BracketNode({ label, m, matches, index, myTeamId, actions, pendingA, pe
         <span>{unlocked ? (m.result ? 'Filed' : 'Ready') : 'Pending'}</span>
       </div>
       {!unlocked ? (
-        <>
-          <div className="bracket-team-row"><div className="bracket-team-seed">—</div><div className="bracket-team-name muted">{pendingA}</div></div>
-          <div className="bracket-team-row"><div className="bracket-team-seed">—</div><div className="bracket-team-name muted">{pendingB}</div></div>
-        </>
+        <div className="bracket-team-tbd">TBD</div>
       ) : (
         <>
           <TeamRow seed={a ? a.seed : null} team={a} isMine={a && a.id === myTeamId} output={outputFor(a)} />
@@ -100,13 +96,13 @@ export default function PlayoffBracketScreen({ state, actions, myTeamId }) {
             <div className="bracket-line bracket-line-v" />
             <div className="bracket-line bracket-line-h mid" />
             <div className="bracket-sf-slot">
-              <BracketNode label="SF 1" m={matches[4]} matches={matches} index={4} myTeamId={myTeamId} actions={actions} pendingA="Winner QF1" pendingB="Winner QF2" narrow />
+              <BracketNode label="SF 1" m={matches[4]} matches={matches} index={4} myTeamId={myTeamId} actions={actions} narrow />
             </div>
             <div className="bracket-line bracket-line-h to-final" />
           </div>
 
           <div className="bracket-centre">
-            <BracketNode label="The Final" m={matches[6]} matches={matches} index={6} myTeamId={myTeamId} actions={actions} pendingA="Winner SF1" pendingB="Winner SF2" big />
+            <BracketNode label="The Final" m={matches[6]} matches={matches} index={6} myTeamId={myTeamId} actions={actions} big />
           </div>
 
           <div className="bracket-half right">
@@ -121,7 +117,7 @@ export default function PlayoffBracketScreen({ state, actions, myTeamId }) {
             <div className="bracket-line bracket-line-v" />
             <div className="bracket-line bracket-line-h mid" />
             <div className="bracket-sf-slot">
-              <BracketNode label="SF 2" m={matches[5]} matches={matches} index={5} myTeamId={myTeamId} actions={actions} pendingA="Winner QF3" pendingB="Winner QF4" narrow />
+              <BracketNode label="SF 2" m={matches[5]} matches={matches} index={5} myTeamId={myTeamId} actions={actions} narrow />
             </div>
             <div className="bracket-line bracket-line-h to-final" />
           </div>
