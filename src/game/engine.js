@@ -8,10 +8,8 @@
 // instead of assuming state.teams[0] — in solo mode the caller always passes 0; in a shared
 // room, the caller resolves teamIdx from the acting player's own seat (ownerUid) first. See
 // game/useLocalGame.js and game/useRoomGame.js for the two callers.
-import { drawCoachCard, applyCoachRetention, drawMatchupModifierCard } from './cards';
-import { weightedPick } from './rng';
-import { MARKETS, FANBASE_ARCHETYPES, MATCHUP_CARD_DRAW_COUNT, HOME_COURT_BONUS } from './constants';
-import { finalizeCap, rollMarketCapAdj } from './economy';
+import { drawMatchupModifierCard } from './cards';
+import { MATCHUP_CARD_DRAW_COUNT, HOME_COURT_BONUS } from './constants';
 import { autoSelectFive, validateLineup } from './roster';
 import {
   buildStarPool, buildTeams, defaultSoloSeats, dealHands, initFrontOffice,
@@ -21,7 +19,7 @@ import {
   checkInjury, playCardEffect, playMatchup, wantsAdvantage, cardChoicesFor, playableCards,
   isMatchUnlocked, hasHomeCourt, applyLiveFanbaseMod,
 } from './matchup';
-import { initAttendance, applyPlayoffWinMilestone } from './fanbase';
+import { applyPlayoffWinMilestone } from './fanbase';
 
 function humanTeams(state) {
   return state.teams.filter((t) => t.human);
@@ -50,37 +48,8 @@ export function proceedFromCardOverview(state) {
   state.phase = 'pullhand';
 }
 
-export function pullCoach(state, teamIdx) {
-  const team = state.teams[teamIdx];
-  if (team.coach) return;
-  team.coach = drawCoachCard();
-  applyCoachRetention(team, team.coach);
-}
-export function pullFanbase(state, teamIdx) {
-  const team = state.teams[teamIdx];
-  if (team.fanbaseArchetype) return;
-  team.fanbaseArchetype = weightedPick(FANBASE_ARCHETYPES);
-  team.advantageAvailable = team.fanbaseArchetype.name === 'Die Hard';
-}
-export function pullMarket(state, teamIdx) {
-  const team = state.teams[teamIdx];
-  if (team.market) return;
-  const def = weightedPick(MARKETS);
-  team.market = { name: def.name, capAdj: rollMarketCapAdj(def) };
-  // Attendance needs both the fanbase archetype and the market floor, so it's only ever
-  // computed here — after both are guaranteed to exist — not in pullFanbase.
-  if (team.fanbaseArchetype) initAttendance(team);
-  finalizeCap(team, state.season);
-}
-// One-click Front Office pull — deals Coach, Fanbase and Market together instead of the
-// player pulling each individually.
-export function pullFrontOffice(state, teamIdx) {
-  pullCoach(state, teamIdx);
-  pullFanbase(state, teamIdx);
-  pullMarket(state, teamIdx);
-}
-
-// The hand is already dealt (see proceedFromCardOverview) — Front Office is pulled next.
+// The hand is already dealt (see proceedFromCardOverview) — Front Office is pulled next,
+// auto-dealt for every team (see initFrontOffice) with no manual pull button any more.
 export function proceedFromHand(state) {
   initFrontOffice(state);
 }

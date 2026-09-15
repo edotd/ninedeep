@@ -31,16 +31,18 @@ export default function PullModifierScreen({ state, actions, myTeamId }) {
 
   return (
     <>
-      <div className="screen">
+      <div className="screen deal-screen">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
           <h1>Matchup Cards — Season {state.season}</h1>
           {dealing && <button className="reset-link" style={{ flexShrink: 0, marginLeft: 10 }} onClick={handleSkip}>Skip ▸▸</button>}
         </div>
         <p className="lede">Your {cards.length} Matchup Modifier cards for the season. They stay with you the whole season, can't be traded or returned, and a fresh set is dealt next season.</p>
-        <div className="mu-deal-row">
-          {cards.slice(0, dealtCount).map((c, i) => (
-            <div key={c.id ?? i} className="card-deal-in"><MatchupCard card={c} /></div>
-          ))}
+        <div className="deal-centered">
+          <div className="mu-deal-row">
+            {cards.slice(0, dealtCount).map((c, i) => (
+              <div key={c.id ?? i} className="card-deal-in"><MatchupCard card={c} /></div>
+            ))}
+          </div>
         </div>
       </div>
       <div className="bottombar">

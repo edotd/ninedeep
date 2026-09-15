@@ -728,11 +728,21 @@ html[data-theme="dark"] .wordmark-ink{color:var(--file);}
 .co-section-band{display:flex;justify-content:space-between;padding:8px 14px;font-family:var(--font-label);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--form);}
 .co-section.players .co-section-band{background:var(--stamp);}
 .co-section.co-frontoffice .co-section-band{background:var(--franchise);color:var(--ink);}
-.co-section.matchup .co-section-band{background:var(--stamp);}
+.co-section.matchup .co-section-band{background:var(--depth);}
 .co-section-body{padding:16px;}
 .co-section-title{font-family:var(--font-display);font-size:32px;line-height:.85;color:var(--ink);margin-bottom:8px;}
 .co-section-text{font-family:var(--font-mono);font-size:13px;line-height:1.55;color:var(--file-body);margin:0 0 14px;}
+.co-examples{margin:0 0 16px;}
+.co-examples .fa-grid,.co-examples .fo-deal-row,.co-examples .mu-deal-row{max-width:none;margin:0;}
 .co-fine-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;border-top:1px solid var(--form-rule);padding-top:12px;}
 .co-fine-label{font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--file-muted);margin-bottom:3px;}
 .co-fine-value{font-family:var(--font-mono);font-size:12px;line-height:1.4;color:var(--ink);}
 @media (max-width:480px){.co-title{font-size:32px;}.co-section-title{font-size:26px;}}
+
+/* Dealing screens (Hand / Front Office / Matchup Cards) — the card grid now centers in the
+   remaining vertical space below the heading/lede instead of sitting right under it, closer
+   to the middle of the window the way a real deal reads. The grid's own layout (fa-grid /
+   fo-deal-row / mu-deal-row) is untouched — only its vertical position in the screen moves. */
+.deal-screen{display:flex;flex-direction:column;}
+.deal-centered{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:50vh;}
+.deal-block{width:100%;max-width:840px;}

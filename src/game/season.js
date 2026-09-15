@@ -100,24 +100,17 @@ export function initFrontOffice(state) {
   state.phase = 'pullcards';
   state.bar = undefined;
   state.leagueAvg = undefined;
+  // Auto-dealt for every team, human or AI — same "no manual pull button" treatment as the
+  // hand and matchup cards. PullCardsScreen just reveals what's already in state.
   state.teams.forEach((team) => {
-    if (!team.human) {
-      team.coach = drawCoachCard();
-      applyCoachRetention(team, team.coach);
-      team.fanbaseArchetype = weightedPick(FANBASE_ARCHETYPES);
-      const marketDef = weightedPick(MARKETS);
-      team.market = { name: marketDef.name, capAdj: rollMarketCapAdj(marketDef) };
-      initAttendance(team);
-      refreshAdvantage(team);
-      finalizeCap(team, state.season);
-    } else {
-      team.coach = null;
-      team.fanbaseArchetype = null;
-      team.attendance = undefined;
-      team.advantageAvailable = false;
-      team.market = null;
-      team.seasonCap = undefined;
-    }
+    team.coach = drawCoachCard();
+    applyCoachRetention(team, team.coach);
+    team.fanbaseArchetype = weightedPick(FANBASE_ARCHETYPES);
+    const marketDef = weightedPick(MARKETS);
+    team.market = { name: marketDef.name, capAdj: rollMarketCapAdj(marketDef) };
+    initAttendance(team);
+    refreshAdvantage(team);
+    finalizeCap(team, state.season);
   });
 }
 

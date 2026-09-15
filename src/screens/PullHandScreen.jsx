@@ -38,23 +38,27 @@ export default function PullHandScreen({ state, actions, myTeamId }) {
 
   return (
     <>
-      <div className="screen">
+      <div className="screen deal-screen">
         <h1>Your Hand — Season {state.season}</h1>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
           <p className="lede" style={{ margin: 0 }}>Your 9-card hand has been dealt — starters and bench are auto-set for you. Review it here before pulling your Front Office cards next.</p>
           {dealing && <button className="reset-link" style={{ flexShrink: 0, marginLeft: 10 }} onClick={handleSkip}>Skip ▸▸</button>}
         </div>
-        <h2>Starters ({starters.length}/5)</h2>
-        <div className="fa-grid">
-          {starters.map((c) => dealtIds.has(c.id) && (
-            <div key={c.id} className="card-deal-in"><PlayerCard card={c} /></div>
-          ))}
-        </div>
-        <h2>Bench ({bench.length})</h2>
-        <div className="fa-grid">
-          {bench.map((c) => dealtIds.has(c.id) && (
-            <div key={c.id} className="card-deal-in"><PlayerCard card={c} /></div>
-          ))}
+        <div className="deal-centered">
+          <div className="deal-block">
+            <h2>Starters ({starters.length}/5)</h2>
+            <div className="fa-grid">
+              {starters.map((c) => dealtIds.has(c.id) && (
+                <div key={c.id} className="card-deal-in"><PlayerCard card={c} /></div>
+              ))}
+            </div>
+            <h2>Bench ({bench.length})</h2>
+            <div className="fa-grid">
+              {bench.map((c) => dealtIds.has(c.id) && (
+                <div key={c.id} className="card-deal-in"><PlayerCard card={c} /></div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
       <div className="bottombar">
