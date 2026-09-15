@@ -32,12 +32,12 @@ export default function PlayerCard({ card, onClick, selected, draftStyle, roster
         <div className="pcard-jersey">{rawOverall(card)}</div>
         <div className="pcard-name">{card.archetype}</div>
       </div>
-      <div className="pcard-contract">
+      <div className="pcard-contract pcard-caphit-row">
         <span className="pcard-microlabel">Cap Hit</span>
         <span className="pcard-caphit">{formatCoins(card.salary)}</span>
       </div>
       {!compact && (
-        <div className="pcard-contract">
+        <div className="pcard-contract pcard-years-row">
           <span className="pcard-microlabel">Years Left</span>
           <div className="pcard-dots">
             {Array.from({ length: card.maxContract }, (_, i) => (
@@ -55,10 +55,10 @@ export default function PlayerCard({ card, onClick, selected, draftStyle, roster
         </div>
       )}
       {!compact && (
-        <div className="pcard-contract" style={{ alignItems: 'flex-start' }}>
+        <div className="pcard-contract pcard-age-row" style={{ alignItems: 'flex-start' }}>
           <div>
             <div className="pcard-microlabel" style={{ marginBottom: 3 }}>Age {card.age}{draftStyle ? '' : ` · Yr ${yearsServed + 1}/${card.maxContract}`}</div>
-            <div className="pcard-microlabel" style={{ color: levelColor }}>
+            <div className="pcard-microlabel pcard-level" style={{ color: levelColor }}>
               {level} ({bonus >= 0 ? '+' : ''}{bonus.toFixed(2)})
             </div>
           </div>

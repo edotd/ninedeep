@@ -93,7 +93,7 @@ export default function FrontOfficeCard({ kind, team }) {
           <span className={'fo2-kind-badge ' + content.badgeTone}>{meta.badge}</span>
         </div>
         <div className="fo2-name-row">
-          <div>
+          <div className="fo2-name-col">
             <div className="fo2-name">{content.name}</div>
             <div className="fo2-qualifier">{content.qualifier}</div>
           </div>
@@ -108,7 +108,7 @@ export default function FrontOfficeCard({ kind, team }) {
           ))}
         </div>
         <div className="fo2-footer">
-          <span>{content.duration}</span>
+          <span className="fo2-duration">{content.duration}</span>
           <span>Nine Deep</span>
         </div>
       </div>

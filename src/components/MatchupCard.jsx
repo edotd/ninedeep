@@ -35,11 +35,11 @@ export default function MatchupCard({ card, playoff }) {
         <div className="mu2-name">{card.name}</div>
         <p className="mu2-statement">{card.flavor}</p>
         <div className="mu2-rows">
-          <div className="mu2-row">
+          <div className="mu2-row mu2-row-bad">
             <span className="mu2-row-label">If Unanswered</span>
             <span className="mu2-row-value bad">{consequence.ifUnanswered}</span>
           </div>
-          <div className="mu2-row">
+          <div className="mu2-row mu2-row-good">
             <span className="mu2-row-label">Counter</span>
             <span className="mu2-row-value good">{consequence.counter}</span>
           </div>

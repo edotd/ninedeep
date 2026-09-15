@@ -41,6 +41,7 @@
   --font-display: 'Bebas Neue', Impact, sans-serif;
   --font-label: 'Archivo Black', Impact, sans-serif;
   --font-mono: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-hand: 'Caveat', cursive;
   --serif: var(--font-display);
   --sans: var(--font-mono);
   --mono: var(--font-mono);
@@ -767,19 +768,42 @@ html[data-theme="dark"] .wordmark-ink{color:var(--file);}
 .co-meta-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;color:var(--ink-muted);text-transform:uppercase;margin-bottom:3px;}
 .co-meta-value{font-family:var(--font-display);font-size:22px;line-height:.86;color:var(--file);}
 .co-meta-value.accent{color:var(--franchise);}
-.co-section{background:var(--form);border:2px solid var(--ink);margin-bottom:16px;}
-.co-section-band{display:flex;justify-content:space-between;padding:8px 14px;font-family:var(--font-label);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--form);}
-.co-section.players .co-section-band{background:var(--stamp);}
-.co-section.co-frontoffice .co-section-band{background:var(--franchise);color:var(--ink);}
-.co-section.matchup .co-section-band{background:var(--depth);}
-.co-section-body{padding:16px;}
-.co-section-title{font-family:var(--font-display);font-size:32px;line-height:.85;color:var(--ink);margin-bottom:8px;}
-.co-section-text{font-family:var(--font-mono);font-size:13px;line-height:1.55;color:var(--file-body);margin:0 0 14px;}
-.co-examples{margin:0 0 16px;}
-.co-examples .fa-grid,.co-examples .fo-deal-row,.co-examples .mu-deal-row{max-width:none;margin:0;}
-.co-fine-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;border-top:1px solid var(--form-rule);padding-top:12px;}
-.co-fine-label{font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--file-muted);margin-bottom:3px;}
-.co-fine-value{font-family:var(--font-mono);font-size:12px;line-height:1.4;color:var(--ink);}
+/* ---- 3A rewrite: two-column section, no header band — the deal-count eyebrow above the
+   type name replaces it — with a fixed-width left rail and a right annotation stage. ---- */
+.co2-section{background:var(--form);border:2px solid var(--ink);box-sizing:border-box;display:flex;align-items:stretch;margin-bottom:20px;flex-wrap:wrap;}
+.co2-left{width:320px;flex:none;box-sizing:border-box;padding:28px 26px;border-right:1px solid var(--form-rule);display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden;}
+.co2-left-ghost{position:absolute !important;right:-30px;bottom:-34px;pointer-events:none;opacity:.13;}
+.co2-eyebrow{position:relative;font-family:var(--font-mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;}
+.co2-title{position:relative;font-family:var(--font-display);font-size:44px;line-height:.82;color:var(--ink);}
+.co2-body{position:relative;font-family:var(--font-mono);font-size:13px;line-height:1.6;color:var(--file-body);margin:0;}
+.co2-rules{position:relative;margin-top:auto;display:flex;flex-direction:column;gap:12px;padding-top:18px;}
+.co2-rule-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;}
+.co2-rule-value{font-family:var(--font-mono);font-size:12px;line-height:1.5;color:var(--file-body);margin-top:2px;}
+
+.co2-stage-wrap{flex:1;min-width:280px;box-sizing:border-box;padding:28px 26px;display:flex;justify-content:center;align-items:flex-start;}
+.co2-stage{position:relative;flex:none;}
+.co2-card-slot{position:relative;}
+.co2-card-slot .fo2-bullets,.co2-card-slot .mu2-bullets,.co2-mobile .fo2-bullets,.co2-mobile .mu2-bullets{display:none;}
+.co2-note{position:absolute;width:224px;display:flex;flex-direction:column;gap:4px;}
+.co2-note.left{left:0;text-align:right;}
+.co2-note.right{right:0;text-align:left;}
+.co2-note-label{font-family:var(--font-hand);font-weight:600;font-size:25px;line-height:.95;}
+.co2-note-text{font-family:var(--font-mono);font-size:12px;line-height:1.55;color:var(--file-body);}
+.co2-svg{position:absolute;left:0;top:0;pointer-events:none;overflow:visible;}
+
+.co2-mobile{display:flex;flex-direction:column;align-items:center;gap:16px;width:100%;}
+.co2-mobile-notes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font-family:var(--font-mono);font-size:12px;line-height:1.55;color:var(--file-body);width:100%;}
+.co2-mobile-notes b{color:var(--ink);}
+
+.co2-footer{border-top:1px solid var(--ink-rule);padding-top:20px;margin-top:4px;}
+.co2-footer-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.18em;color:var(--ink-muted);text-transform:uppercase;margin-bottom:6px;}
+.co2-footer-text{font-family:var(--font-mono);font-size:12px;line-height:1.55;color:#C6CEDB;max-width:640px;}
+
+@media (max-width:900px){
+  .co2-section{flex-direction:column;}
+  .co2-left{width:100%;border-right:none;border-bottom:1px solid var(--form-rule);}
+  .co2-stage-wrap{width:100%;}
+}
 @media (max-width:480px){.co-title{font-size:32px;}.co-section-title{font-size:26px;}}
 
 /* Dealing screens (Hand / Front Office / Matchup Cards) — the card grid centers with equal
