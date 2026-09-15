@@ -10,22 +10,43 @@ export default function StandingsScreen({ state, actions, myTeamId }) {
   const outright = state.settings && state.settings.winCondition === 'outright';
   return (
     <>
-      <div className="screen">
-        <h1>Season {state.season} Standings</h1>
-        <p className="lede">
-          {madeIt
-            ? `You finished in ${ordinal(team.seed)} place this season.`
-            : `${team.name} did not make the playoffs this season.`}
-        </p>
-        {!outright && (
-          <div className="statusline">Championship Bar: <b>{Math.round(state.bar)}</b></div>
-        )}
-        {state.seeds.map((s) => (
-          <div key={s.t.name} className={'standing-row' + (s.t === team ? ' you' : '')}>
-            <span>#{s.t.seed} {s.t.name}{s.t.seed > 8 && <span style={{ color: 'var(--muted)' }}> — out</span>}</span>
-            <span>{Math.round(s.val)}</span>
+      <div className="screen standings-screen">
+        <div className="standings-inner">
+          <div className="standings-masthead">
+            <div className="standings-eyebrow">Season {state.season} · Regular Season Filed</div>
+            <div className="standings-result">
+              {madeIt
+                ? <>You finished in <span className="accent">{ordinal(team.seed)}</span> place this season.</>
+                : <>{team.name} did not make the playoffs this season.</>}
+            </div>
+            {!outright && (
+              <div className="standings-bar-row">
+                <span className="standings-bar-label">Championship Bar</span>
+                <span className="standings-bar-value">{Math.round(state.bar)}</span>
+              </div>
+            )}
           </div>
-        ))}
+
+          <div className="standings-table">
+            <div className="standings-head-row">
+              <span>Team</span>
+              <span>Off Avg</span>
+              <span>Def Avg</span>
+              <span>Rating</span>
+            </div>
+            {state.seeds.map((s) => (
+              <div key={s.t.name} className={'standings-row' + (s.t === team ? ' you' : '') + (s.t.seed > 8 ? ' out' : '')}>
+                <span className="standings-team">
+                  <span className="standings-seed">#{s.t.seed}</span> {s.t.name}
+                  {s.t.seed > 8 && <span className="standings-out-tag"> — out</span>}
+                </span>
+                <span>{s.t.simOffenseAvg != null ? s.t.simOffenseAvg : '—'}</span>
+                <span>{s.t.simDefenseAvg != null ? s.t.simDefenseAvg : '—'}</span>
+                <span className="standings-rating">{Math.round(s.val)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
       <div className="bottombar">
         <button className="primary" onClick={actions.beginPlayoffs}>Begin Playoffs</button>

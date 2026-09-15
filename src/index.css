@@ -67,11 +67,6 @@ p.lede{color:var(--file-body);font-size:14px;line-height:1.5;margin:0 0 14px;}
 .era-seg{height:7px;flex:1;background:var(--ink-rule);}
 .era-seg.done{background:var(--franchise);}
 
-.topbar-stats{display:flex;padding:0 16px 10px;border-bottom:1px solid var(--ink-rule);}
-.tb-cell{padding:0 10px;text-align:center;border-left:1px solid var(--ink-rule);font-family:var(--font-mono);flex:1;}
-.tb-cell:first-child{border-left:none;padding-left:0;}
-.tb-cell b{display:block;font-size:16px;font-family:var(--font-display);color:var(--file);font-weight:400;}
-.tb-cell span{display:block;font-size:9px;color:var(--ink-muted);margin-top:1px;text-transform:uppercase;letter-spacing:.1em;}
 
 .topbar-nav{display:flex;gap:2px;padding:8px 16px;overflow-x:auto;}
 .reset-link{background:none;border:none;color:var(--ink-muted);font-family:var(--font-label);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:8px 10px;white-space:nowrap;}
@@ -303,14 +298,11 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .sidebar-nav-item.active{background:var(--file);color:var(--ink);}
 .sidebar-footer{border-top:1px solid var(--ink-rule);padding-top:14px;margin-top:14px;padding-bottom:var(--desktop-bar-height);}
 .sidebar-era-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--ink-muted);text-transform:uppercase;margin-bottom:6px;}
-.sidebar-titles{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;color:var(--franchise);text-transform:uppercase;margin-top:10px;}
+.sidebar-titles{display:flex;align-items:baseline;gap:7px;margin-top:12px;}
+.sidebar-titles-value{font-family:var(--font-display);font-size:30px;line-height:.8;color:var(--franchise);}
+.sidebar-titles-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;color:var(--franchise);text-transform:uppercase;}
 
 .desktop-content{flex:1;min-width:0;padding-bottom:calc(var(--desktop-bar-height) + 34px);}
-.desktop-content-header{display:flex;padding:16px 28px;background:var(--form);border-bottom:1px solid var(--form-rule);}
-.desktop-content-header .tb-cell{flex:none;padding:0 24px;border-left:1px solid var(--form-rule);text-align:left;}
-.desktop-content-header .tb-cell:first-child{border-left:none;padding-left:0;}
-.desktop-content-header .tb-cell b{color:var(--ink);font-family:var(--font-display);font-size:18px;}
-.desktop-content-header .tb-cell span{color:var(--file-muted);}
 /* .screen/.bottombar's base rule (mobile-first) caps width at --content-width and centers
    with margin:0 auto — those two properties have to be explicitly cancelled here, not just
    have their padding overridden, or they keep applying on top of this rule since CSS merges
@@ -650,7 +642,11 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
    screen's own edges" technique .ts-screen/.sr-screen use — so the ink background always
    fills whatever width the shell (mobile vs desktop content pane) actually gives it instead
    of fighting breakpoint-dependent negative margins. ================= */
-.bracket-screen{background:var(--ink);padding:0;}
+/* Fills the actual window height (minus the chrome above/below it) instead of only as tall
+   as its own content — without this the ink ground stopped short of the bottom of the
+   window, leaving a band of plain canvas showing beneath the tree. */
+.bracket-screen{background:var(--ink);padding:0;min-height:calc(100vh - 190px);box-sizing:border-box;}
+@media (min-width:1000px){.bracket-screen{min-height:calc(100vh - var(--desktop-bar-height));}}
 .bracket-inner{padding:20px 16px 24px;}
 @media (min-width:700px){.bracket-inner{padding:24px;}}
 .bracket-masthead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--ink-rule);padding-bottom:16px;margin-bottom:16px;}
@@ -787,3 +783,31 @@ html[data-theme="dark"] .wordmark-ink{color:var(--file);}
 @media (max-width:520px){.deal-row-5,.deal-row-4{grid-template-columns:1fr;}}
 .deal-heading{font-family:var(--font-display);font-size:28px;line-height:.86;color:var(--ink);letter-spacing:.01em;text-transform:none;margin:0 0 12px;}
 .deal-heading:not(:first-child){margin-top:22px;}
+
+/* ================= Standings — ink ground, full width (the persistent bar already carries
+   season/cap/bar, so this screen gets to spend all its space on the result and the table). ==== */
+.standings-screen{background:var(--ink);padding:0;}
+.standings-inner{padding:20px 16px 28px;}
+@media (min-width:700px){.standings-inner{padding:28px;}}
+.standings-masthead{border-bottom:1px solid var(--ink-rule);padding-bottom:22px;margin-bottom:22px;}
+.standings-eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;color:var(--ink-muted);text-transform:uppercase;margin-bottom:12px;}
+.standings-result{font-family:var(--font-display);font-size:44px;line-height:.88;color:var(--file);margin-bottom:18px;max-width:900px;}
+.standings-result .accent{color:var(--franchise);}
+.standings-bar-row{display:flex;align-items:baseline;gap:16px;}
+.standings-bar-label{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;color:var(--ink-muted);text-transform:uppercase;}
+.standings-bar-value{font-family:var(--font-display);font-size:52px;line-height:.8;color:var(--stamp-ink);}
+.standings-table{max-width:1000px;}
+.standings-head-row,.standings-row{display:grid;grid-template-columns:1fr 100px 100px 90px;gap:10px;align-items:center;padding:12px;}
+.standings-head-row{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-muted);border-bottom:1px solid var(--ink-rule);text-align:right;}
+.standings-head-row span:first-child{text-align:left;}
+.standings-row{font-family:var(--font-mono);font-size:15px;color:var(--file);border-bottom:1px solid var(--ink-rule);text-align:right;}
+.standings-row span:first-child{text-align:left;}
+.standings-row.you{color:var(--franchise);}
+.standings-row.out{color:var(--ink-muted);}
+.standings-team{display:flex;align-items:baseline;gap:8px;}
+.standings-seed{font-family:var(--font-display);font-size:18px;color:var(--depth-nontext);}
+.standings-row.you .standings-seed{color:var(--franchise);}
+.standings-out-tag{color:var(--ink-muted);font-size:12px;}
+.standings-rating{font-family:var(--font-display);font-size:19px;color:var(--file);}
+.standings-row.you .standings-rating{color:var(--franchise);}
+@media (max-width:600px){.standings-head-row,.standings-row{grid-template-columns:1fr 64px 64px 56px;font-size:12px;}.standings-result{font-size:30px;}.standings-bar-value{font-size:38px;}}

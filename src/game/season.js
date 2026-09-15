@@ -6,6 +6,7 @@ import { autoSelectFive, effectiveRating } from './roster';
 import { startDraft } from './draft';
 import { initAttendance, rollFanbaseMod, recomputeSeasonAttendance, applyPlayoffBerthMilestone, applyHomeCourtMilestone, applyChampionshipMilestone } from './fanbase';
 import { accrueSeasonFinances } from './finances';
+import { simulateSeasonOutput } from './matchup';
 
 export function newEraState() {
   return {
@@ -159,6 +160,12 @@ export function lockSeasonAndSeed(state) {
     let overage = Math.max(0, total9 - team.seasonCap);
     team.lastOverage = overage;
     team.total9Salary = total9;
+    // Purely informational — see simulateSeasonOutput. Runs here (under the Simulating
+    // Season loading beat, before Standings shows) rather than at matchup time; the player
+    // never sees or plays these games, just the two averaged figures.
+    const sim = simulateSeasonOutput(team);
+    team.simOffenseAvg = sim.off;
+    team.simDefenseAvg = sim.def;
   });
 
   const seeds = state.teams

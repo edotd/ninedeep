@@ -1,7 +1,34 @@
 import { INJURY_CHANCE } from './constants';
-import { rollDieWithAdvantage } from './rng';
+import { rollDieWithAdvantage, rollDie } from './rng';
 import { offenseDieSize, defenseDieSize, offenseModifier, defenseModifier } from './roster';
 import { cardTotal } from './cards';
+
+// How many simulated regular-season games to average a team's dice-based output over — see
+// simulateSeasonOutput below.
+const SEASON_SIM_GAMES = 100;
+
+// A purely informational stat for the Standings table: what does this team's rotation
+// actually roll like, on average, over a season's worth of games? Unlike teamOutput (a
+// deterministic formula used for seeding), this rolls real dice — offenseDieSize/defenseDieSize
+// plus modifiers — the same number of times a real game would, so passive bonuses baked into
+// those modifiers (coach off/def bonus, retention, player relationships) apply exactly the way
+// they would in an actual matchup. No cards, no advantage, no home court — those are one-off
+// or matchup-specific, not standing passive bonuses, and there's no opponent to play against
+// here anyway. Nothing here is shown to the player as a "game" — it's averaged into two
+// numbers before anyone sees it.
+export function simulateSeasonOutput(team, games = SEASON_SIM_GAMES) {
+  if (!team.coach || !team.activeIds || team.activeIds.length === 0) return { off: null, def: null };
+  const offSides = offenseDieSize(team);
+  const defSides = defenseDieSize(team);
+  const offMod = offenseModifier(team);
+  const defMod = defenseModifier(team);
+  let offTotal = 0, defTotal = 0;
+  for (let i = 0; i < games; i++) {
+    offTotal += rollDie(offSides) + offMod;
+    defTotal += rollDie(defSides) + defMod;
+  }
+  return { off: Math.round((offTotal / games) * 10) / 10, def: Math.round((defTotal / games) * 10) / 10 };
+}
 
 // Rolls for a pre-matchup injury, or removes a specifically chosen player when a matchup
 // card targets one. On a hit, pulls that player out; if a same-position bench card exists it

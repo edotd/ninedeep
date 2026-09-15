@@ -45,7 +45,10 @@ export default function Sidebar({ state, myTeamId, overlay, onNav }) {
             <div key={i} className={'era-seg' + (i < seasonNum ? ' done' : '')} />
           ))}
         </div>
-        <div className="sidebar-titles">{team.titles} Championship{team.titles === 1 ? '' : 's'} Filed</div>
+        <div className="sidebar-titles">
+          <span className="sidebar-titles-value">{team.titles}</span>
+          <span className="sidebar-titles-label">Championship{team.titles === 1 ? '' : 's'} Filed</span>
+        </div>
       </div>
     </div>
   );

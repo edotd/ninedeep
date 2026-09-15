@@ -2,7 +2,6 @@ import { useState } from 'react';
 import Header from './Header';
 import PersistentBar from './PersistentBar';
 import Sidebar from './Sidebar';
-import DesktopContentHeader from './DesktopContentHeader';
 import DesktopBar from './DesktopBar';
 import { useIsDesktop } from '../hooks/useIsDesktop';
 import GlossaryScreen from '../screens/GlossaryScreen';
@@ -100,7 +99,6 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
       <div className="desktop-shell">
         <Sidebar state={state} myTeamId={myTeamId} overlay={overlay} onNav={toggleOverlay} />
         <div className="desktop-content">
-          <DesktopContentHeader state={state} myTeamId={myTeamId} />
           {mainBody}
         </div>
         {showBar && <DesktopBar state={state} myTeamId={myTeamId} />}

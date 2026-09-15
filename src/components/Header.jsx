@@ -1,8 +1,12 @@
-import { formatCoins } from '../game/economy';
 import BallMark from './BallMark';
 
 const ERA_LENGTH = 8;
 
+// The Cap/Bar/Titles stats strip that used to live here is gone — the persistent bar is
+// always up now (see GameShell) and already carries cap; Titles has its own home on the Team
+// screen and Sidebar, and the championship bar is shown, more prominently, on Standings
+// itself. Removing it gives every screen's own heading the space right at the top instead of
+// competing with a second header band above it.
 export default function Header({ state, myTeamId, overlay, onTeam, onGlossary, onStandings, onSettings }) {
   const team = state.teams[myTeamId];
   const seasonNum = Math.min(state.season, ERA_LENGTH);
@@ -20,11 +24,6 @@ export default function Header({ state, myTeamId, overlay, onTeam, onGlossary, o
             <div key={i} className={'era-seg' + (i < seasonNum ? ' done' : '')} />
           ))}
         </div>
-      </div>
-      <div className="topbar-stats">
-        <div className="tb-cell"><b>{team.titles}</b><span>Titles</span></div>
-        <div className="tb-cell"><b>{team.seasonCap !== undefined ? formatCoins(team.seasonCap) : '—'}</b><span>Cap</span></div>
-        <div className="tb-cell"><b>{state.bar !== undefined ? Math.round(state.bar) : '—'}</b><span>Bar</span></div>
       </div>
       <div className="topbar-nav">
         <button className={'reset-link' + (overlay === 'team' ? ' active' : '')} onClick={onTeam}>Team</button>
