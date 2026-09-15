@@ -9,8 +9,13 @@ import { cardTier } from '../game/cards';
 // Team button) on top of the current screen, so the bar itself never loses its place.
 export default function PersistentBar({ state, myTeamId, onExpand }) {
   const team = state.teams[myTeamId];
-  const hand = team.hand || [];
-  const activeIds = team.activeIds || [];
+  // The hand is written to state the instant Hand's own screen mounts, before its one-by-one
+  // reveal animation finishes — the bar has to deliberately ignore it while that reveal is
+  // still the active phase, or the rotation strip would show 9/9 while the screen behind it
+  // is still dealing card by card. Same idea front office/matchup rely on in DesktopBar.
+  const handRevealed = state.phase !== 'pullhand';
+  const hand = handRevealed ? (team.hand || []) : [];
+  const activeIds = handRevealed ? (team.activeIds || []) : [];
 
   const canShowOutput = team.coach && hand.length > 0 && activeIds.length > 0;
   const output = canShowOutput ? teamOutput(team) : null;

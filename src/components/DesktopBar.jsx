@@ -42,16 +42,28 @@ function MatchupSlot({ card }) {
 
 export default function DesktopBar({ state, myTeamId }) {
   const team = state.teams[myTeamId];
-  const hand = team.hand || [];
-  const activeIds = team.activeIds || [];
+  // Each card type is written to state the instant its own dealing screen mounts, before that
+  // screen's one-by-one reveal animation actually finishes — the bar has to deliberately
+  // ignore a type while its own phase is still active, or slots would snap to full while the
+  // screen behind the bar is still dealing them out one at a time. Slots un-hide the moment
+  // the player moves on to the next phase, same beat as that screen's own Continue button.
+  const handRevealed = state.phase !== 'pullhand';
+  const frontOfficeRevealed = handRevealed && state.phase !== 'pullcards';
+  const matchupRevealed = frontOfficeRevealed && state.phase !== 'pullmodifier';
+
+  const hand = handRevealed ? (team.hand || []) : [];
+  const activeIds = handRevealed ? (team.activeIds || []) : [];
   const starters = activeIds.map((id) => hand.find((c) => c.id === id)).filter(Boolean);
   const bench = hand.filter((c) => !activeIds.includes(c.id));
-  const matchupCards = team.matchupCards || [];
+  const matchupCards = matchupRevealed ? (team.matchupCards || []) : [];
+  const coach = frontOfficeRevealed ? team.coach : null;
+  const fanbaseArchetype = frontOfficeRevealed ? team.fanbaseArchetype : null;
+  const market = frontOfficeRevealed ? team.market : null;
 
-  const canShowOutput = team.coach && hand.length > 0 && activeIds.length > 0;
+  const canShowOutput = coach && hand.length > 0 && activeIds.length > 0;
   const output = canShowOutput ? teamOutput(team) : null;
-  const chemistry = teamExperience(team);
-  const cap = team.seasonCap;
+  const chemistry = coach ? teamExperience(team) : null;
+  const cap = frontOfficeRevealed ? team.seasonCap : undefined;
   const salary = hand.length ? rosterSalary(team) : 0;
   const overCap = cap !== undefined && salary > cap;
 
@@ -72,9 +84,9 @@ export default function DesktopBar({ state, myTeamId }) {
       <div className="db-section db-slots-fixed">
         <div className="db-heading">Front Office</div>
         <div className="db-slots">
-          <FrontOfficeSlot label="Coach" value={team.coach ? team.coach.modifier : null} />
-          <FrontOfficeSlot label="Fans" value={team.fanbaseArchetype ? team.fanbaseArchetype.name : null} tone={team.fanbaseArchetype && team.fanbaseArchetype.name === 'Die Hard' ? 'notable' : null} />
-          <FrontOfficeSlot label="Market" value={team.market ? team.market.name : null} />
+          <FrontOfficeSlot label="Coach" value={coach ? coach.modifier : null} />
+          <FrontOfficeSlot label="Fans" value={fanbaseArchetype ? fanbaseArchetype.name : null} tone={fanbaseArchetype && fanbaseArchetype.name === 'Die Hard' ? 'notable' : null} />
+          <FrontOfficeSlot label="Market" value={market ? market.name : null} />
         </div>
       </div>
       <div className="db-section db-slots-fixed">

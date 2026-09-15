@@ -138,8 +138,21 @@ p.lede{color:var(--file-body);font-size:14px;line-height:1.5;margin:0 0 14px;}
 @keyframes dice-spin{0%{transform:rotate(0deg) scale(1);}50%{transform:rotate(180deg) scale(1.25);}100%{transform:rotate(360deg) scale(1);}}
 .dice-rolling{display:inline-block;animation:dice-spin .6s linear infinite;}
 
-@keyframes card-deal{from{opacity:0;transform:translateY(-22px) scale(.96);}to{opacity:1;transform:none;}}
-.card-deal-in{animation:card-deal 280ms ease-out both;}
+/* The deal-in flourish — per the design brand handoff's "4A · The Deal" (cards off the stack,
+   flipped, then filed into the bar): each card lands with a small scale/rotation settle
+   rather than a flat fade, and alternates its landing tilt left/right (nth-child) so a row
+   of them doesn't all twist the same way. */
+@keyframes card-deal{from{opacity:0;transform:translateY(-26px) scale(.82) rotate(-6deg);}55%{opacity:1;}to{opacity:1;transform:none;}}
+@keyframes card-deal-alt{from{opacity:0;transform:translateY(-26px) scale(.82) rotate(6deg);}55%{opacity:1;}to{opacity:1;transform:none;}}
+.card-deal-in{animation:card-deal 340ms cubic-bezier(.2,.8,.25,1) both;}
+.card-deal-in:nth-child(even){animation-name:card-deal-alt;}
+
+/* The bar slot "filing in" the instant a card type's own phase ends — the deal animation's
+   payoff on the persistent bar, per the same 4A spec. Only plays once, the moment a slot's
+   class flips from empty to filled (see PersistentBar/DesktopBar's phase-gated reveal), not on
+   every incidental re-render, since the class string only changes at that one moment. */
+@keyframes bar-fill{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
+.db-player-slot:not(.empty),.db-matchup-slot:not(.empty),.persistent-bar-dot:not(.empty){animation:bar-fill 260ms ease-out both;}
 
 @keyframes ball-seam-spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
 
@@ -174,7 +187,7 @@ p.lede{color:var(--file-body);font-size:14px;line-height:1.5;margin:0 0 14px;}
 /* A corner-docked action button, used in place of the full-width .bottombar where the
    screen has no persistent bar underneath it (e.g. Front Office) and a floating button
    reads better than a bar spanning the whole width. */
-.corner-dock{position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom));z-index:5;}
+.corner-dock{position:fixed;right:20px;bottom:calc(72px + 20px + env(safe-area-inset-bottom));z-index:5;}
 .corner-dock button.primary{flex:none;padding:16px 32px;}
 
 /* ---------- Persistent Bar (see brand handoff, "Component: Persistent Bar" — mobile) ---------- */
@@ -296,6 +309,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
    both sides of the desktop content pane even after this rule's padding was already in place. */
 .desktop-content .screen{max-width:none;margin:0;padding:28px;}
 .desktop-content .bottombar{max-width:none;margin:0;left:220px;right:0;bottom:var(--desktop-bar-height);padding:14px 28px;}
+.desktop-content .corner-dock{bottom:calc(var(--desktop-bar-height) + 20px);}
 
 /* Sized to comfortably fit a ~1440px viewport without horizontal scroll (a 1280px window
    still fits with the bar's overflow-x:auto as a safety net) — bigger and more legible than
@@ -696,6 +710,7 @@ html[data-theme="dark"] #root{background:var(--ink);color:var(--file);}
 html[data-theme="dark"] h1{color:var(--file);}
 html[data-theme="dark"] h2{color:var(--ink-muted);}
 html[data-theme="dark"] p.lede{color:var(--playoff-statement);}
+html[data-theme="dark"] .deal-heading{color:var(--file);}
 html[data-theme="dark"] .standing-row{border-bottom-color:var(--ink-rule);}
 /* Secondary buttons sitting bare on the canvas (Free Agency, Landing, Lobby, Lineup, Setup,
    the Playoff Bracket's Review Series) need to flip with the canvas; the ones living inside
@@ -739,10 +754,23 @@ html[data-theme="dark"] .wordmark-ink{color:var(--file);}
 .co-fine-value{font-family:var(--font-mono);font-size:12px;line-height:1.4;color:var(--ink);}
 @media (max-width:480px){.co-title{font-size:32px;}.co-section-title{font-size:26px;}}
 
-/* Dealing screens (Hand / Front Office / Matchup Cards) — the card grid now centers in the
-   remaining vertical space below the heading/lede instead of sitting right under it, closer
-   to the middle of the window the way a real deal reads. The grid's own layout (fa-grid /
-   fo-deal-row / mu-deal-row) is untouched — only its vertical position in the screen moves. */
-.deal-screen{display:flex;flex-direction:column;}
-.deal-centered{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:50vh;}
+/* Dealing screens (Hand / Front Office / Matchup Cards) — the card grid centers with equal
+   space above and below it in the actual visible window, not just a flex-grow that has
+   nothing to grow into. .deal-screen is given a real height (viewport minus the chrome above
+   and below it — topbar/header and the now-always-visible persistent bar, estimated since
+   neither has a fixed CSS height token), so .deal-centered's justify-content:center has real
+   room on both sides to distribute. The grid's own layout (fa-grid/fo-deal-row/mu-deal-row) is
+   untouched — only its vertical position in the screen moves. */
+.deal-screen{display:flex;flex-direction:column;min-height:calc(100vh - 160px - 72px);box-sizing:border-box;}
+.deal-centered{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;}
 .deal-block{width:100%;max-width:840px;}
+@media (min-width:1000px){.deal-screen{min-height:calc(100vh - 90px - var(--desktop-bar-height));}}
+
+/* Hand screen — now that the window isn't capped at 900px, starters (5) and bench (4) each
+   deal into a single row instead of the 3-column fa-grid wrapping to a second line. */
+.deal-row-5{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;max-width:1200px;margin:0 auto;}
+.deal-row-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;max-width:1000px;margin:0 auto;}
+@media (max-width:900px){.deal-row-5{grid-template-columns:repeat(3,1fr);}.deal-row-4{grid-template-columns:repeat(2,1fr);}}
+@media (max-width:520px){.deal-row-5,.deal-row-4{grid-template-columns:1fr;}}
+.deal-heading{font-family:var(--font-display);font-size:28px;line-height:.86;color:var(--ink);letter-spacing:.01em;text-transform:none;margin:0 0 12px;}
+.deal-heading:not(:first-child){margin-top:22px;}

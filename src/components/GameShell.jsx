@@ -41,13 +41,13 @@ const SCREENS = {
   era_end: EraEndScreen,
 };
 
-// The persistent bar stays empty (and, on desktop, unrendered) through the whole Front
-// Office / Hand / Matchup Cards / Constructing / Team Summary onboarding sequence — the
-// player shouldn't see the bar populate piecemeal as each step completes, only once Team
-// Summary's Continue locks the season and Standings appears. It's also hidden during the
-// Simulating Season loading beat and the Season Recap screen — the roster the bar would show
-// is about to be replaced by next season's, same full-screen treatment as Constructing.
-const HIDE_BAR_PHASES = new Set(['cardoverview', 'pullcards', 'pullhand', 'teamsummary', 'pullmodifier', 'constructing', 'simulating', 'seasonrecap']);
+// The persistent bar is up from the very start of the onboarding sequence now — its slots
+// read as empty (see PersistentBar/DesktopBar) until each card type is actually dealt, so the
+// bar filling in phase by phase (hand, then front office, then matchup cards) IS the deal
+// animation's payoff rather than something hidden until Team Summary. It's still hidden during
+// the Simulating Season loading beat and the Season Recap screen — the roster the bar would
+// show is about to be replaced by next season's, same full-screen treatment as Constructing.
+const HIDE_BAR_PHASES = new Set(['simulating', 'seasonrecap']);
 
 // Glossary/Standings/Settings/Team are client-local overlays, not part of the shared game
 // phase — a room's `state.phase` drives what everyone in the room sees, so if opening the
