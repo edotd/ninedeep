@@ -6,7 +6,10 @@ function outputFor(team) {
   return team && team.coach && team.activeIds && team.activeIds.length > 0 ? teamOutput(team) : null;
 }
 
-function TeamRow({ seed, team, isMine, output }) {
+// Before a series is played, the row shows Projected Output alone. Once it's decided, the
+// projection steps back to a small label and the actual final score (team.result.aSum/bSum,
+// from playMatchup/finishTurn) takes over as the headline figure — the winner's in `approved`.
+function TeamRow({ seed, team, isMine, output, result }) {
   if (!team) {
     return (
       <div className="bracket-team-row">
@@ -15,11 +18,22 @@ function TeamRow({ seed, team, isMine, output }) {
       </div>
     );
   }
+  const final = result ? (team === result.a ? result.aSum : result.bSum) : null;
+  const isWinner = result && result.winner === team;
   return (
     <div className="bracket-team-row">
       <div className="bracket-team-seed">{seed}</div>
       <div className={'bracket-team-name' + (isMine ? ' mine' : '')}>{team.name}</div>
-      <div className="bracket-team-proj">{output ? output.total : '—'}</div>
+      <div className="bracket-team-scores">
+        {result ? (
+          <>
+            <span className="bracket-team-proj small">Proj {output ? output.total : '—'}</span>
+            <span className={'bracket-team-final' + (isWinner ? ' win' : '')}>{final}</span>
+          </>
+        ) : (
+          <span className="bracket-team-proj">{output ? output.total : '—'}</span>
+        )}
+      </div>
     </div>
   );
 }
@@ -41,8 +55,8 @@ function BracketNode({ label, m, matches, index, myTeamId, actions, big, narrow 
         <div className="bracket-team-tbd">TBD</div>
       ) : (
         <>
-          <TeamRow seed={a ? a.seed : null} team={a} isMine={a && a.id === myTeamId} output={outputFor(a)} />
-          <TeamRow seed={b ? b.seed : null} team={b} isMine={b && b.id === myTeamId} output={outputFor(b)} />
+          <TeamRow seed={a ? a.seed : null} team={a} isMine={a && a.id === myTeamId} output={outputFor(a)} result={m.result} />
+          <TeamRow seed={b ? b.seed : null} team={b} isMine={b && b.id === myTeamId} output={outputFor(b)} result={m.result} />
         </>
       )}
       {unlocked && (
@@ -85,20 +99,19 @@ export default function PlayoffBracketScreen({ state, actions, myTeamId }) {
       <div className="bracket-tree-scroll">
         <div className="bracket-tree">
           <div className="bracket-half">
-            <div className="bracket-node-slot top">
-              <BracketNode label="Quarterfinal 1" m={matches[0]} matches={matches} index={0} myTeamId={myTeamId} actions={actions} />
+            <div className="bracket-round quarter">
+              <div className="bracket-round-item">
+                <BracketNode label="Quarterfinal 1" m={matches[0]} matches={matches} index={0} myTeamId={myTeamId} actions={actions} />
+              </div>
+              <div className="bracket-round-item">
+                <BracketNode label="Quarterfinal 2" m={matches[1]} matches={matches} index={1} myTeamId={myTeamId} actions={actions} />
+              </div>
             </div>
-            <div className="bracket-node-slot bottom">
-              <BracketNode label="Quarterfinal 2" m={matches[1]} matches={matches} index={1} myTeamId={myTeamId} actions={actions} />
+            <div className="bracket-round semi">
+              <div className="bracket-round-item">
+                <BracketNode label="SF 1" m={matches[4]} matches={matches} index={4} myTeamId={myTeamId} actions={actions} narrow />
+              </div>
             </div>
-            <div className="bracket-line bracket-line-h top" />
-            <div className="bracket-line bracket-line-h bottom" />
-            <div className="bracket-line bracket-line-v" />
-            <div className="bracket-line bracket-line-h mid" />
-            <div className="bracket-sf-slot">
-              <BracketNode label="SF 1" m={matches[4]} matches={matches} index={4} myTeamId={myTeamId} actions={actions} narrow />
-            </div>
-            <div className="bracket-line bracket-line-h to-final" />
           </div>
 
           <div className="bracket-centre">
@@ -106,20 +119,19 @@ export default function PlayoffBracketScreen({ state, actions, myTeamId }) {
           </div>
 
           <div className="bracket-half right">
-            <div className="bracket-node-slot top">
-              <BracketNode label="Quarterfinal 3" m={matches[2]} matches={matches} index={2} myTeamId={myTeamId} actions={actions} />
+            <div className="bracket-round quarter">
+              <div className="bracket-round-item">
+                <BracketNode label="Quarterfinal 3" m={matches[2]} matches={matches} index={2} myTeamId={myTeamId} actions={actions} />
+              </div>
+              <div className="bracket-round-item">
+                <BracketNode label="Quarterfinal 4" m={matches[3]} matches={matches} index={3} myTeamId={myTeamId} actions={actions} />
+              </div>
             </div>
-            <div className="bracket-node-slot bottom">
-              <BracketNode label="Quarterfinal 4" m={matches[3]} matches={matches} index={3} myTeamId={myTeamId} actions={actions} />
+            <div className="bracket-round semi">
+              <div className="bracket-round-item">
+                <BracketNode label="SF 2" m={matches[5]} matches={matches} index={5} myTeamId={myTeamId} actions={actions} narrow />
+              </div>
             </div>
-            <div className="bracket-line bracket-line-h top" />
-            <div className="bracket-line bracket-line-h bottom" />
-            <div className="bracket-line bracket-line-v" />
-            <div className="bracket-line bracket-line-h mid" />
-            <div className="bracket-sf-slot">
-              <BracketNode label="SF 2" m={matches[5]} matches={matches} index={5} myTeamId={myTeamId} actions={actions} narrow />
-            </div>
-            <div className="bracket-line bracket-line-h to-final" />
           </div>
         </div>
       </div>

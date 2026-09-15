@@ -643,7 +643,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 /* Fills the actual window height (minus the chrome above/below it) instead of only as tall
    as its own content — without this the ink ground stopped short of the bottom of the
    window, leaving a band of plain canvas showing beneath the tree. */
-.bracket-screen{background:var(--ink);padding:0;min-height:calc(100vh - 190px);box-sizing:border-box;}
+.bracket-screen{background:var(--ink);padding:0;min-height:calc(100vh - 190px);box-sizing:border-box;display:flex;flex-direction:column;}
 @media (min-width:1000px){.bracket-screen{min-height:calc(100vh - var(--desktop-bar-height));}}
 .bracket-inner{padding:20px 16px 24px;}
 @media (min-width:700px){.bracket-inner{padding:24px;}}
@@ -664,61 +664,60 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .bracket-team-name.muted{color:var(--file-muted);}
 .bracket-team-name.mine{color:var(--stamp-text);}
 .bracket-team-proj{font-family:var(--font-display);font-size:19px;color:var(--ink);flex-shrink:0;}
+.bracket-team-scores{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex-shrink:0;}
+.bracket-team-proj.small{font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--file-muted);}
+.bracket-team-final{font-family:var(--font-display);font-size:22px;line-height:.9;color:var(--ink);}
+.bracket-team-final.win{color:var(--approved);}
 .bracket-team-tbd{padding:22px 11px;text-align:center;font-family:var(--font-display);font-size:18px;color:var(--file-muted);}
-.bracket-footer{margin-top:16px;}
+.bracket-footer{margin-top:16px;flex-shrink:0;}
 
 /* The bracket tree itself — two symmetric halves (each QF1+QF2 or QF3+QF4 converging on a
-   Semifinal node) plus a centred Final, connected with rule lines, per the design doc's
-   bracket screen (2A). Horizontal positions are all percentages of each half's own (fluid)
-   width, so the whole tree scales to whatever the shell actually gives it — a hard px width
-   here previously overflowed the 900px-capped desktop content pane with no visible scrollbar,
-   clipping the right-hand quarterfinals entirely. Vertical positions stay in px (text height
-   doesn't need to scale). A min-width floor plus the scroll wrapper is the fallback only for
-   viewports too narrow to show two full halves plus the centre at all (phones). */
-.bracket-tree-scroll{overflow-x:auto;padding-bottom:6px;}
-.bracket-tree{display:flex;align-items:stretch;width:100%;min-width:620px;}
-.bracket-half{position:relative;flex:1 1 0;min-width:220px;height:340px;}
-.bracket-centre{flex:0 0 180px;display:flex;align-items:center;justify-content:center;height:340px;padding:0 6px;}
-.bracket-node-slot{position:absolute;left:0;width:55%;}
-.bracket-node-slot.top{top:0;}
-.bracket-node-slot.bottom{top:185px;}
-.bracket-sf-slot{position:absolute;left:66%;top:93px;width:31%;}
-.bracket-half.right .bracket-node-slot{left:auto;right:0;}
-.bracket-half.right .bracket-sf-slot{left:auto;right:66%;}
-.bracket-line{position:absolute;background:var(--ink-rule);}
-.bracket-line-h{height:2px;}
-.bracket-line-h.top{left:55%;top:73px;width:6%;}
-.bracket-line-h.bottom{left:55%;top:258px;width:6%;}
-.bracket-line-v{left:60%;top:73px;width:2px;height:185px;}
-.bracket-line-h.mid{left:60%;top:165px;width:6%;}
-.bracket-line-h.to-final{left:97%;top:165px;width:3%;}
-.bracket-half.right .bracket-line-h.top{left:auto;right:55%;}
-.bracket-half.right .bracket-line-h.bottom{left:auto;right:55%;}
-.bracket-half.right .bracket-line-v{left:auto;right:60%;}
-.bracket-half.right .bracket-line-h.mid{left:auto;right:60%;}
-.bracket-half.right .bracket-line-h.to-final{left:auto;right:97%;}
+   Semifinal node) plus a centred Final. Each half is two flex columns — a "quarter" round
+   (its two matches spaced with justify-content:space-around) and a "semi" round (one match,
+   also space-around'd so it centres in the same flex column) — rather than the earlier
+   fixed-pixel absolute positioning, so the semifinal is ALWAYS vertically centred on its two
+   feeders and the whole tree is free to grow (via flex:1 below) to fill whatever height the
+   screen actually has, instead of a hardcoded height leaving empty space under it. Connector
+   lines are drawn with ::before/::after on the round and its items, at percentages that stay
+   correct at any height — the space-around midpoints for two items sit at 25%/75%. */
+.bracket-tree-scroll{overflow-x:auto;padding-bottom:6px;flex:1;display:flex;}
+.bracket-tree{display:flex;align-items:stretch;width:100%;min-width:660px;gap:32px;flex:1;}
+.bracket-half{position:relative;flex:1 1 0;min-width:230px;display:flex;align-items:stretch;gap:8%;}
+.bracket-half.right{flex-direction:row-reverse;}
+.bracket-centre{flex:0 0 220px;display:flex;align-items:center;justify-content:center;padding:0 6px;}
+.bracket-round{position:relative;display:flex;flex-direction:column;justify-content:space-around;min-width:0;}
+.bracket-round.quarter{flex:0 0 56%;}
+.bracket-round.semi{flex:0 0 32%;}
+.bracket-round-item{position:relative;}
+/* stub out of each quarterfinal box toward the vertical spine */
+.bracket-round.quarter .bracket-round-item::after{content:'';position:absolute;top:50%;left:100%;width:4%;height:2px;background:var(--ink-rule);}
+.bracket-half.right .bracket-round.quarter .bracket-round-item::after{left:auto;right:100%;}
+/* the vertical spine itself, spanning the two items' centres (25%/75%, per space-around) */
+.bracket-round.quarter::after{content:'';position:absolute;top:25%;bottom:25%;left:calc(100% + 4%);width:2px;background:var(--ink-rule);}
+.bracket-half.right .bracket-round.quarter::after{left:auto;right:calc(100% + 4%);}
+/* stub from the spine's midpoint into the semifinal column */
+.bracket-round.quarter::before{content:'';position:absolute;top:50%;left:calc(100% + 4%);width:4%;height:2px;background:var(--ink-rule);}
+.bracket-half.right .bracket-round.quarter::before{left:auto;right:calc(100% + 4%);}
+/* stub from the semifinal box out to the Final, across the tree's own gap */
+.bracket-round.semi .bracket-round-item::after{content:'';position:absolute;top:50%;left:100%;width:32px;height:2px;background:var(--ink-rule);}
+.bracket-half.right .bracket-round.semi .bracket-round-item::after{left:auto;right:100%;}
 .bracket-node{width:100%;box-sizing:border-box;background:var(--form);border:2px solid var(--ink);box-shadow:0 0 0 1px var(--ink-rule);}
 .bracket-node.final{border:3px solid var(--stamp);box-shadow:none;width:100%;}
 .bracket-node.final .bracket-match-header{background:var(--stamp);color:var(--stamp-plate-text);}
 .bracket-node-btn{width:calc(100% - 16px) !important;margin:8px !important;padding:9px 10px !important;font-size:10px !important;}
 @media (max-width:480px){.bracket-title{font-size:30px;}}
-/* The bracket screen fills the full window height on desktop now (no capped 900px pane), so
-   the tree gets scaled up ~1.35x to use the extra vertical room instead of leaving empty space
-   at the bottom — same proportions as the base sizing above, just larger. */
+/* The bracket screen fills the full window height on desktop now (no capped 900px pane) — the
+   tree's own flex:1 (above) plus space-around already claims that room, so this block is just
+   the larger desktop type scale. */
 @media (min-width:1000px){
-  .bracket-half{min-width:280px;height:460px;}
-  .bracket-centre{flex:0 0 240px;height:460px;}
-  .bracket-node-slot.bottom{top:250px;}
-  .bracket-sf-slot{top:125px;width:29%;}
-  .bracket-line-h.top{top:99px;}
-  .bracket-line-h.bottom{top:348px;}
-  .bracket-line-v{top:99px;height:250px;}
-  .bracket-line-h.mid{top:223px;}
-  .bracket-line-h.to-final{top:223px;}
+  .bracket-half{min-width:300px;}
+  .bracket-centre{flex:0 0 260px;}
   .bracket-team-row{padding:14px 14px;}
   .bracket-team-seed{font-size:28px;width:24px;}
   .bracket-team-name{font-size:24px;}
   .bracket-team-proj{font-size:26px;}
+  .bracket-team-proj.small{font-size:10px;}
+  .bracket-team-final{font-size:28px;}
   .bracket-match-header{padding:10px 14px;font-size:11px;}
   .bracket-team-tbd{font-size:24px;padding:32px 14px;}
   .bracket-node-btn{font-size:13px !important;padding:12px 10px !important;}
