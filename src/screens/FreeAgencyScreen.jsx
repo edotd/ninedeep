@@ -5,15 +5,15 @@ export default function FreeAgencyScreen({ state, actions, myTeamId }) {
   const team = state.teams[myTeamId];
   const openSlots = 9 - team.hand.length;
   const total9 = rosterSalary(team);
-  const overCap = total9 > team.seasonCap;
+  const overBudget = total9 > team.seasonCap;
   const lost = state.lastExpiredPlayers || [];
 
   return (
     <>
       <div className="screen">
         <h1>Free Agency</h1>
-        <div className={'statusline' + (overCap ? ' bad' : '')}>
-          Roster salary: {formatCoins(total9)} / {formatCoins(team.seasonCap)} cap{overCap ? ' — luxury tax will apply' : ''}
+        <div className={'statusline' + (overBudget ? ' bad' : '')}>
+          Roster salary: {formatCoins(total9)} / {formatCoins(team.seasonCap)} budget{overBudget ? ' — luxury tax will apply' : ''}
         </div>
         <p className="lede">You have {openSlots} open roster spot{openSlots === 1 ? '' : 's'}. Sign from the free agent pool or bring in undrafted talent.</p>
         {openSlots > 0 && lost.length > 0 && (

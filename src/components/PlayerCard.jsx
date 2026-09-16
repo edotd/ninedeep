@@ -34,9 +34,9 @@ export default function PlayerCard({ card, onClick, selected, draftStyle, roster
         <div className="pcard-jersey">{rawOverall(card)}</div>
         <div className="pcard-name">{card.archetype}</div>
       </div>
-      <div className="pcard-contract pcard-caphit-row">
-        <span className="pcard-microlabel">Cap Hit</span>
-        <span className="pcard-caphit">{formatCoins(card.salary)}</span>
+      <div className="pcard-contract pcard-budgethit-row">
+        <span className="pcard-microlabel">Budget Hit</span>
+        <span className="pcard-budgethit">{formatCoins(card.salary)}</span>
       </div>
       {!compact && (
         <div className="pcard-contract pcard-years-row">

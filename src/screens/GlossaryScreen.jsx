@@ -191,20 +191,20 @@ export default function GlossaryScreen({ state, onBack }) {
         ))}
 
         <h2>Market</h2>
-        <p className="lede">Sets your attendance floor and a cap boost, rolled within range at pull time. You can relocate to any market size for a cap-room fee that scales with how many tiers you're jumping — see the Team screen.</p>
+        <p className="lede">Sets your attendance floor and a budget boost, rolled within range at pull time. You can relocate to any market size for a budget-room fee that scales with how many tiers you're jumping — see the Team screen.</p>
         {MARKETS.map((m) => (
           <div key={m.name} className="matchup-box">
             <div className="matchup-title">{m.name}</div>
             <div className="meta-row" style={{ borderTop: 'none', paddingTop: 0 }}>
               <GlossaryStat label="Attendance Floor" val={Math.round(m.attendanceFloor * 100) + '%'} />
-              <GlossaryStat label="Cap Boost" val={`+${formatCoins(m.capAdjMin)}–${formatCoins(m.capAdjMax)}`} />
+              <GlossaryStat label="Budget Boost" val={`+${formatCoins(m.capAdjMin)}–${formatCoins(m.capAdjMax)}`} />
               <GlossaryStat label="Draw Odds" val={m.weight + 'w'} />
             </div>
           </div>
         ))}
 
         <h2>Front Office Moves</h2>
-        <p className="lede">Fire and replace your coach, relocate to a new market, or invest a small permanent bump into your fanbase baseline (once per season) — all spent directly out of this season's cap room, the same pool that funds your roster. Firing a coach pays off both the outgoing and incoming salaries — no guaranteed upgrade. See the Team screen for exact costs.</p>
+        <p className="lede">Fire and replace your coach, relocate to a new market, or invest a small permanent bump into your fanbase baseline (once per season) — all spent directly out of this season's budget room, the same pool that funds your roster. Firing a coach pays off both the outgoing and incoming salaries — no guaranteed upgrade. See the Team screen for exact costs.</p>
 
         <h2>Player Skillsets and Team Chemistry</h2>
         <p className="lede">Each new player rolls one permanent Skillset. Elite Fit pairs add +3% and Good Fit pairs +1% to Offense or Defense, capped at +12% on each side. Only the active five count; each distinct pairing counts once. Locker Room Guy adds +1 flat Offense and Defense from anywhere on the roster, without stacking. Team Chemistry uses a 0–100 score: 50 base points, up to 30 for Skillset fit (2.5 per percentage point across both sides), up to 15 for starter tenure (1 per completed player-year), and 5 for Locker Room Guy. Grades: A+ 97, A 93, A− 90, B+ 87, B 83, B− 80, C+ 77, C 73, C− 70, D+ 67, D 63, D− 60, F below 60. Each completed starter-year also adds +0.5% Offense and Defense beyond the Skillset cap. Bench players earn tenure but contribute only while starting. Joining a different team resets tenure. The experience rating stays separate. Legacy players without a Skillset remain unchanged.</p>
@@ -216,7 +216,7 @@ export default function GlossaryScreen({ state, onBack }) {
           </li>)}</ul>
         </div>)}
         <h2>Matchup Modifier Cards</h2>
-        <p className="lede">Every team receives three cards from a shared 97-card deck each season. Each name has a fixed effect and rarity: Core, Prime, Signature, or Legendary. Cards are single-use; seeding bonuses apply automatically. Positive cards help your team and negative cards target the opponent. Player-stat changes last one matchup, with stats floored at 1. Ability percentages retain fractional points. Dice cards change the selected offense or defense die (minimum 1). Advantage keeps the higher of two rolls; Disadvantage keeps the lower, and the two cancel. These affect both rolls for the matchup, including rolls already resolved. Extra-card effects draw one remaining playable card; negative card effects discard one random unused playable opponent card. Cap-hit bonuses add the selected starter’s exact salary to one stat without changing salary. Position bonuses count the active matchup lineup when played, excluding the bench. Bargain Production requires a starter with cap hit 1 or less. A fresh deck is shuffled next season.</p>
+        <p className="lede">Every team receives three cards from a shared 97-card deck each season. Each name has a fixed effect and rarity: Core, Prime, Signature, or Legendary. Cards are single-use; seeding bonuses apply automatically. Positive cards help your team and negative cards target the opponent. Player-stat changes last one matchup, with stats floored at 1. Ability percentages retain fractional points. Dice cards change the selected offense or defense die (minimum 1). Advantage keeps the higher of two rolls; Disadvantage keeps the lower, and the two cancel. These affect both rolls for the matchup, including rolls already resolved. Extra-card effects draw one remaining playable card; negative card effects discard one random unused playable opponent card. Budget-hit bonuses add the selected starter’s exact salary to one stat without changing salary. Position bonuses count the active matchup lineup when played, excluding the bench. Bargain Production requires a starter with a budget hit of 1 or less. A fresh deck is shuffled next season.</p>
         {MATCHUP_MODIFIER_TYPES.map((t) => {
           const catColor = t.target === 'opponent' ? 'var(--bad)' : 'var(--good)';
           let roleNote;

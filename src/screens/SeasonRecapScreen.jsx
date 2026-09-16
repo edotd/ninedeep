@@ -31,7 +31,7 @@ export default function SeasonRecapScreen({ state, actions, myTeamId }) {
             <div className="sr-verdict-outcome">{latest ? OUTCOME_LABEL[latest.result] : '—'}</div>
           </div>
           <div className="sr-header-figures">
-            <div><div className="sr-figure-label">Cap Used</div><div className="sr-figure-value">{latest ? Math.round(latest.capUsed * 10) / 10 : '—'}</div></div>
+            <div><div className="sr-figure-label">Budget Used</div><div className="sr-figure-value">{latest ? Math.round(latest.capUsed * 10) / 10 : '—'}</div></div>
             <div><div className="sr-figure-label">Off Rtg</div><div className="sr-figure-value accent">{output ? output.total : '—'}</div></div>
             <div><div className="sr-figure-label">Chemistry</div><div className="sr-figure-value">{chemistry !== null ? chemistry : '—'}</div></div>
           </div>

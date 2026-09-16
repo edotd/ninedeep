@@ -46,7 +46,7 @@ export default function PersistentBar({ state, myTeamId, onExpand }) {
         <div className="chemistry-bar-detail">{synergy.score}/100 · +{synergy.offense}% OFF · +{synergy.defense}% DEF{synergy.flat ? ' · +1 flat' : ''}</div>
       </div>
       <div className="persistent-bar-metric">
-        <div className="persistent-bar-metric-label">Cap</div>
+        <div className="persistent-bar-metric-label">Budget</div>
         <div className="persistent-bar-metric-value">{cap !== undefined ? `${formatCoins(salary)} / ${formatCoins(cap)}` : '—'}</div>
       </div>
       <div className="persistent-bar-metric">

@@ -96,9 +96,9 @@ export const MARKETS = [
   { name: 'Massive', weight: 10, capAdjMin: 2.5, capAdjMax: 3.5, attendanceFloor: 0.80 },
 ];
 
-// Front-office moves (fire coach, relocate market, invest in fanbase) spend cap room —
+// Front-office moves (fire coach, relocate market, invest in fanbase) spend budget room —
 // see game/finances.js — rather than a separate currency, so these costs are tuned to
-// typical cap-room magnitudes (a few coins), not a standalone balance's larger scale.
+// typical budget-room magnitudes (a few coins), not a standalone balance's larger scale.
 export const RELOCATION_BASE_COST = 1.5;
 export const RELOCATION_PER_TIER_COST = 1;
 export const FANBASE_BOOST_COST = 2;

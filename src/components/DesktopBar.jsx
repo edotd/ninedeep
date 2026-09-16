@@ -113,7 +113,7 @@ export default function DesktopBar({ state, myTeamId, actions }) {
   const chemistry = coach ? teamExperience(team) : null;
   const cap = frontOfficeRevealed ? team.seasonCap : undefined;
   const salary = hand.length ? rosterSalary(team) : 0;
-  const overCap = cap !== undefined && salary > cap;
+  const overBudget = cap !== undefined && salary > cap;
   const room = cap !== undefined ? cap - salary : undefined;
 
   const [preview, setPreview] = useState(null); // { rect, type, content }
@@ -206,14 +206,14 @@ export default function DesktopBar({ state, myTeamId, actions }) {
         <div className="db-chem-grade">{chemistry !== null ? synergy.grade : '—'}</div>
         <div className="chemistry-bar-detail">{synergy.score}/100 · +{synergy.offense}% OFF · +{synergy.defense}% DEF{synergy.flat ? ' · +1 flat' : ''}</div>
       </div>
-      <div className="db-section db-metric cap">
-        <div className="db-heading">Salary Cap</div>
-        <div className={'db-cap-figures' + (overCap ? ' over' : '')}>
+      <div className="db-section db-metric budget">
+        <div className="db-heading">Budget</div>
+        <div className={'db-budget-figures' + (overBudget ? ' over' : '')}>
           <span className="committed">{formatCoins(salary)}</span>
           <span className="slash"> / </span>
           <span className="limit">{cap !== undefined ? formatCoins(cap) : '—'}</span>
         </div>
-        {room !== undefined && <div className={'db-cap-room' + (room < 0 ? ' over' : '')}>{room >= 0 ? '+' : ''}{Math.round(room * 10) / 10} Room</div>}
+        {room !== undefined && <div className={'db-budget-room' + (room < 0 ? ' over' : '')}>{room >= 0 ? '+' : ''}{Math.round(room * 10) / 10} Room</div>}
       </div>
       <div className="db-section db-metric output">
         <div className="db-heading">Projected Output</div>

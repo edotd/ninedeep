@@ -23,9 +23,9 @@ const GLOSSARY_TABS = [
   },
   {
     key: 'money', label: 'The Money', rows: [
-      { label: 'Salary Cap', text: 'TBD' },
+      { label: 'Budget', text: 'TBD' },
       { label: 'Contracts', text: 'TBD' },
-      { label: 'Front Office Moves', text: 'Firing your coach, relocating markets, and investing in your fanbase all spend cap room directly — the same pool that funds your roster.' },
+      { label: 'Front Office Moves', text: 'Firing your coach, relocating markets, and investing in your fanbase all spend budget room directly — the same pool that funds your roster.' },
     ],
   },
   {
@@ -222,7 +222,7 @@ export default function EntryScreen({ pendingJoinCode, soloState, soloActions, o
                   Start The Era <span>→</span>
                 </button>
                 <button className="entry-more-settings" onClick={() => setOverlay('settings')}>
-                  More Settings · Era Length, Cap Ceiling, AI Difficulty
+                  More Settings · Era Length, Budget Ceiling, AI Difficulty
                 </button>
               </div>
             </>

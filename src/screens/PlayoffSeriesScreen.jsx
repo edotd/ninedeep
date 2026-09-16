@@ -88,7 +88,7 @@ export default function PlayoffSeriesScreen({ state, actions, myTeamId }) {
         <div className="tipoff-name">{team.name}</div>
         <div className="tipoff-output-label">Projected Output</div>
         <div className={'tipoff-output' + (mine ? ' mine' : '')}>{output ? output.total : '—'}</div>
-        <div className="tipoff-substats">Chemistry {teamSynergy(team).grade} · Experience {team.coach ? teamExperience(team) : '—'} · Cap {team.seasonCap !== undefined ? formatCoins(rosterSalary(team)) : '—'}</div>
+        <div className="tipoff-substats">Chemistry {teamSynergy(team).grade} · Experience {team.coach ? teamExperience(team) : '—'} · Budget {team.seasonCap !== undefined ? formatCoins(rosterSalary(team)) : '—'}</div>
       </div>
     );
     const CardSlot = ({ card, mine }) => {

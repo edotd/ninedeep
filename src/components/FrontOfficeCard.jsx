@@ -68,7 +68,7 @@ function marketContent(team) {
     dispositionTone: 'approved-ink',
     badgeTone: 'approved-ink',
     effects: [
-      { label: 'Cap Boost', value: `+${formatCoins(m.capAdj)}`, tone: 'approved-ink' },
+      { label: 'Budget Boost', value: `+${formatCoins(m.capAdj)}`, tone: 'approved-ink' },
       { label: 'Size', value: m.name, tone: 'file' },
       { label: 'Status', value: 'Current', tone: 'file' },
     ],

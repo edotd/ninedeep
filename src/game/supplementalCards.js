@@ -814,7 +814,7 @@ const DEFINITIONS = [
     "definitionId": "matchup-091",
     "name": "Earn Your Contract",
     "category": "Player Stat",
-    "description": "Add this starter’s cap hit to one chosen stat for this matchup",
+    "description": "Add this starter’s budget hit to one chosen stat for this matchup",
     "rarity": "Signature",
     "effectType": "CAP_HIT_STAT",
     "value": null
@@ -877,7 +877,7 @@ const DEFINITIONS = [
     "definitionId": "matchup-097",
     "name": "Bargain Production",
     "category": "Player Stat",
-    "description": "+2 to one stat on a starter with a cap hit of 1 or less",
+    "description": "+2 to one stat on a starter with a budget hit of 1 or less",
     "rarity": "Core",
     "effectType": "PLAYER_STAT_MOD",
     "value": 2,

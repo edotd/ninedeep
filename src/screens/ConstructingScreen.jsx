@@ -4,7 +4,7 @@ import { useDarkMode } from '../hooks/useDarkMode';
 
 const MESSAGES = [
   'Constructing team…',
-  'Calculating salary cap and projections…',
+  'Calculating budget and projections…',
   'Applying league modifiers…',
 ];
 const STEP_MS = 550;

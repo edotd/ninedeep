@@ -60,7 +60,7 @@ export default function SeasonTransitionScreen({ state, actions, myTeamId }) {
             <div className="trans-panel current">
               <div className="trans-panel-head"><span>Projected This Season</span><span>Before The Deal</span></div>
               <div className="trans-panel-figure accent">{output ? output.total : '—'}</div>
-              <div className="trans-panel-sub">Chemistry {chemistry !== null ? chemistry : '—'}/10 · Cap {formatCoins(salary)} / {formatCoins(team.seasonCap || 0)}</div>
+              <div className="trans-panel-sub">Chemistry {chemistry !== null ? chemistry : '—'}/10 · Budget {formatCoins(salary)} / {formatCoins(team.seasonCap || 0)}</div>
             </div>
           </div>
         </div>

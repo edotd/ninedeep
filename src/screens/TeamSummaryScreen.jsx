@@ -41,8 +41,8 @@ function BenchStrip({ card }) {
 // the season on the auto-selected five, the last stop before the season locks), and — when
 // passed `onBack` — as the "Team" overlay reachable from the sidebar/top bar on any phase,
 // where the button instead just closes the overlay and the front-office moves (fire/hire
-// coach, relocate market, invest in fanbase — all funded out of cap room) are available.
-// Read-only otherwise, organised by category: rotation, cap ledger, front office. No
+// coach, relocate market, invest in fanbase — all funded out of budget room) are available.
+// Read-only otherwise, organised by category: rotation, budget ledger, front office. No
 // nine-slot navigation here (that's the persistent bar's job on every other screen).
 export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) {
   const team = state.teams[myTeamId];
@@ -111,18 +111,18 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
 
           <div className="ts-columns">
             <div className="ts-section">
-              <div className="ts-heading">Cap Ledger</div>
-              <div className="ts-cap-figures">
+              <div className="ts-heading">Budget Ledger</div>
+              <div className="ts-budget-figures">
                 <span className="committed">{formatCoins(committed).replace('🪙', '')}</span>
                 <span className="slash"> / </span>
                 <span className="limit">{formatCoins(cap).replace('🪙', '')}</span>
-                <span className={'ts-cap-room' + (room < 0 ? ' bad' : '')}>{room >= 0 ? '+' : ''}{Math.round(room * 10) / 10} ROOM</span>
+                <span className={'ts-budget-room' + (room < 0 ? ' bad' : '')}>{room >= 0 ? '+' : ''}{Math.round(room * 10) / 10} ROOM</span>
               </div>
-              <div className="ts-cap-bar">
+              <div className="ts-budget-bar">
                 {team.hand.map((c) => (
                   <div
                     key={c.id}
-                    className={'ts-cap-seg' + (cardTier(c) === 'EXP' ? ' exp' : activeSet.has(c.id) ? '' : ' bench')}
+                    className={'ts-budget-seg' + (cardTier(c) === 'EXP' ? ' exp' : activeSet.has(c.id) ? '' : ' bench')}
                     style={{ width: `${cap ? Math.max(2, (c.salary / cap) * 100) : 100 / (team.hand.length || 1)}%` }}
                   />
                 ))}
@@ -159,7 +159,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
               <div className="ts-heading">Front Office Moves</div>
               <div className="pull-slot">
                 <div className="pull-label">Fire &amp; Replace Coach</div>
-                <div className="pull-extra" style={{ marginBottom: 8 }}>Pay off {team.coach.name}'s salary plus the new hire's — a random new coach, no guaranteed upgrade. Est. cost {formatCoins(fireCostEstimate)}+, out of cap room.</div>
+                <div className="pull-extra" style={{ marginBottom: 8 }}>Pay off {team.coach.name}'s salary plus the new hire's — a random new coach, no guaranteed upgrade. Est. cost {formatCoins(fireCostEstimate)}+, out of budget room.</div>
                 <button
                   className="secondary"
                   style={{ width: '100%' }}
