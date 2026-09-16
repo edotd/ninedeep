@@ -28,3 +28,11 @@ Run `npm test` (Node 22.15+), `npm run lint`, and `npm run build`. Tests cover e
 Seven additional cards retain the original 90 definitions and three Legendaries. Earn Your Contract (Signature) adds the selected starter's exact salary, including fractional cap hits, to a chosen stat without changing salary. Three-Guard Attack, Switchable Wings, Own the Paint, and Interior Pressure (Prime) grant +5% per matching starter. Positionless Basketball (Prime) grants +10% Offense with all three positions starting. Bargain Production (Core) grants +2 to a chosen stat only on a starter with salary <= 1.
 
 Position counts use the active matchup lineup when the card resolves, including injury substitutions and excluding the bench. Bonuses are fixed for that matchup after play and stack additively with existing ability percentages. New definitions enter existing games at the next season's deck reset.
+
+## Player Skillsets and Team Chemistry
+
+New player cards roll one permanent `skillsetId` from 24 definitions. Favored positions have 3× draw weight; all Skillsets remain eligible for every position. The ID travels with the player through roster moves, contracts, aging and saved game state. Existing players without an ID remain neutral; start a new game to see Skillsets throughout the roster.
+
+Team Chemistry retains the existing experience score and reports 35 mutual Skillset pairings. Elite Fit grants +3% and Good Fit +1% to the corresponding offense/defense modifier, each side capped at +12%. Only the active lineup counts, including injury substitutions. Duplicate Skillset combinations count once. Locker Room Guy grants +1 flat offense and defense from anywhere on the roster, at most once. These bonuses feed projected output, regular-season simulated averages, and both playoff resolvers; the existing seeding rating formula is unchanged.
+
+Before season confirmation, the Team Chemistry panel previews valid starter/bench swaps and their bonus changes. Swaps preserve a five-player lineup with Guard, Forward and Big coverage and are rejected after the season locks. Pair definitions, eligibility and bonuses come from `src/game/skillsets.js`; the glossary lists every connection.

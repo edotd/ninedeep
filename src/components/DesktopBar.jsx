@@ -1,3 +1,4 @@
+import { teamSynergy } from '../game/skillsets';
 import { useState } from 'react';
 import { formatCoins, rosterSalary } from '../game/economy';
 import { teamOutput } from '../game/matchup';
@@ -89,6 +90,7 @@ export default function DesktopBar({ state, myTeamId }) {
 
   const canShowOutput = coach && hand.length > 0 && activeIds.length > 0;
   const output = canShowOutput ? teamOutput(team) : null;
+  const synergy = teamSynergy(team);
   const chemistry = coach ? teamExperience(team) : null;
   const cap = frontOfficeRevealed ? team.seasonCap : undefined;
   const salary = hand.length ? rosterSalary(team) : 0;
@@ -128,7 +130,8 @@ export default function DesktopBar({ state, myTeamId }) {
       </div>
       <div className="db-section db-metric chemistry">
         <div className="db-heading">Chemistry</div>
-        <div className="db-metric-value">{chemistry !== null ? chemistry : '—'}</div>
+        <div className="db-metric-value">{chemistry !== null ? chemistry : '—'}/10</div>
+        <div className="chemistry-bar-detail">+{synergy.offense}% OFF · +{synergy.defense}% DEF{synergy.flat ? ' · +1 flat' : ''}</div>
       </div>
       <div className="db-section db-metric cap">
         <div className="db-heading">Salary Cap</div>

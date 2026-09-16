@@ -1,3 +1,4 @@
+import { skillsetFor } from '../game/skillsets';
 import { formatCoins } from '../game/economy';
 import { careerLevel, careerBonus } from '../game/aging';
 import { cardTier, rawOverall } from '../game/cards';
@@ -6,6 +7,7 @@ import CardTypeMark from './CardTypeMark';
 export default function PlayerCard({ card, onClick, selected, draftStyle, rosterLabel, compact }) {
   const pillLabel = rosterLabel || (selected ? 'Selected' : null);
   const tier = cardTier(card);
+  const skillset = skillsetFor(card);
   const yearsServed = Math.max(0, card.maxContract - card.contract);
   const level = careerLevel(card.age);
   const bonus = careerBonus(card.age, card.careerRoll);
@@ -32,6 +34,7 @@ export default function PlayerCard({ card, onClick, selected, draftStyle, roster
         <div className="pcard-jersey">{rawOverall(card)}</div>
         <div className="pcard-name">{card.archetype}</div>
       </div>
+      <div className="pcard-skillset" title={skillset?.description}><span className="pcard-microlabel">Skillset</span><strong>{skillset?.name || 'None · legacy card'}</strong></div>
       <div className="pcard-contract pcard-caphit-row">
         <span className="pcard-microlabel">Cap Hit</span>
         <span className="pcard-caphit">{formatCoins(card.salary)}</span>

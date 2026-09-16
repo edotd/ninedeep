@@ -1,3 +1,4 @@
+import { teamSynergy } from '../game/skillsets';
 import { formatCoins, rosterSalary } from '../game/economy';
 import { teamOutput } from '../game/matchup';
 import { teamExperience } from '../game/aging';
@@ -19,6 +20,7 @@ export default function PersistentBar({ state, myTeamId, onExpand }) {
 
   const canShowOutput = team.coach && hand.length > 0 && activeIds.length > 0;
   const output = canShowOutput ? teamOutput(team) : null;
+  const synergy = teamSynergy(team);
   const chemistry = teamExperience(team);
   const cap = team.seasonCap;
   const salary = hand.length ? rosterSalary(team) : 0;
@@ -40,7 +42,8 @@ export default function PersistentBar({ state, myTeamId, onExpand }) {
       </div>
       <div className="persistent-bar-metric">
         <div className="persistent-bar-metric-label">Chemistry</div>
-        <div className="persistent-bar-metric-value">{chemistry !== null ? chemistry : '—'}</div>
+        <div className="persistent-bar-metric-value">{chemistry !== null ? chemistry : '—'}/10</div>
+        <div className="chemistry-bar-detail">+{synergy.offense}% OFF · +{synergy.defense}% DEF{synergy.flat ? ' · +1 flat' : ''}</div>
       </div>
       <div className="persistent-bar-metric">
         <div className="persistent-bar-metric-label">Cap</div>

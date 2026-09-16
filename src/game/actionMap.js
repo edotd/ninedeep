@@ -19,6 +19,7 @@ export const actionMap = {
   finishConstruction: engine.finishConstruction,
   finishSeasonSimulation: engine.finishSeasonSimulation,
   confirmLineup: engine.confirmLineup,
+  swapStarter: engine.swapStarter,
   beginPlayoffs: engine.beginPlayoffs,
   toggleAdvantage: engine.toggleAdvantage,
   rollCurrentMatchup: engine.rollCurrentMatchup,

@@ -1,3 +1,4 @@
+import { applySynergy } from './skillsets';
 import { POSITIONS } from './constants';
 import { cardTotal, retentionBonus, retentionDieBump, relationshipBonus } from './cards';
 import { careerMultiplier } from './aging';
@@ -58,10 +59,12 @@ export function defenseStatSum(team, idsOverride) {
   return Math.round(sum);
 }
 export function offenseModifier(team, idsOverride) {
-  return Math.round((offenseStatSum(team, idsOverride) * (1 + team.coach.offBonus + retentionBonus(team) + relationshipBonus(team))) / 20);
+  const base = Math.round((offenseStatSum(team, idsOverride) * (1 + team.coach.offBonus + retentionBonus(team) + relationshipBonus(team))) / 20);
+  return applySynergy(base, team, idsOverride, 'offense');
 }
 export function defenseModifier(team, idsOverride) {
-  return Math.round((defenseStatSum(team, idsOverride) * (1 + team.coach.defBonus + retentionBonus(team) + relationshipBonus(team))) / 20);
+  const base = Math.round((defenseStatSum(team, idsOverride) * (1 + team.coach.defBonus + retentionBonus(team) + relationshipBonus(team))) / 20);
+  return applySynergy(base, team, idsOverride, 'defense');
 }
 export function offenseDieSize(team) { return team.coach.offDie + retentionDieBump(team); }
 export function defenseDieSize(team) { return team.coach.defDie + retentionDieBump(team); }

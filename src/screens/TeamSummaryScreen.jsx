@@ -1,3 +1,5 @@
+import TeamChemistry from '../components/TeamChemistry';
+import { skillsetFor } from '../game/skillsets';
 import { formatCoins, rosterSalary } from '../game/economy';
 import { teamOutput } from '../game/matchup';
 import { teamExperience } from '../game/aging';
@@ -21,6 +23,7 @@ function RotationCard({ card }) {
       <div className="ts-roto-body">
         <div className="ts-roto-number">{rawOverall(card)}</div>
         <div className="ts-roto-name">{card.archetype}</div>
+        <div className="ts-skillset">{skillsetFor(card)?.name || 'No Skillset'}</div>
         <div className="ts-roto-meta">{card.position.slice(0, 1)} · {formatCoins(card.salary)}{tier === 'EXP' ? ' · EXP' : ''}</div>
       </div>
     </div>
@@ -30,7 +33,7 @@ function RotationCard({ card }) {
 function BenchStrip({ card }) {
   return (
     <div className="ts-bench-strip">
-      <span>{card.archetype}</span>
+      <span>{card.archetype}<small className="ts-skillset">{skillsetFor(card)?.name || 'No Skillset'}</small></span>
       <span className="ts-bench-cap">{formatCoins(card.salary)}</span>
     </div>
   );
@@ -109,6 +112,8 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
             </div>
           </div>
 
+          <TeamChemistry team={team} canEdit={state.phase === 'teamsummary' && !team.lineupConfirmed} onSwap={(outgoing, incoming) => actions.swapStarter(myTeamId, outgoing, incoming)} />
+
           <div className="ts-columns">
             <div className="ts-section">
               <div className="ts-heading">Cap Ledger</div>
@@ -139,7 +144,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
                 <div className="ts-fo-row"><span>Market</span><span>{team.market ? team.market.name : '—'}</span></div>
               </div>
               <div className="ts-metrics">
-                <div><div className="ts-metric-label">Chemistry</div><div className="ts-metric-value">{chemistry !== null ? chemistry : '—'}</div></div>
+                <div><div className="ts-metric-label">Experience</div><div className="ts-metric-value">{chemistry !== null ? chemistry : '—'}</div></div>
                 <div><div className="ts-metric-label">Proj Off</div><div className="ts-metric-value accent">{output ? output.total : '—'}</div></div>
               </div>
             </div>

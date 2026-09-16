@@ -1,3 +1,4 @@
+import { SKILLSETS, SKILLSET_PAIRS } from '../game/skillsets';
 import { ARCHETYPES, POSITIONS, POSITION_MOD, TIERS, LEAGUE_ACCOLADES, COACH_ARCHETYPES, COACH_MODIFIERS, FANBASE_ARCHETYPES, FANBASE_MODS, MARKETS, MATCHUP_MODIFIER_TYPES, PLAYER_AGE_MIN, PLAYER_AGE_MAX, PLAYER_PRIME_START, PLAYER_PRIME_BASE_END, COACH_AGE_MIN, COACH_AGE_MAX } from '../game/constants';
 import { formatCoins } from '../game/economy';
 import { CAREER_LEVELS } from '../game/aging';
@@ -205,6 +206,15 @@ export default function GlossaryScreen({ state, onBack }) {
         <h2>Team Finances</h2>
         <p className="lede">A currency separate from the salary cap — cap money buys the roster, finances buy front-office moves. Funded by a flat per-season stipend plus income scaled off last season's attendance. Spend it to fire and replace your coach (pays off both salaries — no guaranteed upgrade), relocate to a new market, or invest a small permanent bump into your fanbase baseline (once per season). See the Team screen for exact costs.</p>
 
+        <h2>Player Skillsets and Team Chemistry</h2>
+        <p className="lede">Each new player rolls one permanent Skillset. Elite Fit pairs add +3% and Good Fit pairs +1% to Offense or Defense, capped at +12% on each side. Only the active five count; each distinct pairing counts once. Locker Room Guy adds +1 flat Offense and Defense from anywhere on the roster, without stacking. The existing experience rating is shown alongside Skillset bonuses in Team Chemistry. Legacy players without a Skillset remain unchanged.</p>
+        {SKILLSETS.map((skill) => <div key={skill.id} className="matchup-box">
+          <div className="matchup-title">{skill.name}</div><p>{skill.description}</p>
+          <p>Favored positions: {skill.positions.join(', ')} (3× draw weight; all positions eligible).</p>
+          <ul>{SKILLSET_PAIRS.filter((p) => p.skills.includes(skill.id)).map((p) => <li key={p.skills.join(':')}>
+            {SKILLSETS.find((s) => s.id === p.skills.find((id) => id !== skill.id)).name} — {p.percent === 3 ? 'Elite Fit' : 'Good Fit'} · +{p.percent}% {p.side}
+          </li>)}</ul>
+        </div>)}
         <h2>Matchup Modifier Cards</h2>
         <p className="lede">Every team receives three cards from a shared 97-card deck each season. Each name has a fixed effect and rarity: Core, Prime, Signature, or Legendary. Cards are single-use; seeding bonuses apply automatically. Positive cards help your team and negative cards target the opponent. Player-stat changes last one matchup, with stats floored at 1. Ability percentages retain fractional points. Dice cards change the selected offense or defense die (minimum 1). Advantage keeps the higher of two rolls; Disadvantage keeps the lower, and the two cancel. These affect both rolls for the matchup, including rolls already resolved. Extra-card effects draw one remaining playable card; negative card effects discard one random unused playable opponent card. Cap-hit bonuses add the selected starter’s exact salary to one stat without changing salary. Position bonuses count the active matchup lineup when played, excluding the bench. Bargain Production requires a starter with cap hit 1 or less. A fresh deck is shuffled next season.</p>
         {MATCHUP_MODIFIER_TYPES.map((t) => {

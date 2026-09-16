@@ -78,8 +78,8 @@ export function benchScore(team, idsOverride) {
 // this exact number as its 100-game sample grows; the two used to disagree because this
 // ignored dice entirely while that only averaged dice, each missing what the other had).
 export function teamOutput(team) {
-  const off = Math.round(offenseModifier(team) + (offenseDieSize(team) + 1) / 2);
-  const def = Math.round(defenseModifier(team) + (defenseDieSize(team) + 1) / 2);
+  const off = Math.round((offenseModifier(team) + (offenseDieSize(team) + 1) / 2) * 100) / 100;
+  const def = Math.round((defenseModifier(team) + (defenseDieSize(team) + 1) / 2) * 100) / 100;
   const bench = benchScore(team);
   return { off, def, bench, total: off + def + bench };
 }

@@ -238,3 +238,15 @@ export function simulateAllPlayoffs(state) {
 export function updateSettings(state, patch) {
   state.settings = { ...state.settings, ...patch };
 }
+
+// Starting-five edits are allowed only before this team's season is locked.
+export function swapStarter(state, teamIdx, outgoingId, incomingId) {
+  const team = state.teams[teamIdx];
+  if (!team || state.phase !== 'teamsummary' || team.lineupConfirmed) return { ok: false, msg: 'The lineup is locked.' };
+  if (!team.activeIds.includes(outgoingId) || team.activeIds.includes(incomingId) || !team.hand.some((p) => p.id === incomingId)) return { ok: false, msg: 'Choose a starter and a bench player.' };
+  const activeIds = team.activeIds.map((id) => id === outgoingId ? incomingId : id);
+  const validation = validateLineup({ ...team, activeIds });
+  if (!validation.valid) return { ok: false, msg: validation.msg };
+  team.activeIds = activeIds;
+  return { ok: true };
+}

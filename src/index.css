@@ -963,3 +963,14 @@ body:has(.entry-screen){padding-bottom:0;}
 .mu2-card[data-rarity="Signature"]{border-color:var(--stamp);}
 .mu2-card[data-rarity="Legendary"]{border-color:var(--franchise);box-shadow:0 0 0 2px var(--ink);}
 .mu2-card.playoff .mu2-row-value{color:var(--playoff-statement);}
+
+.pcard-skillset{position:relative;display:flex;flex-direction:column;gap:4px;padding:8px 12px;border-bottom:1px solid currentColor;font-size:12px;overflow-wrap:anywhere;}
+.ts-skillset{display:block;font-size:11px;line-height:1.4;margin-top:4px;overflow-wrap:anywhere;}
+.team-chemistry{margin:20px 0;padding:16px;border:1px solid var(--file-rule);}
+.team-chemistry h2{margin:0 0 12px;}
+.team-chemistry p,.team-chemistry li{font-size:13px;line-height:1.6;}
+.chemistry-totals{display:flex;flex-wrap:wrap;gap:12px 24px;}
+.chemistry-swaps{display:grid;gap:10px;margin-top:16px;}
+.chemistry-swaps select{display:block;width:100%;max-width:100%;margin-top:8px;padding:10px;}
+.chemistry-swaps button{white-space:normal;text-align:left;line-height:1.5;}
+.chemistry-bar-detail{font-size:10px;line-height:1.4;max-width:150px;}

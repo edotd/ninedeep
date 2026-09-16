@@ -1,3 +1,4 @@
+import { rollSkillset } from './skillsets';
 import { ARCHETYPES, POSITIONS, POSITION_MOD, COACH_ARCHETYPES, COACH_MODIFIERS, MATCHUP_MODIFIER_TYPES, PLAYER_RELATIONSHIP_MIN, PLAYER_RELATIONSHIP_MAX, LEAGUE_ACCOLADES } from './constants';
 import { rollWithVariance, weightedPick, shuffle } from './rng';
 import { randomPlayerAge, randomPrimeAge, randomCoachAge, careerMultiplier } from './aging';
@@ -59,6 +60,7 @@ export function makeCard(state, archName, position, tier) {
     id: nextCardId(state),
     archetype: archName,
     position,
+    skillsetId: rollSkillset(position),
     tierName: tier.name,
     stats,
     salary,
