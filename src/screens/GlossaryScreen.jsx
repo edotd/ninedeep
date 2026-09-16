@@ -158,7 +158,7 @@ export default function GlossaryScreen({ state, onBack }) {
         ))}
 
         <h2>Fanbase</h2>
-        <p className="lede">Your Fanbase Archetype is drawn once and holds for the whole era, like Coach. Attendance itself is recalculated at the end of every season from your archetype's formula, your Market's floor, and how you finished — then a permanent, small baseline (built up from season milestones and any Finance investment) is added on top. Attendance applies a small multiplier to your cap (0.9x–1.1x) and feeds your Team Finances income every season.</p>
+        <p className="lede">Your Fanbase Archetype is drawn once and holds for the whole era, like Coach. Attendance itself is recalculated at the end of every season from your archetype's formula, your Market's floor, and how you finished — then a permanent, small baseline (built up from season milestones and any fanbase investment) is added on top. Attendance applies a small multiplier to your cap (0.9x–1.1x).</p>
         {FANBASE_ARCHETYPES.map((f) => (
           <div key={f.name} className="matchup-box">
             <div className="matchup-title">{f.name}</div>
@@ -191,7 +191,7 @@ export default function GlossaryScreen({ state, onBack }) {
         ))}
 
         <h2>Market</h2>
-        <p className="lede">Sets your attendance floor and a cap boost, rolled within range at pull time. Team Finances can relocate you to any market size for a fee that scales with how many tiers you're jumping — see the Team screen.</p>
+        <p className="lede">Sets your attendance floor and a cap boost, rolled within range at pull time. You can relocate to any market size for a cap-room fee that scales with how many tiers you're jumping — see the Team screen.</p>
         {MARKETS.map((m) => (
           <div key={m.name} className="matchup-box">
             <div className="matchup-title">{m.name}</div>
@@ -203,8 +203,8 @@ export default function GlossaryScreen({ state, onBack }) {
           </div>
         ))}
 
-        <h2>Team Finances</h2>
-        <p className="lede">A currency separate from the salary cap — cap money buys the roster, finances buy front-office moves. Funded by a flat per-season stipend plus income scaled off last season's attendance. Spend it to fire and replace your coach (pays off both salaries — no guaranteed upgrade), relocate to a new market, or invest a small permanent bump into your fanbase baseline (once per season). See the Team screen for exact costs.</p>
+        <h2>Front Office Moves</h2>
+        <p className="lede">Fire and replace your coach, relocate to a new market, or invest a small permanent bump into your fanbase baseline (once per season) — all spent directly out of this season's cap room, the same pool that funds your roster. Firing a coach pays off both the outgoing and incoming salaries — no guaranteed upgrade. See the Team screen for exact costs.</p>
 
         <h2>Player Skillsets and Team Chemistry</h2>
         <p className="lede">Each new player rolls one permanent Skillset. Elite Fit pairs add +3% and Good Fit pairs +1% to Offense or Defense, capped at +12% on each side. Only the active five count; each distinct pairing counts once. Locker Room Guy adds +1 flat Offense and Defense from anywhere on the roster, without stacking. Team Chemistry uses a 0–100 score: 50 base points, up to 30 for Skillset fit (2.5 per percentage point across both sides), up to 15 for starter tenure (1 per completed player-year), and 5 for Locker Room Guy. Grades: A+ 97, A 93, A− 90, B+ 87, B 83, B− 80, C+ 77, C 73, C− 70, D+ 67, D 63, D− 60, F below 60. Each completed starter-year also adds +0.5% Offense and Defense beyond the Skillset cap. Bench players earn tenure but contribute only while starting. Joining a different team resets tenure. The experience rating stays separate. Legacy players without a Skillset remain unchanged.</p>

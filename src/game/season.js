@@ -1,12 +1,11 @@
 import { addToRoster, creditTeamSeason } from './chemistry';
-import { TIERS, LEAGUE_ACCOLADES, REPLACEMENT_TIER, AI_NAMES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_ARCHETYPES, MARKETS, PLAYER_AGE_MAX, COACH_AGE_MAX, MATCHUP_CARD_DRAW_COUNT, FINANCE_STARTING_BALANCE } from './constants';
+import { TIERS, LEAGUE_ACCOLADES, REPLACEMENT_TIER, AI_NAMES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_ARCHETYPES, MARKETS, PLAYER_AGE_MAX, COACH_AGE_MAX, MATCHUP_CARD_DRAW_COUNT } from './constants';
 import { shuffle, weightedPick } from './rng';
 import { makeCard, randomArch, cardTotal, neededPosition, drawCoachCard, applyCoachRetention, drawMatchupModifierCard, resetMatchupDeck } from './cards';
 import { finalizeCap, rosterSalary, rollMarketCapAdj } from './economy';
 import { autoSelectFive, effectiveRating } from './roster';
 import { startDraft } from './draft';
 import { initAttendance, rollFanbaseMod, recomputeSeasonAttendance, applyPlayoffBerthMilestone, applyHomeCourtMilestone, applyChampionshipMilestone } from './fanbase';
-import { accrueSeasonFinances } from './finances';
 import { simulateSeasonOutput } from './matchup';
 
 export function newEraState() {
@@ -59,7 +58,6 @@ export function buildTeams(state, teamSeats) {
     retainedStreak: 0,
     lastCoachName: null,
     matchupCards: [],
-    finances: FINANCE_STARTING_BALANCE,
     fanbaseBaseline: 0,
     financeBoostUsedThisSeason: false,
     // One entry pushed per season in proceedFromResults, feeding the Season Recap screen's
@@ -140,7 +138,6 @@ export function startNewSeasonRoster(state) {
   state.teams.forEach((team) => {
     applyCoachRetention(team, team.coach);
     refreshAdvantage(team);
-    accrueSeasonFinances(team);
     finalizeCap(team, state.season);
     team.activeIds = autoSelectFive(team.hand);
     team.coach.age = Math.min(COACH_AGE_MAX, team.coach.age + 1);

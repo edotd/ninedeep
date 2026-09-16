@@ -25,7 +25,7 @@ const GLOSSARY_TABS = [
     key: 'money', label: 'The Money', rows: [
       { label: 'Salary Cap', text: 'TBD' },
       { label: 'Contracts', text: 'TBD' },
-      { label: 'Team Finances', text: 'TBD' },
+      { label: 'Front Office Moves', text: 'Firing your coach, relocating markets, and investing in your fanbase all spend cap room directly — the same pool that funds your roster.' },
     ],
   },
   {

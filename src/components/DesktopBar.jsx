@@ -1,6 +1,6 @@
 import { teamSynergy } from '../game/skillsets';
 import { useRef, useState } from 'react';
-import { formatCoins, formatFinances, rosterSalary } from '../game/economy';
+import { formatCoins, rosterSalary } from '../game/economy';
 import { teamOutput } from '../game/matchup';
 import { teamExperience } from '../game/aging';
 import { cardTier, rawOverall } from '../game/cards';
@@ -114,6 +114,7 @@ export default function DesktopBar({ state, myTeamId, actions }) {
   const cap = frontOfficeRevealed ? team.seasonCap : undefined;
   const salary = hand.length ? rosterSalary(team) : 0;
   const overCap = cap !== undefined && salary > cap;
+  const room = cap !== undefined ? cap - salary : undefined;
 
   const [preview, setPreview] = useState(null); // { rect, type, content }
   const handleHover = (el, type, content) => setPreview({ rect: el.getBoundingClientRect(), type, content });
@@ -212,7 +213,7 @@ export default function DesktopBar({ state, myTeamId, actions }) {
           <span className="slash"> / </span>
           <span className="limit">{cap !== undefined ? formatCoins(cap) : '—'}</span>
         </div>
-        <div className="db-finances">Finances {formatFinances(team.finances)}</div>
+        {room !== undefined && <div className={'db-cap-room' + (room < 0 ? ' over' : '')}>{room >= 0 ? '+' : ''}{Math.round(room * 10) / 10} Room</div>}
       </div>
       <div className="db-section db-metric output">
         <div className="db-heading">Projected Output</div>

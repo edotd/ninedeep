@@ -1,11 +1,11 @@
 import TeamChemistry from '../components/TeamChemistry';
 import { skillsetFor } from '../game/skillsets';
-import { formatCoins, formatFinances, rosterSalary } from '../game/economy';
+import { formatCoins, rosterSalary } from '../game/economy';
 import { teamOutput } from '../game/matchup';
 import { teamExperience } from '../game/aging';
 import { cardTier, rawOverall } from '../game/cards';
 import { relocationCost } from '../game/finances';
-import { MARKETS, FINANCE_FANBASE_BOOST_COST } from '../game/constants';
+import { MARKETS, FANBASE_BOOST_COST } from '../game/constants';
 import MatchupCard from '../components/MatchupCard';
 
 const ERA_LENGTH = 8;
@@ -40,14 +40,13 @@ function BenchStrip({ card }) {
 // after the Matchup Cards pull and the Constructing loading beat — its own button confirms
 // the season on the auto-selected five, the last stop before the season locks), and — when
 // passed `onBack` — as the "Team" overlay reachable from the sidebar/top bar on any phase,
-// where the button instead just closes the overlay and the Team Finances moves (fire/hire
-// coach, relocate market, invest in fanbase) are available. Read-only otherwise, organised
-// by category: rotation, cap ledger, front office. No nine-slot navigation here (that's the
-// persistent bar's job on every other screen).
+// where the button instead just closes the overlay and the front-office moves (fire/hire
+// coach, relocate market, invest in fanbase — all funded out of cap room) are available.
+// Read-only otherwise, organised by category: rotation, cap ledger, front office. No
+// nine-slot navigation here (that's the persistent bar's job on every other screen).
 export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) {
   const team = state.teams[myTeamId];
   const seasonNum = Math.min(state.season, ERA_LENGTH);
-  const finances = team.finances || 0;
   // A quick preview of the buyout cost — the actual new hire is drawn fresh when the button
   // is clicked, so this number is an estimate (their salary could land higher or lower).
   const fireCostEstimate = team.coach ? Math.round((team.coach.salary + team.coach.salary) * 10) / 10 : 0;
@@ -157,10 +156,10 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
 
           {team.coach && team.market && (
             <div className="ts-section">
-              <div className="ts-heading">Team Finances — {formatFinances(finances)}</div>
+              <div className="ts-heading">Front Office Moves</div>
               <div className="pull-slot">
                 <div className="pull-label">Fire &amp; Replace Coach</div>
-                <div className="pull-extra" style={{ marginBottom: 8 }}>Pay off {team.coach.name}'s salary plus the new hire's — a random new coach, no guaranteed upgrade. Est. cost {formatFinances(fireCostEstimate)}+.</div>
+                <div className="pull-extra" style={{ marginBottom: 8 }}>Pay off {team.coach.name}'s salary plus the new hire's — a random new coach, no guaranteed upgrade. Est. cost {formatCoins(fireCostEstimate)}+, out of cap room.</div>
                 <button
                   className="secondary"
                   style={{ width: '100%' }}
@@ -188,7 +187,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
                           if (res && res.ok === false) alert(res.msg);
                         }}
                       >
-                        Relocate to {m.name} — {formatFinances(cost)}
+                        Relocate to {m.name} — {formatCoins(cost)}
                       </button>
                     );
                   })}
@@ -206,7 +205,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
                     if (res && res.ok === false) alert(res.msg);
                   }}
                 >
-                  {team.financeBoostUsedThisSeason ? 'Already Invested This Season' : `Invest — ${formatFinances(FINANCE_FANBASE_BOOST_COST)}`}
+                  {team.financeBoostUsedThisSeason ? 'Already Invested This Season' : `Invest — ${formatCoins(FANBASE_BOOST_COST)}`}
                 </button>
               </div>
             </div>

@@ -96,15 +96,13 @@ export const MARKETS = [
   { name: 'Massive', weight: 10, capAdjMin: 2.5, capAdjMax: 3.5, attendanceFloor: 0.80 },
 ];
 
-// Team Finances — a currency separate from the salary cap, spent on front-office moves
-// rather than roster moves. See game/finances.js.
-export const FINANCE_STARTING_BALANCE = 10;
-export const FINANCE_SEASON_STIPEND = 3;
-export const FINANCE_ATTENDANCE_INCOME_RATE = 10; // coins at 100% attendance, scales linearly
-export const FINANCE_RELOCATION_BASE = 15;
-export const FINANCE_RELOCATION_PER_TIER = 10;
-export const FINANCE_FANBASE_BOOST_COST = 8;
-export const FINANCE_FANBASE_BOOST_AMOUNT = 0.02;
+// Front-office moves (fire coach, relocate market, invest in fanbase) spend cap room —
+// see game/finances.js — rather than a separate currency, so these costs are tuned to
+// typical cap-room magnitudes (a few coins), not a standalone balance's larger scale.
+export const RELOCATION_BASE_COST = 1.5;
+export const RELOCATION_PER_TIER_COST = 1;
+export const FANBASE_BOOST_COST = 2;
+export const FANBASE_BOOST_AMOUNT = 0.02;
 
 // Season milestone bumps — permanent additions to a team's fanbaseBaseline (see
 // game/fanbase.js). Season End scales by final seed; the rest are flat.

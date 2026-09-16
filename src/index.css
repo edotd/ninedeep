@@ -367,7 +367,8 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .db-cap-figures .slash{color:var(--ink-rule);}
 .db-cap-figures .limit{color:var(--ink-muted);}
 .db-cap-figures.over .committed{color:var(--stamp);}
-.db-finances{margin-top:4px;font-family:var(--font-mono);font-size:9px;letter-spacing:.04em;color:var(--ink-muted);text-transform:uppercase;white-space:nowrap;}
+.db-cap-room{margin-top:4px;font-family:var(--font-mono);font-size:9px;letter-spacing:.04em;color:var(--approved-file);text-transform:uppercase;white-space:nowrap;}
+.db-cap-room.over{color:var(--stamp-text);}
 
 .db-output-breakdown{display:flex;gap:10px;margin-top:4px;font-family:var(--font-mono);font-size:9px;letter-spacing:.04em;color:var(--ink-muted);text-transform:uppercase;white-space:nowrap;}
 
