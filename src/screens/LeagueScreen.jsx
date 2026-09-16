@@ -1,3 +1,4 @@
+import { teamSynergy } from '../game/skillsets';
 import { teamOutput } from '../game/matchup';
 import { teamExperience } from '../game/aging';
 
@@ -14,7 +15,7 @@ export default function LeagueScreen({ state, myTeamId, onBack }) {
     <>
       <div className="screen">
         <h1>Standings</h1>
-        <p className="lede">Every team's current coach and matchup output — the deterministic part of their score (offense modifier + defense modifier + bench), before dice are rolled — plus Chemistry (1-10, from roster/coach age and title/playoff history). Not visible until hands are dealt for the season.</p>
+        <p className="lede">Every team's current coach and matchup output — the deterministic part of their score (offense modifier + defense modifier + bench), before dice are rolled — plus a Chemistry letter grade from Skillset fit, starter tenure, and leadership, alongside the separate experience rating. Not visible until hands are dealt for the season.</p>
         {rows.map(({ t, out, exp }) => (
           <div key={t.name} className={'standing-row' + (t.id === myTeamId ? ' you' : '')} style={{ alignItems: 'center' }}>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -24,7 +25,7 @@ export default function LeagueScreen({ state, myTeamId, onBack }) {
             <div style={{ display: 'flex', gap: 14, fontFamily: 'var(--mono)', alignItems: 'baseline' }}>
               <span style={{ color: 'var(--muted)', fontSize: 12 }}>Off {out ? out.off : '—'}</span>
               <span style={{ color: 'var(--muted)', fontSize: 12 }}>Def {out ? out.def : '—'}</span>
-              <span style={{ color: 'var(--muted)', fontSize: 12 }}>Chem {exp !== null ? exp : '—'}</span>
+              <span style={{ color: 'var(--muted)', fontSize: 12 }}>Chem {teamSynergy(t).grade} · Exp {exp !== null ? exp : '—'}</span>
               <b>{out ? out.total : '—'}</b>
             </div>
           </div>

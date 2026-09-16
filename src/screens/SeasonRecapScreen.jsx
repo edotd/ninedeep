@@ -1,5 +1,5 @@
 import { teamOutput } from '../game/matchup';
-import { teamExperience } from '../game/aging';
+import { teamSynergy } from '../game/skillsets';
 import { cardTier } from '../game/cards';
 
 const ERA_LENGTH = 8;
@@ -16,7 +16,7 @@ export default function SeasonRecapScreen({ state, actions, myTeamId }) {
   const history = team.seasonHistory || [];
   const latest = history[history.length - 1];
   const output = team.coach && team.activeIds && team.activeIds.length > 0 ? teamOutput(team) : null;
-  const chemistry = team.coach ? teamExperience(team) : null;
+  const chemistry = team.coach ? teamSynergy(team).grade : null;
 
   const years = Array.from({ length: ERA_LENGTH }, (_, i) => i + 1);
   const byYear = {};
