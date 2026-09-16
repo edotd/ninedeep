@@ -331,5 +331,20 @@ export function finishFreeAgency(state) {
   });
   state.season++;
   if (state.season > 8) { state.phase = 'era_end'; }
-  else { startNewSeasonRoster(state); }
+  else {
+    // startNewSeasonRoster does the actual work (cap, retention, matchup cards for the new
+    // season) so the transition screen below has real numbers to show — it just overrides
+    // the phase that leaves it in, so the season doesn't start playable until the player
+    // continues off the transition screen.
+    startNewSeasonRoster(state);
+    state.phase = 'seasontransition';
+  }
+}
+
+// The Odometer (design brand handoff, "Nine Deep Transitions" 2A) — a one-time beat between
+// seasons, shown for every season after the first (the first has no "last season" to show).
+// Not a loading state: it's the beat that says a new season has started and what it will be
+// judged on.
+export function proceedFromSeasonTransition(state) {
+  state.phase = 'pullmodifier';
 }

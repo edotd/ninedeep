@@ -1,9 +1,10 @@
 import { teamSynergy } from '../game/skillsets';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { formatCoins, rosterSalary } from '../game/economy';
 import { teamOutput } from '../game/matchup';
 import { teamExperience } from '../game/aging';
 import { cardTier, rawOverall } from '../game/cards';
+import { validateLineup } from '../game/roster';
 import { MATCHUP_CARD_DRAW_COUNT } from '../game/constants';
 import PlayerCard from './PlayerCard';
 import FrontOfficeCard from './FrontOfficeCard';
@@ -23,15 +24,33 @@ import MatchupCard from './MatchupCard';
 // none of those, so the preview escapes the bar's clipping entirely.
 const PREVIEW_WIDTH = { player: 264, frontoffice: 340, matchup: 280 };
 
-function PlayerSlot({ card, onHover, onLeave }) {
+// Substitution ("stamped in place", per the persistent bar's Bar behaviour spec): click one
+// starter then one bench player (either order) to swap them. Nothing translates — each slot
+// rotates on its own Y axis to 84° and back while a SUB stamp holds over both, then the
+// incoming slot rings for a moment. Slots are matched by player id, not array position, so
+// the animation tracks the two actual players even though the bench array's order (fixed by
+// original deal order, not by slot index) doesn't generally give the outgoing player back the
+// exact slot the incoming one vacated.
+const FLIP_MS = 200;
+const RING_MS = 600;
+
+function PlayerSlot({ card, swap, onHover, onLeave, onSelect }) {
   if (!card) return <div className="db-slot db-player-slot empty"><span className="db-slot-empty-plus">+</span></div>;
   const tier = cardTier(card);
-  const cls = 'db-slot db-player-slot' + (tier === 'EXP' ? ' expiring' : '') + ' tier-' + tier.toLowerCase();
+  const isSwapping = swap && (card.id === swap.outgoingId || card.id === swap.incomingId);
+  const flipping = isSwapping && (swap.phase === 'flip1' || swap.phase === 'flip2');
+  const ringing = swap && swap.phase === 'ring' && card.id === swap.incomingId;
+  const selected = swap && swap.phase === 'selecting' && card.id === swap.selectedId;
+  const rejected = swap && swap.phase === 'reject' && (card.id === swap.outgoingId || card.id === swap.incomingId);
+  const cls = 'db-slot db-player-slot'
+    + (tier === 'EXP' ? ' expiring' : '') + ' tier-' + tier.toLowerCase()
+    + (selected ? ' selected' : '') + (flipping ? ' flipping' : '') + (ringing ? ' ringing' : '') + (rejected ? ' rejected' : '');
   return (
     <div
       className={cls}
       onMouseEnter={(e) => onHover(e.currentTarget, 'player', <PlayerCard card={card} />)}
       onMouseLeave={onLeave}
+      onClick={(e) => onSelect(e.currentTarget, card)}
     >
       <div className="db-slot-tier-strip" />
       <div className="db-slot-number">{rawOverall(card)}</div>
@@ -67,7 +86,7 @@ function MatchupSlot({ card, onHover, onLeave }) {
   );
 }
 
-export default function DesktopBar({ state, myTeamId }) {
+export default function DesktopBar({ state, myTeamId, actions }) {
   const team = state.teams[myTeamId];
   // Each card type is written to state the instant its own dealing screen mounts, before that
   // screen's one-by-one reveal animation actually finishes — the bar has to deliberately
@@ -100,18 +119,71 @@ export default function DesktopBar({ state, myTeamId }) {
   const handleHover = (el, type, content) => setPreview({ rect: el.getBoundingClientRect(), type, content });
   const handleLeave = () => setPreview(null);
 
+  // swap: null | { selectedId, phase: 'selecting' } | { outgoingId, incomingId, phase, stampRect }
+  const [swap, setSwap] = useState(null);
+  const timersRef = useRef([]);
+  const clearTimers = () => { timersRef.current.forEach(clearTimeout); timersRef.current = []; };
+
+  const runSwap = (outgoingId, incomingId, midRect) => {
+    clearTimers();
+    setSwap({ outgoingId, incomingId, phase: 'flip1', stampRect: midRect });
+    timersRef.current.push(setTimeout(() => {
+      actions.swapStarter(myTeamId, outgoingId, incomingId);
+      setSwap((s) => (s ? { ...s, phase: 'flip2' } : s));
+    }, FLIP_MS));
+    timersRef.current.push(setTimeout(() => {
+      setSwap((s) => (s ? { ...s, phase: 'ring' } : s));
+    }, FLIP_MS * 2));
+    timersRef.current.push(setTimeout(() => {
+      setSwap(null);
+    }, FLIP_MS * 2 + RING_MS));
+  };
+
+  const rejectSwap = (outgoingId, incomingId) => {
+    clearTimers();
+    setSwap({ outgoingId, incomingId, phase: 'reject' });
+    timersRef.current.push(setTimeout(() => setSwap(null), 360));
+  };
+
+  // Click one starter then one bench player (either order) to swap them; click the same slot
+  // again to deselect, or a different slot in the same group to move the selection instead.
+  const handleSlotClick = (el, card) => {
+    if (!actions || !actions.swapStarter) return;
+    if (swap && swap.phase !== 'selecting') return; // an animation is already running
+    const isStarter = activeIds.includes(card.id);
+    const rect = el.getBoundingClientRect();
+    if (!swap) {
+      setSwap({ phase: 'selecting', selectedId: card.id, selectedIsStarter: isStarter, selectedRect: rect });
+      return;
+    }
+    if (card.id === swap.selectedId) { setSwap(null); return; }
+    if (isStarter === swap.selectedIsStarter) {
+      setSwap({ phase: 'selecting', selectedId: card.id, selectedIsStarter: isStarter, selectedRect: rect });
+      return;
+    }
+    const outgoingId = swap.selectedIsStarter ? swap.selectedId : card.id;
+    const incomingId = swap.selectedIsStarter ? card.id : swap.selectedId;
+    const nextIds = activeIds.map((id) => (id === outgoingId ? incomingId : id));
+    const check = validateLineup({ ...team, activeIds: nextIds });
+    // Midpoint between the two clicked slots, in viewport coordinates — position:fixed for
+    // the same reason the hover preview is: the bar's overflow-x:auto would otherwise clip it.
+    if (!check.valid) { rejectSwap(outgoingId, incomingId); return; }
+    const midRect = { left: Math.min(swap.selectedRect.left, rect.left), right: Math.max(swap.selectedRect.right, rect.right), top: Math.min(swap.selectedRect.top, rect.top) };
+    runSwap(outgoingId, incomingId, midRect);
+  };
+
   return (
     <div className="desktop-bar">
       <div className="db-section db-slots-fixed">
         <div className="db-heading starters">Starters</div>
         <div className="db-slots">
-          {Array.from({ length: 5 }, (_, i) => <PlayerSlot key={i} card={starters[i]} onHover={handleHover} onLeave={handleLeave} />)}
+          {Array.from({ length: 5 }, (_, i) => <PlayerSlot key={i} card={starters[i]} swap={swap} onHover={handleHover} onLeave={handleLeave} onSelect={handleSlotClick} />)}
         </div>
       </div>
       <div className="db-section db-slots-fixed">
         <div className="db-heading">Bench</div>
         <div className="db-slots">
-          {Array.from({ length: 4 }, (_, i) => <PlayerSlot key={i} card={bench[i]} onHover={handleHover} onLeave={handleLeave} />)}
+          {Array.from({ length: 4 }, (_, i) => <PlayerSlot key={i} card={bench[i]} swap={swap} onHover={handleHover} onLeave={handleLeave} onSelect={handleSlotClick} />)}
         </div>
       </div>
       <div className="db-section db-slots-fixed">
@@ -142,13 +214,20 @@ export default function DesktopBar({ state, myTeamId }) {
         </div>
       </div>
       <div className="db-section db-metric output">
-        <div className="db-heading">Projected</div>
+        <div className="db-heading">Projected Output</div>
         <div className="db-metric-value accent">{output ? output.total : '—'}</div>
         <div className="db-output-breakdown">
           <span>Offense {output ? output.off : '—'}</span>
           <span>Defense {output ? output.def : '—'}</span>
         </div>
       </div>
+
+      {swap && (swap.phase === 'flip1' || swap.phase === 'flip2') && swap.stampRect && (() => {
+        const r = swap.stampRect;
+        const left = (r.left + r.right) / 2;
+        const bottom = window.innerHeight - r.top + 6;
+        return <div className="db-sub-stamp" style={{ left, bottom }}>Sub</div>;
+      })()}
 
       {preview && (() => {
         const width = PREVIEW_WIDTH[preview.type] || 264;

@@ -63,14 +63,21 @@ test('fractional synergy appears in scoring and projections; bench aura is exact
   assert.equal(result.aOffMod,offenseModifier(t));
   assert(Number.isFinite(simulateSeasonOutput(t).off));
 });
-test('swap validates positions, ownership of cards and season lock; updates chemistry',()=>{
+// Subs are no longer phase/lock-gated — the persistent bar lets a player substitute any time
+// (see engine.js's swapStarter), same as "slot drag reorders within a group and moves players
+// between starters and bench" in the brand handoff's Bar behaviour. The only hard block left
+// is a match this team is actively playing turn-by-turn, since that's mid-roll state the swap
+// would invalidate.
+test('swap validates positions and ownership; blocked only mid-live-match; updates chemistry',()=>{
   const t=team([6,1,10,9,2]);t.hand.push({...t.hand[0],id:'bench',skillsetId:sid(18),position:'Guard'});
-  const state={phase:'teamsummary',teams:[t]};
+  const state={phase:'teamsummary',teams:[t],playoff:{matches:[]}};
   assert.equal(swapStarter(state,0,'p0','missing').ok,false);
   assert.equal(swapStarter(state,0,'p2','bench').ok,false); // only Forward
   assert.equal(swapStarter(state,0,'p0','bench').ok,true);assert.notEqual(teamSynergy(t).offense,8);
-  t.lineupConfirmed=true;assert.equal(swapStarter(state,0,'bench','p0').ok,false);
-  t.lineupConfirmed=false;state.phase='playoffs';assert.equal(swapStarter(state,0,'bench','p0').ok,false);
+  t.lineupConfirmed=true;assert.equal(swapStarter(state,0,'bench','p0').ok,true);
+  state.phase='playoffs';assert.equal(swapStarter(state,0,'p0','bench').ok,true);
+  state.playoff.matches=[{turn:{stage:'roll'},result:null,a:t,b:{}}];
+  assert.equal(swapStarter(state,0,'bench','p0').ok,false); // this team is mid-turn in a live match
 });
 test('turn-by-turn scoring retains skillsets after each multiplayer serialization',()=>{
   const a=team([6,1,10,9,2]), b=team([18,19,20,21,22]);b.id=1;b.name='Other';

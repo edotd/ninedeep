@@ -22,21 +22,65 @@ const CONSEQUENCES = {
   'Team Chemistry': { ifUnanswered: 'Passive — always boosts your bench score 50%', counter: 'None' },
 };
 
-export default function MatchupCard({ card, playoff }) {
-  if (card.effectType) return (
-    <div className="mu2-wrap">
-      <div className={'mu2-card' + (playoff ? ' playoff' : '')} data-rarity={card.rarity}>
-        <div className="mu2-header"><span className="mu2-kind-group"><CardTypeMark type="matchup" size={16} />{card.category}</span><span>{card.rarity}</span></div>
-        <div className="mu2-name">{card.name}</div>
-        <p className="mu2-statement">{card.description}</p>
-        <div className="mu2-rows">
-          <div className="mu2-row"><span className="mu2-row-label">Target</span><span className="mu2-row-value">{card.target === 'self' ? 'Your team' : 'Opponent'}{card.targetsPlayer ? ' · choose player and stat' : ''}</span></div>
-          <div className="mu2-row"><span className="mu2-row-label">Timing</span><span className="mu2-row-value">{card.used ? 'Used' : card.passive === 'seeding' ? 'Automatic at seeding' : 'Play once · this matchup'}</span></div>
+// Corner brackets per rarity — real DOM elements rather than ::before/::after, since
+// Signature and Legendary need all four corners and a pseudo-element only gives two. Core
+// gets none; Prime gets the top two only (the "register brackets" per the handoff).
+const CORNERS = {
+  Core: [],
+  Prime: ['tl', 'tr'],
+  Signature: ['tl', 'tr', 'bl', 'br'],
+  Legendary: ['tl', 'tr', 'bl', 'br'],
+};
+
+// A stable per-card serial within its rarity's flavor print run (2500/1200/400/60) — deterministic
+// from the card's own id so it doesn't reshuffle on every render.
+const PRINT_RUN = { Core: 2500, Prime: 1200, Signature: 400, Legendary: 60 };
+function serialFor(card) {
+  const run = PRINT_RUN[card.rarity] || 2500;
+  let h = 0;
+  const key = String(card.id ?? card.definitionId ?? card.name);
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  return String((h % run) + 1).padStart(String(run).length, '0');
+}
+
+// `justDealt` plays the rarity's deal-in animation once (see the design handoff's "Dealing a
+// rarity") — Legendary gets the full treatment (hold, corner snap, badge bloom, glow, two
+// sheen passes); the animation classes below are additive and fill-mode:both, so once they
+// finish the card is left showing exactly its normal resting styles — no cleanup needed, and
+// a card rendered with justDealt=false (anywhere outside the one reveal moment) just shows
+// that resting state immediately. The literal 3D flip-off-a-face-down-back from the spec is
+// skipped — this game has no card-back render for matchup cards to flip from, the same scope
+// cut made earlier for the player/front-office deal animation.
+export default function MatchupCard({ card, playoff, justDealt }) {
+  if (card.effectType) {
+    const rarity = card.rarity || 'Core';
+    const legendary = rarity === 'Legendary';
+    const dealCls = justDealt ? ' dealing' : '';
+    return (
+      <div className="mu2-wrap">
+        <div className={'mu2-card' + (playoff ? ' playoff' : '') + dealCls} data-rarity={rarity}>
+          {legendary && <div className={'mu2-glow' + dealCls} />}
+          <div className="mu2-header"><span className="mu2-kind-group"><CardTypeMark type="matchup" size={16} />{card.category}</span><span>{card.rarity}</span></div>
+          <div className="mu2-name">{card.name}</div>
+          <p className="mu2-statement">{card.description}</p>
+          <div className="mu2-rows">
+            <div className="mu2-row"><span className="mu2-row-label">Target</span><span className="mu2-row-value">{card.target === 'self' ? 'Your team' : 'Opponent'}{card.targetsPlayer ? ' · choose player and stat' : ''}</span></div>
+            <div className="mu2-row"><span className="mu2-row-label">Timing</span><span className="mu2-row-value">{card.used ? 'Used' : card.passive === 'seeding' ? 'Automatic at seeding' : 'Play once · this matchup'}</span></div>
+          </div>
+          <div className="mu2-torn" />
+          {(CORNERS[rarity] || []).map((c) => <span key={c} className={'mu2-corner ' + c + dealCls} />)}
+          {legendary && <div className={'mu2-badge' + dealCls}>Legendary</div>}
+          {legendary && <div className={'mu2-serial' + dealCls}>#{serialFor(card)} / {PRINT_RUN.Legendary}</div>}
+          {legendary && justDealt && (
+            <>
+              <div className="mu2-sheen s1" />
+              <div className="mu2-sheen s2" />
+            </>
+          )}
         </div>
-        <div className="mu2-torn" />
       </div>
-    </div>
-  );
+    );
+  }
   const consequence = CONSEQUENCES[card.name] || { ifUnanswered: '—', counter: '—' };
   return (
     <div className="mu2-wrap">

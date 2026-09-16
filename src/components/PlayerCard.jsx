@@ -34,7 +34,6 @@ export default function PlayerCard({ card, onClick, selected, draftStyle, roster
         <div className="pcard-jersey">{rawOverall(card)}</div>
         <div className="pcard-name">{card.archetype}</div>
       </div>
-      <div className="pcard-skillset" title={skillset?.description}><span className="pcard-microlabel">Skillset</span><strong>{skillset?.name || 'None · legacy card'}</strong></div>
       <div className="pcard-contract pcard-caphit-row">
         <span className="pcard-microlabel">Cap Hit</span>
         <span className="pcard-caphit">{formatCoins(card.salary)}</span>
@@ -55,6 +54,19 @@ export default function PlayerCard({ card, onClick, selected, draftStyle, roster
           <div className="pcard-stat"><b>{card.stats.PLM}</b><span>PLM</span></div>
           <div className="pcard-stat"><b>{card.stats.REB}</b><span>REB</span></div>
           <div className="pcard-stat"><b>{card.stats.DEF}</b><span>DEF</span></div>
+        </div>
+      )}
+      {/* Skillset module (brand handoff, Player Card §5) — a permanent trait rolled once at
+          creation, never a stat. Sits below the stat block on the real card so it reads as
+          "who this player is good next to," not another number; doesn't appear on the
+          compact roster-grid card, where it would outrank the cap figure. */}
+      {!compact && (
+        <div className="pcard-skillset">
+          <div className="pcard-skillset-head">
+            <span className="pcard-microlabel">Skillset</span>
+            <span className="pcard-microlabel">Rolled At Print</span>
+          </div>
+          <div className="pcard-skillset-name" title={skillset?.description}>{skillset?.name || 'None · Legacy Card'}</div>
         </div>
       )}
       {!compact && (

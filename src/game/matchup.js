@@ -81,7 +81,10 @@ export function teamOutput(team) {
   const off = Math.round((offenseModifier(team) + (offenseDieSize(team) + 1) / 2) * 100) / 100;
   const def = Math.round((defenseModifier(team) + (defenseDieSize(team) + 1) / 2) * 100) / 100;
   const bench = benchScore(team);
-  return { off, def, bench, total: off + def + bench };
+  // Round the sum too, not just its inputs — off/def already carry 2 decimals each, and
+  // summing two such floats (e.g. 11.87 + 12.5) routinely lands on values like
+  // 24.369999999999997 that every screen displaying `.total` would otherwise print raw.
+  return { off, def, bench, total: Math.round((off + def + bench) * 100) / 100 };
 }
 
 // Resolves a bracket match's teams for display without mutating state — a semifinal/final

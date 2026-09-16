@@ -63,7 +63,10 @@ function BracketNode({ label, m, matches, index, myTeamId, actions, big, narrow 
         m.result ? (
           <button className="secondary bracket-node-btn" onClick={() => actions.openSeries(index)}>Review</button>
         ) : (
-          <button className="primary bracket-node-btn" onClick={() => actions.openSeries(index)}>{isFinal ? 'Begin The Final' : 'Begin'}</button>
+          <div className="bracket-node-btn-row">
+            <button className="primary bracket-node-btn" onClick={() => actions.openSeries(index)}>{isFinal ? 'Begin The Final' : 'Begin'}</button>
+            <button className="secondary bracket-node-btn" onClick={() => actions.simulateOneMatch(index)}>Sim</button>
+          </div>
         )
       )}
     </div>

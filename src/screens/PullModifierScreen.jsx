@@ -40,7 +40,7 @@ export default function PullModifierScreen({ state, actions, myTeamId }) {
         <div className="deal-centered">
           <div className="mu-deal-row">
             {cards.slice(0, dealtCount).map((c, i) => (
-              <div key={c.id ?? i} className="card-deal-in"><MatchupCard card={c} /></div>
+              <div key={c.id ?? i} className="card-deal-in"><MatchupCard card={c} justDealt={i === dealtCount - 1} /></div>
             ))}
           </div>
         </div>

@@ -367,6 +367,27 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .db-output-breakdown{display:flex;gap:10px;margin-top:4px;font-family:var(--font-mono);font-size:9px;letter-spacing:.04em;color:var(--ink-muted);text-transform:uppercase;white-space:nowrap;}
 
 .db-slot{cursor:default;}
+.db-player-slot:not(.empty){cursor:pointer;}
+
+/* Substitution ("stamped in place", brand handoff Bar behaviour) — click a starter then a
+   bench player (either order) to swap them. Nothing translates: each slot rotates on its own
+   Y axis while a SUB stamp holds over both (see .db-sub-stamp below), then the incoming slot
+   rings for a moment. `perspective` on the slots container gives the rotation actual depth
+   instead of just squashing flat. */
+.db-slots{perspective:600px;}
+.db-player-slot.selected{box-shadow:inset 0 0 0 2px var(--franchise);}
+.db-player-slot.flipping{transform:rotateY(84deg);transition:transform 200ms cubic-bezier(.4,.2,.6,1);}
+.db-player-slot.ringing{animation:db-sub-ring 600ms ease-out both;}
+.db-player-slot.rejected{animation:db-sub-reject 340ms ease-in-out both;}
+@keyframes db-sub-ring{0%{box-shadow:inset 0 0 0 1.5px var(--franchise);}80%{box-shadow:inset 0 0 0 1.5px var(--franchise);}100%{box-shadow:inset 0 0 0 0 transparent;}}
+@keyframes db-sub-reject{0%,100%{transform:translateX(0);}25%{transform:translateX(-3px);}75%{transform:translateX(3px);}}
+.db-sub-stamp{position:fixed;transform:translate(-50%, -50%) rotate(-9deg);z-index:21;pointer-events:none;background:var(--stamp);color:var(--form);font-family:var(--font-label);font-size:8px;letter-spacing:.1em;text-transform:uppercase;padding:2px 4px;animation:db-stamp-hold 680ms ease-out both;}
+@keyframes db-stamp-hold{0%{opacity:0;}8%{opacity:1;}79%{opacity:1;}100%{opacity:0;}}
+@media (prefers-reduced-motion:reduce){
+  .db-player-slot.flipping{transform:none;transition:none;}
+  .db-player-slot.ringing,.db-player-slot.rejected,.db-sub-stamp{animation:none;}
+}
+
 /* Full-card hover preview — position:fixed so it escapes .desktop-bar's overflow-x:auto
    (which per the CSS spec forces overflow-y to clip too) instead of being cut off at the
    bar's own top edge. `bottom` is computed from the hovered slot's own top edge so the
@@ -714,6 +735,9 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .bracket-node.final{border:3px solid var(--stamp);box-shadow:none;width:100%;}
 .bracket-node.final .bracket-match-header{background:var(--stamp);color:var(--stamp-plate-text);}
 .bracket-node-btn{width:calc(100% - 16px) !important;margin:8px !important;padding:9px 10px !important;font-size:10px !important;}
+.bracket-node-btn-row{display:flex;gap:8px;margin:8px;}
+.bracket-node-btn-row .bracket-node-btn{width:auto !important;margin:0 !important;flex:1;}
+.bracket-node-btn-row .bracket-node-btn.secondary{flex:0 0 auto;}
 @media (max-width:480px){.bracket-title{font-size:30px;}}
 /* The bracket screen fills the full window height on desktop now (no capped 900px pane) — the
    tree's own flex:1 (above) plus space-around already claims that room, so this block is just
@@ -957,14 +981,99 @@ body:has(.entry-screen){padding-bottom:0;}
   .entry-glossary-row-label{width:auto;}
 }
 
-/* Matchup rarities retain the existing printed-card palette. */
-.mu2-card[data-rarity="Core"]{border-color:var(--file-muted);}
-.mu2-card[data-rarity="Prime"]{border-color:var(--approved);}
-.mu2-card[data-rarity="Signature"]{border-color:var(--stamp);}
-.mu2-card[data-rarity="Legendary"]{border-color:var(--franchise);box-shadow:0 0 0 2px var(--ink);}
 .mu2-card.playoff .mu2-row-value{color:var(--playoff-statement);}
 
-.pcard-skillset{position:relative;display:flex;flex-direction:column;gap:4px;padding:8px 12px;border-bottom:1px solid currentColor;font-size:12px;overflow-wrap:anywhere;}
+/* ================= Matchup rarity (brand handoff, "Matchup rarity") — never a stat, purely
+   frame/stock/edge scarcity. Ascending Core -> Prime -> Signature -> Legendary. Stock patterns
+   paint as .mu2-card's own background-image, which only shows through the name/statement area
+   since the header/torn-edge/rows-top already carry opaque backgrounds of their own. Corner
+   brackets are real elements (.mu2-corner, rendered by MatchupCard.jsx) since a card can need
+   all four and a pseudo-element only gives two. ==== */
+.mu2-corner{position:absolute;width:13px;height:13px;pointer-events:none;box-sizing:border-box;}
+.mu2-corner.tl{top:4px;left:4px;border-top:2px solid;border-left:2px solid;}
+.mu2-corner.tr{top:4px;right:4px;border-top:2px solid;border-right:2px solid;}
+.mu2-corner.bl{bottom:4px;left:4px;border-bottom:2px solid;border-left:2px solid;}
+.mu2-corner.br{bottom:4px;right:4px;border-bottom:2px solid;border-right:2px solid;}
+
+/* Core — ~60% of the deck, ~/2500. Bare form stock, no ornament; the baseline the rest read against. */
+.mu2-card[data-rarity="Core"]{border:2px solid #C4715A;}
+
+/* Prime — ~28%, ~/1200. A ruled grid ground, register brackets on the top two corners only. */
+.mu2-card[data-rarity="Prime"]{
+  border:3px solid var(--stamp);
+  background-image:repeating-linear-gradient(0deg, transparent 0 7px, #DED3B6 7px 8px), repeating-linear-gradient(90deg, transparent 0 7px, #DED3B6 7px 8px);
+}
+.mu2-card[data-rarity="Prime"] .mu2-corner{border-color:var(--file-rule);}
+
+/* Signature — ~10%, ~/400. File stock, a 45° hatch, a double frame (heavier stamp-text outer
+   plus a thin file inner hairline), brackets on all four corners, and the top-right corner
+   physically clipped. */
+.mu2-card[data-rarity="Signature"]{
+  background:var(--file);
+  border:4px solid var(--stamp-text);
+  box-shadow:inset 0 0 0 1px var(--file);
+  background-image:repeating-linear-gradient(45deg, transparent 0 6px, var(--form-rule) 6px 7px);
+  clip-path:polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+}
+.mu2-card[data-rarity="Signature"] .mu2-corner{border-color:var(--stamp);}
+.mu2-card[data-rarity="Signature"] .mu2-torn{background:repeating-linear-gradient(90deg, var(--stamp) 0 5px, var(--file) 5px 10px);}
+
+/* Legendary — ~2%, ~/60. Ink ground, a double ink+amber frame with an inset plate rule, a
+   crossed hatch, amber brackets on all four corners, an amber torn edge, and — unique to this
+   rarity — a resting badge, serial, and ambient glow (see MatchupCard.jsx). Inverts its text
+   the same way the playoff variant does. */
+.mu2-card[data-rarity="Legendary"]{
+  background:var(--ink);
+  border:5px solid var(--ink);
+  box-shadow:inset 0 0 0 1px var(--franchise);
+  background-image:repeating-linear-gradient(45deg, transparent 0 7px, rgba(240,160,61,.09) 7px 8px), repeating-linear-gradient(-45deg, transparent 0 7px, rgba(240,160,61,.09) 7px 8px);
+}
+.mu2-card[data-rarity="Legendary"]::after{content:'';position:absolute;inset:4px;border:2px solid var(--franchise);pointer-events:none;}
+.mu2-card[data-rarity="Legendary"] .mu2-corner{border-color:var(--franchise);border-width:3px;}
+.mu2-card[data-rarity="Legendary"] .mu2-name{color:var(--franchise);}
+.mu2-card[data-rarity="Legendary"] .mu2-statement{color:#C3CBDA;}
+.mu2-card[data-rarity="Legendary"] .mu2-rows{border-top-color:var(--ink-rule);}
+.mu2-card[data-rarity="Legendary"] .mu2-row-label{color:var(--ink-muted);}
+.mu2-card[data-rarity="Legendary"] .mu2-row-value.bad{color:var(--stamp-ink);}
+.mu2-card[data-rarity="Legendary"] .mu2-row-value.good{color:var(--approved-ink);}
+.mu2-card[data-rarity="Legendary"] .mu2-torn{background:repeating-linear-gradient(90deg, var(--franchise) 0 5px, var(--ink) 5px 10px);}
+
+.mu2-glow{position:absolute;inset:-40px;z-index:-1;pointer-events:none;background:radial-gradient(closest-side, rgba(240,160,61,.5), transparent 70%);opacity:.45;}
+.mu2-badge{position:absolute;top:6px;right:6px;background:var(--franchise);color:var(--ink);font-family:var(--font-label);font-size:9px;letter-spacing:.1em;padding:3px 7px;text-transform:uppercase;z-index:2;}
+.mu2-serial{position:absolute;bottom:6px;left:9px;font-family:var(--font-mono);font-size:9px;color:var(--ink-muted);z-index:2;}
+.mu2-sheen{position:absolute;top:0;bottom:0;width:120px;background:linear-gradient(90deg, transparent, rgba(255,255,255,.5), transparent);pointer-events:none;z-index:3;}
+.mu2-sheen.s2{width:60px;}
+
+/* Deal-in — plays once when a card is first revealed (MatchupCard's `justDealt`). Classes are
+   additive and fill-mode:both, so once an animation finishes the element is left showing
+   exactly its normal resting appearance — no JS cleanup needed to "turn it off". */
+@keyframes mu-ld-enter{0%{opacity:0;transform:translateY(-24px) scale(.92);box-shadow:0 6px 12px rgba(8,13,26,.3);}45%{opacity:1;transform:translateY(0) scale(1);box-shadow:0 14px 26px rgba(8,13,26,.62);}100%{opacity:1;transform:translateY(0) scale(1);}}
+.mu2-card[data-rarity="Legendary"].dealing{animation:mu-ld-enter 900ms cubic-bezier(.2,.8,.25,1) both;}
+@keyframes mu-ld-corner{0%{opacity:0;transform:scale(.5);}100%{opacity:1;transform:scale(1);}}
+.mu2-corner.dealing{opacity:0;animation:mu-ld-corner 200ms cubic-bezier(.2,1.4,.4,1) 860ms both;}
+@keyframes mu-ld-badge{0%{transform:scale(0);opacity:0;}70%{transform:scale(1.55);opacity:1;}100%{transform:scale(1);opacity:1;}}
+.mu2-badge.dealing{opacity:0;animation:mu-ld-badge 420ms cubic-bezier(.2,1.4,.4,1) 900ms both;}
+@keyframes mu-ld-glow{0%{opacity:0;}100%{opacity:.45;}}
+.mu2-glow.dealing{opacity:0;animation:mu-ld-glow 500ms ease-out 900ms both;}
+@keyframes mu-ld-serial{0%{opacity:0;transform:translateY(4px);}100%{opacity:1;transform:translateY(0);}}
+.mu2-serial.dealing{opacity:0;animation:mu-ld-serial 300ms ease-out 1300ms both;}
+@keyframes mu-ld-torn{0%{clip-path:inset(0 100% 0 0);}100%{clip-path:inset(0 0 0 0);}}
+.mu2-torn.dealing{animation:mu-ld-torn 340ms ease-out 1300ms both;}
+@keyframes mu-ld-sheen{0%{transform:translateX(-160%) skewX(-20deg);opacity:0;}10%{opacity:1;}100%{transform:translateX(260%) skewX(-20deg);opacity:0;}}
+.mu2-sheen.s1{animation:mu-ld-sheen 560ms ease-in-out 1540ms both;}
+.mu2-sheen.s2{animation:mu-ld-sheen 460ms ease-in-out 1960ms both;}
+@media (prefers-reduced-motion:reduce){
+  .mu2-card.dealing,.mu2-corner.dealing,.mu2-badge.dealing,.mu2-glow.dealing,.mu2-serial.dealing{animation:none !important;opacity:1 !important;transform:none !important;box-shadow:none !important;}
+  .mu2-torn.dealing{animation:none !important;clip-path:none !important;}
+  .mu2-sheen{display:none !important;}
+}
+
+.pcard-skillset{position:relative;background:var(--file);padding:11px 12px 12px;border-bottom:1px solid var(--form-rule);}
+.pcard-skillset-head{display:flex;justify-content:space-between;margin-bottom:4px;}
+.pcard-skillset-head span:first-child{font-family:var(--font-label);}
+.pcard-skillset-name{font-family:var(--font-display);font-size:27px;line-height:.84;color:var(--ink);overflow-wrap:break-word;}
+.pcard.tier-EXP .pcard-skillset{background:#162034;border-color:var(--ink-rule);}
+.pcard.tier-EXP .pcard-skillset-name{color:var(--franchise);}
 .ts-skillset{display:block;font-size:11px;line-height:1.4;margin-top:4px;overflow-wrap:anywhere;}
 .team-chemistry{margin:20px 0;padding:16px;border:1px solid var(--file-rule);}
 .team-chemistry h2{margin:0 0 12px;}
@@ -974,3 +1083,38 @@ body:has(.entry-screen){padding-bottom:0;}
 .chemistry-swaps select{display:block;width:100%;max-width:100%;margin-top:8px;padding:10px;}
 .chemistry-swaps button{white-space:normal;text-align:left;line-height:1.5;}
 .chemistry-bar-detail{font-size:10px;line-height:1.4;max-width:150px;}
+
+/* ================= Season transition ("The Odometer", design brand handoff "Nine Deep
+   Transitions" 2A) — a one-time beat between seasons, for every season after the first. Ink
+   ground, full-bleed like the other brand-fixed screens (co-screen/tipoff-screen/etc). ==== */
+/* min-height:100vh, not the usual calc(100vh - <bar height>) other full-bleed ink screens use
+   — this phase hides the persistent bar entirely (HIDE_BAR_PHASES), so there's no bar height
+   to reserve space for on either shell, and subtracting one left a bare strip of body
+   background exposed below the screen on desktop. */
+.trans-screen{background:var(--ink);padding:0;min-height:100vh;box-sizing:border-box;}
+/* body's own padding-bottom is reserved for the mobile persistent bar, which this phase also
+   hides — without this it shows up as the same bare strip. */
+body:has(.trans-screen){padding-bottom:0;}
+.trans-inner{padding:20px 16px 28px;display:flex;flex-direction:column;gap:22px;}
+@media (min-width:700px){.trans-inner{padding:40px;}}
+.trans-eyebrow{display:flex;gap:10px;font-family:var(--font-mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-muted);}
+.trans-eyebrow .accent{color:var(--franchise);}
+.trans-headline-row{display:flex;align-items:flex-end;gap:24px;flex-wrap:wrap;border-bottom:2px solid var(--stamp);padding-bottom:14px;}
+.trans-numeral{font-family:var(--font-display);font-size:96px;line-height:.78;color:var(--file);}
+.trans-team{font-family:var(--font-display);font-size:32px;line-height:.85;color:var(--file);padding-bottom:10px;}
+.trans-era-bar{display:flex;gap:4px;}
+.trans-era-seg{flex:1;height:8px;background:var(--ink-rule);}
+.trans-era-seg.done{background:#8E9BB5;}
+.trans-era-seg.current{background:var(--franchise);}
+.trans-meta-row{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);}
+.trans-panels{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.trans-panel{background:var(--form);border:2px solid var(--ink-rule);padding:20px;}
+.trans-panel.current{border-color:var(--franchise);}
+.trans-panel-head{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--file-muted);margin-bottom:10px;}
+.trans-panel-figure{font-family:var(--font-display);font-size:40px;line-height:.85;color:var(--ink);margin-bottom:8px;}
+.trans-panel-figure.accent{color:var(--stamp-text);}
+.trans-panel-sub{font-family:var(--font-mono);font-size:12px;color:var(--file-body);}
+@media (max-width:700px){
+  .trans-panels{grid-template-columns:1fr;}
+  .trans-numeral{font-size:64px;}
+}

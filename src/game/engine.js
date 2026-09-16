@@ -235,14 +235,33 @@ export function simulateAllPlayoffs(state) {
   state.playoff.activeMatchIndex = null;
 }
 
+// Same instant resolver as Simulate All, scoped to one match — for a bracket click that just
+// wants this series decided (including a human-involved one) without playing it turn by turn.
+export function simulateOneMatch(state, index) {
+  const matches = state.playoff.matches;
+  const m = matches[index];
+  if (!m || m.result || !isMatchUnlocked(matches, m)) return { ok: false, msg: 'This match cannot be simulated right now.' };
+  const prevActive = state.playoff.activeMatchIndex;
+  state.playoff.activeMatchIndex = index;
+  rollCurrentMatchup(state);
+  state.playoff.activeMatchIndex = prevActive === index ? null : prevActive;
+  return { ok: true };
+}
+
 export function updateSettings(state, patch) {
   state.settings = { ...state.settings, ...patch };
 }
 
-// Starting-five edits are allowed only before this team's season is locked.
+// Starting-five edits — from the once-per-season Team Summary confirm step, or (per the
+// persistent bar's "slot drag reorders within a group and moves players between starters and
+// bench" behaviour) any time from the bar itself. The only hard block is a match this team is
+// actively playing turn-by-turn: swapping mid-turn would edit a lineup the turn engine has
+// already rolled dice against.
 export function swapStarter(state, teamIdx, outgoingId, incomingId) {
   const team = state.teams[teamIdx];
-  if (!team || state.phase !== 'teamsummary' || team.lineupConfirmed) return { ok: false, msg: 'The lineup is locked.' };
+  if (!team || !team.hand || !team.activeIds || team.activeIds.length !== 5) return { ok: false, msg: 'Nothing to substitute yet.' };
+  const inLiveMatch = state.playoff && state.playoff.matches.some((m) => m.turn && !m.result && (m.a === team || m.b === team));
+  if (inLiveMatch) return { ok: false, msg: "Can't change your lineup mid-match." };
   if (!team.activeIds.includes(outgoingId) || team.activeIds.includes(incomingId) || !team.hand.some((p) => p.id === incomingId)) return { ok: false, msg: 'Choose a starter and a bench player.' };
   const activeIds = team.activeIds.map((id) => id === outgoingId ? incomingId : id);
   const validation = validateLineup({ ...team, activeIds });
