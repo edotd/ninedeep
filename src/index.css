@@ -956,3 +956,10 @@ body:has(.entry-screen){padding-bottom:0;}
   .entry-glossary-row{flex-direction:column;gap:4px;}
   .entry-glossary-row-label{width:auto;}
 }
+
+/* Matchup rarities retain the existing printed-card palette. */
+.mu2-card[data-rarity="Core"]{border-color:var(--file-muted);}
+.mu2-card[data-rarity="Prime"]{border-color:var(--approved);}
+.mu2-card[data-rarity="Signature"]{border-color:var(--stamp);}
+.mu2-card[data-rarity="Legendary"]{border-color:var(--franchise);box-shadow:0 0 0 2px var(--ink);}
+.mu2-card.playoff .mu2-row-value{color:var(--playoff-statement);}

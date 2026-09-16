@@ -23,6 +23,20 @@ const CONSEQUENCES = {
 };
 
 export default function MatchupCard({ card, playoff }) {
+  if (card.effectType) return (
+    <div className="mu2-wrap">
+      <div className={'mu2-card' + (playoff ? ' playoff' : '')} data-rarity={card.rarity}>
+        <div className="mu2-header"><span className="mu2-kind-group"><CardTypeMark type="matchup" size={16} />{card.category}</span><span>{card.rarity}</span></div>
+        <div className="mu2-name">{card.name}</div>
+        <p className="mu2-statement">{card.description}</p>
+        <div className="mu2-rows">
+          <div className="mu2-row"><span className="mu2-row-label">Target</span><span className="mu2-row-value">{card.target === 'self' ? 'Your team' : 'Opponent'}{card.targetsPlayer ? ' · choose player and stat' : ''}</span></div>
+          <div className="mu2-row"><span className="mu2-row-label">Timing</span><span className="mu2-row-value">{card.used ? 'Used' : card.passive === 'seeding' ? 'Automatic at seeding' : 'Play once · this matchup'}</span></div>
+        </div>
+        <div className="mu2-torn" />
+      </div>
+    </div>
+  );
   const consequence = CONSEQUENCES[card.name] || { ifUnanswered: '—', counter: '—' };
   return (
     <div className="mu2-wrap">

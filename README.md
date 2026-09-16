@@ -14,3 +14,11 @@ The React Compiler is not enabled on this template because of its impact on dev 
 ## Expanding the Oxlint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+
+## Matchup deck
+
+The canonical 90-card list is in `src/game/supplementalCards.js`. Every definition has a stable ID, fixed value, category and rarity. A shuffled deck is stored in game state, deals three cards per team without replacement, and resets each season. Existing saved legacy cards keep their original effects until the next deal.
+
+Positive effects target the holder, negative effects target the opponent. Seeding bonuses are additive and consumed automatically at seeding. All other cards are single-use. Player/stat selection covers SCO, PLM, REB and DEF; changes are matchup-local, with stats floored at 1. Ability percentages apply to the offense/defense modifier and retain fractional points. Dice adjustments affect the offense or defense roll corresponding to the action window and cannot reduce a die below 1. Advantage and Disadvantage affect both matchup rolls, cancel each other, and recalculate already-resolved rolls. Extra draws skip seeding cards after seeding; discards remove a random unused playable opposing card. Exhausted decks do not reshuffle midseason.
+
+Run `npm test` (Node 22.15+), `npm run lint`, and `npm run build`. Tests cover every playable definition, shared-deck serialization, temporary effects, seeding, and both match resolvers. The game continues using its existing Firestore state synchronization; no database seed or schema migration is needed.

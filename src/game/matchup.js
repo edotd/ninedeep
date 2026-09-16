@@ -1,5 +1,6 @@
+import { supplementalRoll } from './supplementalEffects';
 import { INJURY_CHANCE } from './constants';
-import { rollDieWithAdvantage, rollDie } from './rng';
+import { rollDie } from './rng';
 import { offenseDieSize, defenseDieSize, offenseModifier, defenseModifier } from './roster';
 import { cardTotal } from './cards';
 
@@ -128,13 +129,13 @@ export function playMatchup(a, b, advA, advB, idsA, idsB, extraA, extraB) {
   extraB = extraB || { offDelta: 0, defDelta: 0, leagueMod: 0 };
   const aOffSides = offenseDieSize(a), aDefSides = defenseDieSize(a);
   const bOffSides = offenseDieSize(b), bDefSides = defenseDieSize(b);
-  const aOffDie = rollDieWithAdvantage(aOffSides, advA), aOffMod = offenseModifier(a, idsA) + (extraA.offDelta || 0), aOffTotal = aOffDie + aOffMod;
-  const aDefDie = rollDieWithAdvantage(aDefSides, advA), aDefMod = defenseModifier(a, idsA) + (extraA.defDelta || 0), aDefTotal = aDefDie + aDefMod;
+  const { die: aOffDie, mod: aOffMod, total: aOffTotal } = supplementalRoll(a, idsA, extraA, 'offense', rollDie(aOffSides), rollDie(aOffSides), advA);
+  const { die: aDefDie, mod: aDefMod, total: aDefTotal } = supplementalRoll(a, idsA, extraA, 'defense', rollDie(aDefSides), rollDie(aDefSides), advA);
   const aBench = benchScore(a, idsA);
   const aLeagueMod = extraA.leagueMod || 0;
   const aSum = aOffTotal + aDefTotal + aBench + aLeagueMod;
-  const bOffDie = rollDieWithAdvantage(bOffSides, advB), bOffMod = offenseModifier(b, idsB) + (extraB.offDelta || 0), bOffTotal = bOffDie + bOffMod;
-  const bDefDie = rollDieWithAdvantage(bDefSides, advB), bDefMod = defenseModifier(b, idsB) + (extraB.defDelta || 0), bDefTotal = bDefDie + bDefMod;
+  const { die: bOffDie, mod: bOffMod, total: bOffTotal } = supplementalRoll(b, idsB, extraB, 'offense', rollDie(bOffSides), rollDie(bOffSides), advB);
+  const { die: bDefDie, mod: bDefMod, total: bDefTotal } = supplementalRoll(b, idsB, extraB, 'defense', rollDie(bDefSides), rollDie(bDefSides), advB);
   const bBench = benchScore(b, idsB);
   const bLeagueMod = extraB.leagueMod || 0;
   const bSum = bOffTotal + bDefTotal + bBench + bLeagueMod;

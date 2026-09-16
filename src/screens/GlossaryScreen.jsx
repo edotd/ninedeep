@@ -206,23 +206,23 @@ export default function GlossaryScreen({ state, onBack }) {
         <p className="lede">A currency separate from the salary cap — cap money buys the roster, finances buy front-office moves. Funded by a flat per-season stipend plus income scaled off last season's attendance. Spend it to fire and replace your coach (pays off both salaries — no guaranteed upgrade), relocate to a new market, or invest a small permanent bump into your fanbase baseline (once per season). See the Team screen for exact costs.</p>
 
         <h2>Matchup Modifier Cards</h2>
-        <p className="lede">Every team pulls one card each season, right after the Front Office pull. It stays for the whole season — it can't be traded or returned — and a new one is dealt next season.</p>
+        <p className="lede">Every team receives three cards from a shared 90-card deck each season. Each name has a fixed effect and rarity: Core, Prime, Signature, or Legendary. Cards are single-use; seeding bonuses apply automatically. Positive cards help your team and negative cards target the opponent. Player-stat changes last one matchup, with stats floored at 1. Ability percentages retain fractional points. Dice cards change the selected offense or defense die (minimum 1). Advantage keeps the higher of two rolls; Disadvantage keeps the lower, and the two cancel. These affect both rolls for the matchup, including rolls already resolved. Extra-card effects draw one remaining playable card; negative card effects discard one random unused playable opponent card. A fresh deck is shuffled next season.</p>
         {MATCHUP_MODIFIER_TYPES.map((t) => {
-          const catColor = t.category === 'debuff' ? 'var(--bad)' : 'var(--good)';
+          const catColor = t.target === 'opponent' ? 'var(--bad)' : 'var(--good)';
           let roleNote;
           if (t.reactive) roleNote = "Reactive — its holder may play it in response to being targeted; playing it consumes it whether or not it works. If the attacking card needs a value, the reaction only blocks it on a roll that meets or beats that value.";
           else if (t.passive === 'bench') roleNote = 'Passive — boosts bench score all season.';
           else if (t.passive === 'seeding') roleNote = 'Passive — boosts seeding roll this season.';
-          else roleNote = matchupCardEffectNote(t);
+          else roleNote = t.effectType ? t.description : matchupCardEffectNote(t);
           return (
             <div key={t.name} className="matchup-box">
               <div className="matchup-title" style={{ color: catColor }}>{t.name}</div>
               <p className="lede" style={{ margin: '8px 0' }}>{t.flavor}</p>
               <div className="meta-row" style={{ borderTop: 'none', paddingTop: 0 }}>
-                <GlossaryStat label="Draw Odds" val={t.weight + 'w'} />
+                <GlossaryStat label="Rarity" val={t.rarity} />
                 {t.needsValue && <GlossaryStat label="Value" val={`1–${t.valueDie || 10}`} />}
               </div>
-              {t.targetsPlayer && <div className="statusline" style={{ marginTop: 4 }}>You choose which of the opponent's active players this targets.</div>}
+              {t.targetsPlayer && <div className="statusline" style={{ marginTop: 4 }}>Choose an active player on the target team and one of SCO, PLM, REB, or DEF.</div>}
               <div className="statusline" style={{ marginTop: 4 }}>{roleNote}</div>
             </div>
           );

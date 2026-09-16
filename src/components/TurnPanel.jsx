@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { playableCards, injuryPreventionCard } from '../game/matchup';
+import { PLAYER_STATS } from '../game/supplementalEffects';
 import { STEP_PLAN } from '../game/turn';
 
 const KIND_LABEL = { offense: 'Offense', defense: 'Defense', bench: 'Bench' };
@@ -20,7 +21,7 @@ function reportForStep(turn, m, stepIdx) {
     team, kind: plan.kind,
     die: turn[`${side}${label}Die`], dieOther: turn[`${side}${label}DieOther`], sides: turn[`${side}${label}Sides`],
     mod: turn[`${side}${label}Mod`], total: turn[`${side}${label}Total`],
-    adv: side === 'a' ? turn.advA : turn.advB,
+    mode: turn[`${side}${label}Mode`],
   };
 }
 
@@ -74,9 +75,6 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
 
   const myOptions = myTurnToAct ? playableCards(myTeam) : [];
   const myIP = myTurnToReact ? injuryPreventionCard(myTeam) : null;
-  const opponentActive = myTurnToAct && otherTeam && otherTeam.activeIds
-    ? otherTeam.activeIds.map((id) => otherTeam.hand.find((h) => h.id === id)).filter(Boolean)
-    : [];
 
   const headline = cur
     ? `${actingTeam.name} — ${KIND_LABEL[cur.kind]}`
@@ -121,7 +119,7 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
             <div className="turn-die-kept">{cur.die}</div>
             {cur.dieOther != null && <div className="turn-die-dropped">{cur.dieOther}</div>}
             <div className="turn-dice-note">
-              <div>1d{cur.sides}{cur.dieOther != null ? ' — rolled twice, kept the higher' : ''}</div>
+              <div>1d{cur.sides}{cur.dieOther != null ? ` — rolled twice, kept the ${cur.mode < 0 ? 'lower' : 'higher'}` : ''}</div>
               <div className="turn-dice-note-sub">Kept value carries into the action stage.</div>
             </div>
           </div>
@@ -138,7 +136,7 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
                   <div className="turn-report-row"><span className="turn-report-label">Die</span><span>1d{report.sides}</span></div>
                   <div className="turn-report-row">
                     <span className="turn-report-label">Rolled</span>
-                    <span>{report.adv && report.dieOther != null ? `${report.die} (rolled twice: ${report.die}, ${report.dieOther} — kept higher)` : report.die}</span>
+                    <span>{report.mode && report.dieOther != null ? `${report.die} (rolled twice: ${report.die}, ${report.dieOther} — kept ${report.mode < 0 ? 'lower' : 'higher'})` : report.die}</span>
                   </div>
                   <div className="turn-report-row"><span className="turn-report-label">Bonuses</span><span>+{report.mod}</span></div>
                   <div className="turn-report-row"><span className="turn-report-label">Total</span><span>{report.total}</span></div>
@@ -156,6 +154,9 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
             {myOptions.length === 0 && <div className="turn-waiting">No card to play this roll.</div>}
             {myOptions.map((c) => {
               const isPicking = targetPickerCardId === c.id;
+              const targetTeam = c.target === 'self' ? myTeam : otherTeam;
+              const targetIds = targetTeam === teamA ? turn.idsA : turn.idsB;
+              const targetPlayers = targetIds.map((id) => targetTeam.hand.find((p) => p.id === id)).filter(Boolean);
               return (
                 <div key={c.id}>
                   <button
@@ -165,20 +166,21 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
                       advance({ cardId: c.id });
                     }}
                   >
-                    <span className="turn-action-name">{c.name}</span>
-                    {c.targetsPlayer ? `Choose a target on ${otherTeam.name}` : `Play against ${otherTeam.name}`}
+                    <span className="turn-action-name">{c.name}{c.rarity ? ` · ${c.rarity}` : ''}</span>
+                    {c.description && <span>{c.description} · </span>}
+                    {c.targetsPlayer ? `Choose a target on ${targetTeam.name}` : `Play on ${targetTeam.name}`}
                   </button>
                   {isPicking && (
                     <div style={{ marginBottom: 8 }}>
-                      {opponentActive.map((oc) => (
+                      {targetPlayers.flatMap((oc) => (c.effectType === 'PLAYER_STAT_MOD' ? PLAYER_STATS : [null]).map((stat) => (
                         <button
-                          key={oc.id}
+                          key={`${oc.id}-${stat}`}
                           className="turn-action-btn"
-                          onClick={() => { advance({ cardId: c.id, targetId: oc.id }); setTargetPickerCardId(null); }}
+                          onClick={() => { advance({ cardId: c.id, targetId: oc.id, stat }); setTargetPickerCardId(null); }}
                         >
-                          {oc.position} · {oc.archetype}
+                          {oc.position} · {oc.archetype}{stat ? ` · ${stat} (${oc.stats[stat]})` : ''}
                         </button>
-                      ))}
+                      )))}
                     </div>
                   )}
                 </div>

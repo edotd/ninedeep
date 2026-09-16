@@ -95,9 +95,9 @@ export default function PlayoffSeriesScreen({ state, actions, myTeamId }) {
       if (mine) {
         return (
           <div className="tipoff-card faceup">
-            <div className="tipoff-card-header"><span>Matchup Card</span><span>One Game</span></div>
+            <div className="tipoff-card-header"><span>Matchup Card</span><span>{card.rarity || 'One Game'}</span></div>
             <div className="tipoff-card-name">{card.name}</div>
-            <div className="tipoff-card-footer"><span>{card.targetsPlayer ? 'Targeted' : 'Team-Wide'}</span><span>Ready</span></div>
+            <div className="tipoff-card-footer"><span>{card.targetsPlayer ? 'Targeted' : 'Team-Wide'}</span><span>{card.used ? 'Used' : card.passive === 'seeding' ? 'Seeding' : 'Ready'}</span></div>
           </div>
         );
       }

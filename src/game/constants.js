@@ -147,22 +147,4 @@ export const COACH_AGE_MAX = 65;
 export const PLAYER_RELATIONSHIP_MIN = 1;
 export const PLAYER_RELATIONSHIP_MAX = 10;
 
-// Matchup Modifier cards: one drawn per team per season, kept all season, cannot be traded/returned.
-// "playable" cards require an explicit play action against a target during a specific matchup.
-// "passive" cards apply automatically for as long as they're held (bench score boost, seeding boost).
-// Injury Prevention is "reactive" — its holder chooses whether to hold it ready before each matchup
-// (see wantsInjuryPrevention in game/matchup.js); it no longer triggers automatically.
-export const MATCHUP_MODIFIER_TYPES = [
-  { name: 'Injury (Minor)', category: 'debuff', weight: 3, flavor: 'A quick tweak — should be fine by tip-off.', playable: true, needsValue: true, valueDie: 6, targetsPlayer: true },
-  { name: 'Injury (Major)', category: 'debuff', weight: 1, flavor: 'This one looks serious.', playable: true, needsValue: true, valueDie: 10, targetsPlayer: true },
-  { name: 'Distraction (External)', category: 'debuff', weight: 2, flavor: 'Their focus is wavering under the weight of outside noise.', playable: true, needsValue: true, valueDie: 10 },
-  { name: 'Distraction (Internal)', category: 'debuff', weight: 2, flavor: 'Internal strife is starting to come between them.', playable: true, needsValue: true, valueDie: 10 },
-  { name: 'Player Suspension', category: 'debuff', weight: 2, flavor: 'The league has made a decision and a suspension is imminent.', playable: true, needsValue: true, valueDie: 10, targetsPlayer: true },
-  { name: 'Biased Officiating', category: 'debuff', weight: 2, flavor: 'The officials seem to have a favorite tonight.', playable: true, needsValue: false },
-  { name: 'Injury Prevention', category: 'buff', weight: 2, flavor: "Your team's medical staff has proven to be exceptional.", playable: false, reactive: true, needsValue: true, valueDie: 10 },
-  { name: 'Focused Film Session', category: 'buff', weight: 1, flavor: 'Extra film study sharpens the defense.', playable: true, needsValue: false },
-  { name: 'Favorable Schedule', category: 'buff', weight: 1, flavor: 'An easier slate lies ahead.', playable: false, passive: 'seeding' },
-  { name: 'Team Chemistry', category: 'buff', weight: 1, flavor: 'This roster just clicks.', playable: false, passive: 'bench' },
-  { name: 'Strategic Advantage', category: 'buff', weight: 1, flavor: 'A tactical edge, prepared well in advance.', playable: true, needsValue: false },
-  { name: 'Divine Intervention', category: 'buff', weight: 1, flavor: 'The basketball gods are in your favor.', playable: true, needsValue: true, valueDie: 10 },
-];
+export { MATCHUP_MODIFIER_TYPES } from './supplementalCards';

@@ -1,5 +1,5 @@
 import { ARCHETYPES, POSITIONS, POSITION_MOD, COACH_ARCHETYPES, COACH_MODIFIERS, MATCHUP_MODIFIER_TYPES, PLAYER_RELATIONSHIP_MIN, PLAYER_RELATIONSHIP_MAX, LEAGUE_ACCOLADES } from './constants';
-import { rollWithVariance, weightedPick } from './rng';
+import { rollWithVariance, weightedPick, shuffle } from './rng';
 import { randomPlayerAge, randomPrimeAge, randomCoachAge, careerMultiplier } from './aging';
 
 // Card ids are generated from a counter stored on the shared game state (not a module-level
@@ -147,8 +147,17 @@ export function relationshipBonus(team) {
   return team.coach.playerRelationship ? team.coach.playerRelationship * 0.005 : 0;
 }
 
-export function drawMatchupModifierCard(state) {
-  const t = weightedPick(MATCHUP_MODIFIER_TYPES);
-  const value = t.needsValue ? 1 + Math.floor(Math.random() * (t.valueDie || 10)) : null;
-  return { id: nextCardId(state), name: t.name, category: t.category, flavor: t.flavor, playable: !!t.playable, reactive: !!t.reactive, passive: t.passive || null, targetsPlayer: !!t.targetsPlayer, valueDie: t.valueDie || 10, value, used: false };
+export function resetMatchupDeck(state) {
+  state.matchupDeck = MATCHUP_MODIFIER_TYPES.map((c) => c.definitionId);
+  shuffle(state.matchupDeck);
+}
+
+export function drawMatchupModifierCard(state, playableOnly = false) {
+  if (!state.matchupDeck) resetMatchupDeck(state);
+  const index = playableOnly ? state.matchupDeck.findLastIndex((id) => MATCHUP_MODIFIER_TYPES.find((c) => c.definitionId === id)?.playable) : state.matchupDeck.length - 1;
+  if (index < 0) return null;
+  const [definitionId] = state.matchupDeck.splice(index, 1);
+  if (!definitionId) return null;
+  const definition = MATCHUP_MODIFIER_TYPES.find((c) => c.definitionId === definitionId);
+  return { ...definition, id: nextCardId(state), used: false };
 }

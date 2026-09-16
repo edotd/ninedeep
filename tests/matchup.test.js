@@ -1,0 +1,116 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { MATCHUP_MODIFIER_TYPES as deck } from '../src/game/supplementalCards.js';
+import { drawMatchupModifierCard, resetMatchupDeck } from '../src/game/cards.js';
+import { applySupplementalCard, supplementalRoll } from '../src/game/supplementalEffects.js';
+import { newEraState, lockSeasonAndSeed, initSeasonModifierCards, startPlayoffs } from '../src/game/season.js';
+import { startEra, proceedFromCardOverview, proceedFromHand, proceedToSeason1, rollCurrentMatchup } from '../src/game/engine.js';
+import { beginTurn, advanceTurn } from '../src/game/turn.js';
+import { rehydrateState } from '../src/game/rehydrate.js';
+const card = (name) => ({ ...deck.find((c) => c.name === name), id: name, used: false });
+function game() {
+  const state = newEraState();
+  startEra(state, 'Test'); proceedFromCardOverview(state); proceedFromHand(state); proceedToSeason1(state);
+  state.settings.injuryChance = 0;
+  state.teams.forEach((t) => { t.fanbaseMod = null; });
+  return state;
+}
+const extra = () => ({ offDelta: 0, defDelta: 0, leagueMod: 0 });
+
+test('90 unique fixed definitions, three Legendaries, no replacement across serialized draws', () => {
+  assert.equal(deck.length, 90); assert.equal(new Set(deck.map(c => c.name)).size, 90);
+  assert.equal(deck.filter(c => c.rarity === 'Legendary').length, 3);
+  assert(deck.filter(c => c.passive === 'seeding').every(c => c.value > 0));
+  let state = {}; const drawn = [];
+  for (let i = 0; i < 90; i++) { drawn.push(drawMatchupModifierCard(state)); state = JSON.parse(JSON.stringify(state)); }
+  assert.equal(new Set(drawn.map(c => c.definitionId)).size, 90);
+  assert.equal(drawMatchupModifierCard(state), null);
+  assert.equal(drawn.find(c => c.name === 'Biased Officiating').value, 3);
+  assert.equal(drawn.find(c => c.name === 'Focused Film Session').value, 10);
+  resetMatchupDeck(state); assert.equal(state.matchupDeck.length, 90);
+});
+
+test('every playable definition resolves and consumes once without mutating roster stats', () => {
+  for (const definition of deck.filter(c => c.playable)) {
+    const state = game(); const [a,b] = state.teams; const c = card(definition.name);
+    a.matchupCards = [c]; b.matchupCards = [card('Friendly Bounce')];
+    const before = JSON.stringify([a.hand,b.hand]); const ea = extra(), eb = extra();
+    assert(applySupplementalCard(state,a,b,c,ea,eb,a.activeIds,b.activeIds,null,'SCO','offense'), c.name);
+    assert(c.used); assert.equal(JSON.stringify([a.hand,b.hand]), before);
+    assert.equal(applySupplementalCard(state,a,b,c,ea,eb,a.activeIds,b.activeIds,null), null);
+    for (const [team, effects] of [[a,ea],[b,eb]]) assert(Number.isFinite(supplementalRoll(team,team.activeIds,effects,'offense',2,5).total));
+  }
+});
+
+test('dice, percentages, advantage and disadvantage have exact scoring semantics', () => {
+  const state=game(), [a,b]=state.teams, ea=extra(), eb=extra();
+  const base = supplementalRoll(a,a.activeIds,ea,'offense',2,5);
+  applySupplementalCard(state,a,b,card('Biased Officiating'),ea,eb,a.activeIds,b.activeIds);
+  assert.equal(supplementalRoll(a,a.activeIds,ea,'offense',2,5).die,5);
+  applySupplementalCard(state,a,b,card('Focused Film Session'),ea,eb,a.activeIds,b.activeIds);
+  assert.equal(supplementalRoll(a,a.activeIds,ea,'offense',2,5).mod, Math.round(base.mod*1.1*100)/100);
+  ea.cardAdvantage=true; assert.equal(supplementalRoll(a,a.activeIds,ea,'defense',2,5).die,5);
+  ea.cardDisadvantage=true; assert.equal(supplementalRoll(a,a.activeIds,ea,'defense',2,5).die,2);
+  ea.cardAdvantage=false; assert.equal(supplementalRoll(a,a.activeIds,ea,'defense',5,2).die,2);
+});
+
+test('player targets validated; stat changes remain temporary and cover all four stats', () => {
+  const state=game(), [a,b]=state.teams;
+  for (const stat of ['SCO','PLM','REB','DEF']) {
+    const c=card('Legacy Performance'), ea=extra();
+    assert.equal(applySupplementalCard(state,a,b,c,ea,extra(),a.activeIds,b.activeIds,'invalid',stat),null);
+    assert.equal(c.used,false);
+    assert(applySupplementalCard(state,a,b,c,ea,extra(),a.activeIds,b.activeIds,a.activeIds[0],stat));
+    assert.deepEqual(ea.statChanges,[{playerId:a.activeIds[0],stat,value:4}]);
+  }
+});
+
+test('three cards per team; seeding cards consumed; disabling cards clears hands', () => {
+  const state=game(); assert(state.teams.every(t=>t.matchupCards.length===3));
+  state.teams[0].matchupCards=[card('Strong Finish'),card('Historic Regular Season')];
+  lockSeasonAndSeed(state); assert(state.teams[0].matchupCards.every(c=>c.used));
+  state.settings.matchupCardsEnabled=false; initSeasonModifierCards(state);
+  assert(state.teams.every(t=>t.matchupCards.length===0)); assert.equal(state.phase,'constructing');
+});
+
+test('extra draw excludes expired seeding cards; discard consumes opponent card; exhausted deck safe', () => {
+  const state=game(), [a,b]=state.teams;
+  state.matchupDeck=[card('Strong Finish').definitionId,card('Biased Officiating').definitionId];
+  a.matchupCards=[]; b.matchupCards=[card('Home Court')];
+  applySupplementalCard(state,a,b,card('Advance Scout'),extra(),extra(),a.activeIds,b.activeIds);
+  assert.equal(a.matchupCards[0].name,'Biased Officiating');
+  applySupplementalCard(state,a,b,card('Limited Film'),extra(),extra(),a.activeIds,b.activeIds);
+  assert(b.matchupCards[0].used);
+  applySupplementalCard(state,a,b,card('Extra Preparation'),extra(),extra(),a.activeIds,b.activeIds);
+  assert.equal(a.matchupCards.length,1);
+});
+
+test('turn engine applies late penalties to completed opposing rolls and survives JSON sync', () => {
+  let state=game(); lockSeasonAndSeed(state); startPlayoffs(state); state.playoff.activeMatchIndex=0;
+  let m=state.playoff.matches[0]; m.a.matchupCards=[];m.b.matchupCards=[];m.a.human=true;m.b.human=true;
+  beginTurn(state); advanceTurn(state);
+  const first=m.turn.order[0], second=m.turn.order[1];
+  second.matchupCards=[card('Scouted Tendencies')];
+  let prior, iterations=0;
+  while(m.turn.stage!=='complete' && iterations++<40) {
+    let payload={pass:true};
+    if(m.turn.stage==='action' && m[m.turn.current.team].id===second.id && m.turn.current.kind==='offense') {
+      const prefix=first.id===m.a.id?'a':'b'; prior=m.turn[`${prefix}OffMod`];
+      payload={cardId:'Scouted Tendencies'};
+    }
+    advanceTurn(state,payload);
+    state=rehydrateState(JSON.parse(JSON.stringify(state)));m=state.playoff.matches[0];
+  }
+  assert.equal(m.turn.stage,'complete');
+  const prefix=first.id===m.a.id?'a':'b'; assert(m.result[`${prefix}OffMod`]<prior);
+  assert(m.result.cardNotes.some(n=>n.cardName==='Scouted Tendencies'));
+});
+
+test('instant simulation executes new effects and finishes', () => {
+  const state=game(); lockSeasonAndSeed(state);startPlayoffs(state);state.playoff.activeMatchIndex=0;
+  const m=state.playoff.matches[0];m.a.human=false;m.b.human=false;
+  m.a.matchupCards=[card('Biased Officiating')];m.b.matchupCards=[card('Back-to-Back')];
+  rollCurrentMatchup(state);
+  assert(m.result.winner);assert.equal(m.result.aExtra.offDice,3);assert(m.result.aExtra.cardDisadvantage);
+  assert.equal(m.result.cardNotes.length,2);
+});

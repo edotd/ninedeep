@@ -1,6 +1,6 @@
 import { TIERS, LEAGUE_ACCOLADES, REPLACEMENT_TIER, AI_NAMES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_ARCHETYPES, MARKETS, PLAYER_AGE_MAX, COACH_AGE_MAX, MATCHUP_CARD_DRAW_COUNT, FINANCE_STARTING_BALANCE } from './constants';
 import { shuffle, weightedPick } from './rng';
-import { makeCard, randomArch, cardTotal, neededPosition, drawCoachCard, applyCoachRetention, drawMatchupModifierCard } from './cards';
+import { makeCard, randomArch, cardTotal, neededPosition, drawCoachCard, applyCoachRetention, drawMatchupModifierCard, resetMatchupDeck } from './cards';
 import { finalizeCap, rosterSalary, rollMarketCapAdj } from './economy';
 import { autoSelectFive, effectiveRating } from './roster';
 import { startDraft } from './draft';
@@ -126,6 +126,7 @@ export function initSeasonModifierCards(state) {
     state.phase = 'constructing';
     return;
   }
+  resetMatchupDeck(state);
   state.phase = 'pullmodifier';
   state.teams.forEach((team) => {
     team.matchupCards = Array.from({ length: MATCHUP_CARD_DRAW_COUNT }, () => drawMatchupModifierCard(state));
@@ -171,7 +172,10 @@ export function lockSeasonAndSeed(state) {
   const seeds = state.teams
     .map((t) => {
       let val = effectiveRating(t) * (0.9 + Math.random() * 0.2);
-      if ((t.matchupCards || []).some((c) => c.name === 'Favorable Schedule' && !c.used)) { val *= 1.10; }
+      const seedingCards = (t.matchupCards || []).filter((c) => c.effectType === 'SEEDING_PERCENT' && !c.used);
+      val *= 1 + seedingCards.reduce((sum, c) => sum + c.value, 0) / 100;
+      seedingCards.forEach((c) => { c.used = true; });
+      if ((t.matchupCards || []).some((c) => !c.effectType && c.name === 'Favorable Schedule' && !c.used)) val *= 1.10;
       return { t, val };
     })
     .sort((a, b) => b.val - a.val);

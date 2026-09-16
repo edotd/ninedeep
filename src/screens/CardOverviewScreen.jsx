@@ -30,12 +30,7 @@ function buildSampleTeam() {
 // counter — this is a display-only example, never dealt into any real hand.
 function sampleMatchupCard() {
   const t = weightedPick(MATCHUP_MODIFIER_TYPES);
-  const value = t.needsValue ? 1 + Math.floor(Math.random() * (t.valueDie || 10)) : null;
-  return {
-    id: 'preview-0', name: t.name, category: t.category, flavor: t.flavor,
-    playable: !!t.playable, reactive: !!t.reactive, passive: t.passive || null,
-    targetsPlayer: !!t.targetsPlayer, valueDie: t.valueDie || 10, value, used: false,
-  };
+  return { ...t, id: 'preview-0', used: false };
 }
 
 const PLAYER_NOTES = [
@@ -70,15 +65,15 @@ const FRONTOFFICE_NOTES = [
 
 const MATCHUP_NOTES = [
   { key: 'header', selector: '.mu2-header', label: 'Stamp header', side: 'left',
-    text: 'Marks it as a matchup and states how long it lasts. Playoff matchups invert to ink and read Series.' },
+    text: 'Shows the effect category and fixed rarity: Core, Prime, Signature, or Legendary.' },
   { key: 'condition', selector: '.mu2-name', circle: true, label: 'The condition', side: 'left',
     text: 'What this card does, named. This is the headline of the card.' },
-  { key: 'unanswered', selector: '.mu2-row-bad', circleSelector: '.mu2-row-bad .mu2-row-value', circle: true, label: 'If unanswered', side: 'left',
-    text: 'What it costs if you play it and nothing counters it. Always the first of the two rows.' },
+  { key: 'unanswered', selector: '.mu2-row:first-child', circleSelector: '.mu2-row:first-child .mu2-row-value', circle: true, label: 'Target', side: 'left',
+    text: 'Positive effects help your team; negative effects target the opponent. Player cards let you choose a player and stat.' },
   { key: 'statement', selector: '.mu2-statement', label: 'The situation', side: 'right',
-    text: 'One or two sentences of plain-language context — no numbers, just the situation.' },
-  { key: 'counter', selector: '.mu2-row-good', label: 'Counter', side: 'right',
-    text: 'What answers it. Meet this and the cost above never lands.' },
+    text: 'The exact effect and fixed value. A card with this name always has this effect.' },
+  { key: 'counter', selector: '.mu2-row:last-child', label: 'Timing', side: 'right',
+    text: 'Seeding cards apply automatically. Other cards are played once and apply to this matchup.' },
   { key: 'torn', selector: '.mu2-torn', label: 'Torn edge', side: 'right',
     text: 'The tell that this card is temporary. No other card type has it — it leaves the table after one game.' },
 ];

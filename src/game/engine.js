@@ -1,3 +1,4 @@
+import { applySupplementalCard } from './supplementalEffects';
 // Action layer — each function mutates `state` in place, exactly like nine-deep.html's
 // "G.foo = ...; render();" functions did (minus the render() call, which the caller does).
 // This mirrors the original on purpose: Phase 3 of the multiplayer brief turns each of these
@@ -65,14 +66,17 @@ export function pullMatchupCard(state, teamIdx) {
   const team = state.teams[teamIdx];
   team.matchupCards ||= [];
   if (team.matchupCards.length >= MATCHUP_CARD_DRAW_COUNT) return;
-  team.matchupCards.push(drawMatchupModifierCard(state));
+  const card = drawMatchupModifierCard(state);
+  if (card) team.matchupCards.push(card);
 }
 // One-click Matchup Cards pull — deals all MATCHUP_CARD_DRAW_COUNT at once.
 export function pullAllMatchupCards(state, teamIdx) {
   const team = state.teams[teamIdx];
   team.matchupCards ||= [];
   while (team.matchupCards.length < MATCHUP_CARD_DRAW_COUNT) {
-    team.matchupCards.push(drawMatchupModifierCard(state));
+    const card = drawMatchupModifierCard(state);
+    if (!card) break;
+    team.matchupCards.push(card);
   }
 }
 
@@ -180,14 +184,20 @@ export function rollCurrentMatchup(state) {
   const a = cardToPlay(m.a, choicesA);
   const b = cardToPlay(m.b, choicesB);
 
-  if (a.card) {
+  if (a.card?.effectType) {
+    const note = applySupplementalCard(state, m.a, m.b, a.card, extraA, extraB, idsA, idsB, a.targetId, choicesA.selectedStat || 'SCO');
+    if (note) cardNotes.push({ text: note, cardName: a.card.name });
+  } else if (a.card) {
     const res = playCardEffect(m.a, m.b, idsB, state.playoff, a.card, a.targetId);
     idsB = res.targetIds;
     extraA.offDelta += res.userOffDelta; extraA.defDelta += res.userDefDelta; extraA.leagueMod += res.userLeagueMod;
     extraB.offDelta += res.targetOffDelta; extraB.defDelta += res.targetDefDelta;
     if (res.note) cardNotes.push({ text: res.note, cardName: res.cardName });
   }
-  if (b.card) {
+  if (b.card?.effectType) {
+    const note = applySupplementalCard(state, m.b, m.a, b.card, extraB, extraA, idsB, idsA, b.targetId, choicesB.selectedStat || 'SCO');
+    if (note) cardNotes.push({ text: note, cardName: b.card.name });
+  } else if (b.card && !b.card.used) {
     const res = playCardEffect(m.b, m.a, idsA, state.playoff, b.card, b.targetId);
     idsA = res.targetIds;
     extraB.offDelta += res.userOffDelta; extraB.defDelta += res.userDefDelta; extraB.leagueMod += res.userLeagueMod;
