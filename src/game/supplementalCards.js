@@ -1,4 +1,4 @@
-// Canonical 90-card deck. Values and rarities are fixed; each definition appears once per season.
+// Canonical 97-card deck. Values and rarities are fixed; each definition appears once per season.
 const DEFINITIONS = [
   {
     "definitionId": "matchup-001",
@@ -809,6 +809,79 @@ const DEFINITIONS = [
     "rarity": "Signature",
     "effectType": "DISADVANTAGE",
     "value": null
+  },
+  {
+    "definitionId": "matchup-091",
+    "name": "Earn Your Contract",
+    "category": "Player Stat",
+    "description": "Add this starter’s cap hit to one chosen stat for this matchup",
+    "rarity": "Signature",
+    "effectType": "CAP_HIT_STAT",
+    "value": null
+  },
+  {
+    "definitionId": "matchup-092",
+    "name": "Three-Guard Attack",
+    "category": "Offense",
+    "description": "+5% Offense per starting Guard",
+    "rarity": "Prime",
+    "effectType": "POSITION_PERCENT",
+    "value": 5,
+    "position": "Guard",
+    "ability": "offense"
+  },
+  {
+    "definitionId": "matchup-093",
+    "name": "Switchable Wings",
+    "category": "Defense",
+    "description": "+5% Defense per starting Forward",
+    "rarity": "Prime",
+    "effectType": "POSITION_PERCENT",
+    "value": 5,
+    "position": "Forward",
+    "ability": "defense"
+  },
+  {
+    "definitionId": "matchup-094",
+    "name": "Own the Paint",
+    "category": "Defense",
+    "description": "+5% Defense per starting Big",
+    "rarity": "Prime",
+    "effectType": "POSITION_PERCENT",
+    "value": 5,
+    "position": "Big",
+    "ability": "defense"
+  },
+  {
+    "definitionId": "matchup-095",
+    "name": "Interior Pressure",
+    "category": "Offense",
+    "description": "+5% Offense per starting Big",
+    "rarity": "Prime",
+    "effectType": "POSITION_PERCENT",
+    "value": 5,
+    "position": "Big",
+    "ability": "offense"
+  },
+  {
+    "definitionId": "matchup-096",
+    "name": "Positionless Basketball",
+    "category": "Offense",
+    "description": "+10% Offense if Guard, Forward, and Big are all starting",
+    "rarity": "Prime",
+    "effectType": "POSITION_COVERAGE_PERCENT",
+    "value": 10,
+    "ability": "offense"
+  },
+  {
+    "definitionId": "matchup-097",
+    "name": "Bargain Production",
+    "category": "Player Stat",
+    "description": "+2 to one stat on a starter with a cap hit of 1 or less",
+    "rarity": "Core",
+    "effectType": "PLAYER_STAT_MOD",
+    "value": 2,
+    "maxSalary": 1
   }
 ];
 
@@ -817,6 +890,6 @@ export const MATCHUP_MODIFIER_TYPES = DEFINITIONS.map((card) => ({
   target: card.value < 0 || card.effectType === 'DISADVANTAGE' ? 'opponent' : 'self',
   playable: card.effectType !== 'SEEDING_PERCENT',
   passive: card.effectType === 'SEEDING_PERCENT' ? 'seeding' : null,
-  targetsPlayer: card.effectType === 'PLAYER_STAT_MOD',
+  targetsPlayer: ['PLAYER_STAT_MOD', 'CAP_HIT_STAT'].includes(card.effectType),
 }));
 

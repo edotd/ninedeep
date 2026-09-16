@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { playableCards, injuryPreventionCard } from '../game/matchup';
-import { PLAYER_STATS } from '../game/supplementalEffects';
+import { PLAYER_STATS, eligibleStatTargets } from '../game/supplementalEffects';
 import { STEP_PLAN } from '../game/turn';
 
 const KIND_LABEL = { offense: 'Offense', defense: 'Defense', bench: 'Bench' };
@@ -156,11 +156,12 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
               const isPicking = targetPickerCardId === c.id;
               const targetTeam = c.target === 'self' ? myTeam : otherTeam;
               const targetIds = targetTeam === teamA ? turn.idsA : turn.idsB;
-              const targetPlayers = targetIds.map((id) => targetTeam.hand.find((p) => p.id === id)).filter(Boolean);
+              const targetPlayers = eligibleStatTargets(targetTeam, targetIds, c);
               return (
                 <div key={c.id}>
                   <button
                     className="turn-action-btn"
+                    disabled={c.targetsPlayer && targetPlayers.length === 0}
                     onClick={() => {
                       if (c.targetsPlayer) { setTargetPickerCardId(isPicking ? null : c.id); return; }
                       advance({ cardId: c.id });
@@ -168,17 +169,18 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
                   >
                     <span className="turn-action-name">{c.name}{c.rarity ? ` · ${c.rarity}` : ''}</span>
                     {c.description && <span>{c.description} · </span>}
+                    {c.targetsPlayer && targetPlayers.length === 0 && <span>No eligible starter · </span>}
                     {c.targetsPlayer ? `Choose a target on ${targetTeam.name}` : `Play on ${targetTeam.name}`}
                   </button>
                   {isPicking && (
                     <div style={{ marginBottom: 8 }}>
-                      {targetPlayers.flatMap((oc) => (c.effectType === 'PLAYER_STAT_MOD' ? PLAYER_STATS : [null]).map((stat) => (
+                      {targetPlayers.flatMap((oc) => (c.targetsPlayer && c.effectType ? PLAYER_STATS : [null]).map((stat) => (
                         <button
                           key={`${oc.id}-${stat}`}
                           className="turn-action-btn"
                           onClick={() => { advance({ cardId: c.id, targetId: oc.id, stat }); setTargetPickerCardId(null); }}
                         >
-                          {oc.position} · {oc.archetype}{stat ? ` · ${stat} (${oc.stats[stat]})` : ''}
+                          {oc.position} · {oc.archetype}{stat ? ` · ${stat} (${oc.stats[stat]})` : ''}{c.effectType === 'CAP_HIT_STAT' ? ` · +${oc.salary}` : ''}
                         </button>
                       )))}
                     </div>

@@ -1,7 +1,13 @@
+import { POSITIONS } from './constants';
 import { drawMatchupModifierCard } from './cards';
 import { offenseModifier, defenseModifier } from './roster';
 
 export const PLAYER_STATS = ['SCO', 'PLM', 'REB', 'DEF'];
+
+export function eligibleStatTargets(team, ids, card) {
+  return ids.map((id) => team.hand.find((player) => player.id === id))
+    .filter((player) => player && (card.maxSalary == null || player.salary <= card.maxSalary));
+}
 
 // All numerical changes live on match extras, never on the persistent roster.
 export function applySupplementalCard(state, user, opponent, card, ownExtra, opposingExtra, ownIds, opposingIds, targetId, stat = 'SCO', kind = 'offense') {
@@ -11,14 +17,26 @@ export function applySupplementalCard(state, user, opponent, card, ownExtra, opp
   const extra = self ? ownExtra : opposingExtra;
   const ids = self ? ownIds : opposingIds;
   let detail = card.description;
-  if (card.effectType === 'PLAYER_STAT_MOD') {
+  if (card.effectType === 'PLAYER_STAT_MOD' || card.effectType === 'CAP_HIT_STAT') {
     if (!PLAYER_STATS.includes(stat)) return null;
-    const playerId = targetId || ids[0];
-    if (!ids.includes(playerId) || !team.hand.some((p) => p.id === playerId)) return null;
+    const candidates = eligibleStatTargets(team, ids, card);
+    const player = targetId ? candidates.find((p) => p.id === targetId) : candidates[0];
+    if (!player) return null;
+    const playerId = player.id;
+    const value = card.effectType === 'CAP_HIT_STAT' ? player.salary : card.value;
+    if (!Number.isFinite(value)) return null;
     extra.statChanges ||= [];
-    extra.statChanges.push({ playerId, stat, value: card.value });
-    const player = team.hand.find((p) => p.id === playerId);
-    detail = `${card.value > 0 ? '+' : ''}${card.value} ${stat} for ${player.archetype}`;
+    extra.statChanges.push({ playerId, stat, value });
+    detail = `${value >= 0 ? '+' : ''}${value} ${stat} for ${player.archetype}`;
+  } else if (card.effectType === 'POSITION_PERCENT' || card.effectType === 'POSITION_COVERAGE_PERCENT') {
+    const starters = ids.map((id) => team.hand.find((p) => p.id === id)).filter(Boolean);
+    const count = card.effectType === 'POSITION_PERCENT'
+      ? starters.filter((p) => p.position === card.position).length
+      : Number(POSITIONS.every((position) => starters.some((p) => p.position === position)));
+    const value = card.value * count;
+    const key = card.ability === 'offense' ? 'offPercent' : 'defPercent';
+    extra[key] = (extra[key] || 0) + value;
+    detail = `+${value}% ${card.ability}` + (card.position ? ` from ${count} starting ${card.position}${count === 1 ? '' : 's'}` : ' from starting position coverage');
   } else if (card.effectType === 'OFFENSE_PERCENT' || card.effectType === 'DEFENSE_PERCENT') {
     const key = card.effectType === 'OFFENSE_PERCENT' ? 'offPercent' : 'defPercent';
     extra[key] = (extra[key] || 0) + card.value;
