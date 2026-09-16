@@ -85,8 +85,7 @@ export const FANBASE_ATTENDANCE_MAX_SWING = 0.10; // Invested / Corporate cap, i
 
 // Market — Small through Massive, each with an attendance floor (see game/fanbase.js) and a
 // cap-adjustment range (the actual capAdj is rolled within it at pull time — see
-// economy.js's rollMarketCapAdj). Order matters: relocateMarket's fee scales with how many
-// tiers apart the old and new market are, and a team can jump straight to any tier for it.
+// economy.js's rollMarketCapAdj). A new market is rolled with every new GM.
 export const MARKETS = [
   { name: 'Small', weight: 25, capAdjMin: 0.5, capAdjMax: 1.0, attendanceFloor: 0.50 },
   { name: 'Medium', weight: 40, capAdjMin: 1.0, capAdjMax: 1.75, attendanceFloor: 0.60 },
@@ -94,12 +93,13 @@ export const MARKETS = [
   { name: 'Massive', weight: 10, capAdjMin: 2.5, capAdjMax: 3.5, attendanceFloor: 0.80 },
 ];
 export const GM_TYPES = ['Aggressive', 'Hands-Off', 'Neutral'];
+export const GM_BONUS_RATE = 0.02;
+export const HANDS_OFF_BONUS_CAP = 0.12;
+export const FIRE_GM_COST = 2;
 
-// Front-office moves (fire coach, relocate market, invest in fanbase) spend budget room —
+// Front-office moves (fire coach, fire GM, invest in fanbase) spend budget room —
 // see game/finances.js — rather than a separate currency, so these costs are tuned to
 // typical budget-room magnitudes (a few coins), not a standalone balance's larger scale.
-export const RELOCATION_BASE_COST = 1.5;
-export const RELOCATION_PER_TIER_COST = 1;
 export const FANBASE_BOOST_COST = 2;
 export const FANBASE_BOOST_AMOUNT = 0.02;
 

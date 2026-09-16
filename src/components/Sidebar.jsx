@@ -21,7 +21,7 @@ const NAV_ITEMS = [
 // Standings / Glossary / Settings as overlays on top of the current phase), just restyled
 // into the sidebar's vertical list. Team was dropped for a while when the persistent bar
 // alone covered the roster/front-office/matchup view, but it's the only way to reach the
-// front-office moves (fire coach, relocate market, invest in fanbase), so it's back.
+// front-office moves (fire coach or GM, invest in fanbase), so it's back.
 export default function Sidebar({ state, myTeamId, overlay, onNav }) {
   const team = state.teams[myTeamId];
   const seasonNum = Math.min(state.season, ERA_LENGTH);

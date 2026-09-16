@@ -2,6 +2,7 @@ import PlayerCard from '../components/PlayerCard';
 import { cardTotal } from '../game/cards';
 import { formatCoins } from '../game/economy';
 import OffseasonFile from '../components/OffseasonFile';
+import { offseasonPrice } from '../game/gm';
 
 export default function DraftScreen({ state, actions, myTeamId }) {
   const draft = state.draft;
@@ -62,7 +63,7 @@ export default function DraftScreen({ state, actions, myTeamId }) {
 
       <h2>Available Cards ({sortedPool.length})</h2>
       {sortedPool.map((c) => (
-        <PlayerCard key={c.id} card={c} onClick={onTheClock ? () => actions.draftPick(myTeamId, c.id) : undefined} />
+        <PlayerCard key={c.id} card={{ ...c, salary: offseasonPrice(myTeam, c.salary) }} onClick={onTheClock ? () => actions.draftPick(myTeamId, c.id) : undefined} />
       ))}
     </OffseasonFile>
   );

@@ -1,5 +1,5 @@
 import { SKILLSETS, SKILLSET_PAIRS } from '../game/skillsets';
-import { ARCHETYPES, POSITIONS, POSITION_MOD, TIERS, LEAGUE_ACCOLADES, COACH_ARCHETYPES, COACH_MODIFIERS, FANBASE_ARCHETYPES, FANBASE_MODS, MARKETS, GM_TYPES, MATCHUP_MODIFIER_TYPES } from '../game/constants';
+import { ARCHETYPES, POSITIONS, POSITION_MOD, TIERS, LEAGUE_ACCOLADES, COACH_ARCHETYPES, COACH_MODIFIERS, FANBASE_ARCHETYPES, FANBASE_MODS, MARKETS, GM_TYPES, GM_BONUS_RATE, HANDS_OFF_BONUS_CAP, FIRE_GM_COST, MATCHUP_MODIFIER_TYPES } from '../game/constants';
 import { formatCoins } from '../game/economy';
 import { CAREER_LEVELS } from '../game/aging';
 import { matchupCardEffectNote } from '../game/summaries';
@@ -210,7 +210,7 @@ export default function GlossaryScreen({ state, onBack }) {
         ))}
 
         <h2 id="market">GM &amp; Market Size</h2>
-        <p className="lede">GM cards are Aggressive, Hands-Off, or Neutral. Market size sets your attendance floor and budget increase, rolled within its range when the card is pulled. You can relocate for a budget-room fee that scales with the distance between market sizes.</p>
+        <p className="lede">Each GM card rolls a market size that sets the attendance floor and budget increase. Firing a GM draws a new type and market together. Aggressive reduces offseason player salary requests by {GM_BONUS_RATE * 100}% and costs +1 budget. Hands-Off adds {GM_BONUS_RATE * 100}% Offense and Defense for each completed year of coach tenure and starting-five continuity, capped at {HANDS_OFF_BONUS_CAP * 100}%, and costs +1 budget. Neutral has no bonus or extra budget hit.</p>
         <div className="statusline">GM types: {GM_TYPES.join(' · ')}</div>
         {MARKETS.map((m) => (
           <div key={m.name} className="matchup-box">
@@ -224,7 +224,7 @@ export default function GlossaryScreen({ state, onBack }) {
         ))}
 
         <h2 id="front-office-moves">Front Office Moves</h2>
-        <p className="lede">Fire and replace your coach, relocate to a new market, or invest a small permanent bump into your fanbase baseline (once per season) — all spent directly out of this season's budget room, the same pool that funds your roster. Firing a coach pays off both the outgoing and incoming salaries — no guaranteed upgrade. See the Team screen for exact costs.</p>
+        <p className="lede">Fire and replace your coach, fire your GM, or invest in your fanbase — all spent from this season's budget room. Firing a coach pays both the outgoing and incoming salaries. Firing a GM costs {formatCoins(FIRE_GM_COST)}, is limited to once per season, and draws a random GM and market size.</p>
 
         <h2 id="skillsets-chemistry">Player Skillsets and Team Chemistry</h2>
         <p className="lede">Each new player rolls one permanent Skillset. Elite Fit pairs add +3% and Good Fit pairs +1% to Offense or Defense, capped at +12% on each side. Only the active five count; each distinct pairing counts once. Locker Room Guy adds +1 flat Offense and Defense from anywhere on the roster, without stacking. Team Chemistry uses a 0–100 score: 50 base points, up to 30 for Skillset fit (2.5 per percentage point across both sides), up to 15 for starter tenure (1 per completed player-year), and 5 for Locker Room Guy. Grades: A+ 97, A 93, A− 90, B+ 87, B 83, B− 80, C+ 77, C 73, C− 70, D+ 67, D 63, D− 60, F below 60. Each completed starter-year also adds +0.5% Offense and Defense beyond the Skillset cap. Bench players earn tenure but contribute only while starting. Joining a different team resets tenure. The experience rating stays separate. Legacy players without a Skillset remain unchanged.</p>

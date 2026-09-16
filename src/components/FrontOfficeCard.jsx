@@ -1,6 +1,8 @@
 import { formatCoins } from '../game/economy';
 import { retentionBonus, relationshipBonus } from '../game/cards';
 import CardTypeMark from './CardTypeMark';
+import { GM_BONUS_RATE, HANDS_OFF_BONUS_CAP } from '../game/constants';
+import { handsOffBonus } from '../game/gm';
 
 // Front Office card, per the brand handoff's "Components: Front Office & Matchup Cards" —
 // landscape, ink ground, told apart from a Player card by shape alone. One component covers
@@ -61,8 +63,9 @@ function fanbaseContent(team) {
 
 function marketContent(team) {
   const m = team.market;
+  const type = team.gmType || 'Neutral';
   return {
-    name: team.gmType || 'Neutral',
+    name: type,
     qualifier: 'General Manager',
     disposition: null,
     dispositionTone: 'approved-ink',
@@ -70,10 +73,11 @@ function marketContent(team) {
     effects: [
       { label: 'Budget Increase', value: `+${formatCoins(m.capAdj)}`, tone: 'approved-ink' },
       { label: 'Market Size', value: m.name, tone: 'file' },
+      { label: 'Budget Hit', value: type === 'Neutral' ? '+0' : '+1', tone: type === 'Neutral' ? 'file' : 'stamp-ink' },
+      { label: 'GM Bonus', value: type === 'Aggressive' ? `${GM_BONUS_RATE * 100}% off offseason requests` : type === 'Hands-Off' ? `+${Math.round(handsOffBonus(team) * 100)}% continuity` : 'None', tone: type === 'Neutral' ? 'file' : 'approved-ink' },
     ],
-    // Relocatable via a front-office move (see TeamSummaryScreen) — "fixed" only in that it doesn't
-    // drift or get re-rolled on its own the way attendance does.
-    duration: 'Holds Until Relocated',
+    detail: type === 'Hands-Off' ? `Coach tenure + starting-five continuity: +${GM_BONUS_RATE * 100}% per year, capped at ${HANDS_OFF_BONUS_CAP * 100}%.` : null,
+    duration: 'Holds Until Fired',
   };
 }
 

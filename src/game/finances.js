@@ -1,14 +1,15 @@
-// Front-office moves — firing a coach, relocating markets, investing in the fanbase — spend
+// Front-office moves — firing a coach or GM, investing in the fanbase — spend
 // budget room (this season's unused budget headroom) rather than a separate currency. Firing
 // a coach charges both the old coach's payout and the new hire's salary as a one-time
 // deduction (real dead-cap treatment: you eat the outgoing contract while also taking on the
 // incoming one, which then keeps counting against the budget normally via rosterSalary going
 // forward).
 import {
-  RELOCATION_BASE_COST, RELOCATION_PER_TIER_COST, FANBASE_BOOST_COST, FANBASE_BOOST_AMOUNT, MARKETS,
+  FANBASE_BOOST_COST, FANBASE_BOOST_AMOUNT, FIRE_GM_COST,
 } from './constants';
 import { drawCoachCard } from './cards';
-import { rollMarketCapAdj, finalizeCap, rosterSalary } from './economy';
+import { rosterSalary } from './economy';
+import { drawGM } from './gm';
 
 function budgetRoom(team) {
   return (team.seasonCap || 0) - rosterSalary(team);
@@ -28,29 +29,18 @@ export function fireCoach(state, teamIdx) {
   return { ok: true };
 }
 
-function marketTierIndex(name) {
-  return MARKETS.findIndex((m) => m.name === name);
-}
-export function relocationCost(team, marketName) {
-  const fromIdx = team.market ? marketTierIndex(team.market.name) : 0;
-  const toIdx = marketTierIndex(marketName);
-  const distance = Math.max(1, Math.abs(toIdx - fromIdx));
-  return RELOCATION_BASE_COST + RELOCATION_PER_TIER_COST * distance;
-}
-export function relocateMarket(state, teamIdx, marketName) {
+export function fireGM(state, teamIdx) {
   const team = state.teams[teamIdx];
-  const targetDef = MARKETS.find((m) => m.name === marketName);
-  if (!targetDef) return { ok: false, msg: 'Unknown market.' };
-  if (team.market && team.market.name === marketName) return { ok: false, msg: 'Already in that market.' };
-  const cost = relocationCost(team, marketName);
-  const room = budgetRoom(team);
-  if (room < cost) return { ok: false, msg: `Not enough budget room — relocating here costs ${cost}, you have ${Math.round(room * 10) / 10}.` };
-  team.market = { name: targetDef.name, capAdj: rollMarketCapAdj(targetDef) };
-  // finalizeCap recomputes seasonCap fresh off the new market, so the relocation fee is
-  // deducted after — it's a moving expense on top of whatever the new market's budget turns
-  // out to be, not a bite out of the old one.
-  finalizeCap(team, state.season);
-  team.seasonCap -= cost;
+  if (!team?.market) return { ok: false, msg: 'No GM to fire.' };
+  if (team.gmChangeSeason === state.season) return { ok: false, msg: 'GM already replaced this season.' };
+  if (budgetRoom(team) < FIRE_GM_COST) return { ok: false, msg: `Fire GM requires ${FIRE_GM_COST} budget room.` };
+  const next = drawGM(team.gmType || 'Neutral');
+  const attendanceMult = 0.9 + (team.attendance ?? 0.5) * 0.2;
+  const capChange = Math.round((next.market.capAdj - team.market.capAdj) * attendanceMult * 2) / 2;
+  team.gmType = next.type;
+  team.market = next.market;
+  team.seasonCap += capChange - FIRE_GM_COST;
+  team.gmChangeSeason = state.season;
   return { ok: true };
 }
 

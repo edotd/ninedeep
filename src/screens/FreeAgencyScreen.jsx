@@ -1,6 +1,7 @@
 import PlayerCard from '../components/PlayerCard';
 import { rosterSalary, formatCoins } from '../game/economy';
 import OffseasonFile from '../components/OffseasonFile';
+import { offseasonPrice } from '../game/gm';
 
 export default function FreeAgencyScreen({ state, actions, myTeamId }) {
   const team = state.teams[myTeamId];
@@ -36,7 +37,7 @@ export default function FreeAgencyScreen({ state, actions, myTeamId }) {
         {state.freeAgents.length ? (
           <div className="fa-grid">
             {state.freeAgents.map((c) => (
-              <PlayerCard key={c.id} card={c} draftStyle onClick={() => {
+              <PlayerCard key={c.id} card={{ ...c, salary: offseasonPrice(team, c.salary) }} draftStyle onClick={() => {
                 const res = actions.signFreeAgent(c.id, myTeamId);
                 if (res && res.ok === false) alert(res.msg);
               }} />

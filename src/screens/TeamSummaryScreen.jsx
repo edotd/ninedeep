@@ -4,8 +4,8 @@ import { formatCoins, rosterSalary } from '../game/economy';
 import { teamOutput } from '../game/matchup';
 import { teamExperience } from '../game/aging';
 import { cardTier, rawOverall } from '../game/cards';
-import { relocationCost } from '../game/finances';
-import { MARKETS, FANBASE_BOOST_COST } from '../game/constants';
+import { FANBASE_BOOST_COST, FIRE_GM_COST, GM_BONUS_RATE, HANDS_OFF_BONUS_CAP } from '../game/constants';
+import { handsOffBonus } from '../game/gm';
 import MatchupCard from '../components/MatchupCard';
 
 const ERA_LENGTH = 8;
@@ -41,7 +41,7 @@ function BenchStrip({ card }) {
 // the season on the auto-selected five, the last stop before the season locks), and — when
 // passed `onBack` — as the "Team" overlay reachable from the sidebar/top bar on any phase,
 // where the button instead just closes the overlay and the front-office moves (fire/hire
-// coach, relocate market, invest in fanbase — all funded out of budget room) are available.
+// coach, fire GM, invest in fanbase — all funded out of budget room) are available.
 // Read-only otherwise, organised by category: rotation, budget ledger, front office. No
 // nine-slot navigation here (that's the persistent bar's job on every other screen).
 export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) {
@@ -128,6 +128,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
                 ))}
               </div>
               <div className="ts-ledger-row"><span>Committed This Season</span><span>{formatCoins(committed)}</span></div>
+              <div className="ts-ledger-row"><span>GM Budget Hit</span><span>{formatCoins(team.gmType === 'Aggressive' || team.gmType === 'Hands-Off' ? 1 : 0)}</span></div>
               <div className="ts-ledger-row"><span>Expiring This Season</span><span className={expiring.length ? 'bad' : ''}>{expiring.length ? `${formatCoins(expiringTotal)} · ${expiring.map((c) => c.archetype).join(', ')}` : 'None'}</span></div>
             </div>
 
@@ -138,6 +139,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
                 <div className="ts-fo-row"><span>Fanbase</span><span>{team.fanbaseArchetype ? team.fanbaseArchetype.name : '—'}</span></div>
                 <div className="ts-fo-row"><span>Fanbase Modifier</span><span>{team.fanbaseMod ? `${team.fanbaseMod.name}${team.fanbaseMod.value ? ` · ${team.fanbaseMod.value}` : ''}` : 'Pending'}</span></div>
                 <div className="ts-fo-row"><span>GM</span><span>{team.gmType || 'Neutral'} · {team.market ? team.market.name : '—'} market</span></div>
+                <div className="ts-fo-row"><span>GM Effect</span><span>{team.gmType === 'Aggressive' ? `${GM_BONUS_RATE * 100}% off offseason player requests · +1 budget hit` : team.gmType === 'Hands-Off' ? `+${Math.round(handsOffBonus(team) * 100)}% continuity (max ${HANDS_OFF_BONUS_CAP * 100}%) · +1 budget hit` : 'No bonus · +0 budget hit'}</span></div>
               </div>
               <div className="ts-metrics">
                 <div><div className="ts-metric-label">Experience</div><div className="ts-metric-value">{chemistry !== null ? chemistry : '—'}</div></div>
@@ -159,7 +161,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
             <div className="ts-section">
               <div className="ts-heading">Front Office Moves</div>
               <div className="pull-slot">
-                <div className="pull-label">Fire &amp; Replace Coach</div>
+                <div className="pull-label">Fire Coach</div>
                 <div className="pull-extra" style={{ marginBottom: 8 }}>Pay off {team.coach.name}'s salary plus the new hire's — a random new coach, no guaranteed upgrade. Est. cost {formatCoins(fireCostEstimate)}+, out of budget room.</div>
                 <button
                   className="secondary"
@@ -169,30 +171,16 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
                     if (res && res.ok === false) alert(res.msg);
                   }}
                 >
-                  Fire {team.coach.name}
+                  Fire Coach
                 </button>
               </div>
               <div className="pull-slot">
-                <div className="pull-label">Relocate Market</div>
-                <div className="pull-extra" style={{ marginBottom: 8 }}>Jump to any market size — bigger jumps cost more. Currently {team.market.name}.</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {MARKETS.filter((m) => m.name !== team.market.name).map((m) => {
-                    const cost = relocationCost(team, m.name);
-                    return (
-                      <button
-                        key={m.name}
-                        className="secondary"
-                        style={{ width: '100%' }}
-                        onClick={() => {
-                          const res = actions.relocateMarket(myTeamId, m.name);
-                          if (res && res.ok === false) alert(res.msg);
-                        }}
-                      >
-                        Relocate to {m.name} — {formatCoins(cost)}
-                      </button>
-                    );
-                  })}
-                </div>
+                <div className="pull-label">Fire GM</div>
+                <div className="pull-extra" style={{ marginBottom: 8 }}>Draw a random GM and market size. Once per season; costs {formatCoins(FIRE_GM_COST)} in budget room. The new market may raise or lower your cap.</div>
+                <button className="secondary" style={{ width: '100%' }} disabled={team.gmChangeSeason === state.season} onClick={() => {
+                  const res = actions.fireGM(myTeamId);
+                  if (res && res.ok === false) alert(res.msg);
+                }}>{team.gmChangeSeason === state.season ? 'GM Replaced This Season' : 'Fire GM'}</button>
               </div>
               <div className="pull-slot">
                 <div className="pull-label">Invest in Fanbase</div>

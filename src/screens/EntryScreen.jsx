@@ -25,7 +25,7 @@ const GLOSSARY_TABS = [
     key: 'money', label: 'The Money', rows: [
       { label: 'Budget', text: 'TBD' },
       { label: 'Contracts', text: 'TBD' },
-      { label: 'Front Office Moves', text: 'Firing your coach, relocating markets, and investing in your fanbase all spend budget room directly — the same pool that funds your roster.' },
+      { label: 'Front Office Moves', text: 'Firing your coach or GM and investing in your fanbase all spend budget room directly — the same pool that funds your roster.' },
     ],
   },
   {

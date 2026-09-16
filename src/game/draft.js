@@ -1,4 +1,4 @@
-import { addToRoster } from './chemistry';
+import { acquireOffseasonPlayer } from './gm';
 import { TIERS, LEAGUE_ACCOLADES, POSITIONS } from './constants';
 import { makeCard, randomArchForTier, cardTotal, neededPosition } from './cards';
 
@@ -56,8 +56,8 @@ function bestCardFor(team, pool) {
 
 function assignPick(state, team, card) {
   state.draft.pool = state.draft.pool.filter((c) => c.id !== card.id);
-  addToRoster(team, card);
-  state.draft.picks.unshift({ teamId: team.id, teamName: team.name, human: team.human, card });
+  const signed = acquireOffseasonPlayer(team, card);
+  state.draft.picks.unshift({ teamId: team.id, teamName: team.name, human: team.human, card: signed });
   state.draft.queue.shift();
 }
 

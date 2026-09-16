@@ -1,6 +1,7 @@
 import { applySynergy } from './skillsets';
 import { POSITIONS } from './constants';
 import { cardTotal, retentionBonus, retentionDieBump, relationshipBonus } from './cards';
+import { handsOffBonus } from './gm';
 import { careerMultiplier } from './aging';
 
 export function autoSelectFive(hand) {
@@ -33,7 +34,7 @@ export function activeStatSum(team) {
   return team.activeIds.reduce((s, id) => { const c = team.hand.find((h) => h.id === id); return c ? s + cardTotal(c) : s; }, 0);
 }
 export function effectiveRating(team) {
-  const bonus = retentionBonus(team) + relationshipBonus(team);
+  const bonus = retentionBonus(team) + relationshipBonus(team) + handsOffBonus(team);
   return activeStatSum(team) * (1 + (team.coach.offBonus + bonus + team.coach.defBonus + bonus) / 2);
 }
 
@@ -59,11 +60,11 @@ export function defenseStatSum(team, idsOverride) {
   return Math.round(sum);
 }
 export function offenseModifier(team, idsOverride) {
-  const base = Math.round((offenseStatSum(team, idsOverride) * (1 + team.coach.offBonus + retentionBonus(team) + relationshipBonus(team))) / 20);
+  const base = Math.round((offenseStatSum(team, idsOverride) * (1 + team.coach.offBonus + retentionBonus(team) + relationshipBonus(team) + handsOffBonus(team))) / 20);
   return applySynergy(base, team, idsOverride, 'offense');
 }
 export function defenseModifier(team, idsOverride) {
-  const base = Math.round((defenseStatSum(team, idsOverride) * (1 + team.coach.defBonus + retentionBonus(team) + relationshipBonus(team))) / 20);
+  const base = Math.round((defenseStatSum(team, idsOverride) * (1 + team.coach.defBonus + retentionBonus(team) + relationshipBonus(team) + handsOffBonus(team))) / 20);
   return applySynergy(base, team, idsOverride, 'defense');
 }
 export function offenseDieSize(team) { return team.coach.offDie + retentionDieBump(team); }

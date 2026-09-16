@@ -3,7 +3,7 @@
 // either way: (state, ...args) => result | undefined, mutating state in place.
 import { newEraState, signFreeAgent, signReplacement, finishFreeAgency, proceedFromResults, proceedFromSeasonRecap, proceedFromSeasonTransition, finishPlayoffs, fileContracts, fileRoster, fileOffseasonLineup, renewExpiredContract } from './season';
 import { draftPick, tradeDown } from './draft';
-import { fireCoach, relocateMarket, investInFanbase } from './finances';
+import { fireCoach, fireGM, investInFanbase } from './finances';
 import * as engine from './engine';
 import { beginTurn, advanceTurn } from './turn';
 
@@ -44,6 +44,6 @@ export const actionMap = {
   finishFreeAgency,
   proceedFromSeasonTransition,
   fireCoach,
-  relocateMarket,
+  fireGM,
   investInFanbase,
 };

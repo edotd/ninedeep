@@ -1,8 +1,9 @@
 import { retentionBonus, retentionDieBump, relationshipBonus } from './cards';
 import { formatCoins } from './economy';
+import { handsOffBonus } from './gm';
 
 export function coachSummary(team) {
-  const bonus = retentionBonus(team) + relationshipBonus(team);
+  const bonus = retentionBonus(team) + relationshipBonus(team) + handsOffBonus(team);
   const dieBump = retentionDieBump(team);
   const offPct = Math.round((team.coach.offBonus + bonus) * 100);
   const defPct = Math.round((team.coach.defBonus + bonus) * 100);

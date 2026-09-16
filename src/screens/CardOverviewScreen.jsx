@@ -7,8 +7,8 @@ import CardAnnotation from '../components/CardAnnotation';
 import { useIsDesktop } from '../hooks/useIsDesktop';
 import { drawCoachCard, applyCoachRetention } from '../game/cards';
 import { weightedPick } from '../game/rng';
-import { FANBASE_ARCHETYPES, MARKETS, GM_TYPES, MATCHUP_MODIFIER_TYPES } from '../game/constants';
-import { rollMarketCapAdj } from '../game/economy';
+import { FANBASE_ARCHETYPES, MATCHUP_MODIFIER_TYPES } from '../game/constants';
+import { drawGM } from '../game/gm';
 import { initAttendance } from '../game/fanbase';
 import { rollFanbaseMod } from '../game/fanbase';
 
@@ -21,9 +21,9 @@ function buildSampleTeam() {
   applyCoachRetention(team, team.coach);
   team.fanbaseArchetype = weightedPick(FANBASE_ARCHETYPES);
   rollFanbaseMod(team);
-  const marketDef = weightedPick(MARKETS);
-  team.market = { name: marketDef.name, capAdj: rollMarketCapAdj(marketDef) };
-  team.gmType = GM_TYPES[Math.floor(Math.random() * GM_TYPES.length)];
+  const gm = drawGM();
+  team.market = gm.market;
+  team.gmType = gm.type;
   initAttendance(team);
   team.advantageAvailable = team.fanbaseArchetype.name === 'Die Hard';
   return team;

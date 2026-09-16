@@ -3,8 +3,8 @@ export function baseCap(season) {
 }
 
 export function formatCoins(n) {
-  const rounded = Math.round(n * 2) / 2;
-  const text = rounded % 1 === 0 ? String(rounded) : rounded.toFixed(1);
+  const cents = Math.round(n * 100);
+  const text = cents % 100 === 0 ? String(cents / 100) : (cents / 100).toFixed(cents % 10 === 0 ? 1 : 2);
   return '🪙' + text;
 }
 
@@ -27,5 +27,6 @@ export function finalizeCap(team, season) {
 }
 
 export function rosterSalary(team) {
-  return team.hand.reduce((s, c) => s + c.salary, 0) + (team.coach ? team.coach.salary : 0);
+  const total = team.hand.reduce((s, c) => s + c.salary, 0) + (team.coach ? team.coach.salary : 0) + (team.gmType === 'Aggressive' || team.gmType === 'Hands-Off' ? 1 : 0);
+  return Math.round(total * 100) / 100;
 }

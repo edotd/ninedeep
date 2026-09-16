@@ -1,9 +1,10 @@
 import { addToRoster, creditTeamSeason } from './chemistry';
-import { TIERS, LEAGUE_ACCOLADES, REPLACEMENT_TIER, AI_NAMES, AI_TRICODES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_ARCHETYPES, MARKETS, GM_TYPES, MATCHUP_CARD_DRAW_COUNT } from './constants';
+import { TIERS, LEAGUE_ACCOLADES, REPLACEMENT_TIER, AI_NAMES, AI_TRICODES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_ARCHETYPES, MATCHUP_CARD_DRAW_COUNT } from './constants';
+import { drawGM, acquireOffseasonPlayer } from './gm';
 import { advanceCareer } from './aging';
 import { shuffle, weightedPick } from './rng';
 import { makeCard, randomArch, randomArchForTier, cardTotal, neededPosition, drawCoachCard, applyCoachRetention, drawMatchupModifierCard, resetMatchupDeck } from './cards';
-import { finalizeCap, rosterSalary, rollMarketCapAdj } from './economy';
+import { finalizeCap, rosterSalary } from './economy';
 import { autoSelectFive, effectiveRating, validateLineup } from './roster';
 import { startDraft } from './draft';
 import { initAttendance, rollFanbaseMod, recomputeSeasonAttendance, applyPlayoffBerthMilestone, applyHomeCourtMilestone, applyChampionshipMilestone } from './fanbase';
@@ -97,7 +98,7 @@ export function refreshAdvantage(team) {
   team.advantageAvailable = !!(team.fanbaseArchetype && team.fanbaseArchetype.name === 'Die Hard');
 }
 
-// Runs once, right after team setup and before hands are dealt. Coach, Fanbase, and Market are
+// Runs once, right after team setup and before hands are dealt. Coach, Fanbase, and GM are
 // pulled here for AI teams and kept for the whole era. Human teams pull their own via pullCoach etc.
 export function initFrontOffice(state) {
   state.phase = 'pullcards';
@@ -110,9 +111,9 @@ export function initFrontOffice(state) {
     applyCoachRetention(team, team.coach);
     team.fanbaseArchetype = weightedPick(FANBASE_ARCHETYPES);
     rollFanbaseMod(team);
-    const marketDef = weightedPick(MARKETS);
-    team.market = { name: marketDef.name, capAdj: rollMarketCapAdj(marketDef) };
-    team.gmType = GM_TYPES[Math.floor(Math.random() * GM_TYPES.length)];
+    const gm = drawGM();
+    team.market = gm.market;
+    team.gmType = gm.type;
     initAttendance(team);
     refreshAdvantage(team);
     finalizeCap(team, state.season);
@@ -315,7 +316,7 @@ export function renewExpiredContract(state, teamIdx, cardId) {
   const index = state.freeAgents.findIndex((c) => c.id === cardId && c.lastTeamId === team.id);
   if (index < 0) return { ok: false, msg: 'Player is not available for renewal.' };
   const [card] = state.freeAgents.splice(index, 1);
-  addToRoster(team, card);
+  acquireOffseasonPlayer(team, card);
   return { ok: true };
 }
 
@@ -351,7 +352,7 @@ export function signFreeAgent(state, cardId, teamIdx) {
   const team = state.teams[teamIdx];
   if (team.hand.length >= 9) return { ok: false, msg: 'Your roster is full.' };
   const [card] = state.freeAgents.splice(idx, 1);
-  addToRoster(team, card);
+  acquireOffseasonPlayer(team, card);
   return { ok: true };
 }
 
@@ -359,7 +360,7 @@ export function signReplacement(state, teamIdx) {
   if (state.phase !== 'freeagency') return { ok: false, msg: 'Free agency is closed.' };
   const team = state.teams[teamIdx];
   if (team.hand.length >= 9) return { ok: false, msg: 'Your roster is full.' };
-  addToRoster(team, makeCard(state, randomArch(), neededPosition(team) || POSITIONS[Math.floor(Math.random() * 3)], REPLACEMENT_TIER));
+  acquireOffseasonPlayer(team, makeCard(state, randomArch(), neededPosition(team) || POSITIONS[Math.floor(Math.random() * 3)], REPLACEMENT_TIER));
   return { ok: true };
 }
 
@@ -371,14 +372,14 @@ export function finishFreeAgency(state) {
       const need = neededPosition(team);
       const poolMatch = need ? state.freeAgents.find((c) => c.position === need) : null;
       if (poolMatch) {
-        addToRoster(team, state.freeAgents.splice(state.freeAgents.indexOf(poolMatch), 1)[0]);
+        acquireOffseasonPlayer(team, state.freeAgents.splice(state.freeAgents.indexOf(poolMatch), 1)[0]);
       } else if (state.freeAgents.length > 0 && !need) {
         let bestIdx = 0, bestVal = -1;
         state.freeAgents.forEach((c, i) => { const v = cardTotal(c); if (v > bestVal) { bestVal = v; bestIdx = i; } });
         const [card] = state.freeAgents.splice(bestIdx, 1);
-        addToRoster(team, card);
+        acquireOffseasonPlayer(team, card);
       } else {
-        addToRoster(team, makeCard(state, randomArch(), need || POSITIONS[Math.floor(Math.random() * 3)], REPLACEMENT_TIER));
+        acquireOffseasonPlayer(team, makeCard(state, randomArch(), need || POSITIONS[Math.floor(Math.random() * 3)], REPLACEMENT_TIER));
       }
     }
   });
