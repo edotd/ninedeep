@@ -351,26 +351,26 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .db-matchup-label{font-family:var(--font-mono);font-size:8px;letter-spacing:.06em;color:var(--stamp);text-transform:uppercase;}
 .db-matchup-value{font-family:var(--font-display);font-size:13px;color:var(--file);line-height:1.15;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
 
-.db-metric{flex-shrink:0;justify-content:center;padding:0 16px;}
+.db-metric{flex-shrink:0;justify-content:center;align-items:center;text-align:center;padding:0 16px;}
 .db-metric.chemistry{flex:0.5;}
 .db-metric.budget{flex:0.85;}
 .db-metric.output{flex:1.1;}
-.db-metric-value{font-family:var(--font-display);font-size:28px;color:var(--file);line-height:.9;}
-.db-metric-value.accent{color:var(--franchise);font-size:30px;}
+.db-metric-value{font-family:var(--font-display);font-size:36px;color:var(--file);line-height:.9;}
+.db-metric-value.accent{color:var(--franchise);font-size:38px;}
 /* The chemistry letter grade is the one metric block with nothing beneath it competing for
    room except its own detail line, so it fills essentially the whole box height instead of
    matching the other two metrics' figure size. */
 .db-chem-grade{font-family:var(--font-display);font-size:58px;line-height:.82;color:var(--file);}
 
-.db-budget-figures{font-family:var(--font-display);font-size:22px;white-space:nowrap;}
+.db-budget-figures{font-family:var(--font-display);font-size:28px;white-space:nowrap;}
 .db-budget-figures .committed{color:var(--file);}
 .db-budget-figures .slash{color:var(--ink-rule);}
 .db-budget-figures .limit{color:var(--ink-muted);}
 .db-budget-figures.over .committed{color:var(--stamp);}
-.db-budget-room{margin-top:4px;font-family:var(--font-mono);font-size:9px;letter-spacing:.04em;color:var(--approved-file);text-transform:uppercase;white-space:nowrap;}
+.db-budget-room{margin-top:4px;font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;color:var(--approved-file);text-transform:uppercase;white-space:nowrap;}
 .db-budget-room.over{color:var(--stamp-text);}
 
-.db-output-breakdown{display:flex;gap:10px;margin-top:4px;font-family:var(--font-mono);font-size:9px;letter-spacing:.04em;color:var(--ink-muted);text-transform:uppercase;white-space:nowrap;}
+.db-output-breakdown{display:flex;justify-content:center;gap:10px;margin-top:4px;font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;color:var(--ink-muted);text-transform:uppercase;white-space:nowrap;}
 
 .db-slot{cursor:default;}
 .db-player-slot:not(.empty){cursor:pointer;}
@@ -760,6 +760,60 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
   .bracket-match-header{padding:10px 14px;font-size:11px;}
   .bracket-team-tbd{font-size:24px;padding:32px 14px;}
   .bracket-node-btn{font-size:13px !important;padding:12px 10px !important;}
+}
+
+/* Clickable overview nodes — the whole card zooms into its cluster; the actual action
+   buttons stop that click from bubbling (see BracketNode's `stop` helper) so Begin/Sim/Review
+   still just do their own thing. */
+.bracket-node.selectable{cursor:pointer;}
+.bracket-node.selectable:hover{box-shadow:0 0 0 1px var(--ink-rule),0 0 0 3px var(--franchise);}
+
+/* ================= Zoomed Bracket — one cluster (two feeders + what they feed) at a time,
+   filling the screen, switched via a 3-stop scrollbar-styled control rather than free
+   scrolling: there's no single continuous strip to scroll, just three fixed layouts. ======= */
+.bracket-zoomed-screen{background:var(--ink);padding:20px 16px 16px;min-height:calc(100vh - 190px);box-sizing:border-box;display:flex;flex-direction:column;}
+@media (min-width:1000px){.bracket-zoomed-screen{min-height:calc(100vh - var(--desktop-bar-height));padding:24px;}}
+.bracket-zoom-header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px;flex-shrink:0;}
+.bracket-zoom-back{background:none;border:1px solid var(--ink-rule);color:var(--file);font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:9px 14px;cursor:pointer;}
+.bracket-zoom-back:hover{border-color:var(--franchise);color:var(--franchise);}
+.bracket-zoom-label{font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-muted);}
+
+.bracket-zoom-content{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:8px 0;}
+.bracket-zoom-cluster{display:flex;align-items:center;gap:20px;width:100%;max-width:900px;justify-content:center;}
+.bracket-zoom-cluster.middle{max-width:1100px;}
+.bracket-zoom-quarters{display:flex;flex-direction:column;gap:20px;flex:1;max-width:320px;}
+.bracket-zoom-cluster .bracket-node{flex:1;max-width:320px;}
+.bracket-zoom-cluster .bracket-node.big{max-width:360px;}
+.bracket-zoom-arrow{color:var(--ink-rule);font-family:var(--font-display);font-size:30px;flex-shrink:0;}
+.bracket-zoom-arrow.rev{transform:scaleX(-1);}
+
+.bracket-node.zoomed .bracket-match-header{padding:12px 16px;font-size:12px;}
+.bracket-node.zoomed .bracket-team-row{padding:16px 16px;}
+.bracket-node.zoomed .bracket-team-seed{font-size:30px;width:28px;}
+.bracket-node.zoomed .bracket-team-name{font-size:26px;}
+.bracket-node.zoomed .bracket-team-proj{font-size:28px;}
+.bracket-node.zoomed .bracket-team-proj.small{font-size:11px;}
+.bracket-node.zoomed .bracket-team-final{font-size:32px;}
+.bracket-node.zoomed .bracket-team-tbd{font-size:26px;padding:34px 16px;}
+.bracket-node.zoomed .bracket-node-btn{font-size:13px !important;padding:12px 10px !important;}
+
+.bracket-zoom-scrollbar{margin-top:18px;flex-shrink:0;}
+.bracket-zoom-track{position:relative;height:52px;background:var(--ink-deep);border:1px solid var(--ink-rule);display:flex;}
+.bracket-zoom-seg{flex:1;position:relative;z-index:1;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px;font-family:var(--font-mono);color:var(--ink-muted);}
+.bracket-zoom-seg + .bracket-zoom-seg{border-left:1px solid var(--ink-rule);}
+.bracket-zoom-seg-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;}
+.bracket-zoom-seg-sub{font-size:8px;letter-spacing:.06em;text-transform:uppercase;opacity:.7;}
+.bracket-zoom-seg.active{color:var(--ink);}
+.bracket-zoom-thumb{position:absolute;top:2px;bottom:2px;width:calc(33.333% - 4px);background:var(--franchise);transition:left .18s ease;pointer-events:none;}
+
+@media (max-width:700px){
+  .bracket-zoom-cluster{flex-direction:column;gap:14px;}
+  .bracket-zoom-cluster.middle{flex-direction:column;}
+  .bracket-zoom-arrow{transform:rotate(90deg);font-size:22px;}
+  .bracket-zoom-arrow.rev{transform:rotate(90deg);}
+  .bracket-zoom-quarters{max-width:none;width:100%;}
+  .bracket-zoom-cluster .bracket-node{max-width:none;width:100%;}
+  .bracket-zoom-seg-sub{display:none;}
 }
 
 /* ================= Dark mode — a device-level display preference (Settings screen),
