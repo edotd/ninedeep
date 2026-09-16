@@ -10,6 +10,22 @@ function archetypeStatRange(archetype, stat) {
 }
 
 const STAT_NAMES = { SCO: 'Scoring', PLM: 'Playmaking', REB: 'Rebounding', DEF: 'Defense' };
+const SECTIONS = [
+  ['matchup-scoring', 'How Matchup Scoring Works'],
+  ['archetypes', 'Archetypes'],
+  ['player-modifiers', 'Player Modifiers'],
+  ['league-accolades', 'League Accolades'],
+  ['aging-experience', 'Aging & Experience'],
+  ['coach-archetypes', 'Coach Archetypes'],
+  ['coach-modifiers', 'Coach Modifiers'],
+  ['fanbase', 'Fanbase'],
+  ['season-milestones', 'Season Milestones'],
+  ['fanbase-mods', 'Fanbase Mods'],
+  ['market', 'Market'],
+  ['front-office-moves', 'Front Office Moves'],
+  ['skillsets-chemistry', 'Player Skillsets and Team Chemistry'],
+  ['matchup-modifier-cards', 'Matchup Modifier Cards'],
+];
 
 function GlossaryStat({ label, val }) {
   return <div className="meta-cell"><b>{val}</b><span>{label}</span></div>;
@@ -50,12 +66,16 @@ export default function GlossaryScreen({ state, onBack }) {
     <>
       <div className="screen">
         <h1>Glossary</h1>
+        <nav className="glossary-toc" aria-label="Glossary table of contents">
+          <div className="glossary-toc-title">Contents <span>Jump to a section</span></div>
+          <ol>{SECTIONS.map(([id, label]) => <li key={id}><a href={`#${id}`}>{label}</a></li>)}</ol>
+        </nav>
         <p className="lede">Base stats shown are before position adjustment and tier multiplier. Each stat gets a small ±1 roll applied after the tier bonus, so the tier's effect always comes through. Coach bonuses and Hall of Fame's die size are rolled fresh within their range each time the card is pulled. Coach, Fanbase, and Market are pulled once and kept for the whole era.</p>
-        <p className="lede">Every 9-card hand splits into 5 starters and 4 bench players. There is no draft — hands are dealt automatically once your Coach, Fanbase, and Market cards are set.</p>
+        <p className="lede">Every 9-card hand splits into 5 starters and 4 bench players. The first hand is dealt automatically; later seasons include an offseason draft.</p>
         <p className="lede">Before every playoff matchup, each team has a small independent chance ({injuryPct}%, adjustable in Settings) that a random active player is injured for that game. A same-position bench card subs in automatically if you have one; otherwise the team plays that matchup one player short.</p>
         <p className="lede">Each team's 4 bench players also contribute directly to that matchup's score — their combined stat total (scaled down, same as the Offense/Defense modifiers) is added on top of the dice roll. A deep bench is worth points even when it isn't on the floor.</p>
 
-        <h2>How Matchup Scoring Works</h2>
+        <h2 id="matchup-scoring">How Matchup Scoring Works</h2>
         <p className="lede">Every playoff matchup comes down to one number per team: the higher score wins (an exact tie is a coin flip). Each side's score is built from four pieces:</p>
         <div className="matchup-box">
           <div className="matchup-title">🏀 Offense</div>
@@ -81,7 +101,7 @@ export default function GlossaryScreen({ state, onBack }) {
           <p className="lede" style={{ margin: 0 }}>The top 4 seeds get a flat +2 Offense / +2 Defense in every playoff matchup they play.</p>
         </div>
 
-        <h2>Archetypes</h2>
+        <h2 id="archetypes">Archetypes</h2>
         <p className="lede">Ranges below show how each archetype's stats shift by position (Guard/Forward/Big) before any tier multiplier or the final ±1 roll are applied.</p>
         {Object.entries(ARCHETYPES).map(([name, a]) => {
           const ranges = {
@@ -104,15 +124,15 @@ export default function GlossaryScreen({ state, onBack }) {
           );
         })}
 
-        <h2>Player Modifiers</h2>
+        <h2 id="player-modifiers">Player Modifiers</h2>
         <p className="lede">Base quality/trait tiers — no age restriction on who can roll them.</p>
         {TIERS.map((t) => <TierBlock key={t.name} t={t} />)}
 
-        <h2>League Accolades</h2>
+        <h2 id="league-accolades">League Accolades</h2>
         <p className="lede">Elite, statistical-distinction tiers. These only roll on a player currently in their Prime Career Level ({PLAYER_PRIME_START}–{PLAYER_PRIME_BASE_END}) — you don't win these before or after your prime. Generational Talent is the one exception: it marks a player's ceiling rather than a given season's form, so it can appear at any age.</p>
         {LEAGUE_ACCOLADES.map((t) => <TierBlock key={t.name} t={t} />)}
 
-        <h2>Aging &amp; Experience</h2>
+        <h2 id="aging-experience">Aging &amp; Experience</h2>
         <p className="lede">Players are {PLAYER_AGE_MIN}–{PLAYER_AGE_MAX} years old. Career Level tracks where they are in their arc — Young (below {PLAYER_PRIME_START}), Prime ({PLAYER_PRIME_START}–{PLAYER_PRIME_BASE_END}), or Declining (above {PLAYER_PRIME_BASE_END}) — and each brings its own output bonus range. This shows up directly in a player's actual on-court output (their printed stat numbers never change, but how much they count for in matchups and seeding does), not just a label on the card.</p>
         {Object.entries(CAREER_LEVELS).map(([name, r]) => (
           <div key={name} className="matchup-box">
@@ -133,7 +153,7 @@ export default function GlossaryScreen({ state, onBack }) {
           <p className="lede" style={{ margin: '8px 0' }}>A scouting-style rating for the whole team, blending average roster + coach age (older/more veteran counts higher) with your title count and how many seasons you've made the playoffs. Visible on the Standings tab and your Team screen once hands are dealt.</p>
         </div>
 
-        <h2>Coach Archetypes</h2>
+        <h2 id="coach-archetypes">Coach Archetypes</h2>
         {Object.entries(COACH_ARCHETYPES).map(([name, a]) => (
           <div key={name} className="matchup-box">
             <div className="matchup-title">{name}</div>
@@ -144,7 +164,7 @@ export default function GlossaryScreen({ state, onBack }) {
           </div>
         ))}
 
-        <h2>Coach Modifiers</h2>
+        <h2 id="coach-modifiers">Coach Modifiers</h2>
         {COACH_MODIFIERS.map((m) => (
           <div key={m.name} className="matchup-box">
             <div className="matchup-title">{m.name}</div>
@@ -157,7 +177,7 @@ export default function GlossaryScreen({ state, onBack }) {
           </div>
         ))}
 
-        <h2>Fanbase</h2>
+        <h2 id="fanbase">Fanbase</h2>
         <p className="lede">Your Fanbase Archetype is drawn once and holds for the whole era, like Coach. Attendance itself is recalculated at the end of every season from your archetype's formula, your Market's floor, and how you finished — then a permanent, small baseline (built up from season milestones and any fanbase investment) is added on top. Attendance applies a small multiplier to your cap (0.9x–1.1x).</p>
         {FANBASE_ARCHETYPES.map((f) => (
           <div key={f.name} className="matchup-box">
@@ -173,10 +193,10 @@ export default function GlossaryScreen({ state, onBack }) {
           </div>
         ))}
 
-        <h2>Season Milestones</h2>
+        <h2 id="season-milestones">Season Milestones</h2>
         <p className="lede">Small, permanent additions to your fanbase baseline — they never expire and never decrease. Season End scales with your final seed (best at #1, nothing if you miss the playoffs); the rest are flat: Playoff Berth, Home Court Clinch (seed ≤ 4), a Playoff Win (each series won), and a Championship.</p>
 
-        <h2>Fanbase Mods</h2>
+        <h2 id="fanbase-mods">Fanbase Mods</h2>
         <p className="lede">Re-rolled every season for every team, from one shared pool. Team Pride can only roll for a Steady or Die Hard fanbase.</p>
         {FANBASE_MODS.map((m) => (
           <div key={m.name} className="matchup-box">
@@ -190,7 +210,7 @@ export default function GlossaryScreen({ state, onBack }) {
           </div>
         ))}
 
-        <h2>Market</h2>
+        <h2 id="market">Market</h2>
         <p className="lede">Sets your attendance floor and a budget boost, rolled within range at pull time. You can relocate to any market size for a budget-room fee that scales with how many tiers you're jumping — see the Team screen.</p>
         {MARKETS.map((m) => (
           <div key={m.name} className="matchup-box">
@@ -203,10 +223,10 @@ export default function GlossaryScreen({ state, onBack }) {
           </div>
         ))}
 
-        <h2>Front Office Moves</h2>
+        <h2 id="front-office-moves">Front Office Moves</h2>
         <p className="lede">Fire and replace your coach, relocate to a new market, or invest a small permanent bump into your fanbase baseline (once per season) — all spent directly out of this season's budget room, the same pool that funds your roster. Firing a coach pays off both the outgoing and incoming salaries — no guaranteed upgrade. See the Team screen for exact costs.</p>
 
-        <h2>Player Skillsets and Team Chemistry</h2>
+        <h2 id="skillsets-chemistry">Player Skillsets and Team Chemistry</h2>
         <p className="lede">Each new player rolls one permanent Skillset. Elite Fit pairs add +3% and Good Fit pairs +1% to Offense or Defense, capped at +12% on each side. Only the active five count; each distinct pairing counts once. Locker Room Guy adds +1 flat Offense and Defense from anywhere on the roster, without stacking. Team Chemistry uses a 0–100 score: 50 base points, up to 30 for Skillset fit (2.5 per percentage point across both sides), up to 15 for starter tenure (1 per completed player-year), and 5 for Locker Room Guy. Grades: A+ 97, A 93, A− 90, B+ 87, B 83, B− 80, C+ 77, C 73, C− 70, D+ 67, D 63, D− 60, F below 60. Each completed starter-year also adds +0.5% Offense and Defense beyond the Skillset cap. Bench players earn tenure but contribute only while starting. Joining a different team resets tenure. The experience rating stays separate. Legacy players without a Skillset remain unchanged.</p>
         {SKILLSETS.map((skill) => <div key={skill.id} className="matchup-box">
           <div className="matchup-title">{skill.name}</div><p>{skill.description}</p>
@@ -215,7 +235,7 @@ export default function GlossaryScreen({ state, onBack }) {
             {SKILLSETS.find((s) => s.id === p.skills.find((id) => id !== skill.id)).name} — {p.percent === 3 ? 'Elite Fit' : 'Good Fit'} · +{p.percent}% {p.side}
           </li>)}</ul>
         </div>)}
-        <h2>Matchup Modifier Cards</h2>
+        <h2 id="matchup-modifier-cards">Matchup Modifier Cards</h2>
         <p className="lede">Every team receives three cards from a shared 97-card deck each season. Each name has a fixed effect and rarity: Core, Prime, Signature, or Legendary. Cards are single-use; seeding bonuses apply automatically. Positive cards help your team and negative cards target the opponent. Player-stat changes last one matchup, with stats floored at 1. Ability percentages retain fractional points. Dice cards change the selected offense or defense die (minimum 1). Advantage keeps the higher of two rolls; Disadvantage keeps the lower, and the two cancel. These affect both rolls for the matchup, including rolls already resolved. Extra-card effects draw one remaining playable card; negative card effects discard one random unused playable opponent card. Budget-hit bonuses add the selected starter’s exact salary to one stat without changing salary. Position bonuses count the active matchup lineup when played, excluding the bench. Bargain Production requires a starter with a budget hit of 1 or less. A fresh deck is shuffled next season.</p>
         {MATCHUP_MODIFIER_TYPES.map((t) => {
           const catColor = t.target === 'opponent' ? 'var(--bad)' : 'var(--good)';
