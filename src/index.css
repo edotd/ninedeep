@@ -46,6 +46,29 @@
   --sans: var(--font-mono);
   --mono: var(--font-mono);
 }
+
+/* Offseason personnel file */
+.offseason-file{max-width:1040px;margin:16px auto 110px;background:var(--form);border:1px solid var(--file-rule);box-shadow:8px 8px 0 rgba(30,43,71,.08);min-height:calc(100vh - 170px)}
+.of-kicker{display:flex;justify-content:space-between;gap:12px;background:var(--ink);color:var(--file);padding:12px 20px;font:10px var(--font-mono);letter-spacing:.13em;text-transform:uppercase}
+.of-title{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:16px 20px 11px;font:32px var(--font-display);border-bottom:2px solid var(--ink);text-transform:uppercase}
+.of-title span{font:10px var(--font-label);letter-spacing:.12em;color:var(--file-muted)}
+.of-index{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:2px solid var(--ink)}
+.of-index>div{padding:10px 12px;border-right:1px solid var(--file-rule);font:11px var(--font-label);text-transform:uppercase;min-width:0}
+.of-index>div:last-child{border-right:0}
+.of-index small,.of-index em{display:block;font:9px var(--font-mono);letter-spacing:.08em;color:var(--file-muted);font-style:normal}
+.of-index small{margin-bottom:6px}.of-index em{margin-top:6px}
+.of-index .current{background:var(--ink);color:var(--form)}.of-index .current small,.of-index .current em{color:var(--franchise)}
+.of-index .filed em{color:var(--approved)}
+.of-content{padding:22px 24px 30px;max-height:calc(100vh - 340px);overflow:auto}
+.of-content h1{font-size:46px;margin:8px 0 18px}.of-content .lede{max-width:680px}
+.of-section-label{font:10px var(--font-label);letter-spacing:.14em;color:var(--stamp);margin:14px 0 8px;text-transform:uppercase}
+.of-table-head,.of-table-row{display:grid;grid-template-columns:1fr 120px 85px;gap:12px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--form-rule)}
+.of-table-head{background:var(--ink);color:var(--form);font:9px var(--font-label);letter-spacing:.1em}
+.of-table-row{font:13px var(--font-mono)}.of-table-row small{display:block;font-size:10px;color:var(--file-muted);margin-top:3px}.of-table-row strong{font:10px var(--font-label);color:var(--approved)}
+.of-table-row.expired{color:var(--file-muted)}.of-table-row.expired strong{color:var(--stamp)}
+.of-action-wrap{margin-top:18px}.of-action{margin-top:20px;width:100%}.of-action:disabled{opacity:.55;cursor:default}
+.of-ledger{display:flex;justify-content:space-between;gap:12px;background:var(--ink);color:var(--file);padding:12px 20px;font:10px var(--font-mono);letter-spacing:.06em;position:sticky;bottom:0}.of-ledger b{color:var(--franchise);font-weight:500}.of-ledger .negative{color:var(--stamp-ink)}
+@media(max-width:680px){.offseason-file{margin:0 0 110px;min-height:0;border-inline:0;box-shadow:none}.of-title{font-size:25px}.of-title span{display:none}.of-index>div{padding:9px 5px;font-size:8px;text-align:center}.of-index small,.of-index em{font-size:7px}.of-content{padding:14px 16px;max-height:none;overflow:visible}.of-content h1{font-size:38px}.of-table-head,.of-table-row{grid-template-columns:1fr 78px 42px;gap:6px;padding:9px 6px}.of-ledger{font-size:8px;padding:10px;flex-wrap:wrap}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body,#root{margin:0;padding:0;background:var(--file);color:var(--ink);font-family:var(--font-mono);}
 body{min-height:100vh;padding-bottom:176px;}

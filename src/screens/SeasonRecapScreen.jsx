@@ -85,7 +85,7 @@ export default function SeasonRecapScreen({ state, actions, myTeamId }) {
         </div>
       </div>
       <div className="bottombar">
-        <button className="primary" onClick={actions.proceedFromSeasonRecap}>Continue to Draft</button>
+        <button className="primary" onClick={actions.proceedFromSeasonRecap}>Open Contract File</button>
       </div>
     </>
   );

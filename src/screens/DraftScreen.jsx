@@ -1,6 +1,7 @@
 import PlayerCard from '../components/PlayerCard';
 import { cardTotal } from '../game/cards';
 import { formatCoins } from '../game/economy';
+import OffseasonFile from '../components/OffseasonFile';
 
 export default function DraftScreen({ state, actions, myTeamId }) {
   const draft = state.draft;
@@ -18,10 +19,10 @@ export default function DraftScreen({ state, actions, myTeamId }) {
   });
 
   return (
-    <div className="screen">
-      <h1>Draft — Season {state.season}</h1>
+    <OffseasonFile state={state} team={myTeam}>
+      <div className="of-section-label">02 / DRAFT</div><h1>Draft — Season {state.season}</h1>
       <p className="lede">
-        Every team fills its open roster spots from this shared pool, worst record first.{' '}
+        Every team with an open spot gets one pick, worst record first.{' '}
         {onTheClock
           ? "You're on the clock — draft a card, or trade your pick down to another team for a cap bonus next season."
           : draft.queue[0] ? `Waiting on ${draft.queue[0].name} to pick…` : ''}
@@ -63,6 +64,6 @@ export default function DraftScreen({ state, actions, myTeamId }) {
       {sortedPool.map((c) => (
         <PlayerCard key={c.id} card={c} onClick={onTheClock ? () => actions.draftPick(myTeamId, c.id) : undefined} />
       ))}
-    </div>
+    </OffseasonFile>
   );
 }

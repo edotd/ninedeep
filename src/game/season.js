@@ -3,7 +3,7 @@ import { TIERS, LEAGUE_ACCOLADES, REPLACEMENT_TIER, AI_NAMES, AI_TRICODES, POSIT
 import { shuffle, weightedPick } from './rng';
 import { makeCard, randomArch, randomArchForTier, cardTotal, neededPosition, drawCoachCard, applyCoachRetention, drawMatchupModifierCard, resetMatchupDeck } from './cards';
 import { finalizeCap, rosterSalary, rollMarketCapAdj } from './economy';
-import { autoSelectFive, effectiveRating } from './roster';
+import { autoSelectFive, effectiveRating, validateLineup } from './roster';
 import { startDraft } from './draft';
 import { initAttendance, rollFanbaseMod, recomputeSeasonAttendance, applyPlayoffBerthMilestone, applyHomeCourtMilestone, applyChampionshipMilestone } from './fanbase';
 import { tricodeFor } from './names';
@@ -141,7 +141,7 @@ export function startNewSeasonRoster(state) {
     applyCoachRetention(team, team.coach);
     refreshAdvantage(team);
     finalizeCap(team, state.season);
-    team.activeIds = autoSelectFive(team.hand);
+    if (!team.activeIds || !validateLineup(team).valid) team.activeIds = autoSelectFive(team.hand);
     team.coach.age = Math.min(COACH_AGE_MAX, team.coach.age + 1);
     team.lineupConfirmed = false;
     team.financeBoostUsedThisSeason = false;
@@ -258,6 +258,7 @@ function seasonResultForTeam(state, team) {
 }
 
 export function proceedFromResults(state) {
+  if (state.phase !== 'results') return;
   state.teams.forEach((team) => { team.lastSeasonAvgScore = seasonAvgScoreForTeam(state, team); });
   recomputeSeasonAttendance(state);
   // Filed once, before contracts move — captures the season exactly as it was played
@@ -272,6 +273,7 @@ export function proceedFromResults(state) {
     });
   });
   state.lastExpiredPlayers = [];
+  state.offseason = { contractsFiled: {}, rosterFiled: {}, lineupFiled: {} };
   state.teams.forEach((team) => {
     creditTeamSeason(team, state.season);
     const kept = [];
@@ -279,7 +281,7 @@ export function proceedFromResults(state) {
       c.contract--;
       c.age = Math.min(PLAYER_AGE_MAX, c.age + 1);
       if (c.contract <= 0) {
-        state.freeAgents.push(Object.assign({}, c, { contract: c.maxContract }));
+        state.freeAgents.push(Object.assign({}, c, { contract: c.maxContract, lastTeamId: team.id }));
         if (team.human) state.lastExpiredPlayers.push(c);
       } else kept.push(c);
     });
@@ -291,10 +293,57 @@ export function proceedFromResults(state) {
 }
 
 export function proceedFromSeasonRecap(state) {
-  startDraft(state);
+  if (state.phase !== 'seasonrecap') return;
+  state.phase = 'contracts';
+}
+
+const allHumanFiled = (state, key) => state.teams.filter((t) => t.human).every((t) => state.offseason[key][t.id]);
+
+export function fileContracts(state, teamIdx) {
+  if (state.phase !== 'contracts' || !state.teams[teamIdx]?.human) return { ok: false, msg: 'Contracts are not open.' };
+  state.offseason.contractsFiled[state.teams[teamIdx].id] = true;
+  if (allHumanFiled(state, 'contractsFiled')) startDraft(state);
+  return { ok: true };
+}
+
+export function renewExpiredContract(state, teamIdx, cardId) {
+  const team = state.teams[teamIdx];
+  if (state.phase !== 'contracts' || !team?.human || state.offseason?.contractsFiled?.[team.id]) return { ok: false, msg: 'Contract decisions are closed.' };
+  if (team.hand.length >= 9) return { ok: false, msg: 'Your roster is full.' };
+  const index = state.freeAgents.findIndex((c) => c.id === cardId && c.lastTeamId === team.id);
+  if (index < 0) return { ok: false, msg: 'Player is not available for renewal.' };
+  const [card] = state.freeAgents.splice(index, 1);
+  addToRoster(team, card);
+  return { ok: true };
+}
+
+export function fileRoster(state, teamIdx) {
+  const team = state.teams[teamIdx];
+  if (state.phase !== 'roster' || !team?.human || team.hand.length !== 9) return { ok: false, msg: 'Fill all nine roster spots first.' };
+  state.offseason.rosterFiled[team.id] = true;
+  if (allHumanFiled(state, 'rosterFiled')) {
+    state.teams.forEach((t) => { t.activeIds = autoSelectFive(t.hand); t.lineupConfirmed = false; });
+    state.phase = 'offseasonlineup';
+  }
+  return { ok: true };
+}
+
+export function fileOffseasonLineup(state, teamIdx) {
+  const team = state.teams[teamIdx];
+  if (state.phase !== 'offseasonlineup' || !team?.human) return { ok: false, msg: 'Lineups are not open.' };
+  const { valid, msg } = validateLineup(team);
+  if (!valid) return { ok: false, msg };
+  state.offseason.lineupFiled[team.id] = true;
+  if (allHumanFiled(state, 'lineupFiled')) {
+    state.season++;
+    if (state.season > 8) state.phase = 'era_end';
+    else { startNewSeasonRoster(state); state.phase = 'seasontransition'; }
+  }
+  return { ok: true };
 }
 
 export function signFreeAgent(state, cardId, teamIdx) {
+  if (state.phase !== 'freeagency') return { ok: false, msg: 'Free agency is closed.' };
   const idx = state.freeAgents.findIndex((c) => c.id === cardId);
   if (idx < 0) return { ok: false, msg: 'Card not available.' };
   const team = state.teams[teamIdx];
@@ -305,6 +354,7 @@ export function signFreeAgent(state, cardId, teamIdx) {
 }
 
 export function signReplacement(state, teamIdx) {
+  if (state.phase !== 'freeagency') return { ok: false, msg: 'Free agency is closed.' };
   const team = state.teams[teamIdx];
   if (team.hand.length >= 9) return { ok: false, msg: 'Your roster is full.' };
   addToRoster(team, makeCard(state, randomArch(), neededPosition(team) || POSITIONS[Math.floor(Math.random() * 3)], REPLACEMENT_TIER));
@@ -312,7 +362,9 @@ export function signReplacement(state, teamIdx) {
 }
 
 export function finishFreeAgency(state) {
-  state.teams.slice(1).forEach((team) => {
+  if (state.phase !== 'freeagency') return { ok: false, msg: 'Free agency is closed.' };
+  if (state.teams.some((t) => t.human && t.hand.length !== 9)) return { ok: false, msg: 'Every human team must fill its roster.' };
+  state.teams.filter((t) => !t.human).forEach((team) => {
     while (team.hand.length < 9) {
       const need = neededPosition(team);
       const poolMatch = need ? state.freeAgents.find((c) => c.position === need) : null;
@@ -328,16 +380,8 @@ export function finishFreeAgency(state) {
       }
     }
   });
-  state.season++;
-  if (state.season > 8) { state.phase = 'era_end'; }
-  else {
-    // startNewSeasonRoster does the actual work (cap, retention, matchup cards for the new
-    // season) so the transition screen below has real numbers to show — it just overrides
-    // the phase that leaves it in, so the season doesn't start playable until the player
-    // continues off the transition screen.
-    startNewSeasonRoster(state);
-    state.phase = 'seasontransition';
-  }
+  state.phase = 'roster';
+  return { ok: true };
 }
 
 // The Odometer (design brand handoff, "Nine Deep Transitions" 2A) — a one-time beat between
@@ -345,5 +389,6 @@ export function finishFreeAgency(state) {
 // Not a loading state: it's the beat that says a new season has started and what it will be
 // judged on.
 export function proceedFromSeasonTransition(state) {
+  if (state.phase !== 'seasontransition') return;
   state.phase = 'pullmodifier';
 }

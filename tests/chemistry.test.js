@@ -41,9 +41,9 @@ test('real season completion credits retained and expired players, free-agent tr
  const state=newEraState();startEra(state,'Test');proceedFromCardOverview(state);proceedFromHand(state);proceedToSeason1(state);
  lockSeasonAndSeed(state);startPlayoffs(state);state.playoffTeams=[];
  const player=state.teams[0].hand[0];player.contract=1;
- proceedFromResults(state);
+ state.phase='results';proceedFromResults(state);
  assert(state.teams[0].hand.every(p=>completedTeamYears(p,0)===1));
  const expired=state.freeAgents.find(p=>p.id===player.id);assert.equal(completedTeamYears(expired,0),1);
- const target=state.teams[1];target.hand.pop();signFreeAgent(state,player.id,1);
+ const target=state.teams[1];target.hand.pop();state.phase='freeagency';signFreeAgent(state,player.id,1);
  assert.equal(completedTeamYears(target.hand.find(p=>p.id===player.id),1),0);
 });

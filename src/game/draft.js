@@ -30,23 +30,9 @@ export function buildDraftPool(state, count) {
   return cards;
 }
 
-// A flat, round-robin queue of team turns: worst-record team first each round, looping
-// until every team has picked once for each of its open roster spots.
+// One pick per team with an open slot leaves meaningful roster work for free agency.
 function buildPickQueue(teams, order) {
-  const remaining = new Map(teams.map((t) => [t, Math.max(0, 9 - t.hand.length)]));
-  const queue = [];
-  let progress = true;
-  while (progress) {
-    progress = false;
-    for (const t of order) {
-      if (remaining.get(t) > 0) {
-        queue.push(t);
-        remaining.set(t, remaining.get(t) - 1);
-        progress = true;
-      }
-    }
-  }
-  return queue;
+  return order.filter((t) => teams.includes(t) && t.hand.length < 9);
 }
 
 export function startDraft(state) {
@@ -92,6 +78,7 @@ function resolveAiPicksUntilHuman(state) {
 // teamIdx is the acting player's own seat — the pick only applies if it's actually that
 // team's turn (queue[0]), so one player can never draft on another's behalf.
 export function draftPick(state, teamIdx, cardId) {
+  if (state.phase !== 'draft') return { ok: false, msg: 'The draft is closed.' };
   const team = state.draft.queue[0];
   if (!team || !team.human || team.id !== state.teams[teamIdx].id) return;
   const card = state.draft.pool.find((c) => c.id === cardId);
@@ -105,6 +92,7 @@ export function draftPick(state, teamIdx, cardId) {
 // a simplified stand-in for a real multi-asset trade negotiation (no other tradable
 // resource — draft picks, future cap space — exists in the game yet).
 export function tradeDown(state, teamIdx, partnerTeamIndex) {
+  if (state.phase !== 'draft') return { ok: false, msg: 'The draft is closed.' };
   const queue = state.draft.queue;
   const human = queue[0];
   if (!human || !human.human || human.id !== state.teams[teamIdx].id) return;

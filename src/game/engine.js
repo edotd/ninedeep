@@ -259,6 +259,7 @@ export function updateSettings(state, patch) {
 // already rolled dice against.
 export function swapStarter(state, teamIdx, outgoingId, incomingId) {
   const team = state.teams[teamIdx];
+  if (state.phase === 'offseasonlineup' && state.offseason?.lineupFiled?.[team?.id]) return { ok: false, msg: 'Lineup already filed.' };
   if (!team || !team.hand || !team.activeIds || team.activeIds.length !== 5) return { ok: false, msg: 'Nothing to substitute yet.' };
   const inLiveMatch = state.playoff && state.playoff.matches.some((m) => m.turn && !m.result && (m.a === team || m.b === team));
   if (inLiveMatch) return { ok: false, msg: "Can't change your lineup mid-match." };

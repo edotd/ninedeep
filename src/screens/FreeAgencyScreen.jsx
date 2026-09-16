@@ -1,17 +1,18 @@
 import PlayerCard from '../components/PlayerCard';
 import { rosterSalary, formatCoins } from '../game/economy';
+import OffseasonFile from '../components/OffseasonFile';
 
 export default function FreeAgencyScreen({ state, actions, myTeamId }) {
   const team = state.teams[myTeamId];
   const openSlots = 9 - team.hand.length;
   const total9 = rosterSalary(team);
   const overBudget = total9 > team.seasonCap;
-  const lost = state.lastExpiredPlayers || [];
+  const lost = (state.lastExpiredPlayers || []).filter((c) => c.lastTeamId === team.id);
 
   return (
     <>
-      <div className="screen">
-        <h1>Free Agency</h1>
+      <OffseasonFile state={state} team={team}>
+        <div className="of-section-label">03 / FREE AGENCY</div><h1>Free Agency</h1>
         <div className={'statusline' + (overBudget ? ' bad' : '')}>
           Roster salary: {formatCoins(total9)} / {formatCoins(team.seasonCap)} budget{overBudget ? ' — luxury tax will apply' : ''}
         </div>
@@ -42,12 +43,12 @@ export default function FreeAgencyScreen({ state, actions, myTeamId }) {
             ))}
           </div>
         ) : <p className="lede">Pool is empty right now.</p>}
-      </div>
-      <div className="bottombar">
-        <button className="primary" onClick={actions.finishFreeAgency}>
-          {state.season >= 8 ? 'View Era Results' : `Continue to Season ${state.season + 1}`}
+      <div className="of-action-wrap">
+        <button className="primary of-action" disabled={state.teams.some((t) => t.human && t.hand.length !== 9)} onClick={actions.finishFreeAgency}>
+          {openSlots ? `Fill ${openSlots} Open Slot${openSlots === 1 ? '' : 's'}` : 'Continue to Roster Filing'}
         </button>
       </div>
+      </OffseasonFile>
     </>
   );
 }

@@ -22,6 +22,9 @@ import EraEndScreen from '../screens/EraEndScreen';
 import ConstructingScreen from '../screens/ConstructingScreen';
 import SimulatingSeasonScreen from '../screens/SimulatingSeasonScreen';
 import SeasonTransitionScreen from '../screens/SeasonTransitionScreen';
+import ContractsScreen from '../screens/ContractsScreen';
+import RosterFilingScreen from '../screens/RosterFilingScreen';
+import OffseasonLineupScreen from '../screens/OffseasonLineupScreen';
 
 const SCREENS = {
   cardoverview: CardOverviewScreen,
@@ -35,8 +38,11 @@ const SCREENS = {
   playoffs: PlayoffsScreen,
   results: ResultsScreen,
   seasonrecap: SeasonRecapScreen,
+  contracts: ContractsScreen,
   draft: DraftScreen,
   freeagency: FreeAgencyScreen,
+  roster: RosterFilingScreen,
+  offseasonlineup: OffseasonLineupScreen,
   simulating: SimulatingSeasonScreen,
   era_end: EraEndScreen,
 };
@@ -47,7 +53,7 @@ const SCREENS = {
 // animation's payoff rather than something hidden until Team Summary. It's still hidden during
 // the Simulating Season loading beat and the Season Recap screen — the roster the bar would
 // show is about to be replaced by next season's, same full-screen treatment as Constructing.
-const HIDE_BAR_PHASES = new Set(['simulating', 'seasonrecap', 'seasontransition']);
+const HIDE_BAR_PHASES = new Set(['simulating', 'seasonrecap', 'seasontransition', 'contracts', 'draft', 'freeagency', 'roster', 'offseasonlineup']);
 
 // Glossary/Standings/Settings/Team are client-local overlays, not part of the shared game
 // phase — a room's `state.phase` drives what everyone in the room sees, so if opening the
