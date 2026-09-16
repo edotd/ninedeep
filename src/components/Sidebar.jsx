@@ -1,6 +1,11 @@
 import BallMark from './BallMark';
+import { teamOutput } from '../game/matchup';
 
 const ERA_LENGTH = 8;
+
+function outputFor(team) {
+  return team && team.coach && team.activeIds && team.activeIds.length > 0 ? teamOutput(team) : null;
+}
 const NAV_ITEMS = [
   { key: 'team', label: 'Team' },
   { key: 'standings', label: 'Standings' },
@@ -20,6 +25,18 @@ const NAV_ITEMS = [
 export default function Sidebar({ state, myTeamId, overlay, onNav }) {
   const team = state.teams[myTeamId];
   const seasonNum = Math.min(state.season, ERA_LENGTH);
+  // A quick glance at where you stand relative to the rest of the league without leaving
+  // whatever screen you're on — sorted by Projected Output (each rotation's expected points,
+  // same figure the persistent bar and bracket show), teams that haven't set a lineup yet
+  // (no coach/active five) sink to the bottom rather than sorting as a false zero.
+  const standings = state.teams
+    .map((t) => ({ t, output: outputFor(t) }))
+    .sort((a, b) => {
+      if (a.output && b.output) return b.output.total - a.output.total;
+      if (a.output) return -1;
+      if (b.output) return 1;
+      return a.t.id - b.t.id;
+    });
   return (
     <div className="sidebar">
       <div className="sidebar-lockup">
@@ -38,6 +55,16 @@ export default function Sidebar({ state, myTeamId, overlay, onNav }) {
           </button>
         ))}
       </nav>
+      <div className="sidebar-standings">
+        <div className="sidebar-standings-heading">Live Standings</div>
+        {standings.map(({ t, output }, i) => (
+          <div key={t.id} className={'sidebar-standings-row' + (t.id === myTeamId ? ' you' : '')}>
+            <span className="sidebar-standings-rank">{i + 1}</span>
+            <span className="sidebar-standings-tri">{t.tricode}</span>
+            <span className="sidebar-standings-val">{output ? output.total.toFixed(2) : '—'}</span>
+          </div>
+        ))}
+      </div>
       <div className="sidebar-footer">
         <div className="sidebar-era-label">Era 01 · Year {seasonNum} of {ERA_LENGTH}</div>
         <div className="era-bar">

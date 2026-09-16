@@ -1,11 +1,12 @@
 import { addToRoster, creditTeamSeason } from './chemistry';
-import { TIERS, LEAGUE_ACCOLADES, REPLACEMENT_TIER, AI_NAMES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_ARCHETYPES, MARKETS, PLAYER_AGE_MAX, COACH_AGE_MAX, MATCHUP_CARD_DRAW_COUNT } from './constants';
+import { TIERS, LEAGUE_ACCOLADES, REPLACEMENT_TIER, AI_NAMES, AI_TRICODES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_ARCHETYPES, MARKETS, PLAYER_AGE_MAX, COACH_AGE_MAX, MATCHUP_CARD_DRAW_COUNT } from './constants';
 import { shuffle, weightedPick } from './rng';
 import { makeCard, randomArch, cardTotal, neededPosition, drawCoachCard, applyCoachRetention, drawMatchupModifierCard, resetMatchupDeck } from './cards';
 import { finalizeCap, rosterSalary, rollMarketCapAdj } from './economy';
 import { autoSelectFive, effectiveRating } from './roster';
 import { startDraft } from './draft';
 import { initAttendance, rollFanbaseMod, recomputeSeasonAttendance, applyPlayoffBerthMilestone, applyHomeCourtMilestone, applyChampionshipMilestone } from './fanbase';
+import { tricodeFor } from './names';
 import { simulateSeasonOutput } from './matchup';
 
 export function newEraState() {
@@ -49,6 +50,7 @@ export function buildTeams(state, teamSeats) {
   state.teams = teamSeats.map((seat, id) => ({
     id,
     name: seat.name,
+    tricode: tricodeFor(seat.name, AI_TRICODES),
     human: seat.human,
     ownerUid: seat.ownerUid ?? null,
     hand: [],

@@ -297,6 +297,14 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .sidebar-nav{display:flex;flex-direction:column;gap:3px;flex:1;}
 .sidebar-nav-item{background:none;border:none;text-align:left;font-family:var(--font-label);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-muted);padding:9px 11px;}
 .sidebar-nav-item.active{background:var(--file);color:var(--ink);}
+.sidebar-standings{border-top:1px solid var(--ink-rule);padding-top:12px;margin-top:12px;max-height:260px;overflow-y:auto;flex-shrink:0;}
+.sidebar-standings-heading{font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:6px;}
+.sidebar-standings-row{display:flex;align-items:baseline;gap:8px;padding:3px 0;font-family:var(--font-mono);font-size:11px;color:var(--file-muted);}
+.sidebar-standings-rank{width:14px;flex-shrink:0;color:var(--ink-muted);}
+.sidebar-standings-tri{flex:1;letter-spacing:.06em;color:var(--file);}
+.sidebar-standings-val{flex-shrink:0;color:var(--ink-muted);}
+.sidebar-standings-row.you{color:var(--franchise);}
+.sidebar-standings-row.you .sidebar-standings-tri,.sidebar-standings-row.you .sidebar-standings-val,.sidebar-standings-row.you .sidebar-standings-rank{color:var(--franchise);}
 .sidebar-footer{border-top:1px solid var(--ink-rule);padding-top:14px;margin-top:14px;padding-bottom:var(--desktop-bar-height);}
 .sidebar-era-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--ink-muted);text-transform:uppercase;margin-bottom:6px;}
 .sidebar-titles{display:flex;align-items:baseline;gap:7px;margin-top:12px;}

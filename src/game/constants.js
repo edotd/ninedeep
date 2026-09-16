@@ -114,6 +114,20 @@ export const MILESTONE_SEASON_END_BEST = 0.010; // seed 1
 export const MILESTONE_SEASON_END_WORST = 0.002; // seed 8 (missed playoffs = 0)
 
 export const AI_NAMES = ['Ironclad Capital', 'Harborline Holdings', 'Vantage Point Group', 'Steel & Sycamore', 'Continental Ledger Co.', 'Northgate Ventures', 'Granite Peak Partners', 'Meridian Sports Partners', 'Cobalt Ridge Capital'];
+// Curated three-letter tricodes for the fixed AI ownership groups, in the same order as
+// AI_NAMES — hand-picked rather than run through names.js's tricodeFor() derivation, which
+// exists for arbitrary player-chosen franchise names instead. See game/names.js.
+export const AI_TRICODES = {
+  'Ironclad Capital': 'IRC',
+  'Harborline Holdings': 'HAR',
+  'Vantage Point Group': 'VPG',
+  'Steel & Sycamore': 'STS',
+  'Continental Ledger Co.': 'CLC',
+  'Northgate Ventures': 'NGV',
+  'Granite Peak Partners': 'GPP',
+  'Meridian Sports Partners': 'MSP',
+  'Cobalt Ridge Capital': 'CRC',
+};
 export const CHAMPIONSHIP_BAR_MULT = 1.10;
 export const INJURY_CHANCE = 0.03;
 
