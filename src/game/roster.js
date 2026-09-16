@@ -45,7 +45,7 @@ export function offenseStatSum(team, idsOverride) {
   const sum = ids.reduce((s, id) => {
     const c = team.hand.find((h) => h.id === id);
     if (!c) return s;
-    return s + (c.stats.SCO + c.stats.PLM) * careerMultiplier(c.age, c.careerRoll);
+    return s + (c.stats.SCO + c.stats.PLM) * careerMultiplier(c, c.careerRoll);
   }, 0);
   return Math.round(sum);
 }
@@ -54,7 +54,7 @@ export function defenseStatSum(team, idsOverride) {
   const sum = ids.reduce((s, id) => {
     const c = team.hand.find((h) => h.id === id);
     if (!c) return s;
-    return s + (c.stats.DEF + c.stats.REB) * careerMultiplier(c.age, c.careerRoll);
+    return s + (c.stats.DEF + c.stats.REB) * careerMultiplier(c, c.careerRoll);
   }, 0);
   return Math.round(sum);
 }

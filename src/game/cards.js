@@ -1,7 +1,7 @@
 import { rollSkillset } from './skillsets';
 import { ARCHETYPES, POSITIONS, POSITION_MOD, COACH_ARCHETYPES, COACH_MODIFIERS, MATCHUP_MODIFIER_TYPES, PLAYER_RELATIONSHIP_MIN, PLAYER_RELATIONSHIP_MAX, LEAGUE_ACCOLADES } from './constants';
 import { rollWithVariance, weightedPick, shuffle } from './rng';
-import { randomPlayerAge, randomPrimeAge, randomCoachAge, careerMultiplier } from './aging';
+import { randomCareerStage, careerMultiplier } from './aging';
 
 // Card ids are generated from a counter stored on the shared game state (not a module-level
 // variable) so they stay unique across reconnects/reloads once state lives in Firestore.
@@ -55,7 +55,7 @@ export function makeCard(state, archName, position, tier) {
   let salary = statsToCoins(total) * (1 + contractDeviation * 0.15);
   salary = Math.max(0, Math.round(salary * 2) / 2);
   // League Accolade tiers only roll on players in their prime, except Generational Talent.
-  const age = tier.accolade && !tier.primeExempt ? randomPrimeAge() : randomPlayerAge();
+  const careerStage = tier.accolade && !tier.primeExempt ? 'Prime' : randomCareerStage();
   return {
     id: nextCardId(state),
     archetype: archName,
@@ -66,7 +66,8 @@ export function makeCard(state, archName, position, tier) {
     salary,
     contract,
     maxContract: contract,
-    age,
+    careerStage,
+    stageYears: 0,
     careerRoll: Math.random(),
   };
 }
@@ -105,7 +106,7 @@ export function randomPos() {
 // so a card's on-court output rises and falls across the era as they age.
 export function cardTotal(c) {
   const raw = c.stats.SCO + c.stats.PLM + c.stats.REB + c.stats.DEF;
-  return Math.round(raw * careerMultiplier(c.age, c.careerRoll));
+  return Math.round(raw * careerMultiplier(c, c.careerRoll));
 }
 
 export function neededPosition(team) {
@@ -143,7 +144,6 @@ export function drawCoachCard() {
     defBonus,
     offDie,
     defDie,
-    age: randomCoachAge(),
     playerRelationship: rollPlayerRelationship(mod.name),
   };
 }

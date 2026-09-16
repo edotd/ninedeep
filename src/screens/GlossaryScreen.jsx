@@ -1,5 +1,5 @@
 import { SKILLSETS, SKILLSET_PAIRS } from '../game/skillsets';
-import { ARCHETYPES, POSITIONS, POSITION_MOD, TIERS, LEAGUE_ACCOLADES, COACH_ARCHETYPES, COACH_MODIFIERS, FANBASE_ARCHETYPES, FANBASE_MODS, MARKETS, MATCHUP_MODIFIER_TYPES, PLAYER_AGE_MIN, PLAYER_AGE_MAX, PLAYER_PRIME_START, PLAYER_PRIME_BASE_END, COACH_AGE_MIN, COACH_AGE_MAX } from '../game/constants';
+import { ARCHETYPES, POSITIONS, POSITION_MOD, TIERS, LEAGUE_ACCOLADES, COACH_ARCHETYPES, COACH_MODIFIERS, FANBASE_ARCHETYPES, FANBASE_MODS, MARKETS, GM_TYPES, MATCHUP_MODIFIER_TYPES } from '../game/constants';
 import { formatCoins } from '../game/economy';
 import { CAREER_LEVELS } from '../game/aging';
 import { matchupCardEffectNote } from '../game/summaries';
@@ -21,7 +21,7 @@ const SECTIONS = [
   ['fanbase', 'Fanbase'],
   ['season-milestones', 'Season Milestones'],
   ['fanbase-mods', 'Fanbase Mods'],
-  ['market', 'Market'],
+  ['market', 'GM & Market Size'],
   ['front-office-moves', 'Front Office Moves'],
   ['skillsets-chemistry', 'Player Skillsets and Team Chemistry'],
   ['matchup-modifier-cards', 'Matchup Modifier Cards'],
@@ -52,7 +52,7 @@ function TierBlock({ t }) {
       {t.allowedPositions && <div className="statusline" style={{ marginTop: 4 }}>Only appears at: {t.allowedPositions.join(', ')}</div>}
       {t.accolade && (
         <div className="statusline" style={{ marginTop: 4 }}>
-          {t.primeExempt ? 'Can roll on a player at any age.' : 'Only rolls on a player currently in their Prime Career Level.'}
+          {t.primeExempt ? 'Can roll at any career stage.' : 'Only rolls on a player in the Prime career stage.'}
         </div>
       )}
       <div className="statusline" style={{ marginTop: 4 }}>A shorter-than-typical roll costs more per season; a longer roll costs less.</div>
@@ -70,7 +70,7 @@ export default function GlossaryScreen({ state, onBack }) {
           <div className="glossary-toc-title">Contents <span>Jump to a section</span></div>
           <ol>{SECTIONS.map(([id, label]) => <li key={id}><a href={`#${id}`}>{label}</a></li>)}</ol>
         </nav>
-        <p className="lede">Base stats shown are before position adjustment and tier multiplier. Each stat gets a small ±1 roll applied after the tier bonus, so the tier's effect always comes through. Coach bonuses and Hall of Fame's die size are rolled fresh within their range each time the card is pulled. Coach, Fanbase, and Market are pulled once and kept for the whole era.</p>
+        <p className="lede">Base stats shown are before position adjustment and tier multiplier. Each stat gets a small ±1 roll applied after the tier bonus, so the tier's effect always comes through. Coach bonuses and Hall of Fame's die size are rolled fresh within their range each time the card is pulled. Coach, Fanbase, and GM are pulled once and kept for the whole era.</p>
         <p className="lede">Every 9-card hand splits into 5 starters and 4 bench players. The first hand is dealt automatically; later seasons include an offseason draft.</p>
         <p className="lede">Before every playoff matchup, each team has a small independent chance ({injuryPct}%, adjustable in Settings) that a random active player is injured for that game. A same-position bench card subs in automatically if you have one; otherwise the team plays that matchup one player short.</p>
         <p className="lede">Each team's 4 bench players also contribute directly to that matchup's score — their combined stat total (scaled down, same as the Offense/Defense modifiers) is added on top of the dice roll. A deep bench is worth points even when it isn't on the floor.</p>
@@ -129,11 +129,11 @@ export default function GlossaryScreen({ state, onBack }) {
         {TIERS.map((t) => <TierBlock key={t.name} t={t} />)}
 
         <h2 id="league-accolades">League Accolades</h2>
-        <p className="lede">Elite, statistical-distinction tiers. These only roll on a player currently in their Prime Career Level ({PLAYER_PRIME_START}–{PLAYER_PRIME_BASE_END}) — you don't win these before or after your prime. Generational Talent is the one exception: it marks a player's ceiling rather than a given season's form, so it can appear at any age.</p>
+        <p className="lede">Elite, statistical-distinction tiers roll on players in the Prime career stage. Generational Talent is the exception and can appear at any stage.</p>
         {LEAGUE_ACCOLADES.map((t) => <TierBlock key={t.name} t={t} />)}
 
         <h2 id="aging-experience">Aging &amp; Experience</h2>
-        <p className="lede">Players are {PLAYER_AGE_MIN}–{PLAYER_AGE_MAX} years old. Career Level tracks where they are in their arc — Young (below {PLAYER_PRIME_START}), Prime ({PLAYER_PRIME_START}–{PLAYER_PRIME_BASE_END}), or Declining (above {PLAYER_PRIME_BASE_END}) — and each brings its own output bonus range. This shows up directly in a player's actual on-court output (their printed stat numbers never change, but how much they count for in matchups and seeding does), not just a label on the card.</p>
+        <p className="lede">Players move through five career stages: Young, Established, Prime, Veteran, and Declining. Each stage has an output bonus or penalty that affects matchups and seeding. Printed stats stay the same.</p>
         {Object.entries(CAREER_LEVELS).map(([name, r]) => (
           <div key={name} className="matchup-box">
             <div className="matchup-title">{name}</div>
@@ -142,15 +142,14 @@ export default function GlossaryScreen({ state, onBack }) {
             </div>
           </div>
         ))}
-        <p className="lede">Every player's exact spot within their bracket's range is fixed for their career — a strong Young prospect stays a strong performer once they hit Prime, and a graceful decliner falls off more slowly than most.</p>
-        <p className="lede">Coaches are {COACH_AGE_MIN}–{COACH_AGE_MAX} years old, but don't have a Career Level of their own — age is just one input into a team's overall Experience rating (below).</p>
+        <p className="lede">A player's career roll is fixed, so their relative place within each stage's bonus range stays consistent. Stages advance as seasons pass. Team Experience combines roster career stages, coach tenure, titles, and playoff appearances.</p>
         <div className="matchup-box">
           <div className="matchup-title">Player Relations <span className="tier-pill">1–10</span></div>
           <p className="lede" style={{ margin: '8px 0' }}>Every coach has a Player Relations rating — how well they connect with the roster. It adds a small Off/Def bonus on top of the coach's base bonuses: +0.5% per point, up to +5% at the maximum of 10.</p>
         </div>
         <div className="matchup-box">
           <div className="matchup-title">Chemistry <span className="tier-pill">1–10</span></div>
-          <p className="lede" style={{ margin: '8px 0' }}>A scouting-style rating for the whole team, blending average roster + coach age (older/more veteran counts higher) with your title count and how many seasons you've made the playoffs. Visible on the Standings tab and your Team screen once hands are dealt.</p>
+          <p className="lede" style={{ margin: '8px 0' }}>A scouting-style rating for the whole team, blending roster career stages and coach tenure with titles and playoff appearances. Visible on Standings and your Team screen once hands are dealt.</p>
         </div>
 
         <h2 id="coach-archetypes">Coach Archetypes</h2>
@@ -210,14 +209,15 @@ export default function GlossaryScreen({ state, onBack }) {
           </div>
         ))}
 
-        <h2 id="market">Market</h2>
-        <p className="lede">Sets your attendance floor and a budget boost, rolled within range at pull time. You can relocate to any market size for a budget-room fee that scales with how many tiers you're jumping — see the Team screen.</p>
+        <h2 id="market">GM &amp; Market Size</h2>
+        <p className="lede">GM cards are Aggressive, Hands-Off, or Neutral. Market size sets your attendance floor and budget increase, rolled within its range when the card is pulled. You can relocate for a budget-room fee that scales with the distance between market sizes.</p>
+        <div className="statusline">GM types: {GM_TYPES.join(' · ')}</div>
         {MARKETS.map((m) => (
           <div key={m.name} className="matchup-box">
             <div className="matchup-title">{m.name}</div>
             <div className="meta-row" style={{ borderTop: 'none', paddingTop: 0 }}>
               <GlossaryStat label="Attendance Floor" val={Math.round(m.attendanceFloor * 100) + '%'} />
-              <GlossaryStat label="Budget Boost" val={`+${formatCoins(m.capAdjMin)}–${formatCoins(m.capAdjMax)}`} />
+              <GlossaryStat label="Budget Increase" val={`+${formatCoins(m.capAdjMin)}–${formatCoins(m.capAdjMax)}`} />
               <GlossaryStat label="Draw Odds" val={m.weight + 'w'} />
             </div>
           </div>

@@ -9,8 +9,8 @@ export default function PlayerCard({ card, onClick, selected, draftStyle, roster
   const tier = cardTier(card);
   const skillset = skillsetFor(card);
   const yearsServed = Math.max(0, card.maxContract - card.contract);
-  const level = careerLevel(card.age);
-  const bonus = careerBonus(card.age, card.careerRoll);
+  const level = careerLevel(card);
+  const bonus = careerBonus(card, card.careerRoll);
   // The EXP card inverts to a dark ground, so the level indicator needs a light-on-dark
   // palette instead of the light-ground colors used everywhere else — otherwise Prime/
   // Declining/Young all read as illegibly dim navy-on-navy.
@@ -72,7 +72,7 @@ export default function PlayerCard({ card, onClick, selected, draftStyle, roster
       {!compact && (
         <div className="pcard-contract pcard-age-row" style={{ alignItems: 'flex-start' }}>
           <div>
-            <div className="pcard-microlabel" style={{ marginBottom: 3 }}>Age {card.age}{draftStyle ? '' : ` · Yr ${yearsServed + 1}/${card.maxContract}`}</div>
+            <div className="pcard-microlabel" style={{ marginBottom: 3 }}>Career Stage{draftStyle ? '' : ` · Yr ${yearsServed + 1}/${card.maxContract}`}</div>
             <div className="pcard-microlabel pcard-level" style={{ color: levelColor }}>
               {level} ({bonus >= 0 ? '+' : ''}{bonus.toFixed(2)})
             </div>

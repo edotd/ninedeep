@@ -326,13 +326,13 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 
 .sidebar{width:220px;flex-shrink:0;background:var(--ink-deep);display:flex;flex-direction:column;padding:24px 18px;box-sizing:border-box;position:sticky;top:0;height:100vh;}
 .sidebar-lockup{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-.sidebar-team{font-family:var(--font-mono);font-size:12px;color:var(--ink-muted);margin-bottom:28px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.sidebar-nav{display:flex;flex-direction:column;gap:3px;flex:1;}
+.sidebar-team{font-family:var(--font-mono);font-size:12px;color:var(--ink-muted);margin-bottom:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sidebar-nav{display:flex;flex-direction:column;gap:3px;flex:0 0 auto;}
 .sidebar-nav-item{background:none;border:none;text-align:left;font-family:var(--font-label);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-muted);padding:9px 11px;}
 .sidebar-nav-item.active{background:var(--file);color:var(--ink);}
-.sidebar-standings{border-top:1px solid var(--ink-rule);padding-top:12px;margin-top:12px;max-height:340px;overflow-y:auto;flex-shrink:0;}
+.sidebar-standings{border-top:1px solid var(--ink-rule);padding-top:12px;margin-top:12px;overflow-y:auto;flex:1 1 auto;min-height:0;}
 .sidebar-standings-heading{font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:8px;}
-.sidebar-standings-row{display:flex;align-items:baseline;gap:8px;padding:7px 0;font-family:var(--font-mono);color:var(--file-muted);}
+.sidebar-standings-row{display:flex;align-items:baseline;gap:8px;padding:5px 0;font-family:var(--font-mono);color:var(--file-muted);}
 .sidebar-standings-row + .sidebar-standings-row{border-top:1px solid var(--ink-rule);}
 .sidebar-standings-rank{width:16px;flex-shrink:0;font-size:11px;color:var(--ink-muted);}
 .sidebar-standings-tri{flex:1;font-size:15px;letter-spacing:.06em;color:var(--file);}
@@ -474,6 +474,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .fo2-effect-value.approved-ink{color:var(--approved-ink);}
 .fo2-effect-value.stamp-ink{color:var(--stamp-ink);}
 .fo2-effect-value.file{color:var(--file);}
+.fo2-mod-detail{border-top:1px solid var(--ink-rule);padding:7px 13px;color:var(--file);font:10px/1.4 var(--font-mono);}
 .fo2-footer{display:flex;justify-content:space-between;padding:7px 13px;background:var(--ink-deep);font-size:9px;letter-spacing:.06em;color:var(--ink-muted);text-transform:uppercase;}
 
 /* ================= Matchup card — square, form ground, torn stamp edge. ================= */

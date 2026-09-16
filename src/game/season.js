@@ -1,5 +1,6 @@
 import { addToRoster, creditTeamSeason } from './chemistry';
-import { TIERS, LEAGUE_ACCOLADES, REPLACEMENT_TIER, AI_NAMES, AI_TRICODES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_ARCHETYPES, MARKETS, PLAYER_AGE_MAX, COACH_AGE_MAX, MATCHUP_CARD_DRAW_COUNT } from './constants';
+import { TIERS, LEAGUE_ACCOLADES, REPLACEMENT_TIER, AI_NAMES, AI_TRICODES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_ARCHETYPES, MARKETS, GM_TYPES, MATCHUP_CARD_DRAW_COUNT } from './constants';
+import { advanceCareer } from './aging';
 import { shuffle, weightedPick } from './rng';
 import { makeCard, randomArch, randomArchForTier, cardTotal, neededPosition, drawCoachCard, applyCoachRetention, drawMatchupModifierCard, resetMatchupDeck } from './cards';
 import { finalizeCap, rosterSalary, rollMarketCapAdj } from './economy';
@@ -108,8 +109,10 @@ export function initFrontOffice(state) {
     team.coach = drawCoachCard();
     applyCoachRetention(team, team.coach);
     team.fanbaseArchetype = weightedPick(FANBASE_ARCHETYPES);
+    rollFanbaseMod(team);
     const marketDef = weightedPick(MARKETS);
     team.market = { name: marketDef.name, capAdj: rollMarketCapAdj(marketDef) };
+    team.gmType = GM_TYPES[Math.floor(Math.random() * GM_TYPES.length)];
     initAttendance(team);
     refreshAdvantage(team);
     finalizeCap(team, state.season);
@@ -121,7 +124,7 @@ export function initSeasonModifierCards(state) {
   state.leagueAvg = undefined;
   // Fanbase mods are re-rolled every season for every team, independent of the Matchup
   // Cards setting — they're a fanbase mechanic, not a matchup one.
-  state.teams.forEach((team) => { rollFanbaseMod(team); });
+  state.teams.forEach((team) => { if (state.season > 1 || !team.fanbaseMod) rollFanbaseMod(team); });
   if (state.settings && state.settings.matchupCardsEnabled === false) {
     state.teams.forEach((team) => { team.matchupCards = []; });
     state.phase = 'constructing';
@@ -142,7 +145,6 @@ export function startNewSeasonRoster(state) {
     refreshAdvantage(team);
     finalizeCap(team, state.season);
     if (!team.activeIds || !validateLineup(team).valid) team.activeIds = autoSelectFive(team.hand);
-    team.coach.age = Math.min(COACH_AGE_MAX, team.coach.age + 1);
     team.lineupConfirmed = false;
     team.financeBoostUsedThisSeason = false;
   });
@@ -279,7 +281,7 @@ export function proceedFromResults(state) {
     const kept = [];
     team.hand.forEach((c) => {
       c.contract--;
-      c.age = Math.min(PLAYER_AGE_MAX, c.age + 1);
+      advanceCareer(c);
       if (c.contract <= 0) {
         state.freeAgents.push(Object.assign({}, c, { contract: c.maxContract, lastTeamId: team.id }));
         if (team.human) state.lastExpiredPlayers.push(c);

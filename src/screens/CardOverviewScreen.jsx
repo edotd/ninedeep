@@ -7,9 +7,10 @@ import CardAnnotation from '../components/CardAnnotation';
 import { useIsDesktop } from '../hooks/useIsDesktop';
 import { drawCoachCard, applyCoachRetention } from '../game/cards';
 import { weightedPick } from '../game/rng';
-import { FANBASE_ARCHETYPES, MARKETS, MATCHUP_MODIFIER_TYPES } from '../game/constants';
+import { FANBASE_ARCHETYPES, MARKETS, GM_TYPES, MATCHUP_MODIFIER_TYPES } from '../game/constants';
 import { rollMarketCapAdj } from '../game/economy';
 import { initAttendance } from '../game/fanbase';
+import { rollFanbaseMod } from '../game/fanbase';
 
 // A throwaway team, built with the same generators the real Front Office pull uses, purely so
 // this screen has something real to show in the Front Office example — never written to
@@ -19,8 +20,10 @@ function buildSampleTeam() {
   team.coach = drawCoachCard();
   applyCoachRetention(team, team.coach);
   team.fanbaseArchetype = weightedPick(FANBASE_ARCHETYPES);
+  rollFanbaseMod(team);
   const marketDef = weightedPick(MARKETS);
   team.market = { name: marketDef.name, capAdj: rollMarketCapAdj(marketDef) };
+  team.gmType = GM_TYPES[Math.floor(Math.random() * GM_TYPES.length)];
   initAttendance(team);
   team.advantageAvailable = team.fanbaseArchetype.name === 'Die Hard';
   return team;
@@ -47,16 +50,16 @@ const PLAYER_NOTES = [
   { key: 'years', selector: '.pcard-years-row', circleSelector: '.pcard-dots', circle: true, label: 'Years left', side: 'right',
     text: 'Filled dots are years already served against the contract. Reaches zero and the player expires.' },
   { key: 'level', selector: '.pcard-age-row', circleSelector: '.pcard-level', circle: true, label: 'Career stage', side: 'right',
-    text: 'Age and career roll combine into a bonus or penalty on every stat — read it before you plan around this player long-term.' },
+    text: 'The career stage and a fixed career roll set the bonus or penalty on every stat.' },
 ];
 
 const FRONTOFFICE_NOTES = [
   { key: 'department', selector: '.fo2-header', label: 'Department', side: 'left',
-    text: 'Which part of the front office this is — Coach, Fanbase, or Market — and a three-letter code for its class.' },
+    text: 'Which part of the front office this is — Coach, Fanbase, or GM. Fanbase cards show the current modifier here.' },
   { key: 'name', selector: '.fo2-name-col', label: 'Name and tenure', side: 'left',
     text: 'Who or what it is, and how long it has held. Landscape and ink, so it can never be read as a player.' },
   { key: 'effects', selector: '.fo2-effects', label: 'Effect lines', side: 'left',
-    text: 'Always three lines, always in this order. This is the entire mechanical effect.' },
+    text: 'The effect lines show the card’s current bonuses and modifiers.' },
   { key: 'disposition', selector: '.fo2-disposition', circle: true, label: 'Disposition', side: 'right',
     text: 'One word for the whole card, in colour. Amber is a structural trait, green is favorable to you.' },
   { key: 'duration', selector: '.fo2-footer', circleSelector: '.fo2-duration', circle: true, label: 'Duration', side: 'right',

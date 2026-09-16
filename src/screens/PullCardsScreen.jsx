@@ -36,7 +36,7 @@ export default function PullCardsScreen({ state, actions, myTeamId }) {
           <h1>Front Office</h1>
           {dealing && <button className="reset-link" style={{ flexShrink: 0, marginLeft: 10 }} onClick={handleSkip}>Skip ▸▸</button>}
         </div>
-        <p className="lede">Your Coach, Fanbase, and Market cards. These are kept for the whole era — pulled once, right after your 9-card hand is dealt.</p>
+        <p className="lede">Your Coach, Fanbase, and GM cards. These are kept for the whole era — pulled once, right after your 9-card hand is dealt.</p>
         <div className="deal-centered">
           <div className="fo-deal-row">
             {KINDS.slice(0, dealtCount).map((kind) => (

@@ -17,7 +17,7 @@ const GLOSSARY_TABS = [
   {
     key: 'cards', label: 'The Cards', rows: [
       { label: 'Player Cards', text: "Rotations consist of 5 starters and 4 bench players. Find the best combination to maximize your team's potential output." },
-      { label: 'Front Office Cards', text: 'Use Coach, Fanbase and Market cards to apply bonuses and modifiers to your team.' },
+      { label: 'Front Office Cards', text: 'Use Coach, Fanbase and GM cards to apply bonuses and modifiers to your team.' },
       { label: 'Matchup Cards', text: 'Use matchup cards to target and negatively affect opposing players and teams, or apply bonuses to your own.' },
     ],
   },

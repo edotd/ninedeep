@@ -30,9 +30,7 @@ export const TIERS = [
 export const REPLACEMENT_TIER = { name: 'Undrafted', uniform: 1, peak: 1, contract: 6 };
 
 // League Accolades — elite, statistical-distinction tiers. These can only roll on a player
-// whose age falls within the Prime Career Level window (26-35), since you don't win these
-// before or after your prime — with one exception: Generational Talent (primeExempt) can
-// appear at any age, since it marks a player's ceiling, not a given season's form.
+// in the Prime career stage, with Generational Talent exempt from that restriction.
 export const LEAGUE_ACCOLADES = [
   { name: 'All-League Defensive Team', uniform: 1.10, peak: 1.30, contract: 4, count: 3, forceStat: 'DEF', accolade: true },
   { name: 'All-League 2nd Team', uniform: 1.15, peak: 1.30, contract: 4, count: 4, accolade: true },
@@ -95,6 +93,7 @@ export const MARKETS = [
   { name: 'Large', weight: 25, capAdjMin: 1.75, capAdjMax: 2.5, attendanceFloor: 0.70 },
   { name: 'Massive', weight: 10, capAdjMin: 2.5, capAdjMax: 3.5, attendanceFloor: 0.80 },
 ];
+export const GM_TYPES = ['Aggressive', 'Hands-Off', 'Neutral'];
 
 // Front-office moves (fire coach, relocate market, invest in fanbase) spend budget room —
 // see game/finances.js — rather than a separate currency, so these costs are tuned to
@@ -148,14 +147,6 @@ export const ACTION_LOG_SPEEDS = {
   instant: 0,
 };
 
-// Aging — players 20-40 with a 26-35 "Prime" Career Level window; coaches 40-65 with no
-// Career Level curve of their own. See game/aging.js for the bonus this drives.
-export const PLAYER_AGE_MIN = 20;
-export const PLAYER_AGE_MAX = 40;
-export const PLAYER_PRIME_START = 26;
-export const PLAYER_PRIME_BASE_END = 35;
-export const COACH_AGE_MIN = 40;
-export const COACH_AGE_MAX = 65;
 export const PLAYER_RELATIONSHIP_MIN = 1;
 export const PLAYER_RELATIONSHIP_MAX = 10;
 

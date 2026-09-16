@@ -136,7 +136,8 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
               <div className="ts-fo-list">
                 <div className="ts-fo-row"><span>Coach{team.coach ? ` · ${team.coach.archetype}` : ''}</span><span>{team.coach ? team.coach.modifier : '—'}</span></div>
                 <div className="ts-fo-row"><span>Fanbase</span><span>{team.fanbaseArchetype ? team.fanbaseArchetype.name : '—'}</span></div>
-                <div className="ts-fo-row"><span>Market</span><span>{team.market ? team.market.name : '—'}</span></div>
+                <div className="ts-fo-row"><span>Fanbase Modifier</span><span>{team.fanbaseMod ? `${team.fanbaseMod.name}${team.fanbaseMod.value ? ` · ${team.fanbaseMod.value}` : ''}` : 'Pending'}</span></div>
+                <div className="ts-fo-row"><span>GM</span><span>{team.gmType || 'Neutral'} · {team.market ? team.market.name : '—'} market</span></div>
               </div>
               <div className="ts-metrics">
                 <div><div className="ts-metric-label">Experience</div><div className="ts-metric-value">{chemistry !== null ? chemistry : '—'}</div></div>

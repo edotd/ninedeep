@@ -10,9 +10,9 @@ import CardTypeMark from './CardTypeMark';
 // fanbase) are new copy authored to fit the template — the game data itself only has
 // name/attendance/ability, not a one-word disposition, so these are a judgment call.
 const KIND_META = {
-  coach: { label: 'Coach', badge: 'SYS' },
-  fanbase: { label: 'Fanbase', badge: 'MOOD' },
-  market: { label: 'Market', badge: 'ECON' },
+  coach: { label: 'Coach' },
+  fanbase: { label: 'Fanbase' },
+  market: { label: 'GM' },
 };
 
 function coachContent(team) {
@@ -20,7 +20,7 @@ function coachContent(team) {
   const bonus = retentionBonus(team) + relationshipBonus(team);
   return {
     name: coach.archetype,
-    qualifier: `Age ${coach.age}` + (team.retainedStreak ? ` · Retained ${team.retainedStreak} season${team.retainedStreak === 1 ? '' : 's'}` : ''),
+    qualifier: team.retainedStreak ? `Retained ${team.retainedStreak} season${team.retainedStreak === 1 ? '' : 's'}` : 'League appointment',
     disposition: coach.modifier,
     dispositionTone: 'approved-ink',
     badgeTone: 'approved-ink',
@@ -45,32 +45,31 @@ function fanbaseContent(team) {
     qualifier: `Attendance ${attendance}%`,
     disposition: FANBASE_DISPOSITION[archetype.name] || archetype.name,
     dispositionTone: archetype.name === 'Fair Weather' ? 'franchise' : 'approved-ink',
+    badge: mod ? mod.name : 'NO MODIFIER',
     badgeTone: 'franchise',
     effects: [
       { label: 'Attendance', value: `${attendance}%`, tone: 'file' },
-      { label: 'Season Mod', value: mod ? mod.name : '—', tone: mod ? 'approved-ink' : 'file' },
+      { label: 'Season Modifier', value: mod ? `${mod.name}${mod.value ? ` · ${mod.value}` : ''}` : 'Pending', tone: mod ? 'approved-ink' : 'file' },
       { label: 'Advantage', value: isDieHard ? (team.advantageAvailable ? 'Available' : 'Used') : '—', tone: isDieHard && team.advantageAvailable ? 'approved-ink' : 'file' },
     ],
     // The archetype itself holds for the whole era, like Coach — only attendance and the
     // season mod (shown above) actually re-evaluate every season.
     duration: 'Holds Through Era 01',
+    detail: mod?.flavor,
   };
 }
-
-const MARKET_DISPOSITION = { Small: 'Modest', Medium: 'Steady', Large: 'Lucrative', Massive: 'Booming' };
 
 function marketContent(team) {
   const m = team.market;
   return {
-    name: m.name,
-    qualifier: 'Market Size',
-    disposition: MARKET_DISPOSITION[m.name] || m.name,
+    name: team.gmType || 'Neutral',
+    qualifier: 'General Manager',
+    disposition: null,
     dispositionTone: 'approved-ink',
     badgeTone: 'approved-ink',
     effects: [
-      { label: 'Budget Boost', value: `+${formatCoins(m.capAdj)}`, tone: 'approved-ink' },
-      { label: 'Size', value: m.name, tone: 'file' },
-      { label: 'Status', value: 'Current', tone: 'file' },
+      { label: 'Budget Increase', value: `+${formatCoins(m.capAdj)}`, tone: 'approved-ink' },
+      { label: 'Market Size', value: m.name, tone: 'file' },
     ],
     // Relocatable via a front-office move (see TeamSummaryScreen) — "fixed" only in that it doesn't
     // drift or get re-rolled on its own the way attendance does.
@@ -90,14 +89,14 @@ export default function FrontOfficeCard({ kind, team }) {
             <CardTypeMark type="frontoffice" size={16} />
             <span className="fo2-kind-label">{meta.label}</span>
           </span>
-          <span className={'fo2-kind-badge ' + content.badgeTone}>{meta.badge}</span>
+          {content.badge && <span className={'fo2-kind-badge ' + content.badgeTone}>{content.badge}</span>}
         </div>
         <div className="fo2-name-row">
           <div className="fo2-name-col">
             <div className="fo2-name">{content.name}</div>
             <div className="fo2-qualifier">{content.qualifier}</div>
           </div>
-          <div className={'fo2-disposition ' + content.dispositionTone}>{content.disposition}</div>
+          {content.disposition && <div className={'fo2-disposition ' + content.dispositionTone}>{content.disposition}</div>}
         </div>
         <div className="fo2-effects">
           {content.effects.map((e, i) => (
@@ -107,14 +106,16 @@ export default function FrontOfficeCard({ kind, team }) {
             </div>
           ))}
         </div>
+        {content.detail && <div className="fo2-mod-detail">{content.detail}</div>}
         <div className="fo2-footer">
           <span className="fo2-duration">{content.duration}</span>
           <span>Nine Deep</span>
         </div>
       </div>
       <ul className="fo2-bullets">
-        <li>Disposition: {content.disposition}</li>
+        {content.disposition && <li>Disposition: {content.disposition}</li>}
         {content.effects.map((e, i) => <li key={i}>{e.label}: {e.value}</li>)}
+        {content.detail && <li>{content.detail}</li>}
       </ul>
     </div>
   );

@@ -192,7 +192,7 @@ export default function DesktopBar({ state, myTeamId, actions }) {
         <div className="db-slots">
           <FrontOfficeSlot label="Coach" value={coach ? coach.modifier : null} kind="coach" team={frontOfficeTeam} onHover={handleHover} onLeave={handleLeave} />
           <FrontOfficeSlot label="Fans" value={fanbaseArchetype ? fanbaseArchetype.name : null} tone={fanbaseArchetype && fanbaseArchetype.name === 'Die Hard' ? 'notable' : null} kind="fanbase" team={frontOfficeTeam} onHover={handleHover} onLeave={handleLeave} />
-          <FrontOfficeSlot label="Market" value={market ? market.name : null} kind="market" team={frontOfficeTeam} onHover={handleHover} onLeave={handleLeave} />
+          <FrontOfficeSlot label="GM" value={market ? (team.gmType || 'Neutral') : null} kind="market" team={frontOfficeTeam} onHover={handleHover} onLeave={handleLeave} />
         </div>
       </div>
       <div className="db-section db-slots-fixed">
