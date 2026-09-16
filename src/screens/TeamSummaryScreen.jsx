@@ -2,9 +2,16 @@ import { formatCoins, rosterSalary } from '../game/economy';
 import { teamOutput } from '../game/matchup';
 import { teamExperience } from '../game/aging';
 import { cardTier, rawOverall } from '../game/cards';
+import { relocationCost } from '../game/finances';
+import { MARKETS, FINANCE_FANBASE_BOOST_COST } from '../game/constants';
+import MatchupCard from '../components/MatchupCard';
 
 const ERA_LENGTH = 8;
 const TIER_STRIP = { A: 'var(--franchise)', B: 'var(--ink)', D: 'var(--depth)', EXP: 'var(--stamp)' };
+
+function formatFinances(n) {
+  return '$' + (Math.round((n || 0) * 10) / 10);
+}
 
 function RotationCard({ card }) {
   const tier = cardTier(card);
@@ -29,15 +36,22 @@ function BenchStrip({ card }) {
   );
 }
 
-// The Team Summary screen — "the file the league keeps on you" (design brand handoff, 1a) —
-// shown once per season, after the Matchup Cards pull and the Constructing loading beat. Its
-// own Continue button confirms the season on the auto-selected five (there's no separate
-// manual lineup-picking screen any more — this is the last stop before the season locks).
-// Read-only otherwise, organised by category: rotation, cap ledger, front office. No
-// nine-slot navigation here (that's the persistent bar's job on every other screen).
-export default function TeamSummaryScreen({ state, actions, myTeamId }) {
+// The Team Summary screen — "the file the league keeps on you" (design brand handoff, 1a).
+// Serves two roles from the same markup: as the 'teamsummary' phase (shown once per season,
+// after the Matchup Cards pull and the Constructing loading beat — its own button confirms
+// the season on the auto-selected five, the last stop before the season locks), and — when
+// passed `onBack` — as the "Team" overlay reachable from the sidebar/top bar on any phase,
+// where the button instead just closes the overlay and the Team Finances moves (fire/hire
+// coach, relocate market, invest in fanbase) are available. Read-only otherwise, organised
+// by category: rotation, cap ledger, front office. No nine-slot navigation here (that's the
+// persistent bar's job on every other screen).
+export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) {
   const team = state.teams[myTeamId];
   const seasonNum = Math.min(state.season, ERA_LENGTH);
+  const finances = team.finances || 0;
+  // A quick preview of the buyout cost — the actual new hire is drawn fresh when the button
+  // is clicked, so this number is an estimate (their salary could land higher or lower).
+  const fireCostEstimate = team.coach ? Math.round((team.coach.salary + team.coach.salary) * 10) / 10 : 0;
   const activeSet = new Set(team.activeIds || []);
   const starters = team.hand.filter((c) => activeSet.has(c.id));
   const bench = team.hand.filter((c) => !activeSet.has(c.id));
@@ -130,6 +144,72 @@ export default function TeamSummaryScreen({ state, actions, myTeamId }) {
               </div>
             </div>
           </div>
+
+          {(team.matchupCards || []).length > 0 && (
+            <div className="ts-section">
+              <div className="ts-heading">Matchup Cards</div>
+              <div className="mu-deal-row" style={{ margin: 0 }}>
+                {team.matchupCards.map((c) => <MatchupCard key={c.id} card={c} />)}
+              </div>
+            </div>
+          )}
+
+          {team.coach && team.market && (
+            <div className="ts-section">
+              <div className="ts-heading">Team Finances — {formatFinances(finances)}</div>
+              <div className="pull-slot">
+                <div className="pull-label">Fire &amp; Replace Coach</div>
+                <div className="pull-extra" style={{ marginBottom: 8 }}>Pay off {team.coach.name}'s salary plus the new hire's — a random new coach, no guaranteed upgrade. Est. cost {formatFinances(fireCostEstimate)}+.</div>
+                <button
+                  className="secondary"
+                  style={{ width: '100%' }}
+                  onClick={() => {
+                    const res = actions.fireCoach(myTeamId);
+                    if (res && res.ok === false) alert(res.msg);
+                  }}
+                >
+                  Fire {team.coach.name}
+                </button>
+              </div>
+              <div className="pull-slot">
+                <div className="pull-label">Relocate Market</div>
+                <div className="pull-extra" style={{ marginBottom: 8 }}>Jump to any market size — bigger jumps cost more. Currently {team.market.name}.</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {MARKETS.filter((m) => m.name !== team.market.name).map((m) => {
+                    const cost = relocationCost(team, m.name);
+                    return (
+                      <button
+                        key={m.name}
+                        className="secondary"
+                        style={{ width: '100%' }}
+                        onClick={() => {
+                          const res = actions.relocateMarket(myTeamId, m.name);
+                          if (res && res.ok === false) alert(res.msg);
+                        }}
+                      >
+                        Relocate to {m.name} — {formatFinances(cost)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="pull-slot">
+                <div className="pull-label">Invest in Fanbase</div>
+                <div className="pull-extra" style={{ marginBottom: 8 }}>A small, permanent bump to your attendance baseline. Once per season.</div>
+                <button
+                  className="secondary"
+                  style={{ width: '100%' }}
+                  disabled={team.financeBoostUsedThisSeason}
+                  onClick={() => {
+                    const res = actions.investInFanbase(myTeamId);
+                    if (res && res.ok === false) alert(res.msg);
+                  }}
+                >
+                  {team.financeBoostUsedThisSeason ? 'Already Invested This Season' : `Invest — ${formatFinances(FINANCE_FANBASE_BOOST_COST)}`}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {team.lineupConfirmed && waitingOn.length > 0 && (
@@ -137,16 +217,20 @@ export default function TeamSummaryScreen({ state, actions, myTeamId }) {
         )}
       </div>
       <div className="bottombar">
-        <button
-          className="primary"
-          disabled={team.lineupConfirmed}
-          onClick={() => {
-            const res = actions.confirmLineup(myTeamId);
-            if (res && res.valid === false) alert(res.msg);
-          }}
-        >
-          {team.lineupConfirmed ? 'Waiting…' : 'Begin Season'}
-        </button>
+        {onBack ? (
+          <button className="primary" onClick={onBack}>Back</button>
+        ) : (
+          <button
+            className="primary"
+            disabled={team.lineupConfirmed}
+            onClick={() => {
+              const res = actions.confirmLineup(myTeamId);
+              if (res && res.valid === false) alert(res.msg);
+            }}
+          >
+            {team.lineupConfirmed ? 'Waiting…' : 'Begin Season'}
+          </button>
+        )}
       </div>
     </>
   );

@@ -72,7 +72,7 @@ function marketContent(team) {
       { label: 'Size', value: m.name, tone: 'file' },
       { label: 'Status', value: 'Current', tone: 'file' },
     ],
-    // Relocatable via Team Finances (see TeamScreen) — "fixed" only in that it doesn't
+    // Relocatable via Team Finances (see TeamSummaryScreen) — "fixed" only in that it doesn't
     // drift or get re-rolled on its own the way attendance does.
     duration: 'Holds Until Relocated',
   };

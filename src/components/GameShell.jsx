@@ -7,7 +7,6 @@ import { useIsDesktop } from '../hooks/useIsDesktop';
 import GlossaryScreen from '../screens/GlossaryScreen';
 import LeagueScreen from '../screens/LeagueScreen';
 import SettingsScreen from '../screens/SettingsScreen';
-import TeamScreen from '../screens/TeamScreen';
 import CardOverviewScreen from '../screens/CardOverviewScreen';
 import PullCardsScreen from '../screens/PullCardsScreen';
 import PullHandScreen from '../screens/PullHandScreen';
@@ -81,7 +80,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
   if (overlay === 'glossary') overlayBody = <GlossaryScreen state={state} onBack={close} />;
   else if (overlay === 'settings') overlayBody = <SettingsScreen state={state} actions={actions} onBack={close} onNewEra={onNewEra} />;
   else if (overlay === 'standings') overlayBody = <LeagueScreen state={state} myTeamId={myTeamId} onBack={close} />;
-  else if (overlay === 'team') overlayBody = <TeamScreen state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
+  else if (overlay === 'team') overlayBody = <TeamSummaryScreen state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
 
   const Screen = SCREENS[state.phase];
   const mainBody = overlayBody || (Screen

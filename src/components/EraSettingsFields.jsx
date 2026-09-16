@@ -1,7 +1,7 @@
-// Win Condition + Matchup Cards controls — shared by the Settings screen (mid-era, via
-// actions.updateSettings) and the pre-era Setup screens (solo SetupScreen, the online host's
-// Era Setup step in the Lobby), since state.settings already exists with sane defaults
-// before an era starts, so there's nothing solo/host-specific to plumb through separately.
+// Win Condition + Matchup Cards controls — used by the Settings screen (mid-era, via
+// actions.updateSettings) and the online host's Era Setup step in the Lobby (the solo
+// equivalent lives inline on EntryScreen's Solo tab, styled to match that screen instead),
+// since state.settings already exists with sane defaults before an era starts.
 export default function EraSettingsFields({ settings, actions }) {
   const winCondition = settings.winCondition || 'bar';
   const matchupCardsEnabled = settings.matchupCardsEnabled !== false;

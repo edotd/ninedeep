@@ -47,7 +47,7 @@ export async function createRoom({ hostName, seatCount }) {
       injuryChance: INJURY_CHANCE,
       championshipBarMult: CHAMPIONSHIP_BAR_MULT,
       actionLogSpeed: 'normal',
-      winCondition: 'bar',
+      winCondition: 'outright',
       matchupCardsEnabled: true,
     },
   });

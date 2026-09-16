@@ -22,7 +22,7 @@ export function newEraState() {
       injuryChance: INJURY_CHANCE,
       championshipBarMult: CHAMPIONSHIP_BAR_MULT,
       actionLogSpeed: 'normal',
-      winCondition: 'bar', // 'bar' = must clear the championship bar; 'outright' = winning the Finals is enough
+      winCondition: 'outright', // 'bar' = must clear the championship bar; 'outright' = winning the Finals is enough
       matchupCardsEnabled: true,
     },
   };
