@@ -76,7 +76,7 @@ function MatchupSlot({ card, onHover, onLeave }) {
   if (!card) return <div className="db-slot db-matchup-slot empty"><span className="db-slot-empty-plus">+</span></div>;
   return (
     <div
-      className="db-slot db-matchup-slot"
+      className={'db-slot db-matchup-slot' + (card.used ? ' used' : '')}
       onMouseEnter={(e) => onHover(e.currentTarget, 'matchup', <MatchupCard card={card} />)}
       onMouseLeave={onLeave}
     >
@@ -204,7 +204,7 @@ export default function DesktopBar({ state, myTeamId, actions }) {
       <div className="db-section db-metric chemistry">
         <div className="db-heading">Chemistry</div>
         <div className="db-chem-grade">{chemistry !== null ? synergy.grade : '—'}</div>
-        <div className="chemistry-bar-detail">{synergy.score}/100 · +{synergy.offense}% OFF · +{synergy.defense}% DEF{synergy.flat ? ' · +1 flat' : ''}</div>
+        <div className="chemistry-bar-detail">{chemistry !== null ? `${synergy.score}/100` : '—'}</div>
       </div>
       <div className="db-section db-metric budget">
         <div className="db-heading">Budget</div>

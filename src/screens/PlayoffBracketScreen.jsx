@@ -28,7 +28,7 @@ function TeamRow({ seed, team, isMine, output, result }) {
   return (
     <div className="bracket-team-row">
       <div className="bracket-team-seed">{seed}</div>
-      <div className={'bracket-team-name' + (isMine ? ' mine' : '')}>{team.name}</div>
+      <div className={'bracket-team-name' + (isMine ? ' mine' : '')} title={team.name}>{team.tricode || team.name}</div>
       <div className="bracket-team-scores">
         {result ? (
           <>
@@ -137,13 +137,13 @@ function ZoomedBracket({ matches, myTeamId, actions, segment, onSegmentChange, o
           </div>
         )}
         {segment === 'right' && (
-          <div className="bracket-zoom-cluster">
+          <div className="bracket-zoom-cluster reverse">
+            {node(5, 'Semifinal 2', { big: true })}
+            <div className="bracket-zoom-arrow rev">→</div>
             <div className="bracket-zoom-quarters">
               {node(2, 'Quarterfinal 3')}
               {node(3, 'Quarterfinal 4')}
             </div>
-            <div className="bracket-zoom-arrow">→</div>
-            {node(5, 'Semifinal 2', { big: true })}
           </div>
         )}
       </div>

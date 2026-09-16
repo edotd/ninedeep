@@ -297,12 +297,13 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .sidebar-nav{display:flex;flex-direction:column;gap:3px;flex:1;}
 .sidebar-nav-item{background:none;border:none;text-align:left;font-family:var(--font-label);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-muted);padding:9px 11px;}
 .sidebar-nav-item.active{background:var(--file);color:var(--ink);}
-.sidebar-standings{border-top:1px solid var(--ink-rule);padding-top:12px;margin-top:12px;max-height:260px;overflow-y:auto;flex-shrink:0;}
-.sidebar-standings-heading{font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:6px;}
-.sidebar-standings-row{display:flex;align-items:baseline;gap:8px;padding:3px 0;font-family:var(--font-mono);font-size:11px;color:var(--file-muted);}
-.sidebar-standings-rank{width:14px;flex-shrink:0;color:var(--ink-muted);}
-.sidebar-standings-tri{flex:1;letter-spacing:.06em;color:var(--file);}
-.sidebar-standings-val{flex-shrink:0;color:var(--ink-muted);}
+.sidebar-standings{border-top:1px solid var(--ink-rule);padding-top:12px;margin-top:12px;max-height:340px;overflow-y:auto;flex-shrink:0;}
+.sidebar-standings-heading{font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:8px;}
+.sidebar-standings-row{display:flex;align-items:baseline;gap:8px;padding:7px 0;font-family:var(--font-mono);color:var(--file-muted);}
+.sidebar-standings-row + .sidebar-standings-row{border-top:1px solid var(--ink-rule);}
+.sidebar-standings-rank{width:16px;flex-shrink:0;font-size:11px;color:var(--ink-muted);}
+.sidebar-standings-tri{flex:1;font-size:15px;letter-spacing:.06em;color:var(--file);}
+.sidebar-standings-val{flex-shrink:0;font-size:14px;color:var(--ink-muted);}
 .sidebar-standings-row.you{color:var(--franchise);}
 .sidebar-standings-row.you .sidebar-standings-tri,.sidebar-standings-row.you .sidebar-standings-val,.sidebar-standings-row.you .sidebar-standings-rank{color:var(--franchise);}
 .sidebar-footer{border-top:1px solid var(--ink-rule);padding-top:14px;margin-top:14px;padding-bottom:var(--desktop-bar-height);}
@@ -330,6 +331,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .db-section + .db-section{border-left:1px solid var(--ink-rule);}
 .db-slots-fixed{flex-shrink:0;}
 .db-heading{font-family:var(--font-label);font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:6px;white-space:nowrap;}
+.db-metric .db-heading{margin-bottom:0;}
 .db-heading.starters{color:var(--franchise);}
 .db-heading.matchup{color:var(--stamp);}
 .db-metric.output .db-heading{color:var(--franchise);}
@@ -356,29 +358,36 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 
 .db-matchup-slot{width:88px;height:66px;background:var(--ink);box-shadow:inset 0 0 0 1.5px var(--stamp);padding:6px 7px;display:flex;flex-direction:column;justify-content:space-between;}
 .db-matchup-slot.empty{box-shadow:inset 0 0 0 1.5px var(--ink-rule);align-items:center;justify-content:center;}
+.db-matchup-slot.used{box-shadow:inset 0 0 0 1.5px var(--ink-rule);}
 .db-matchup-label{font-family:var(--font-mono);font-size:8px;letter-spacing:.06em;color:var(--stamp);text-transform:uppercase;}
+.db-matchup-slot.used .db-matchup-label{color:var(--ink-muted);}
 .db-matchup-value{font-family:var(--font-display);font-size:13px;color:var(--file);line-height:1.15;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.db-matchup-slot.used .db-matchup-value{color:var(--ink-muted);text-decoration:line-through;}
 
-.db-metric{flex-shrink:0;justify-content:center;align-items:center;text-align:center;padding:0 16px;}
-.db-metric.chemistry{flex:0.5;}
-.db-metric.budget{flex:0.85;}
-.db-metric.output{flex:1.1;}
-.db-metric-value{font-family:var(--font-display);font-size:36px;color:var(--file);line-height:.9;}
-.db-metric-value.accent{color:var(--franchise);font-size:38px;}
+.db-metric{flex-shrink:0;justify-content:space-between;align-items:center;text-align:center;padding:8px 16px;box-sizing:border-box;}
+.db-metric.chemistry{flex:0.7;}
+.db-metric.budget{flex:0.9;}
+.db-metric.output{flex:1.15;}
+.db-metric-value{font-family:var(--font-display);font-size:38px;color:var(--file);line-height:.9;}
+.db-metric-value.accent{color:var(--franchise);font-size:40px;}
 /* The chemistry letter grade is the one metric block with nothing beneath it competing for
    room except its own detail line, so it fills essentially the whole box height instead of
-   matching the other two metrics' figure size. */
-.db-chem-grade{font-family:var(--font-display);font-size:58px;line-height:.82;color:var(--file);}
+   matching the other two metrics' figure size. justify-content:space-between (above) pins the
+   heading and detail line to the box's top/bottom padding edges symmetrically, with the grade
+   filling whatever's left between them — so as long as all three actually fit the box (see
+   chemistry-bar-detail below), the spacing above/below the grade is equal by construction
+   rather than by accident. */
+.db-chem-grade{font-family:var(--font-display);font-size:46px;line-height:.85;color:var(--file);}
 
-.db-budget-figures{font-family:var(--font-display);font-size:28px;white-space:nowrap;}
+.db-budget-figures{font-family:var(--font-display);font-size:34px;white-space:nowrap;}
 .db-budget-figures .committed{color:var(--file);}
 .db-budget-figures .slash{color:var(--ink-rule);}
 .db-budget-figures .limit{color:var(--ink-muted);}
 .db-budget-figures.over .committed{color:var(--stamp);}
-.db-budget-room{margin-top:4px;font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;color:var(--approved-file);text-transform:uppercase;white-space:nowrap;}
+.db-budget-room{font-family:var(--font-mono);font-size:11px;letter-spacing:.04em;color:var(--approved-file);text-transform:uppercase;white-space:nowrap;}
 .db-budget-room.over{color:var(--stamp-text);}
 
-.db-output-breakdown{display:flex;justify-content:center;gap:10px;margin-top:4px;font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;color:var(--ink-muted);text-transform:uppercase;white-space:nowrap;}
+.db-output-breakdown{display:flex;justify-content:center;gap:10px;font-family:var(--font-mono);font-size:11px;letter-spacing:.04em;color:var(--ink-muted);text-transform:uppercase;white-space:nowrap;}
 
 .db-slot{cursor:default;}
 .db-player-slot:not(.empty){cursor:pointer;}
@@ -817,6 +826,10 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 @media (max-width:700px){
   .bracket-zoom-cluster{flex-direction:column;gap:14px;}
   .bracket-zoom-cluster.middle{flex-direction:column;}
+  /* The right cluster's DOM order is SF2, arrow, quarters (so desktop reads quarters-on-the-
+     right, feeding left into SF2) — reversed back to quarters-first here so a stacked mobile
+     column still reads top-to-bottom as feeders into what they feed, same as the left cluster. */
+  .bracket-zoom-cluster.reverse{flex-direction:column-reverse;}
   .bracket-zoom-arrow{transform:rotate(90deg);font-size:22px;}
   .bracket-zoom-arrow.rev{transform:rotate(90deg);}
   .bracket-zoom-quarters{max-width:none;width:100%;}
@@ -1151,7 +1164,7 @@ body:has(.entry-screen){padding-bottom:0;}
 .chemistry-swaps{display:grid;gap:10px;margin-top:16px;}
 .chemistry-swaps select{display:block;width:100%;max-width:100%;margin-top:8px;padding:10px;}
 .chemistry-swaps button{white-space:normal;text-align:left;line-height:1.5;}
-.chemistry-bar-detail{font-size:10px;line-height:1.4;max-width:150px;}
+.chemistry-bar-detail{font-size:9px;line-height:1.3;max-width:150px;}
 
 /* ================= Season transition ("The Odometer", design brand handoff "Nine Deep
    Transitions" 2A) — a one-time beat between seasons, for every season after the first. Ink
