@@ -357,12 +357,17 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .db-metric.output{flex:1.1;}
 .db-metric-value{font-family:var(--font-display);font-size:28px;color:var(--file);line-height:.9;}
 .db-metric-value.accent{color:var(--franchise);font-size:30px;}
+/* The chemistry letter grade is the one metric block with nothing beneath it competing for
+   room except its own detail line, so it fills essentially the whole box height instead of
+   matching the other two metrics' figure size. */
+.db-chem-grade{font-family:var(--font-display);font-size:58px;line-height:.82;color:var(--file);}
 
 .db-cap-figures{font-family:var(--font-display);font-size:22px;white-space:nowrap;}
 .db-cap-figures .committed{color:var(--file);}
 .db-cap-figures .slash{color:var(--ink-rule);}
 .db-cap-figures .limit{color:var(--ink-muted);}
 .db-cap-figures.over .committed{color:var(--stamp);}
+.db-finances{margin-top:4px;font-family:var(--font-mono);font-size:9px;letter-spacing:.04em;color:var(--ink-muted);text-transform:uppercase;white-space:nowrap;}
 
 .db-output-breakdown{display:flex;gap:10px;margin-top:4px;font-family:var(--font-mono);font-size:9px;letter-spacing:.04em;color:var(--ink-muted);text-transform:uppercase;white-space:nowrap;}
 

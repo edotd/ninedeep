@@ -1,6 +1,6 @@
 import TeamChemistry from '../components/TeamChemistry';
 import { skillsetFor } from '../game/skillsets';
-import { formatCoins, rosterSalary } from '../game/economy';
+import { formatCoins, formatFinances, rosterSalary } from '../game/economy';
 import { teamOutput } from '../game/matchup';
 import { teamExperience } from '../game/aging';
 import { cardTier, rawOverall } from '../game/cards';
@@ -10,10 +10,6 @@ import MatchupCard from '../components/MatchupCard';
 
 const ERA_LENGTH = 8;
 const TIER_STRIP = { A: 'var(--franchise)', B: 'var(--ink)', D: 'var(--depth)', EXP: 'var(--stamp)' };
-
-function formatFinances(n) {
-  return '$' + (Math.round((n || 0) * 10) / 10);
-}
 
 function RotationCard({ card }) {
   const tier = cardTier(card);

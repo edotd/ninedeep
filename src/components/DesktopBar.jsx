@@ -1,6 +1,6 @@
 import { teamSynergy } from '../game/skillsets';
 import { useRef, useState } from 'react';
-import { formatCoins, rosterSalary } from '../game/economy';
+import { formatCoins, formatFinances, rosterSalary } from '../game/economy';
 import { teamOutput } from '../game/matchup';
 import { teamExperience } from '../game/aging';
 import { cardTier, rawOverall } from '../game/cards';
@@ -202,7 +202,7 @@ export default function DesktopBar({ state, myTeamId, actions }) {
       </div>
       <div className="db-section db-metric chemistry">
         <div className="db-heading">Chemistry</div>
-        <div className="db-metric-value">{chemistry !== null ? synergy.grade : '—'}</div>
+        <div className="db-chem-grade">{chemistry !== null ? synergy.grade : '—'}</div>
         <div className="chemistry-bar-detail">{synergy.score}/100 · +{synergy.offense}% OFF · +{synergy.defense}% DEF{synergy.flat ? ' · +1 flat' : ''}</div>
       </div>
       <div className="db-section db-metric cap">
@@ -212,6 +212,7 @@ export default function DesktopBar({ state, myTeamId, actions }) {
           <span className="slash"> / </span>
           <span className="limit">{cap !== undefined ? formatCoins(cap) : '—'}</span>
         </div>
+        <div className="db-finances">Finances {formatFinances(team.finances)}</div>
       </div>
       <div className="db-section db-metric output">
         <div className="db-heading">Projected Output</div>

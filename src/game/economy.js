@@ -8,6 +8,13 @@ export function formatCoins(n) {
   return '🪙' + text;
 }
 
+// Team Finances (game/finances.js) is a currency separate from the salary cap — spent on
+// front-office moves, not roster moves — so it gets its own '$' prefix rather than the cap's
+// coin glyph, wherever it's shown (Team Summary's Team Finances section, the persistent bar).
+export function formatFinances(n) {
+  return '$' + (Math.round((n || 0) * 10) / 10);
+}
+
 // Market size only ever helps the cap — roll a concrete boost within the market's range
 // once, at pull time, so it stays fixed for the rest of the era.
 export function rollMarketCapAdj(market) {
