@@ -1,3 +1,5 @@
+import CardTypeMark from '../components/CardTypeMark';
+
 function ordinal(n) {
   const s = ['th', 'st', 'nd', 'rd'];
   const v = n % 100;
@@ -34,17 +36,28 @@ export default function StandingsScreen({ state, actions, myTeamId }) {
               <span>Def Avg</span>
               <span>Rating</span>
             </div>
-            {state.seeds.map((s) => (
+            {state.seeds.map((s) => {
+              const seedingCards = (s.t.matchupCards || []).filter((c) => c.effectType === 'SEEDING_PERCENT' && c.used);
+              return (
               <div key={s.t.name} className={'standings-row' + (s.t === team ? ' you' : '') + (s.t.seed > 8 ? ' out' : '')}>
                 <span className="standings-team">
                   <span className="standings-seed">#{s.t.seed}</span> {s.t.name}
+                  {seedingCards.length > 0 && (
+                    <span
+                      className="standings-seeding-icon"
+                      title={seedingCards.map((c) => `${c.name} +${c.value}%`).join(' · ') + ' Seeding Roll'}
+                    >
+                      <CardTypeMark type="matchup" size={13} />
+                    </span>
+                  )}
                   {s.t.seed > 8 && <span className="standings-out-tag"> — out</span>}
                 </span>
                 <span>{s.t.simOffenseAvg != null ? s.t.simOffenseAvg : '—'}</span>
                 <span>{s.t.simDefenseAvg != null ? s.t.simDefenseAvg : '—'}</span>
                 <span className="standings-rating">{Math.round(s.val)}</span>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

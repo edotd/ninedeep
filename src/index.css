@@ -889,6 +889,7 @@ html[data-theme="dark"] .wordmark-ink{color:var(--file);}
 .standings-seed{font-family:var(--font-display);font-size:18px;color:var(--depth-nontext);}
 .standings-row.you .standings-seed{color:var(--franchise);}
 .standings-out-tag{color:var(--ink-muted);font-size:12px;}
+.standings-seeding-icon{display:inline-flex;align-self:center;color:var(--franchise);cursor:default;}
 .standings-rating{font-family:var(--font-display);font-size:19px;color:var(--file);}
 .standings-row.you .standings-rating{color:var(--franchise);}
 @media (max-width:600px){.standings-head-row,.standings-row{grid-template-columns:1fr 64px 64px 56px;font-size:12px;}.standings-result{font-size:30px;}.standings-bar-value{font-size:38px;}}
