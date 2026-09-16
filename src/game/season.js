@@ -1,7 +1,7 @@
 import { addToRoster, creditTeamSeason } from './chemistry';
 import { TIERS, LEAGUE_ACCOLADES, REPLACEMENT_TIER, AI_NAMES, AI_TRICODES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_ARCHETYPES, MARKETS, PLAYER_AGE_MAX, COACH_AGE_MAX, MATCHUP_CARD_DRAW_COUNT } from './constants';
 import { shuffle, weightedPick } from './rng';
-import { makeCard, randomArch, cardTotal, neededPosition, drawCoachCard, applyCoachRetention, drawMatchupModifierCard, resetMatchupDeck } from './cards';
+import { makeCard, randomArch, randomArchForTier, cardTotal, neededPosition, drawCoachCard, applyCoachRetention, drawMatchupModifierCard, resetMatchupDeck } from './cards';
 import { finalizeCap, rosterSalary, rollMarketCapAdj } from './economy';
 import { autoSelectFive, effectiveRating } from './roster';
 import { startDraft } from './draft';
@@ -35,7 +35,7 @@ export function buildStarPool(state) {
     for (let i = 0; i < tier.count; i++) {
       const posPool = tier.allowedPositions || POSITIONS;
       const pos = posPool[Math.floor(Math.random() * posPool.length)];
-      state.starPool.push(makeCard(state, randomArch(), pos, tier));
+      state.starPool.push(makeCard(state, randomArchForTier(tier), pos, tier));
     }
   });
   shuffle(state.starPool);

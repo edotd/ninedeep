@@ -1,6 +1,6 @@
 import { addToRoster } from './chemistry';
 import { TIERS, LEAGUE_ACCOLADES, POSITIONS } from './constants';
-import { makeCard, randomArch, cardTotal, neededPosition } from './cards';
+import { makeCard, randomArchForTier, cardTotal, neededPosition } from './cards';
 
 // Extra cards beyond exactly what's needed to fill every open roster spot, so there's
 // real choice (and something worth trading for) at the draft table.
@@ -25,7 +25,7 @@ export function buildDraftPool(state, count) {
     const tier = pickWeightedTier(tierPool);
     const posPool = tier.allowedPositions || POSITIONS;
     const pos = posPool[Math.floor(Math.random() * posPool.length)];
-    cards.push(makeCard(state, randomArch(), pos, tier));
+    cards.push(makeCard(state, randomArchForTier(tier), pos, tier));
   }
   return cards;
 }

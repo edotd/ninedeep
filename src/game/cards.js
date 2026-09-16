@@ -60,7 +60,7 @@ export function makeCard(state, archName, position, tier) {
     id: nextCardId(state),
     archetype: archName,
     position,
-    skillsetId: rollSkillset(position),
+    skillsetId: rollSkillset(position, archName),
     tierName: tier.name,
     stats,
     salary,
@@ -74,6 +74,29 @@ export function makeCard(state, archName, position, tier) {
 export function randomArch() {
   const a = Object.keys(ARCHETYPES);
   return a[Math.floor(Math.random() * a.length)];
+}
+
+// Archetypes whose peak stat is the given one — 'Balanced' peaks SCO on paper but its base
+// stats are flat across the board, so it's a plausible fit for any stat and is included
+// everywhere rather than just under SCO.
+const STAT_ARCHETYPES = {
+  SCO: ['Scorer', 'Marksman', 'Balanced'],
+  PLM: ['Pass-First', 'Playmaker', 'Balanced'],
+  REB: ['Rebounder', 'Balanced'],
+  DEF: ['Defender', 'Balanced'],
+};
+
+// A tier's forceStat/forceStats (Scoring Champion, Rebounding Champion, All-League Defensive
+// Team, the High IQ/Hustler base tiers, etc.) names the stat the card is built around — so the
+// archetype drawn for it should actually be good at that stat too, instead of randomArch()
+// occasionally handing a Scoring Champion card to a Pass-First archetype. Tiers with no forced
+// stat (All-League 1st/2nd Team, MVP Candidate, Generational Talent, Role Player, ...) stay
+// fully random — those honors plausibly go to any kind of player.
+export function randomArchForTier(tier) {
+  const stats = tier.forceStats || (tier.forceStat ? [tier.forceStat] : null);
+  if (!stats) return randomArch();
+  const pool = [...new Set(stats.flatMap((s) => STAT_ARCHETYPES[s] || []))];
+  return pool.length ? pool[Math.floor(Math.random() * pool.length)] : randomArch();
 }
 export function randomPos() {
   return POSITIONS[Math.floor(Math.random() * 3)];

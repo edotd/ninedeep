@@ -1,39 +1,56 @@
 import { chemistryDetails } from './chemistry';
 import { weightedPick } from './rng';
 
-// Position preferences affect draw odds (3:1), never eligibility or player quality.
+// Position preferences affect draw odds (3:1), never eligibility. `families` is which
+// archetype peak-stat(s) (SCO/PLM/REB/DEF) the skillset's flavor actually fits, or 'ANY' for
+// the handful with no stat identity — it's an eligibility gate, not a weight: an archetype
+// never rolls a skillset outside its families (see rollSkillset/ARCHETYPE_FAMILY below), so a
+// Pass-First guard can't come up Rim Runner just at low odds — it simply can't happen.
 const rows = [
-  ['Three and D', 'Spaces the floor and defends the perimeter.', 'Guard,Forward'],
-  ['Vertical Finisher', 'Finishes lobs above the rim.', 'Forward,Big'],
-  ['Locker Room Guy', 'Adds +1 flat Offense and Defense from anywhere on the roster; does not stack.', 'Guard,Forward,Big'],
-  ['Three Point Specialist', 'Punishes defenses that leave a shooter open.', 'Guard,Forward'],
-  ['Drive and Kick', 'Penetrates and finds open shooters.', 'Guard'],
-  ['Pick-and-Roll Maestro', 'Creates advantages through ball screens.', 'Guard'],
-  ['Lob Architect', 'Finds teammates moving toward the rim.', 'Guard,Forward'],
-  ['Post Technician', 'Scores inside and draws help defenders.', 'Forward,Big'],
-  ['Passing Hub', 'Directs offense with quick reads and precise passes.', 'Forward,Big'],
-  ['Backdoor Cutter', 'Exploits defenders watching the ball.', 'Guard,Forward'],
-  ['Screen Setter', 'Creates separation for teammates.', 'Forward,Big'],
-  ['Floor-Stretching Big', 'Pulls interior defenders away from the basket.', 'Big'],
-  ['Rim Runner', 'Sprints into early scoring opportunities.', 'Forward,Big'],
-  ['Movement Shooter', 'Scores while relocating and coming off screens.', 'Guard,Forward'],
-  ['Downhill Slasher', 'Attacks openings and finishes through traffic.', 'Guard,Forward'],
-  ['Grab and Go', 'Turns defensive rebounds into immediate attacks.', 'Guard,Forward'],
-  ['Outlet Specialist', 'Starts fast breaks with an early pass.', 'Forward,Big'],
-  ['Rim Protector', 'Covers the basket when teammates get beaten.', 'Big'],
-  ['Point-of-Attack Defender', 'Pressures the ball and contains penetration.', 'Guard,Forward'],
-  ['Glass Cleaner', 'Secures rebounds to end defensive possessions.', 'Forward,Big'],
-  ['Switch Defender', 'Covers different positions without breaking the scheme.', 'Forward,Big'],
-  ['Help-Side Anchor', 'Rotates, covers gaps, and organizes defense.', 'Forward,Big'],
-  ['Passing-Lane Disruptor', 'Anticipates passes and creates turnovers.', 'Guard,Forward'],
-  ['Closer', 'Converts difficult scoring opportunities.', 'Guard,Forward'],
+  ['Three and D', 'Spaces the floor and defends the perimeter.', 'Guard,Forward', 'SCO,DEF'],
+  ['Vertical Finisher', 'Finishes lobs above the rim.', 'Forward,Big', 'SCO'],
+  ['Locker Room Guy', 'Adds +1 flat Offense and Defense from anywhere on the roster; does not stack.', 'Guard,Forward,Big', 'ANY'],
+  ['Three Point Specialist', 'Punishes defenses that leave a shooter open.', 'Guard,Forward', 'SCO'],
+  ['Drive and Kick', 'Penetrates and finds open shooters.', 'Guard', 'PLM'],
+  ['Pick-and-Roll Maestro', 'Creates advantages through ball screens.', 'Guard', 'PLM'],
+  ['Lob Architect', 'Finds teammates moving toward the rim.', 'Guard,Forward', 'PLM'],
+  ['Post Technician', 'Scores inside and draws help defenders.', 'Forward,Big', 'SCO'],
+  ['Passing Hub', 'Directs offense with quick reads and precise passes.', 'Forward,Big', 'PLM'],
+  ['Backdoor Cutter', 'Exploits defenders watching the ball.', 'Guard,Forward', 'SCO'],
+  ['Screen Setter', 'Creates separation for teammates.', 'Forward,Big', 'PLM'],
+  ['Floor-Stretching Big', 'Pulls interior defenders away from the basket.', 'Big', 'SCO'],
+  ['Rim Runner', 'Sprints into early scoring opportunities.', 'Forward,Big', 'SCO'],
+  ['Movement Shooter', 'Scores while relocating and coming off screens.', 'Guard,Forward', 'SCO'],
+  ['Downhill Slasher', 'Attacks openings and finishes through traffic.', 'Guard,Forward', 'SCO'],
+  ['Grab and Go', 'Turns defensive rebounds into immediate attacks.', 'Guard,Forward', 'REB'],
+  ['Outlet Specialist', 'Starts fast breaks with an early pass.', 'Forward,Big', 'REB'],
+  ['Rim Protector', 'Covers the basket when teammates get beaten.', 'Big', 'DEF'],
+  ['Point-of-Attack Defender', 'Pressures the ball and contains penetration.', 'Guard,Forward', 'DEF'],
+  ['Glass Cleaner', 'Secures rebounds to end defensive possessions.', 'Forward,Big', 'REB'],
+  ['Switch Defender', 'Covers different positions without breaking the scheme.', 'Forward,Big', 'DEF'],
+  ['Help-Side Anchor', 'Rotates, covers gaps, and organizes defense.', 'Forward,Big', 'DEF'],
+  ['Passing-Lane Disruptor', 'Anticipates passes and creates turnovers.', 'Guard,Forward', 'DEF'],
+  ['Closer', 'Converts difficult scoring opportunities.', 'Guard,Forward', 'SCO'],
 ];
-export const SKILLSETS = rows.map(([name, description, positions], i) => ({
-  id: `skill-${String(i + 1).padStart(2, '0')}`, name, description, positions: positions.split(','),
+export const SKILLSETS = rows.map(([name, description, positions, families], i) => ({
+  id: `skill-${String(i + 1).padStart(2, '0')}`, name, description, positions: positions.split(','), families: families.split(','),
 }));
 export const skillsetFor = (player) => SKILLSETS.find((s) => s.id === player?.skillsetId) || null;
-export function rollSkillset(position) {
-  return weightedPick(SKILLSETS.map((s) => ({ ...s, weight: s.positions.includes(position) ? 3 : 1 }))).id;
+
+// Which peak-stat family an archetype fits for skillset eligibility — 'Balanced' has no single
+// specialization (flat base stats), so it's treated as 'ANY' rather than tying it to its
+// nominal SCO peak.
+const ARCHETYPE_FAMILY = {
+  'Pass-First': 'PLM', 'Scorer': 'SCO', 'Playmaker': 'PLM', 'Balanced': 'ANY',
+  'Marksman': 'SCO', 'Rebounder': 'REB', 'Defender': 'DEF',
+};
+
+export function rollSkillset(position, archetype) {
+  const family = ARCHETYPE_FAMILY[archetype];
+  const eligible = !family || family === 'ANY'
+    ? SKILLSETS
+    : SKILLSETS.filter((s) => s.families.includes('ANY') || s.families.includes(family));
+  return weightedPick(eligible.map((s) => ({ ...s, weight: s.positions.includes(position) ? 3 : 1 }))).id;
 }
 
 // Each unordered pairing appears once. All unspecified pairs, including duplicates, are neutral.

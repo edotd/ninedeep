@@ -34,10 +34,10 @@ export const REPLACEMENT_TIER = { name: 'Undrafted', uniform: 1, peak: 1, contra
 // before or after your prime — with one exception: Generational Talent (primeExempt) can
 // appear at any age, since it marks a player's ceiling, not a given season's form.
 export const LEAGUE_ACCOLADES = [
-  { name: 'All-League Defensive Team', uniform: 1.10, peak: 1.30, contract: 4, count: 3, accolade: true },
+  { name: 'All-League Defensive Team', uniform: 1.10, peak: 1.30, contract: 4, count: 3, forceStat: 'DEF', accolade: true },
   { name: 'All-League 2nd Team', uniform: 1.15, peak: 1.30, contract: 4, count: 4, accolade: true },
   { name: 'All-League 1st Team', uniform: 1.20, peak: 1.40, contract: 3, count: 3, accolade: true },
-  { name: 'Defensive Player of the Year', uniform: 1.15, peak: 1.50, contract: 2, count: 2, accolade: true },
+  { name: 'Defensive Player of the Year', uniform: 1.15, peak: 1.50, contract: 2, count: 2, forceStat: 'DEF', accolade: true },
   { name: 'Scoring Champion', uniform: 1.15, peak: 1.50, contract: 2, count: 2, forceStat: 'SCO', accolade: true },
   { name: 'Rebounding Champion', uniform: 1.15, peak: 1.50, contract: 2, count: 2, forceStat: 'REB', allowedPositions: ['Forward', 'Big'], accolade: true },
   { name: 'Assist Leader', uniform: 1.15, peak: 1.50, contract: 2, count: 2, forceStat: 'PLM', accolade: true },
