@@ -36,3 +36,9 @@ New player cards roll one permanent `skillsetId` from 24 definitions. Favored po
 Team Chemistry retains the existing experience score and reports 35 mutual Skillset pairings. Elite Fit grants +3% and Good Fit +1% to the corresponding offense/defense modifier, each side capped at +12%. Only the active lineup counts, including injury substitutions. Duplicate Skillset combinations count once. Locker Room Guy grants +1 flat offense and defense from anywhere on the roster, at most once. These bonuses feed projected output, regular-season simulated averages, and both playoff resolvers; the existing seeding rating formula is unchanged.
 
 Before season confirmation, the Team Chemistry panel previews valid starter/bench swaps and their bonus changes. Swaps preserve a five-player lineup with Guard, Forward and Big coverage and are rejected after the season locks. Pair definitions, eligibility and bonuses come from `src/game/skillsets.js`; the glossary lists every connection.
+
+## Chemistry grades and club tenure
+
+Chemistry now reports a rounded 0–100 score and plus/minus grade: 50 base points + up to 30 fit points (2.5 per combined Skillset percentage point) + up to 15 tenure points (one per completed starter-year) + 5 for a Locker Room Guy. Thresholds are A+ 97, A 93, A− 90, B+ 87, B 83, B− 80, C+ 77, C 73, C− 70, D+ 67, D 63, D− 60, otherwise F. The experience rating remains separately visible.
+
+Every completed year of current-team tenure among active players adds +0.5% Offense and Defense, separately from the Skillset cap. All roster players accrue a year at season completion, with a season marker preventing duplicate credit. Bench players contribute only when active. Signing for another team resets tenure; immediate same-team re-signing retains it. Legacy saves begin tracking at their next completed season; contract age is not used to invent past tenure. The grade is descriptive and does not add another multiplier on top of these bonuses.

@@ -1,3 +1,4 @@
+import { addToRoster, creditTeamSeason } from './chemistry';
 import { TIERS, LEAGUE_ACCOLADES, REPLACEMENT_TIER, AI_NAMES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_ARCHETYPES, MARKETS, PLAYER_AGE_MAX, COACH_AGE_MAX, MATCHUP_CARD_DRAW_COUNT, FINANCE_STARTING_BALANCE } from './constants';
 import { shuffle, weightedPick } from './rng';
 import { makeCard, randomArch, cardTotal, neededPosition, drawCoachCard, applyCoachRetention, drawMatchupModifierCard, resetMatchupDeck } from './cards';
@@ -82,11 +83,11 @@ export function dealHands(state) {
   const extraSet = new Set(order.slice(0, extraCount));
   state.teams.forEach((team, idx) => {
     const count = base + (extraSet.has(idx) ? 1 : 0);
-    for (let i = 0; i < count; i++) { team.hand.push(state.starPool.pop()); }
+    for (let i = 0; i < count; i++) { addToRoster(team, state.starPool.pop()); }
   });
   state.teams.forEach((team) => {
     while (team.hand.length < 9) {
-      team.hand.push(makeCard(state, randomArch(), neededPosition(team) || POSITIONS[Math.floor(Math.random() * 3)], REPLACEMENT_TIER));
+      addToRoster(team, makeCard(state, randomArch(), neededPosition(team) || POSITIONS[Math.floor(Math.random() * 3)], REPLACEMENT_TIER));
     }
   });
 }
@@ -273,6 +274,7 @@ export function proceedFromResults(state) {
   });
   state.lastExpiredPlayers = [];
   state.teams.forEach((team) => {
+    creditTeamSeason(team, state.season);
     const kept = [];
     team.hand.forEach((c) => {
       c.contract--;
@@ -299,14 +301,14 @@ export function signFreeAgent(state, cardId, teamIdx) {
   const team = state.teams[teamIdx];
   if (team.hand.length >= 9) return { ok: false, msg: 'Your roster is full.' };
   const [card] = state.freeAgents.splice(idx, 1);
-  team.hand.push(card);
+  addToRoster(team, card);
   return { ok: true };
 }
 
 export function signReplacement(state, teamIdx) {
   const team = state.teams[teamIdx];
   if (team.hand.length >= 9) return { ok: false, msg: 'Your roster is full.' };
-  team.hand.push(makeCard(state, randomArch(), neededPosition(team) || POSITIONS[Math.floor(Math.random() * 3)], REPLACEMENT_TIER));
+  addToRoster(team, makeCard(state, randomArch(), neededPosition(team) || POSITIONS[Math.floor(Math.random() * 3)], REPLACEMENT_TIER));
   return { ok: true };
 }
 
@@ -316,14 +318,14 @@ export function finishFreeAgency(state) {
       const need = neededPosition(team);
       const poolMatch = need ? state.freeAgents.find((c) => c.position === need) : null;
       if (poolMatch) {
-        team.hand.push(state.freeAgents.splice(state.freeAgents.indexOf(poolMatch), 1)[0]);
+        addToRoster(team, state.freeAgents.splice(state.freeAgents.indexOf(poolMatch), 1)[0]);
       } else if (state.freeAgents.length > 0 && !need) {
         let bestIdx = 0, bestVal = -1;
         state.freeAgents.forEach((c, i) => { const v = cardTotal(c); if (v > bestVal) { bestVal = v; bestIdx = i; } });
         const [card] = state.freeAgents.splice(bestIdx, 1);
-        team.hand.push(card);
+        addToRoster(team, card);
       } else {
-        team.hand.push(makeCard(state, randomArch(), need || POSITIONS[Math.floor(Math.random() * 3)], REPLACEMENT_TIER));
+        addToRoster(team, makeCard(state, randomArch(), need || POSITIONS[Math.floor(Math.random() * 3)], REPLACEMENT_TIER));
       }
     }
   });

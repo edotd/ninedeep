@@ -42,8 +42,8 @@ export default function PersistentBar({ state, myTeamId, onExpand }) {
       </div>
       <div className="persistent-bar-metric">
         <div className="persistent-bar-metric-label">Chemistry</div>
-        <div className="persistent-bar-metric-value">{chemistry !== null ? chemistry : '—'}/10</div>
-        <div className="chemistry-bar-detail">+{synergy.offense}% OFF · +{synergy.defense}% DEF{synergy.flat ? ' · +1 flat' : ''}</div>
+        <div className="persistent-bar-metric-value">{chemistry !== null ? synergy.grade : '—'}</div>
+        <div className="chemistry-bar-detail">{synergy.score}/100 · +{synergy.offense}% OFF · +{synergy.defense}% DEF{synergy.flat ? ' · +1 flat' : ''}</div>
       </div>
       <div className="persistent-bar-metric">
         <div className="persistent-bar-metric-label">Cap</div>

@@ -1,3 +1,4 @@
+import { chemistryDetails } from './chemistry';
 import { weightedPick } from './rng';
 
 // Position preferences affect draw odds (3:1), never eligibility or player quality.
@@ -55,7 +56,11 @@ export function teamSynergy(team, ids = team.activeIds || []) {
   const rawOffense = pairs.filter((p) => p.side === 'offense').reduce((n,p) => n+p.percent, 0);
   const rawDefense = pairs.filter((p) => p.side === 'defense').reduce((n,p) => n+p.percent, 0);
   const flat = (team.hand || []).some((p) => p.skillsetId === 'skill-03') ? 1 : 0;
-  return { pairs, rawOffense, rawDefense, offense: Math.min(SYNERGY_CAP, rawOffense), defense: Math.min(SYNERGY_CAP, rawDefense), flat };
+  const skillOffense = Math.min(SYNERGY_CAP, rawOffense);
+  const skillDefense = Math.min(SYNERGY_CAP, rawDefense);
+  const chemistry = chemistryDetails(team, ids, skillOffense, skillDefense, flat);
+  return { pairs, rawOffense, rawDefense, skillOffense, skillDefense, flat, ...chemistry,
+    offense: skillOffense + chemistry.continuity, defense: skillDefense + chemistry.continuity };
 }
 
 export function applySynergy(base, team, ids, side) {

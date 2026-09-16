@@ -1,3 +1,4 @@
+import { addToRoster } from './chemistry';
 import { TIERS, LEAGUE_ACCOLADES, POSITIONS } from './constants';
 import { makeCard, randomArch, cardTotal, neededPosition } from './cards';
 
@@ -69,7 +70,7 @@ function bestCardFor(team, pool) {
 
 function assignPick(state, team, card) {
   state.draft.pool = state.draft.pool.filter((c) => c.id !== card.id);
-  team.hand.push(card);
+  addToRoster(team, card);
   state.draft.picks.unshift({ teamId: team.id, teamName: team.name, human: team.human, card });
   state.draft.queue.shift();
 }
