@@ -3,7 +3,7 @@ import { useRef, useState } from 'react';
 import { formatCoins, rosterSalary } from '../game/economy';
 import { teamOutput } from '../game/matchup';
 import { teamExperience } from '../game/aging';
-import { cardTier, rawOverall } from '../game/cards';
+import { cardTier, jerseyNumber } from '../game/cards';
 import { validateLineup } from '../game/roster';
 import { MATCHUP_CARD_DRAW_COUNT } from '../game/constants';
 import PlayerCard from './PlayerCard';
@@ -53,7 +53,7 @@ function PlayerSlot({ card, swap, onHover, onLeave, onSelect }) {
       onClick={(e) => onSelect(e.currentTarget, card)}
     >
       <div className="db-slot-tier-strip" />
-      <div className="db-slot-number">{rawOverall(card)}</div>
+      <div className="db-slot-number">#{jerseyNumber(card)}</div>
       <div className="db-slot-position">{card.position}</div>
     </div>
   );

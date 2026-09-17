@@ -30,6 +30,22 @@ export function rawOverall(card) {
   return card.stats.SCO + card.stats.PLM + card.stats.REB + card.stats.DEF;
 }
 
+// The file number is stable across teams and survives reloads for existing cards.
+export function jerseyNumber(card) {
+  const idNumber = Number.parseInt(String(card.id).replace(/^c/, ''), 10);
+  return Number.isFinite(idNumber) ? ((idNumber - 1) % 99 + 99) % 99 + 1 : 0;
+}
+
+export function playerGrade(card) {
+  const score = rawOverall(card);
+  if (score >= 42) return 'A+';
+  if (score >= 37) return 'A';
+  if (score >= 32) return 'B';
+  if (score >= 27) return 'C';
+  if (score >= 22) return 'D';
+  return 'F';
+}
+
 export function statsToCoins(total) {
   let v = Math.round(((total - 12) / 6) * 2) / 2;
   return Math.max(0, Math.min(5, v));

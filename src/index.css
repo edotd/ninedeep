@@ -272,6 +272,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .pcard.selected{outline:3px solid var(--franchise);outline-offset:2px;}
 .pcard-header{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:var(--ink);color:var(--file);}
 .pcard-header-pos{font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;}
+.pcard-grade{font-family:var(--font-display);font-size:22px;line-height:1;letter-spacing:.03em;color:inherit;white-space:nowrap;}
 .pcard-header-badge{font-family:var(--font-label);font-size:10px;letter-spacing:.08em;}
 .pcard-name-block{display:flex;align-items:flex-start;gap:12px;padding:16px 12px 14px;border-bottom:2px solid var(--ink);}
 .pcard-jersey{font-family:var(--font-display);font-size:52px;line-height:.7;color:var(--stamp);}
@@ -310,6 +311,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .pcard-compact{background:var(--form);border:2px solid var(--ink);width:152px;font-family:var(--font-mono);cursor:pointer;}
 .pcard-compact .pcard-header{padding:6px 8px;}
 .pcard-compact .pcard-header-pos{font-size:8px;}
+.pcard-compact .pcard-grade{font-size:17px;}
 .pcard-compact .pcard-header-badge{font-size:8px;}
 .pcard-compact .pcard-name-block{padding:10px 8px;gap:6px;border-bottom:1px solid var(--form-rule);}
 .pcard-compact .pcard-jersey{font-size:32px;}

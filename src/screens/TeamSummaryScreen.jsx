@@ -3,7 +3,7 @@ import { skillsetFor } from '../game/skillsets';
 import { formatCoins, rosterSalary } from '../game/economy';
 import { teamOutput } from '../game/matchup';
 import { teamExperience } from '../game/aging';
-import { cardTier, rawOverall } from '../game/cards';
+import { cardTier, jerseyNumber } from '../game/cards';
 import { FANBASE_BOOST_COST, FIRE_GM_COST, GM_BONUS_RATE, HANDS_OFF_BONUS_CAP } from '../game/constants';
 import { handsOffBonus } from '../game/gm';
 import MatchupCard from '../components/MatchupCard';
@@ -17,7 +17,7 @@ function RotationCard({ card }) {
     <div className={'ts-roto-card' + (tier === 'EXP' ? ' exp' : '')}>
       <div className="ts-roto-strip" style={{ background: TIER_STRIP[tier] }} />
       <div className="ts-roto-body">
-        <div className="ts-roto-number">{rawOverall(card)}</div>
+        <div className="ts-roto-number">#{jerseyNumber(card)}</div>
         <div className="ts-roto-name">{card.archetype}</div>
         <div className="ts-skillset">{skillsetFor(card)?.name || 'No Skillset'}</div>
         <div className="ts-roto-meta">{card.position.slice(0, 1)} · {formatCoins(card.salary)}{tier === 'EXP' ? ' · EXP' : ''}</div>

@@ -1,7 +1,7 @@
 import { skillsetFor } from '../game/skillsets';
 import { formatCoins } from '../game/economy';
 import { careerLevel, careerBonus } from '../game/aging';
-import { cardTier, rawOverall } from '../game/cards';
+import { cardTier, jerseyNumber, playerGrade } from '../game/cards';
 import CardTypeMark from './CardTypeMark';
 
 export default function PlayerCard({ card, onClick, selected, draftStyle, rosterLabel, compact }) {
@@ -28,10 +28,10 @@ export default function PlayerCard({ card, onClick, selected, draftStyle, roster
       />
       <div className="pcard-header">
         <span className="pcard-header-pos">{card.position} · {card.archetype}</span>
-        <CardTypeMark type="player" size={16} />
+        <span className="pcard-grade" aria-label={`Player grade ${playerGrade(card)}`}>GRADE {playerGrade(card)}</span>
       </div>
       <div className="pcard-name-block">
-        <div className="pcard-jersey">{rawOverall(card)}</div>
+        <div className="pcard-jersey" aria-label={`Jersey number ${jerseyNumber(card)}`}>#{jerseyNumber(card)}</div>
         <div className="pcard-name">{card.archetype}</div>
       </div>
       <div className="pcard-contract pcard-budgethit-row">

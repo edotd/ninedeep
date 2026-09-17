@@ -73,7 +73,6 @@ function marketContent(team) {
     effects: [
       { label: 'Budget Increase', value: `+${formatCoins(m.capAdj)}`, tone: 'approved-ink' },
       { label: 'Market Size', value: m.name, tone: 'file' },
-      { label: 'Budget Hit', value: type === 'Neutral' ? '+0' : '+1', tone: type === 'Neutral' ? 'file' : 'stamp-ink' },
       { label: 'GM Bonus', value: type === 'Aggressive' ? `${GM_BONUS_RATE * 100}% off offseason requests` : type === 'Hands-Off' ? `+${Math.round(handsOffBonus(team) * 100)}% continuity` : 'None', tone: type === 'Neutral' ? 'file' : 'approved-ink' },
     ],
     detail: type === 'Hands-Off' ? `Coach tenure + starting-five continuity: +${GM_BONUS_RATE * 100}% per year, capped at ${HANDS_OFF_BONUS_CAP * 100}%.` : null,
