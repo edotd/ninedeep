@@ -5,11 +5,13 @@ import { advanceCareer } from './aging';
 import { shuffle, weightedPick } from './rng';
 import { makeCard, randomArch, randomArchForTier, cardTotal, neededPosition, drawCoachCard, applyCoachRetention, drawMatchupModifierCard, resetMatchupDeck } from './cards';
 import { finalizeCap, rosterSalary } from './economy';
-import { autoSelectFive, effectiveRating, validateLineup } from './roster';
+import { autoSelectFive, effectiveRating, activeStatSum, validateLineup } from './roster';
+import { retentionBonus, relationshipBonus } from './cards';
+import { handsOffBonus } from './gm';
 import { startDraft } from './draft';
 import { initAttendance, rollFanbaseMod, recomputeSeasonAttendance, applyPlayoffBerthMilestone, applyHomeCourtMilestone, applyChampionshipMilestone } from './fanbase';
 import { tricodeFor } from './names';
-import { simulateSeasonOutput } from './matchup';
+import { simulateSeasonOutput, teamOutput } from './matchup';
 
 export function newEraState() {
   return {
@@ -172,17 +174,47 @@ export function lockSeasonAndSeed(state) {
     team.simDefenseAvg = sim.def;
   });
 
+  // Seeding logging — effectiveRating (below) is a *different* formula from teamOutput's
+  // Proj Offense/Defense/Bench (the numbers shown everywhere in the UI): it sums all four
+  // stats undifferentiated and applies coach bonuses, but — unlike offenseModifier/
+  // defenseModifier — never applies Team Chemistry/Skillset synergy. A team can lead the
+  // league in projected output on the strength of its chemistry and still seed low, because
+  // seeding never sees that bonus. This table makes that gap visible instead of hidden.
+  const seedLog = [];
   const seeds = state.teams
     .map((t) => {
-      let val = effectiveRating(t) * (0.9 + Math.random() * 0.2);
+      const raw = activeStatSum(t);
+      const bonus = t.coach ? retentionBonus(t) + relationshipBonus(t) + handsOffBonus(t) : 0;
+      const base = effectiveRating(t);
+      const randomMult = 0.9 + Math.random() * 0.2;
+      let val = base * randomMult;
       const seedingCards = (t.matchupCards || []).filter((c) => c.effectType === 'SEEDING_PERCENT' && !c.used);
-      val *= 1 + seedingCards.reduce((sum, c) => sum + c.value, 0) / 100;
+      const seedingCardPct = seedingCards.reduce((sum, c) => sum + c.value, 0);
+      val *= 1 + seedingCardPct / 100;
       seedingCards.forEach((c) => { c.used = true; });
-      if ((t.matchupCards || []).some((c) => !c.effectType && c.name === 'Favorable Schedule' && !c.used)) val *= 1.10;
+      const favorableSchedule = (t.matchupCards || []).some((c) => !c.effectType && c.name === 'Favorable Schedule' && !c.used);
+      if (favorableSchedule) val *= 1.10;
+      const output = t.coach && t.activeIds && t.activeIds.length > 0 ? teamOutput(t) : null;
+      seedLog.push({
+        Team: t.name,
+        'Raw 4-Stat Sum': raw,
+        'Coach+Rel Bonus %': t.coach ? Math.round(bonus * 1000) / 10 : '—',
+        'Effective Rating (no chemistry)': Math.round(base * 10) / 10,
+        'Random Roll': `${Math.round((randomMult - 1) * 1000) / 10}%`,
+        'Seeding Card Bonus %': seedingCardPct + (favorableSchedule ? ' +10 (Favorable Schedule)' : ''),
+        'Final Seeding Rating': Math.round(val),
+        'Proj Offense (w/ chemistry)': output ? output.off : '—',
+        'Proj Defense (w/ chemistry)': output ? output.def : '—',
+        'Bench Output': output ? output.bench : '—',
+      });
       return { t, val };
     })
     .sort((a, b) => b.val - a.val);
   seeds.forEach((s, rank) => { s.t.seed = rank + 1; });
+  seedLog.sort((a, b) => b['Final Seeding Rating'] - a['Final Seeding Rating']);
+  console.log(`%c🏀 Season ${state.season} — Seeding Breakdown`, 'font-weight:bold;font-size:13px;');
+  console.table(seedLog);
+  console.log('Note: "Final Seeding Rating" decides playoff seeds — it never includes Team Chemistry/Skillset synergy, unlike the Proj Offense/Defense/Bench figures shown alongside it here for comparison.');
   state.seeds = seeds;
   state.playoffTeams = seeds.slice(0, 8).map((s) => s.t);
   state.playoffTeams.forEach((t) => {
