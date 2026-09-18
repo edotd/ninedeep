@@ -28,7 +28,7 @@ export default function PlayerCard({ card, onClick, selected, draftStyle, roster
       />
       <div className="pcard-header">
         <span className="pcard-header-pos">{card.position} · {card.archetype}</span>
-        <span className="pcard-grade" aria-label={`Player grade ${playerGrade(card)}`}>GRADE {playerGrade(card)}</span>
+        <span className="pcard-grade" aria-label={`Player grade ${playerGrade(card)}`}>{playerGrade(card)}</span>
       </div>
       <div className="pcard-name-block">
         <div className="pcard-jersey" aria-label={`Jersey number ${jerseyNumber(card)}`}>#{jerseyNumber(card)}</div>

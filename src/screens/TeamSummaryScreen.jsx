@@ -1,30 +1,15 @@
 import TeamChemistry from '../components/TeamChemistry';
+import PlayerCard from '../components/PlayerCard';
+import FrontOfficeCard from '../components/FrontOfficeCard';
 import { skillsetFor } from '../game/skillsets';
 import { formatCoins, rosterSalary } from '../game/economy';
 import { teamOutput } from '../game/matchup';
 import { teamExperience } from '../game/aging';
-import { cardTier, jerseyNumber } from '../game/cards';
-import { FANBASE_BOOST_COST, FIRE_GM_COST, GM_BONUS_RATE, HANDS_OFF_BONUS_CAP } from '../game/constants';
-import { handsOffBonus } from '../game/gm';
+import { cardTier } from '../game/cards';
+import { FANBASE_BOOST_COST, FIRE_GM_COST } from '../game/constants';
 import MatchupCard from '../components/MatchupCard';
 
 const ERA_LENGTH = 8;
-const TIER_STRIP = { A: 'var(--franchise)', B: 'var(--ink)', D: 'var(--depth)', EXP: 'var(--stamp)' };
-
-function RotationCard({ card }) {
-  const tier = cardTier(card);
-  return (
-    <div className={'ts-roto-card' + (tier === 'EXP' ? ' exp' : '')}>
-      <div className="ts-roto-strip" style={{ background: TIER_STRIP[tier] }} />
-      <div className="ts-roto-body">
-        <div className="ts-roto-number">#{jerseyNumber(card)}</div>
-        <div className="ts-roto-name">{card.archetype}</div>
-        <div className="ts-skillset">{skillsetFor(card)?.name || 'No Skillset'}</div>
-        <div className="ts-roto-meta">{card.position.slice(0, 1)} · {formatCoins(card.salary)}{tier === 'EXP' ? ' · EXP' : ''}</div>
-      </div>
-    </div>
-  );
-}
 
 function BenchStrip({ card }) {
   return (
@@ -94,7 +79,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
           <div className="ts-section">
             <div className="ts-heading">Rotation</div>
             <div className="ts-roto-grid">
-              {starters.map((c) => <RotationCard key={c.id} card={c} />)}
+              {starters.map((c) => <PlayerCard key={c.id} card={c} compact />)}
             </div>
             <div className="ts-bench-grid">
               {bench.map((c) => <BenchStrip key={c.id} card={c} />)}
@@ -109,44 +94,42 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
 
           <TeamChemistry team={team} canEdit={state.phase === 'teamsummary' && !team.lineupConfirmed} onSwap={(outgoing, incoming) => actions.swapStarter(myTeamId, outgoing, incoming)} />
 
-          <div className="ts-columns">
-            <div className="ts-section">
-              <div className="ts-heading">Budget Ledger</div>
-              <div className="ts-budget-figures">
-                <span className="committed">{formatCoins(committed).replace('🪙', '')}</span>
-                <span className="slash"> / </span>
-                <span className="limit">{formatCoins(cap).replace('🪙', '')}</span>
-                <span className={'ts-budget-room' + (room < 0 ? ' bad' : '')}>{room >= 0 ? '+' : ''}{Math.round(room * 10) / 10} ROOM</span>
-              </div>
-              <div className="ts-budget-bar">
-                {team.hand.map((c) => (
-                  <div
-                    key={c.id}
-                    className={'ts-budget-seg' + (cardTier(c) === 'EXP' ? ' exp' : activeSet.has(c.id) ? '' : ' bench')}
-                    style={{ width: `${cap ? Math.max(2, (c.salary / cap) * 100) : 100 / (team.hand.length || 1)}%` }}
-                  />
-                ))}
-              </div>
-              <div className="ts-ledger-row"><span>Committed This Season</span><span>{formatCoins(committed)}</span></div>
-              <div className="ts-ledger-row"><span>GM Budget Hit</span><span>{formatCoins(team.gmType === 'Aggressive' || team.gmType === 'Hands-Off' ? 1 : 0)}</span></div>
-              <div className="ts-ledger-row"><span>Expiring This Season</span><span className={expiring.length ? 'bad' : ''}>{expiring.length ? `${formatCoins(expiringTotal)} · ${expiring.map((c) => c.archetype).join(', ')}` : 'None'}</span></div>
+          <div className="ts-section">
+            <div className="ts-heading">Budget Ledger</div>
+            <div className="ts-budget-figures">
+              <span className="committed">{formatCoins(committed).replace('🪙', '')}</span>
+              <span className="slash"> / </span>
+              <span className="limit">{formatCoins(cap).replace('🪙', '')}</span>
+              <span className={'ts-budget-room' + (room < 0 ? ' bad' : '')}>{room >= 0 ? '+' : ''}{Math.round(room * 10) / 10} ROOM</span>
             </div>
-
-            <div className="ts-section">
-              <div className="ts-heading">Front Office</div>
-              <div className="ts-fo-list">
-                <div className="ts-fo-row"><span>Coach{team.coach ? ` · ${team.coach.archetype}` : ''}</span><span>{team.coach ? team.coach.modifier : '—'}</span></div>
-                <div className="ts-fo-row"><span>Fanbase</span><span>{team.fanbaseArchetype ? team.fanbaseArchetype.name : '—'}</span></div>
-                <div className="ts-fo-row"><span>Fanbase Modifier</span><span>{team.fanbaseMod ? `${team.fanbaseMod.name}${team.fanbaseMod.value ? ` · ${team.fanbaseMod.value}` : ''}` : 'Pending'}</span></div>
-                <div className="ts-fo-row"><span>GM</span><span>{team.gmType || 'Neutral'} · {team.market ? team.market.name : '—'} market</span></div>
-                <div className="ts-fo-row"><span>GM Effect</span><span>{team.gmType === 'Aggressive' ? `${GM_BONUS_RATE * 100}% off offseason player requests · +1 budget hit` : team.gmType === 'Hands-Off' ? `+${Math.round(handsOffBonus(team) * 100)}% continuity (max ${HANDS_OFF_BONUS_CAP * 100}%) · +1 budget hit` : 'No bonus · +0 budget hit'}</span></div>
-              </div>
-              <div className="ts-metrics">
-                <div><div className="ts-metric-label">Experience</div><div className="ts-metric-value">{chemistry !== null ? chemistry : '—'}</div></div>
-                <div><div className="ts-metric-label">Proj Off</div><div className="ts-metric-value accent">{output ? output.total : '—'}</div></div>
-              </div>
+            <div className="ts-budget-bar">
+              {team.hand.map((c) => (
+                <div
+                  key={c.id}
+                  className={'ts-budget-seg' + (cardTier(c) === 'EXP' ? ' exp' : activeSet.has(c.id) ? '' : ' bench')}
+                  style={{ width: `${cap ? Math.max(2, (c.salary / cap) * 100) : 100 / (team.hand.length || 1)}%` }}
+                />
+              ))}
+            </div>
+            <div className="ts-ledger-row"><span>Committed This Season</span><span>{formatCoins(committed)}</span></div>
+            <div className="ts-ledger-row"><span>GM Budget Hit</span><span>{formatCoins(team.gmType === 'Aggressive' || team.gmType === 'Hands-Off' ? 1 : 0)}</span></div>
+            <div className="ts-ledger-row"><span>Expiring This Season</span><span className={expiring.length ? 'bad' : ''}>{expiring.length ? `${formatCoins(expiringTotal)} · ${expiring.map((c) => c.archetype).join(', ')}` : 'None'}</span></div>
+            <div className="ts-metrics">
+              <div><div className="ts-metric-label">Experience</div><div className="ts-metric-value">{chemistry !== null ? chemistry : '—'}</div></div>
+              <div><div className="ts-metric-label">Proj Off</div><div className="ts-metric-value accent">{output ? output.total : '—'}</div></div>
             </div>
           </div>
+
+          {team.coach && team.market && (
+            <div className="ts-section">
+              <div className="ts-heading">Front Office</div>
+              <div className="fo-deal-row" style={{ margin: 0 }}>
+                <FrontOfficeCard kind="coach" team={team} />
+                <FrontOfficeCard kind="fanbase" team={team} />
+                <FrontOfficeCard kind="market" team={team} />
+              </div>
+            </div>
+          )}
 
           {(team.matchupCards || []).length > 0 && (
             <div className="ts-section">

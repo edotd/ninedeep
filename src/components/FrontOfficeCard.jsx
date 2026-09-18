@@ -25,6 +25,7 @@ function coachContent(team) {
     qualifier: team.retainedStreak ? `Retained ${team.retainedStreak} season${team.retainedStreak === 1 ? '' : 's'}` : 'League appointment',
     disposition: coach.modifier,
     dispositionTone: 'approved-ink',
+    badge: 'SYS',
     badgeTone: 'approved-ink',
     effects: [
       { label: 'Off Bonus', value: `+${Math.round((coach.offBonus + bonus) * 100)}%`, tone: 'approved-ink' },
@@ -45,13 +46,18 @@ function fanbaseContent(team) {
   return {
     name: archetype.name,
     qualifier: `Attendance ${attendance}%`,
-    disposition: FANBASE_DISPOSITION[archetype.name] || archetype.name,
-    dispositionTone: archetype.name === 'Fair Weather' ? 'franchise' : 'approved-ink',
-    badge: mod ? mod.name : 'NO MODIFIER',
-    badgeTone: 'franchise',
+    // This season's rolled mood swing is the headline (the big teal word, same slot every
+    // other card uses for its own headline trait) — the archetype's own fixed disposition is
+    // a season-independent fact about the fanbase, so it moves down into the effects list
+    // instead of sharing top billing with something that actually changes every season.
+    disposition: mod ? mod.name : 'No Modifier',
+    dispositionTone: 'approved-ink',
+    badge: 'MOOD',
+    badgeTone: 'approved-ink',
     effects: [
+      { label: 'Disposition', value: FANBASE_DISPOSITION[archetype.name] || archetype.name, tone: archetype.name === 'Fair Weather' ? 'franchise' : 'file' },
       { label: 'Attendance', value: `${attendance}%`, tone: 'file' },
-      { label: 'Season Modifier', value: mod ? `${mod.name}${mod.value ? ` · ${mod.value}` : ''}` : 'Pending', tone: mod ? 'approved-ink' : 'file' },
+      { label: 'Modifier Effect', value: mod ? `${mod.value ? mod.value : 'Active'}` : 'Pending', tone: mod ? 'approved-ink' : 'file' },
       { label: 'Advantage', value: isDieHard ? (team.advantageAvailable ? 'Available' : 'Used') : '—', tone: isDieHard && team.advantageAvailable ? 'approved-ink' : 'file' },
     ],
     // The archetype itself holds for the whole era, like Coach — only attendance and the
@@ -69,6 +75,7 @@ function marketContent(team) {
     qualifier: 'General Manager',
     disposition: null,
     dispositionTone: 'approved-ink',
+    badge: 'ECON',
     badgeTone: 'approved-ink',
     effects: [
       { label: 'Budget Increase', value: `+${formatCoins(m.capAdj)}`, tone: 'approved-ink' },
