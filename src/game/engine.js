@@ -270,3 +270,25 @@ export function swapStarter(state, teamIdx, outgoingId, incomingId) {
   team.activeIds = activeIds;
   return { ok: true };
 }
+
+// Fills an open starting slot directly (no outgoing player) — the case swapStarter can't
+// handle, since it always trades one active id for one bench id and refuses to run at all
+// once activeIds.length !== 5. That gap opens up after releasePlayer cuts an active starter:
+// activeIds shrinks below 5 and stays there until this fills it back up.
+export function promoteToStarter(state, teamIdx, incomingId) {
+  const team = state.teams[teamIdx];
+  if (state.phase === 'offseasonlineup' && state.offseason?.lineupFiled?.[team?.id]) return { ok: false, msg: 'Lineup already filed.' };
+  if (!team || !team.hand) return { ok: false, msg: 'Nothing to add yet.' };
+  const activeIds = team.activeIds || [];
+  if (activeIds.length >= 5) return { ok: false, msg: 'Your starting five is already full.' };
+  if (activeIds.includes(incomingId) || !team.hand.some((p) => p.id === incomingId)) return { ok: false, msg: 'Choose a bench player.' };
+  const inLiveMatch = state.playoff && state.playoff.matches.some((m) => m.turn && !m.result && (m.a === team || m.b === team));
+  if (inLiveMatch) return { ok: false, msg: "Can't change your lineup mid-match." };
+  const nextIds = [...activeIds, incomingId];
+  if (nextIds.length === 5) {
+    const validation = validateLineup({ ...team, activeIds: nextIds });
+    if (!validation.valid) return { ok: false, msg: validation.msg };
+  }
+  team.activeIds = nextIds;
+  return { ok: true };
+}

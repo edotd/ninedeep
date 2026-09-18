@@ -20,6 +20,7 @@ export const actionMap = {
   finishSeasonSimulation: engine.finishSeasonSimulation,
   confirmLineup: engine.confirmLineup,
   swapStarter: engine.swapStarter,
+  promoteToStarter: engine.promoteToStarter,
   beginPlayoffs: engine.beginPlayoffs,
   toggleAdvantage: engine.toggleAdvantage,
   rollCurrentMatchup: engine.rollCurrentMatchup,

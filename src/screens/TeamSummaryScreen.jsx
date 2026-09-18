@@ -112,7 +112,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
             <div className="ts-heading">Rotation</div>
             <div className="ts-roto-scroll">
               <div className="ts-roto-grid">
-                {starters.map((c) => <PlayerCard key={c.id} card={c} />)}
+                {starters.map((c) => <PlayerCard key={c.id} card={c} onRelease={canEdit ? handleRelease : undefined} />)}
               </div>
             </div>
           </div>
@@ -132,7 +132,12 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
             </div>
           </div>
 
-          <TeamChemistry team={team} canEdit={canEdit} onSwap={(outgoing, incoming) => actions.swapStarter(myTeamId, outgoing, incoming)} />
+          <TeamChemistry
+            team={team}
+            canEdit={canEdit}
+            onSwap={(outgoing, incoming) => actions.swapStarter(myTeamId, outgoing, incoming)}
+            onPromote={(incoming) => actions.promoteToStarter(myTeamId, incoming)}
+          />
 
           <div className="ts-section">
             <div className="ts-heading">Budget Ledger</div>

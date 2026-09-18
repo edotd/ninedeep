@@ -7,7 +7,7 @@ import { validateLineup } from '../game/roster';
 const nameFor = (id) => SKILLSETS.find((s) => s.id === id)?.name || id;
 const signed = (n) => `${n >= 0 ? '+' : ''}${n}`;
 
-export default function TeamChemistry({ team, canEdit, onSwap }) {
+export default function TeamChemistry({ team, canEdit, onSwap, onPromote }) {
   const [incomingId, setIncomingId] = useState('');
   const [error, setError] = useState('');
   const current = teamSynergy(team);
@@ -86,15 +86,31 @@ export default function TeamChemistry({ team, canEdit, onSwap }) {
         {current.flat > 0 && <p className="tc2-note">Locker Room Guy: +1 flat Offense and Defense from your roster, including the bench. Applies once.</p>}
       </div>
 
+      {canEdit && ids.length < 5 && (
+        <p className="tc2-note" role="alert">Your starting five has an open slot — add a bench player below before you can begin the season.</p>
+      )}
+
       {canEdit && bench.length > 0 && (
         <div className="tc2-swap-panel">
-          <label className="tc2-swap-label">Preview a bench player in the starting five
+          <label className="tc2-swap-label">{ids.length < 5 ? 'Add a bench player to the starting five' : 'Preview a bench player in the starting five'}
             <select value={incomingId} onChange={(e) => { setIncomingId(e.target.value); setError(''); }}>
               <option value="">Choose a player</option>
               {bench.map((p) => <option key={p.id} value={p.id}>{p.position} · {p.archetype} · {skillsetFor(p)?.name || 'No Skillset'} · #{p.id}</option>)}
             </select>
           </label>
-          {bench.some((p) => p.id === incomingId) && ids.map((outgoingId) => {
+          {bench.some((p) => p.id === incomingId) && (ids.length < 5 ? (() => {
+            const incoming = team.hand.find((p) => p.id === incomingId);
+            const nextIds = [...ids, incomingId];
+            const validation = nextIds.length === 5 ? validateLineup({ ...team, activeIds: nextIds }) : { valid: true };
+            const next = teamSynergy(team, nextIds);
+            return <button className="secondary tc2-swap-btn" disabled={!validation.valid} onClick={async () => {
+              const result = await onPromote(incomingId);
+              if (result?.ok === false) setError(result.msg); else { setIncomingId(''); setError(''); }
+            }}>
+              Add {incoming.archetype} · {incoming.position} · {skillsetFor(incoming)?.name || 'No Skillset'} · #{incoming.id} to the starting five
+              <br />{validation.valid ? `Chemistry ${current.grade} → ${next.grade} (${signed(next.score - current.score)} points): ${signed(next.offense - current.offense)}% Offense · ${signed(next.defense - current.defense)}% Defense` : validation.msg}
+            </button>;
+          })() : ids.map((outgoingId) => {
             const outgoing = team.hand.find((p) => p.id === outgoingId);
             const nextIds = ids.map((id) => id === outgoingId ? incomingId : id);
             const validation = validateLineup({ ...team, activeIds: nextIds });
@@ -106,7 +122,7 @@ export default function TeamChemistry({ team, canEdit, onSwap }) {
               Replace {outgoing.archetype} · {outgoing.position} · {skillsetFor(outgoing)?.name || 'No Skillset'} · #{outgoing.id}
               <br />{validation.valid ? `Chemistry ${current.grade} → ${next.grade} (${signed(next.score - current.score)} points): ${signed(next.offense - current.offense)}% Offense · ${signed(next.defense - current.defense)}% Defense` : validation.msg}
             </button>;
-          })}
+          }))}
           {error && <p role="alert" className="tc2-note">{error}</p>}
         </div>
       )}

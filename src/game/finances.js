@@ -44,22 +44,22 @@ export function fireGM(state, teamIdx) {
   return { ok: true };
 }
 
-// Waiving a bench player: their full remaining salary counts as dead money against this
-// season's budget (same one-time-deduction treatment as firing a coach), and they head to
-// free agency for any other club to sign. Restricted to the bench — cutting an active starter
-// would leave a hole in activeIds that the chemistry panel's swap UI can't repair (it swaps an
-// existing starter out for a bench player in, not an already-gone id), so a starter has to be
-// benched first via swapStarter before they can be released.
+// Waiving a player — starter or bench: their full remaining salary counts as dead money
+// against this season's budget (same one-time-deduction treatment as firing a coach), and
+// they head to free agency for any other club to sign. Releasing an active starter drops
+// activeIds below 5; the chemistry panel's own UI notices that and offers promoteToStarter
+// (engine.js) — a direct "fill the open slot" action — instead of the outgoing/incoming swap
+// it normally shows, since swapStarter refuses to run at all unless activeIds.length === 5.
 export function releasePlayer(state, teamIdx, cardId) {
   const team = state.teams[teamIdx];
   const idx = team.hand.findIndex((c) => c.id === cardId);
   if (idx < 0) return { ok: false, msg: 'Player not found on this roster.' };
-  if ((team.activeIds || []).includes(cardId)) return { ok: false, msg: 'Bench this player before releasing them.' };
   const card = team.hand[idx];
   const deadMoney = card.salary;
   const room = budgetRoom(team);
   if (room < deadMoney) return { ok: false, msg: `Not enough budget room — releasing ${card.archetype} carries ${deadMoney} in dead money, you have ${Math.round(room * 10) / 10}.` };
   team.hand.splice(idx, 1);
+  if (team.activeIds) team.activeIds = team.activeIds.filter((id) => id !== cardId);
   team.seasonCap -= deadMoney;
   team.deadMoney = (team.deadMoney || 0) + deadMoney;
   state.freeAgents.push(Object.assign({}, card, { contract: card.maxContract, lastTeamId: team.id }));
