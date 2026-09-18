@@ -35,7 +35,7 @@ export default function PlayerCard({ card, onClick, selected, draftStyle, roster
         <div className="pcard-name">{card.archetype}</div>
       </div>
       <div className="pcard-contract pcard-budgethit-row">
-        <span className="pcard-microlabel">Budget Hit</span>
+        <span className="pcard-microlabel">Cost</span>
         <span className="pcard-budgethit">{formatCoins(card.salary)}</span>
       </div>
       {!compact && (

@@ -45,7 +45,7 @@ const PLAYER_NOTES = [
     text: 'Four fixed cells so all nine cards scan as one table. These drive offense, defense, and rebounding rolls.' },
   { key: 'footer', selector: '.pcard-footer', label: 'Tier and card ID', side: 'left',
     text: 'The tier name and a stable card number — collectible information only, no effect in play.' },
-  { key: 'budgethit', selector: '.pcard-budgethit-row', circleSelector: '.pcard-budgethit', circle: true, label: 'Budget hit', side: 'right',
+  { key: 'budgethit', selector: '.pcard-budgethit-row', circleSelector: '.pcard-budgethit', circle: true, label: 'Cost', side: 'right',
     text: 'The largest figure on the card, and the one this player gets traded on. It charges the budget every season the contract runs.' },
   { key: 'years', selector: '.pcard-years-row', circleSelector: '.pcard-dots', circle: true, label: 'Years left', side: 'right',
     text: 'Filled dots are years already served against the contract. Reaches zero and the player expires.' },
@@ -153,7 +153,7 @@ export default function CardOverviewScreen({ state, actions }) {
             accent="var(--stamp)" markType="player" eyebrow="Five Of Your Nine" title="Player Cards"
             body="An asset you own and pay for. Five of them make the rotation you play the game with, and every number on the card is either what they do on the floor or what they cost you to keep."
             howLabel="How It Plays" howText="Played into the roll to take a possession, or held back to answer one."
-            costLabel="What It Costs" costText="Budget hit every season it is on the books, minutes every time you use it."
+            costLabel="What It Costs" costText="Cost every season it is on the books, minutes every time you use it."
             notes={PLAYER_NOTES}
           >
             {playerExample && <PlayerCard card={playerExample} />}
