@@ -134,9 +134,10 @@ export const INJURY_CHANCE = 0.03;
 // (see settings.matchupCardsEnabled in game/season.js's newEraState).
 export const MATCHUP_CARD_DRAW_COUNT = 3;
 
-// Flat Off/Def bonus applied to the top-4 seeds in every playoff matchup they play — see
-// engine.js's rollCurrentMatchup.
-export const HOME_COURT_BONUS = 2;
+// Off/Def percentage bonus for Home Court Advantage — a top-4 seed gets it in every playoff
+// matchup they play, except against another top-4 seed, where only the higher (numerically
+// lower) seed gets it. See game/matchup.js's hasHomeCourt and engine.js's rollCurrentMatchup.
+export const HOME_COURT_BONUS = 1;
 
 // Delay (ms) between successive Action Log entries appearing while a matchup rolls out.
 // "instant" reveals everything the moment Roll Dice is clicked, no animation at all.

@@ -101,11 +101,14 @@ export function isMatchUnlocked(matches, m) {
   return !m.from || (!!matches[m.from[0]].result && !!matches[m.from[1]].result);
 }
 
-// Top-4 seeds get a Home Court Advantage boost in every playoff matchup they play. Shared by
-// the instant resolver (engine.js's rollCurrentMatchup, used for simulateAllPlayoffs) and the
-// turn-by-turn engine (game/turn.js).
-export function hasHomeCourt(team) {
-  return !!(team.seed && team.seed <= 4);
+// Top-4 seeds get a Home Court Advantage boost — but when two top-4 seeds meet (a semifinal
+// or the Final), only one club can actually be hosting, so it goes to the higher (numerically
+// lower) seed only, not both. Shared by the instant resolver (engine.js's rollCurrentMatchup,
+// used for simulateAllPlayoffs) and the turn-by-turn engine (game/turn.js).
+export function hasHomeCourt(team, opponent) {
+  if (!team.seed || team.seed > 4) return false;
+  if (opponent && opponent.seed && opponent.seed <= 4) return team.seed < opponent.seed;
+  return true;
 }
 
 // Sixth Man / Mind Games are the two fanbase mods that act live, during a matchup, rather

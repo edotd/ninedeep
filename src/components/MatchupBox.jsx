@@ -28,7 +28,7 @@ function dieText(roll, sides) {
 function eventLogEntry(m, ev) {
   if (ev.kind === 'hca') {
     const team = ev.team === 'a' ? m.a : m.b;
-    return { icon: '🏟️', text: `${team.name} has Home Court Advantage this matchup — +2 Offense, +2 Defense.`, highlight: team.name };
+    return { icon: '🏟️', text: `${team.name} has Home Court Advantage this matchup — +1% Offense, +1% Defense.`, highlight: team.name };
   }
   if (ev.kind === 'advantage') {
     const team = ev.team === 'a' ? m.a : m.b;

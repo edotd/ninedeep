@@ -162,10 +162,10 @@ export function rollCurrentMatchup(state) {
   const extraB = { offDelta: 0, defDelta: 0, leagueMod: 0 };
   const cardNotes = [];
 
-  const hcaA = hasHomeCourt(m.a);
-  const hcaB = hasHomeCourt(m.b);
-  if (hcaA) { extraA.offDelta += HOME_COURT_BONUS; extraA.defDelta += HOME_COURT_BONUS; }
-  if (hcaB) { extraB.offDelta += HOME_COURT_BONUS; extraB.defDelta += HOME_COURT_BONUS; }
+  const hcaA = hasHomeCourt(m.a, m.b);
+  const hcaB = hasHomeCourt(m.b, m.a);
+  if (hcaA) { extraA.offPercent = (extraA.offPercent || 0) + HOME_COURT_BONUS; extraA.defPercent = (extraA.defPercent || 0) + HOME_COURT_BONUS; }
+  if (hcaB) { extraB.offPercent = (extraB.offPercent || 0) + HOME_COURT_BONUS; extraB.defPercent = (extraB.defPercent || 0) + HOME_COURT_BONUS; }
 
   idsB = applyLiveFanbaseMod(m.a, m.b, extraA, idsB, cardNotes);
   idsA = applyLiveFanbaseMod(m.b, m.a, extraB, idsA, cardNotes);

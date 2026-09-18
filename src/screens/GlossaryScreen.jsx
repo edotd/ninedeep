@@ -98,7 +98,7 @@ export default function GlossaryScreen({ state, onBack }) {
         <p className="lede">Die size (d6 by default) and the Off/Def bonus percentages all come from your Coach card — a bigger die and higher bonus mean a stronger, swingier team. The Die Hard fanbase ability, if used, rolls each die twice and keeps the higher result. Matchup Modifier cards (see below) can shift these numbers up or down before the roll, and a {injuryPct}% independent injury chance per team can pull a random active player out beforehand.</p>
         <div className="matchup-box">
           <div className="matchup-title">🏟️ Home Court Advantage</div>
-          <p className="lede" style={{ margin: 0 }}>The top 4 seeds get a flat +2 Offense / +2 Defense in every playoff matchup they play.</p>
+          <p className="lede" style={{ margin: 0 }}>The top 4 seeds get +1% Offense / +1% Defense in every playoff matchup they play — except against another top-4 seed, where only the higher seed gets it.</p>
         </div>
 
         <h2 id="archetypes">Archetypes</h2>

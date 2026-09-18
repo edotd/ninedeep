@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import MatchupBox, { buildMatchEvents } from '../components/MatchupBox';
 import TurnPanel from '../components/TurnPanel';
 import BallMark from '../components/BallMark';
-import { matchTeams, cardChoicesFor, teamOutput } from '../game/matchup';
+import { matchTeams, cardChoicesFor, teamOutput, hasHomeCourt } from '../game/matchup';
 import { ACTION_LOG_SPEEDS } from '../game/constants';
 import { teamExperience } from '../game/aging';
 import { formatCoins, rosterSalary } from '../game/economy';
@@ -76,12 +76,14 @@ export default function PlayoffSeriesScreen({ state, actions, myTeamId }) {
   if (showTipoff) {
     const outputA = teamA.coach && teamA.activeIds && teamA.activeIds.length > 0 ? teamOutput(teamA) : null;
     const outputB = teamB.coach && teamB.activeIds && teamB.activeIds.length > 0 ? teamOutput(teamB) : null;
-    const TipoffTeam = ({ team, output, mine, away }) => (
+    const TipoffTeam = ({ team, opponent, output, mine, away }) => {
+      const hca = hasHomeCourt(team, opponent);
+      return (
       <div className={'tipoff-team' + (mine ? ' mine' : '') + (away ? ' away' : '')}>
         <div className="tipoff-team-tags">
           {!away && <span className="tipoff-seed-badge">{team.seed ? `${team.seed} Seed` : 'Seed —'}</span>}
-          {(team.seed <= 4 || mine) && (
-            <span className="tipoff-team-tag">{team.seed <= 4 ? 'Home Court' : ''}{team.seed <= 4 && mine ? ' · ' : ''}{mine ? 'Your Club' : ''}</span>
+          {(hca || mine) && (
+            <span className="tipoff-team-tag">{hca ? 'Home Court' : ''}{hca && mine ? ' · ' : ''}{mine ? 'Your Club' : ''}</span>
           )}
           {away && <span className="tipoff-seed-badge outline">{team.seed ? `${team.seed} Seed` : 'Seed —'}</span>}
         </div>
@@ -90,7 +92,8 @@ export default function PlayoffSeriesScreen({ state, actions, myTeamId }) {
         <div className={'tipoff-output' + (mine ? ' mine' : '')}>{output ? output.total : '—'}</div>
         <div className="tipoff-substats">Chemistry {teamSynergy(team).grade} · Experience {team.coach ? teamExperience(team) : '—'} · Budget {team.seasonCap !== undefined ? formatCoins(rosterSalary(team)) : '—'}</div>
       </div>
-    );
+      );
+    };
     const CardSlot = ({ card, mine }) => {
       if (!card) return <div className="tipoff-card empty">None held</div>;
       if (mine) {
@@ -120,12 +123,12 @@ export default function PlayoffSeriesScreen({ state, actions, myTeamId }) {
             <div className="tipoff-tipoff-tag">Tip-Off</div>
           </div>
           <div className="tipoff-row">
-            <TipoffTeam team={teamA} output={outputA} mine={humanInMatch && teamA === myTeam} />
+            <TipoffTeam team={teamA} opponent={teamB} output={outputA} mine={humanInMatch && teamA === myTeam} />
             <div className="tipoff-vs">
               <span className={'tipoff-vs-text' + (vsShowingLogo ? ' hidden' : '')}>VS</span>
               <span className={'tipoff-vs-logo' + (vsShowingLogo ? '' : ' hidden')}><BallMark size={58} variant="onInk" /></span>
             </div>
-            <TipoffTeam team={teamB} output={outputB} mine={humanInMatch && teamB === myTeam} away />
+            <TipoffTeam team={teamB} opponent={teamA} output={outputB} mine={humanInMatch && teamB === myTeam} away />
           </div>
           <div className="tipoff-cards-row">
             <div className="tipoff-cards-col">
