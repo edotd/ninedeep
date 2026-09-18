@@ -78,8 +78,10 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
         <div className="ts-body">
           <div className="ts-section">
             <div className="ts-heading">Rotation</div>
-            <div className="ts-roto-grid">
-              {starters.map((c) => <PlayerCard key={c.id} card={c} compact />)}
+            <div className="ts-roto-scroll">
+              <div className="ts-roto-grid">
+                {starters.map((c) => <PlayerCard key={c.id} card={c} />)}
+              </div>
             </div>
             <div className="ts-bench-grid">
               {bench.map((c) => <BenchStrip key={c.id} card={c} />)}

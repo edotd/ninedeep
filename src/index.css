@@ -548,10 +548,13 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .ts-titles-value{font-family:var(--font-display);font-size:40px;line-height:.86;color:var(--franchise);}
 .ts-body{background:var(--file);padding:22px 24px;display:flex;flex-direction:column;gap:20px;}
 .ts-heading{font-family:var(--font-label);font-size:11px;letter-spacing:.14em;color:var(--ink);text-transform:uppercase;margin-bottom:9px;}
-/* Starters render as real (compact) PlayerCards now — see TeamSummaryScreen.jsx — so this is
-   just a wrapping flex row rather than a rigid column grid: the cards are a fixed 152px wide,
-   and flex-wrap lets them reflow at any viewport without a media query per breakpoint. */
-.ts-roto-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;}
+/* Starters render as real, full-size PlayerCards now — see TeamSummaryScreen.jsx — matching
+   the synced design's gallery of full cards rather than a bespoke roster tile. Five full cards
+   are wider than most viewports, so this scrolls horizontally (same pattern as the playoff
+   bracket's tree) instead of shrinking the cards or wrapping them into a cramped multi-row grid. */
+.ts-roto-scroll{overflow-x:auto;padding-bottom:6px;margin-bottom:8px;}
+.ts-roto-grid{display:flex;gap:14px;}
+.ts-roto-grid .pcard{width:230px;flex-shrink:0;margin:0;}
 .ts-bench-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;}
 .ts-bench-strip{background:var(--form);border:1px solid var(--form-rule);padding:7px 9px;display:flex;justify-content:space-between;align-items:baseline;font-family:var(--font-mono);font-size:12px;color:var(--ink);}
 .ts-bench-cap{font-size:10px;color:var(--file-muted);}
