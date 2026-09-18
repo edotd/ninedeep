@@ -4,7 +4,7 @@ import { careerLevel, careerBonus } from '../game/aging';
 import { cardTier, jerseyNumber, playerGrade } from '../game/cards';
 import CardTypeMark from './CardTypeMark';
 
-export default function PlayerCard({ card, onClick, selected, draftStyle, rosterLabel, compact }) {
+export default function PlayerCard({ card, onClick, selected, draftStyle, rosterLabel, compact, onRelease }) {
   const pillLabel = rosterLabel || (selected ? 'Selected' : null);
   const tier = cardTier(card);
   const skillset = skillsetFor(card);
@@ -85,6 +85,11 @@ export default function PlayerCard({ card, onClick, selected, draftStyle, roster
           <span>{card.tierName}</span>
           <span>#{card.id}</span>
         </div>
+      )}
+      {!compact && onRelease && (
+        <button className="pcard-release" onClick={(e) => { e.stopPropagation(); onRelease(card); }}>
+          Release <span className="pcard-release-cost">{formatCoins(card.salary)} Dead</span>
+        </button>
       )}
     </div>
   );

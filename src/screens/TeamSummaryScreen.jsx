@@ -1,7 +1,6 @@
 import TeamChemistry from '../components/TeamChemistry';
 import PlayerCard from '../components/PlayerCard';
 import FrontOfficeCard from '../components/FrontOfficeCard';
-import { skillsetFor } from '../game/skillsets';
 import { formatCoins, rosterSalary } from '../game/economy';
 import { teamOutput } from '../game/matchup';
 import { teamExperience } from '../game/aging';
@@ -11,13 +10,10 @@ import MatchupCard from '../components/MatchupCard';
 
 const ERA_LENGTH = 8;
 
-function BenchStrip({ card }) {
-  return (
-    <div className="ts-bench-strip">
-      <span>{card.archetype}<small className="ts-skillset">{skillsetFor(card)?.name || 'No Skillset'}</small></span>
-      <span className="ts-bench-cap">{formatCoins(card.salary)}</span>
-    </div>
-  );
+function ordinal(n) {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }
 
 // The Team Summary screen — "the file the league keeps on you" (design brand handoff, 1a).
@@ -51,6 +47,24 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
   const output = team.coach && team.activeIds && team.activeIds.length > 0 ? teamOutput(team) : null;
   const chemistry = team.coach ? teamExperience(team) : null;
 
+  // Ranked against every other team that also has a lineup set — same "Nth of the league"
+  // framing as Standings, but scoped to whatever this game's actual team count is rather than
+  // a fixed number.
+  const leagueOutputs = state.teams.map((t) => (t.coach && t.activeIds && t.activeIds.length > 0 ? teamOutput(t) : null));
+  const rankedCount = leagueOutputs.filter(Boolean).length;
+  const rankFor = (key) => {
+    if (!output) return null;
+    const better = leagueOutputs.filter((o) => o && o[key] > output[key]).length;
+    return better + 1;
+  };
+
+  const canEdit = state.phase === 'teamsummary' && !team.lineupConfirmed;
+  const handleRelease = (card) => {
+    if (!window.confirm(`Release ${card.archetype} · ${card.position}? This carries ${formatCoins(card.salary)} in dead money against your budget this season.`)) return;
+    const res = actions.releasePlayer(myTeamId, card.id);
+    if (res && res.ok === false) alert(res.msg);
+  };
+
   return (
     <>
       <div className="screen ts-screen">
@@ -75,6 +89,24 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
           </div>
         </div>
 
+        <div className="ts-proj-row">
+          <div className="ts-proj-tile">
+            <div className="ts-proj-label">Proj Offense</div>
+            <div className="ts-proj-value accent">{output ? output.off : '—'}</div>
+            {output && <div className="ts-proj-rank">{ordinal(rankFor('off'))} of {rankedCount}</div>}
+          </div>
+          <div className="ts-proj-tile">
+            <div className="ts-proj-label">Proj Defense</div>
+            <div className="ts-proj-value">{output ? output.def : '—'}</div>
+            {output && <div className="ts-proj-rank">{ordinal(rankFor('def'))} of {rankedCount}</div>}
+          </div>
+          <div className="ts-proj-tile">
+            <div className="ts-proj-label">Bench Output</div>
+            <div className="ts-proj-value">{output ? output.bench : '—'}</div>
+            {output && <div className="ts-proj-rank">{ordinal(rankFor('bench'))} of {rankedCount}</div>}
+          </div>
+        </div>
+
         <div className="ts-body">
           <div className="ts-section">
             <div className="ts-heading">Rotation</div>
@@ -83,18 +115,24 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
                 {starters.map((c) => <PlayerCard key={c.id} card={c} />)}
               </div>
             </div>
-            <div className="ts-bench-grid">
-              {bench.map((c) => <BenchStrip key={c.id} card={c} />)}
-              {Array.from({ length: Math.max(0, openSlots) }, (_, i) => (
-                <div key={'open' + i} className="ts-bench-open">OPEN</div>
-              ))}
-              {openSlots <= 0 && bench.length < 4 && (
-                <div className="ts-bench-open">ROSTER FULL</div>
-              )}
+          </div>
+
+          <div className="ts-section">
+            <div className="ts-heading">Bench</div>
+            <div className="ts-roto-scroll">
+              <div className="ts-roto-grid">
+                {bench.map((c) => <PlayerCard key={c.id} card={c} onRelease={canEdit ? handleRelease : undefined} />)}
+                {Array.from({ length: Math.max(0, openSlots) }, (_, i) => (
+                  <div key={'open' + i} className="ts-bench-open">OPEN</div>
+                ))}
+                {openSlots <= 0 && bench.length < 4 && (
+                  <div className="ts-bench-open">ROSTER FULL</div>
+                )}
+              </div>
             </div>
           </div>
 
-          <TeamChemistry team={team} canEdit={state.phase === 'teamsummary' && !team.lineupConfirmed} onSwap={(outgoing, incoming) => actions.swapStarter(myTeamId, outgoing, incoming)} />
+          <TeamChemistry team={team} canEdit={canEdit} onSwap={(outgoing, incoming) => actions.swapStarter(myTeamId, outgoing, incoming)} />
 
           <div className="ts-section">
             <div className="ts-heading">Budget Ledger</div>
@@ -126,9 +164,47 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
             <div className="ts-section">
               <div className="ts-heading">Front Office</div>
               <div className="fo-deal-row" style={{ margin: 0 }}>
-                <FrontOfficeCard kind="coach" team={team} />
-                <FrontOfficeCard kind="fanbase" team={team} />
-                <FrontOfficeCard kind="market" team={team} />
+                <div className="ts-fo-col">
+                  <FrontOfficeCard kind="coach" team={team} />
+                  <button
+                    className="secondary ts-fo-action"
+                    style={{ width: '100%' }}
+                    onClick={() => {
+                      const res = actions.fireCoach(myTeamId);
+                      if (res && res.ok === false) alert(res.msg);
+                    }}
+                  >
+                    Fire Coach — Est. {formatCoins(fireCostEstimate)}+ Dead
+                  </button>
+                </div>
+                <div className="ts-fo-col">
+                  <FrontOfficeCard kind="fanbase" team={team} />
+                  <button
+                    className="secondary ts-fo-action"
+                    style={{ width: '100%' }}
+                    disabled={team.financeBoostUsedThisSeason}
+                    onClick={() => {
+                      const res = actions.investInFanbase(myTeamId);
+                      if (res && res.ok === false) alert(res.msg);
+                    }}
+                  >
+                    {team.financeBoostUsedThisSeason ? 'Already Invested This Season' : `Invest — ${formatCoins(FANBASE_BOOST_COST)}`}
+                  </button>
+                </div>
+                <div className="ts-fo-col">
+                  <FrontOfficeCard kind="market" team={team} />
+                  <button
+                    className="secondary ts-fo-action"
+                    style={{ width: '100%' }}
+                    disabled={team.gmChangeSeason === state.season}
+                    onClick={() => {
+                      const res = actions.fireGM(myTeamId);
+                      if (res && res.ok === false) alert(res.msg);
+                    }}
+                  >
+                    {team.gmChangeSeason === state.season ? 'GM Replaced This Season' : `Fire GM — ${formatCoins(FIRE_GM_COST)}`}
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -138,49 +214,6 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
               <div className="ts-heading">Matchup Cards</div>
               <div className="mu-deal-row" style={{ margin: 0 }}>
                 {team.matchupCards.map((c) => <MatchupCard key={c.id} card={c} />)}
-              </div>
-            </div>
-          )}
-
-          {team.coach && team.market && (
-            <div className="ts-section">
-              <div className="ts-heading">Front Office Moves</div>
-              <div className="pull-slot">
-                <div className="pull-label">Fire Coach</div>
-                <div className="pull-extra" style={{ marginBottom: 8 }}>Pay off {team.coach.name}'s salary plus the new hire's — a random new coach, no guaranteed upgrade. Est. cost {formatCoins(fireCostEstimate)}+, out of budget room.</div>
-                <button
-                  className="secondary"
-                  style={{ width: '100%' }}
-                  onClick={() => {
-                    const res = actions.fireCoach(myTeamId);
-                    if (res && res.ok === false) alert(res.msg);
-                  }}
-                >
-                  Fire Coach
-                </button>
-              </div>
-              <div className="pull-slot">
-                <div className="pull-label">Fire GM</div>
-                <div className="pull-extra" style={{ marginBottom: 8 }}>Draw a random GM and market size. Once per season; costs {formatCoins(FIRE_GM_COST)} in budget room. The new market may raise or lower your cap.</div>
-                <button className="secondary" style={{ width: '100%' }} disabled={team.gmChangeSeason === state.season} onClick={() => {
-                  const res = actions.fireGM(myTeamId);
-                  if (res && res.ok === false) alert(res.msg);
-                }}>{team.gmChangeSeason === state.season ? 'GM Replaced This Season' : 'Fire GM'}</button>
-              </div>
-              <div className="pull-slot">
-                <div className="pull-label">Invest in Fanbase</div>
-                <div className="pull-extra" style={{ marginBottom: 8 }}>A small, permanent bump to your attendance baseline. Once per season.</div>
-                <button
-                  className="secondary"
-                  style={{ width: '100%' }}
-                  disabled={team.financeBoostUsedThisSeason}
-                  onClick={() => {
-                    const res = actions.investInFanbase(myTeamId);
-                    if (res && res.ok === false) alert(res.msg);
-                  }}
-                >
-                  {team.financeBoostUsedThisSeason ? 'Already Invested This Season' : `Invest — ${formatCoins(FANBASE_BOOST_COST)}`}
-                </button>
               </div>
             </div>
           )}
