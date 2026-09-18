@@ -62,9 +62,18 @@ export default function DraftScreen({ state, actions, myTeamId }) {
       )}
 
       <h2>Available Cards ({sortedPool.length})</h2>
-      {sortedPool.map((c) => (
-        <PlayerCard key={c.id} card={{ ...c, salary: offseasonPrice(myTeam, c.salary) }} onClick={onTheClock ? () => actions.draftPick(myTeamId, c.id) : undefined} />
-      ))}
+      <div className="fa-grid">
+        {sortedPool.map((c) => {
+          const priced = { ...c, salary: offseasonPrice(myTeam, c.salary) };
+          const pick = () => actions.draftPick(myTeamId, c.id);
+          return (
+            <div key={c.id}>
+              <PlayerCard card={priced} onClick={onTheClock ? pick : undefined} />
+              {onTheClock && <button className="pcard-renew" onClick={pick}>Select</button>}
+            </div>
+          );
+        })}
+      </div>
     </OffseasonFile>
   );
 }

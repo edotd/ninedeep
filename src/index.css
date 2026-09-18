@@ -315,6 +315,12 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .pcard-release:hover{background:var(--stamp-text);}
 .pcard-release-cost{font-family:var(--font-mono);font-weight:normal;letter-spacing:.04em;}
 
+/* Renew — the positive counterpart to Release, on the Contracts screen's expiring cards.
+   Same full-width footer-bar treatment, approved-green instead of stamp-red. */
+.pcard-renew{width:100%;border:none;border-top:2px solid var(--approved);background:var(--approved);color:var(--form);font-family:var(--font-label);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:9px 12px;cursor:pointer;margin-top:-2px;}
+.pcard-renew:hover{background:var(--approved-ink);}
+.pcard-renew:disabled{opacity:.55;cursor:default;}
+
 /* Compact card — used to tile a full roster */
 .pcard-compact{background:var(--form);border:2px solid var(--ink);width:152px;font-family:var(--font-mono);cursor:pointer;}
 .pcard-compact .pcard-header{padding:6px 8px;}

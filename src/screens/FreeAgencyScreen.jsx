@@ -36,12 +36,19 @@ export default function FreeAgencyScreen({ state, actions, myTeamId }) {
         <h2>Free Agent Pool ({state.freeAgents.length})</h2>
         {state.freeAgents.length ? (
           <div className="fa-grid">
-            {state.freeAgents.map((c) => (
-              <PlayerCard key={c.id} card={{ ...c, salary: offseasonPrice(team, c.salary) }} draftStyle onClick={() => {
+            {state.freeAgents.map((c) => {
+              const price = offseasonPrice(team, c.salary);
+              const sign = () => {
                 const res = actions.signFreeAgent(c.id, myTeamId);
                 if (res && res.ok === false) alert(res.msg);
-              }} />
-            ))}
+              };
+              return (
+                <div key={c.id}>
+                  <PlayerCard card={{ ...c, salary: price }} draftStyle onClick={sign} />
+                  <button className="pcard-renew" disabled={openSlots <= 0} onClick={sign}>Sign — {formatCoins(price)}</button>
+                </div>
+              );
+            })}
           </div>
         ) : <p className="lede">Pool is empty right now.</p>}
       <div className="of-action-wrap">
