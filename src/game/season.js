@@ -284,8 +284,12 @@ export function proceedFromResults(state) {
       c.contract--;
       advanceCareer(c);
       if (c.contract <= 0) {
-        state.freeAgents.push(Object.assign({}, c, { contract: c.maxContract, lastTeamId: team.id }));
-        if (team.human) state.lastExpiredPlayers.push(c);
+        // Contracts/FreeAgencyScreen both filter lastExpiredPlayers by lastTeamId — push the
+        // same tagged copy that goes to free agency (not the bare original `c`, which never
+        // carries lastTeamId) so that filter can actually match.
+        const expiredCard = Object.assign({}, c, { contract: c.maxContract, lastTeamId: team.id });
+        state.freeAgents.push(expiredCard);
+        if (team.human) state.lastExpiredPlayers.push(expiredCard);
       } else kept.push(c);
     });
     team.hand = kept;
