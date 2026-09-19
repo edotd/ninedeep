@@ -63,7 +63,7 @@ export default function SettingsScreen({ state, actions, onBack, onNewEra }) {
           />
           <div className="pull-extra">
             {winCondition === 'outright'
-              ? "Not used while Win Condition is set to Win Playoffs Outright."
+              ? "Not used while Win Condition is set to Win Playoffs."
               : "The Finals winner's rating must clear (playoff-field average rating × this multiplier) to be crowned champion."}
           </div>
         </div>

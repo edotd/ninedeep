@@ -23,7 +23,7 @@ export default function StandingsScreen({ state, actions, myTeamId }) {
             </div>
             {!outright && (
               <div className="standings-bar-row">
-                <span className="standings-bar-label">Championship Bar</span>
+                <span className="standings-bar-label">Clear Championship Bar</span>
                 <span className="standings-bar-value">{Math.round(state.bar)}</span>
               </div>
             )}

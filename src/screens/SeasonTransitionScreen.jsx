@@ -48,7 +48,7 @@ export default function SeasonTransitionScreen({ state, actions, myTeamId }) {
 
           <div className="trans-meta-row">
             <span>{played} Season{played === 1 ? '' : 's'} Played · {remaining} Remaining</span>
-            <span>Win Condition · {outright ? 'Win Playoffs Outright' : 'Championship Bar'}</span>
+            <span>Win Condition · {outright ? 'Win Playoffs' : 'Clear Championship Bar'}</span>
           </div>
 
           <div className="trans-panels">

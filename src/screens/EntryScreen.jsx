@@ -41,9 +41,8 @@ const GLOSSARY_TABS = [
 // file. Replaces the old two-step flow (a mode-picker LandingScreen, then a separate
 // SetupScreen for naming the solo franchise) with one screen: an ink hero half that carries
 // the pitch and a browsable glossary preview, and a cream setup half on the right whose
-// content swaps with the Solo/Host/Join tab — Solo's fields (name, win condition, matchup
-// cards) sit right here, so starting a solo era is a single "Start The Era" click with
-// nothing in between.
+// content swaps with the Solo/Host/Join tab. Solo keeps only the franchise name and Start
+// action here; all configuration lives on the linked Settings screen.
 export default function EntryScreen({ pendingJoinCode, soloState, soloActions, onStartSolo, onEnterRoom }) {
   const [tab, setTab] = useState(pendingJoinCode ? 'join' : 'solo');
   const [glossaryTab, setGlossaryTab] = useState('basics');
@@ -70,8 +69,6 @@ export default function EntryScreen({ pendingJoinCode, soloState, soloActions, o
   if (overlay === 'glossary') return <GlossaryScreen state={soloState} onBack={() => setOverlay(null)} />;
   if (overlay === 'settings') return <SettingsScreen state={soloState} actions={soloActions} onBack={() => setOverlay(null)} />;
 
-  const winCondition = soloState.settings.winCondition || 'outright';
-  const matchupCardsEnabled = soloState.settings.matchupCardsEnabled !== false;
   const activeGlossary = GLOSSARY_TABS.find((t) => t.key === glossaryTab) || GLOSSARY_TABS[0];
 
   const handleStartSolo = () => {
@@ -184,45 +181,12 @@ export default function EntryScreen({ pendingJoinCode, soloState, soloActions, o
                 </div>
               </div>
 
-              <div className="entry-field-group">
-                <div className="entry-field-heading">
-                  <span>Win Condition</span>
-                </div>
-                <div className="entry-radio-list">
-                  <button className={'entry-radio-row' + (winCondition === 'bar' ? ' active' : '')} onClick={() => soloActions.updateSettings({ winCondition: 'bar' })}>
-                    <div>
-                      <div className="entry-radio-title">Championship Bar</div>
-                      <div className="entry-radio-text">The Finals winner must also clear a rating bar to be crowned.</div>
-                    </div>
-                    <span className="entry-radio-dot" />
-                  </button>
-                  <button className={'entry-radio-row' + (winCondition === 'outright' ? ' active' : '')} onClick={() => soloActions.updateSettings({ winCondition: 'outright' })}>
-                    <div>
-                      <div className="entry-radio-title">Win Playoffs Outright</div>
-                      <div className="entry-radio-text">Whoever wins the Finals is champion. No bar to clear.</div>
-                    </div>
-                    <span className="entry-radio-dot" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="entry-toggle-row">
-                <div>
-                  <div className="entry-toggle-title">Matchup Cards</div>
-                  <div className="entry-toggle-text">Every club pulls them each season and plays them in the playoffs.</div>
-                </div>
-                <div className="entry-toggle-switch">
-                  <button className={matchupCardsEnabled ? 'active' : ''} onClick={() => soloActions.updateSettings({ matchupCardsEnabled: true })}>On</button>
-                  <button className={!matchupCardsEnabled ? 'active' : ''} onClick={() => soloActions.updateSettings({ matchupCardsEnabled: false })}>Off</button>
-                </div>
-              </div>
-
               <div className="entry-start-block">
                 <button className="entry-start-btn" onClick={handleStartSolo}>
-                  Start The Era <span>→</span>
+                  Start <span>→</span>
                 </button>
                 <button className="entry-more-settings" onClick={() => setOverlay('settings')}>
-                  More Settings · Era Length, Budget Ceiling, AI Difficulty
+                  Settings
                 </button>
               </div>
             </>
