@@ -1,42 +1,33 @@
 import { applySupplementalCard, supplementalRoll } from './supplementalEffects';
-// The turn-by-turn playoff match engine (design doc: "Nine Deep Match Flow", screens 2C/2D).
-// A game is a coin flip followed by each team's own three-roll cycle — offense, defense,
-// bench, in that order — first the coin-flip winner, then the other team. Offense/defense
-// rolls open a card-play window for the rolling team and a reaction window for the other team
-// (only meaningful when an Injury card was just played against a held Injury Prevention);
-// bench never opens either window. This produces exactly the same m.result shape the old
-// one-shot playMatchup did, so every downstream reader (MatchupBox, ResultsScreen,
-// SeasonRecapScreen, seasonAvgScoreForTeam, lockSeasonAndSeed) keeps working unchanged.
+// Nine Deep's turn-by-turn playoff match engine — a coin flip decides who opens on offense.
+// A match is exactly two possessions ("exchanges"): the coin-flip winner is offense for
+// Exchange 1, the loser is offense for Exchange 2, so both teams get exactly one offense roll
+// and one defense roll, same total dice as the old three-roll-per-team model. Within an
+// exchange, offense chooses a matchup card (or passes), then defense does — each blind to the
+// other's pick — before either die is rolled. Both then roll: if offense's die ties or beats
+// defense's, offense's full total counts; if defense's die is higher, offense's total is cut by
+// the defending team's coach.defBonus (a stronger defensive coach costs the offense more).
+// Defense's total always counts, win or lose. Bench, Home Court, matchup-card effects, and
+// Advantage/Disadvantage all work exactly as before — only how the offense/defense numbers get
+// produced, and who rolls against whom, has changed.
 import { HOME_COURT_BONUS } from './constants';
 import { rollDie } from './rng';
 import { offenseDieSize, defenseDieSize } from './roster';
 import {
-  checkInjury, playCardEffect, wantsAdvantage, playableCards,
-  injuryPreventionCard, benchScore, hasHomeCourt, applyLiveFanbaseMod,
+  checkInjury, playCardEffect, playableCards,
+  benchScore, hasHomeCourt, applyLiveFanbaseMod, wantsAdvantage,
 } from './matchup';
 import { applyPlayoffWinMilestone } from './fanbase';
 
-export const STEP_PLAN = [
-  { who: 'first', kind: 'offense' },
-  { who: 'first', kind: 'defense' },
-  { who: 'first', kind: 'bench' },
-  { who: 'second', kind: 'offense' },
-  { who: 'second', kind: 'defense' },
-  { who: 'second', kind: 'bench' },
+export const EXCHANGE_PLAN = [
+  { offenseWho: 'first', defenseWho: 'second' },
+  { offenseWho: 'second', defenseWho: 'first' },
 ];
 
-function isInjuryCardName(name) {
-  return name === 'Injury (Minor)' || name === 'Injury (Major)';
-}
-
-// stepIndex tags each entry with the roll it narrates, so the UI can pull "just this step's"
-// lines for the resolution report while the full log still shows everything in order.
 function pushLog(turn, tag, text) {
-  turn.log.unshift({ tag, text, stepIndex: turn.stepIndex });
+  turn.log.unshift({ tag, text, stepIndex: turn.exchangeIndex });
 }
 
-// Sets up everything that used to happen once at the top of rollCurrentMatchup — advantage,
-// pre-turn injury checks, home court, live fanbase mods — then starts the coin flip.
 export function beginTurn(state) {
   const m = state.playoff.matches[state.playoff.activeMatchIndex];
   if (m.from) {
@@ -63,28 +54,34 @@ export function beginTurn(state) {
 
   m.turn = {
     stage: 'coinflip',
-    stepIndex: 0,
+    exchangeIndex: 0,
     order: null,
     current: null,
+    offenseSide: null,
+    defenseSide: null,
     advA, advB, injA, injB, idsA, idsB, extraA, extraB, cardNotes, hcaA, hcaB,
     log: [],
   };
-}
-
-function startStep(m) {
-  const turn = m.turn;
-  const plan = STEP_PLAN[turn.stepIndex];
-  const team = plan.who === 'first' ? turn.order[0] : turn.order[1];
-  turn.current = { kind: plan.kind, team: team === m.a ? 'a' : 'b' };
-  turn.stage = 'roll';
 }
 
 function flipCoin(m) {
   const turn = m.turn;
   const firstIsA = Math.random() < 0.5;
   turn.order = firstIsA ? [m.a, m.b] : [m.b, m.a];
-  pushLog(turn, 'pregame', `Coin flip — ${turn.order[0].name} wins possession.`);
-  startStep(m);
+  pushLog(turn, 'pregame', `Coin flip — ${turn.order[0].name} starts on offense.`);
+  startExchange(m);
+}
+
+function startExchange(m) {
+  const turn = m.turn;
+  const plan = EXCHANGE_PLAN[turn.exchangeIndex];
+  const offenseTeam = plan.offenseWho === 'first' ? turn.order[0] : turn.order[1];
+  const defenseTeam = offenseTeam === m.a ? m.b : m.a;
+  turn.offenseSide = offenseTeam === m.a ? 'a' : 'b';
+  turn.defenseSide = defenseTeam === m.a ? 'a' : 'b';
+  turn.current = { team: turn.offenseSide, role: 'offense' };
+  turn.stage = 'card';
+  pushLog(turn, 'pregame', `Exchange ${turn.exchangeIndex + 1}: ${offenseTeam.name} on offense, ${defenseTeam.name} on defense.`);
 }
 
 function aiChooseCard(team) {
@@ -92,82 +89,78 @@ function aiChooseCard(team) {
   return options.length ? options[0] : null;
 }
 
-// Whether the reaction window is even worth showing — only an Injury card played against a
-// held (unused) Injury Prevention card gives the other team anything to react with.
-function needsReaction(cur, otherTeam) {
-  return !!(cur.actionCard && isInjuryCardName(cur.actionCard.name) && injuryPreventionCard(otherTeam));
-}
-
-function resolveStep(state, m) {
+function applyCard(state, m, side, role, card, targetId, stat) {
   const turn = m.turn;
-  const plan = STEP_PLAN[turn.stepIndex];
-  const cur = turn.current;
-  const side = cur.team === 'a' ? 'a' : 'b';
+  const actingTeam = side === 'a' ? m.a : m.b;
+  if (!card) { pushLog(turn, 'action', `${actingTeam.name} passes.`); return; }
   const otherSide = side === 'a' ? 'b' : 'a';
-  const actingTeam = cur.team === 'a' ? m.a : m.b;
-  const otherTeam = cur.team === 'a' ? m.b : m.a;
+  const otherTeam = otherSide === 'a' ? m.a : m.b;
   const actingExtra = side === 'a' ? turn.extraA : turn.extraB;
   const otherExtra = otherSide === 'a' ? turn.extraA : turn.extraB;
 
-  if (cur.actionCard?.effectType) {
-    const note = applySupplementalCard(state, actingTeam, otherTeam, cur.actionCard,
-      actingExtra, otherExtra, side === 'a' ? turn.idsA : turn.idsB,
-      otherSide === 'a' ? turn.idsA : turn.idsB, cur.actionTargetId, cur.actionStat || (cur.kind === 'defense' ? 'DEF' : 'SCO'), cur.kind);
-    if (note) { turn.cardNotes.push({ text: note, cardName: cur.actionCard.name }); pushLog(turn, 'action', note); }
-  } else if (cur.actionCard) {
-    let otherIds = otherSide === 'a' ? turn.idsA : turn.idsB;
-    const res = playCardEffect(actingTeam, otherTeam, otherIds, state.playoff, cur.actionCard, cur.actionTargetId, cur.reacts);
+  if (card.effectType) {
+    const note = applySupplementalCard(state, actingTeam, otherTeam, card, actingExtra, otherExtra,
+      side === 'a' ? turn.idsA : turn.idsB, otherSide === 'a' ? turn.idsA : turn.idsB,
+      targetId, stat || (role === 'defense' ? 'DEF' : 'SCO'), role);
+    if (note) { turn.cardNotes.push({ text: note, cardName: card.name }); pushLog(turn, 'action', note); }
+  } else {
+    const otherIds = otherSide === 'a' ? turn.idsA : turn.idsB;
+    const res = playCardEffect(actingTeam, otherTeam, otherIds, state.playoff, card, targetId);
     if (otherSide === 'a') turn.idsA = res.targetIds; else turn.idsB = res.targetIds;
     actingExtra.offDelta += res.userOffDelta; actingExtra.defDelta += res.userDefDelta; actingExtra.leagueMod += res.userLeagueMod;
     otherExtra.offDelta += res.targetOffDelta; otherExtra.defDelta += res.targetDefDelta;
     if (res.note) turn.cardNotes.push({ text: res.note, cardName: res.cardName });
-  }
-
-  const myIds = side === 'a' ? turn.idsA : turn.idsB;
-  if (plan.kind === 'bench') {
-    const bench = benchScore(actingTeam, myIds);
-    turn[`${side}Bench`] = bench;
-    pushLog(turn, 'resolution', `${actingTeam.name}'s bench contributes +${bench}.`);
-  } else {
-    const off = plan.kind === 'offense';
-    const sides = off ? offenseDieSize(actingTeam) : defenseDieSize(actingTeam);
-    const label = off ? 'Off' : 'Def';
-    turn[`${side}${label}First`] = cur.first ?? cur.die;
-    turn[`${side}${label}Second`] = cur.second ?? cur.dieOther ?? cur.die;
-    turn[`${side}${label}Sides`] = sides;
-    refreshRolls(m);
-    const mod = turn[`${side}${label}Mod`];
-    const total = turn[`${side}${label}Total`];
-    cur.die = turn[`${side}${label}Die`];
-    pushLog(turn, 'resolution', `${actingTeam.name} rolls ${cur.die} (1d${sides}) on ${off ? 'Offense' : 'Defense'} — +${mod} = ${total}.`);
-  }
-
-  refreshRolls(m);
-  turn.current = null;
-  turn.stepIndex += 1;
-  if (turn.stepIndex >= STEP_PLAN.length) {
-    finishTurn(state, m);
-  } else {
-    turn.stage = 'stepdone';
+    pushLog(turn, 'action', `${actingTeam.name} plays ${card.name}.`);
   }
 }
 
-// Recompute resolved rolls as well: a second-team penalty still affects this game.
-function refreshRolls(m) {
+function resolveExchange(state, m) {
   const turn = m.turn;
-  for (const side of ['a', 'b']) {
-    for (const kind of ['offense', 'defense']) {
-      const label = kind === 'offense' ? 'Off' : 'Def';
-      const first = turn[`${side}${label}First`];
-      if (first == null) continue;
-      const result = supplementalRoll(m[side], side === 'a' ? turn.idsA : turn.idsB,
-        side === 'a' ? turn.extraA : turn.extraB, kind, first,
-        turn[`${side}${label}Second`], side === 'a' ? turn.advA : turn.advB);
-      for (const key of ['die', 'dieOther', 'mod', 'total', 'mode']) {
-        turn[`${side}${label}${key[0].toUpperCase() + key.slice(1)}`] = result[key];
-      }
-    }
-  }
+  const offSide = turn.offenseSide, defSide = turn.defenseSide;
+  const offenseTeam = offSide === 'a' ? m.a : m.b;
+  const defenseTeam = defSide === 'a' ? m.a : m.b;
+  const offenseExtra = offSide === 'a' ? turn.extraA : turn.extraB;
+  const defenseExtra = defSide === 'a' ? turn.extraA : turn.extraB;
+  const offenseIds = offSide === 'a' ? turn.idsA : turn.idsB;
+  const defenseIds = defSide === 'a' ? turn.idsA : turn.idsB;
+  const offAdv = offSide === 'a' ? turn.advA : turn.advB;
+  const defAdv = defSide === 'a' ? turn.advA : turn.advB;
+
+  const offSides = offenseDieSize(offenseTeam);
+  const defSidesN = defenseDieSize(defenseTeam);
+  const offRolled = supplementalRoll(offenseTeam, offenseIds, offenseExtra, 'offense', rollDie(offSides), rollDie(offSides), offAdv);
+  const defRolled = supplementalRoll(defenseTeam, defenseIds, defenseExtra, 'defense', rollDie(defSidesN), rollDie(defSidesN), defAdv);
+
+  const offenseWon = offRolled.die >= defRolled.die;
+  const haircut = (defenseTeam.coach && defenseTeam.coach.defBonus) || 0;
+  const offenseOutput = offenseWon ? offRolled.total : Math.round(offRolled.total * (1 - haircut) * 100) / 100;
+  const defenseOutput = defRolled.total;
+
+  turn[`${offSide}OffDie`] = offRolled.die; turn[`${offSide}OffDieOther`] = offRolled.dieOther; turn[`${offSide}OffMode`] = offRolled.mode;
+  turn[`${offSide}OffMod`] = offRolled.mod; turn[`${offSide}OffTotal`] = offenseOutput; turn[`${offSide}OffSides`] = offSides;
+  turn[`${offSide}OffWon`] = offenseWon;
+  turn[`${defSide}DefDie`] = defRolled.die; turn[`${defSide}DefDieOther`] = defRolled.dieOther; turn[`${defSide}DefMode`] = defRolled.mode;
+  turn[`${defSide}DefMod`] = defRolled.mod; turn[`${defSide}DefTotal`] = defenseOutput; turn[`${defSide}DefSides`] = defSidesN;
+
+  pushLog(turn, 'resolution',
+    `${offenseTeam.name} rolls ${offRolled.die} (1d${offSides}) on Offense vs ${defenseTeam.name}'s ${defRolled.die} (1d${defSidesN}) on Defense — ` +
+    (offenseWon
+      ? `offense wins the possession, ${offenseTeam.name} banks the full ${offenseOutput}.`
+      : `defense wins the possession — ${offenseTeam.name}'s offense is cut to ${offenseOutput} (${Math.round(haircut * 100)}% haircut from ${defenseTeam.name}'s coaching).`) +
+    ` ${defenseTeam.name}'s defense banks ${defenseOutput} regardless.`);
+
+  turn.current = null;
+  turn.stage = 'resolved';
+}
+
+function finishBench(state, m) {
+  const turn = m.turn;
+  const aBench = benchScore(m.a, turn.idsA);
+  const bBench = benchScore(m.b, turn.idsB);
+  turn.aBench = aBench; turn.bBench = bBench;
+  pushLog(turn, 'resolution', `${m.a.name}'s bench contributes +${aBench}.`);
+  pushLog(turn, 'resolution', `${m.b.name}'s bench contributes +${bBench}.`);
+  finishTurn(state, m);
 }
 
 function finishTurn(state, m) {
@@ -177,10 +170,10 @@ function finishTurn(state, m) {
   const winner = aSum === bSum ? (Math.random() < 0.5 ? m.a : m.b) : aSum > bSum ? m.a : m.b;
   m.result = {
     a: m.a, b: m.b, advA: !!turn.advA, advB: !!turn.advB,
-    aOffDie: turn.aOffDie, aOffMod: turn.aOffMod, aOffTotal: turn.aOffTotal, aOffSides: turn.aOffSides,
+    aOffDie: turn.aOffDie, aOffMod: turn.aOffMod, aOffTotal: turn.aOffTotal, aOffSides: turn.aOffSides, aOffWon: turn.aOffWon,
     aDefDie: turn.aDefDie, aDefMod: turn.aDefMod, aDefTotal: turn.aDefTotal, aDefSides: turn.aDefSides,
     aBench: turn.aBench, aLeagueMod: turn.extraA.leagueMod, aSum,
-    bOffDie: turn.bOffDie, bOffMod: turn.bOffMod, bOffTotal: turn.bOffTotal, bOffSides: turn.bOffSides,
+    bOffDie: turn.bOffDie, bOffMod: turn.bOffMod, bOffTotal: turn.bOffTotal, bOffSides: turn.bOffSides, bOffWon: turn.bOffWon,
     bDefDie: turn.bDefDie, bDefMod: turn.bDefMod, bDefTotal: turn.bDefTotal, bDefSides: turn.bDefSides,
     bBench: turn.bBench, bLeagueMod: turn.extraB.leagueMod, bSum,
     winner,
@@ -195,71 +188,43 @@ function finishTurn(state, m) {
   turn.stage = 'complete';
 }
 
-// Single entry point driving every stage transition. `payload` only matters at the two stages
-// that ask a human for a decision:
-//  - stage 'action', payload { cardId, targetId? } to play a card, or { pass: true } to pass.
-//  - stage 'reaction', payload { reacts: bool } for whether the target plays Injury Prevention.
-// Every other stage (coinflip, roll, stepdone) ignores payload — it's a mechanical advance.
-// An AI-controlled team's action/reaction is decided automatically the moment its stage is
-// reached, so calling this with no payload is enough to carry an AI-vs-AI match to completion.
 export function advanceTurn(state, payload) {
   const m = state.playoff.matches[state.playoff.activeMatchIndex];
   const turn = m.turn;
   if (!turn || turn.stage === 'complete') return;
 
   if (turn.stage === 'coinflip') { flipCoin(m); return; }
-  if (turn.stage === 'stepdone') { startStep(m); return; }
 
-  if (turn.stage === 'roll') {
-    const plan = STEP_PLAN[turn.stepIndex];
+  if (turn.stage === 'card') {
     const cur = turn.current;
     const actingTeam = cur.team === 'a' ? m.a : m.b;
-    if (plan.kind === 'bench') {
-      pushLog(turn, 'roll', `${actingTeam.name} looks to the bench.`);
-      resolveStep(state, m);
-      return;
-    }
-    const off = plan.kind === 'offense';
-    const sides = off ? offenseDieSize(actingTeam) : defenseDieSize(actingTeam);
-    const adv = cur.team === 'a' ? turn.advA : turn.advB;
-    // Store both raw rolls so a later Advantage/Disadvantage card can resolve
-    // without rerolling on refresh or after a Firestore round trip.
-    const first = rollDie(sides);
-    const second = rollDie(sides);
-    cur.first = first; cur.second = second;
-    const rolled = supplementalRoll(actingTeam, cur.team === 'a' ? turn.idsA : turn.idsB, cur.team === 'a' ? turn.extraA : turn.extraB, plan.kind, first, second, adv);
-    cur.die = rolled.die; cur.dieOther = rolled.dieOther; cur.mode = rolled.mode;
-    cur.sides = sides;
-    pushLog(turn, 'roll', `${actingTeam.name} rolls for ${off ? 'Offense' : 'Defense'}.`);
-    turn.stage = 'action';
-    return;
-  }
-
-  if (turn.stage === 'action') {
-    const cur = turn.current;
-    const actingTeam = cur.team === 'a' ? m.a : m.b;
-    const otherTeam = cur.team === 'a' ? m.b : m.a;
+    let card = null, targetId = null, stat = null;
     if (actingTeam.human) {
-      const options = playableCards(actingTeam);
-      const card = payload && !payload.pass ? options.find((c) => c.id === payload.cardId) || null : null;
-      cur.actionCard = card;
-      cur.actionTargetId = card ? payload.targetId || null : null;
-      cur.actionStat = card ? payload.stat || (cur.kind === 'defense' ? 'DEF' : 'SCO') : null;
+      if (payload && !payload.pass) {
+        const options = playableCards(actingTeam);
+        card = options.find((c) => c.id === payload.cardId) || null;
+        targetId = card ? payload.targetId || null : null;
+        stat = card ? payload.stat || null : null;
+      }
     } else {
-      cur.actionCard = aiChooseCard(actingTeam);
-      cur.actionTargetId = null;
+      card = aiChooseCard(actingTeam);
     }
-    pushLog(turn, 'action', cur.actionCard ? `${actingTeam.name} plays ${cur.actionCard.name}.` : `${actingTeam.name} passes.`);
-    if (needsReaction(cur, otherTeam)) { turn.stage = 'reaction'; }
-    else { resolveStep(state, m); }
+    applyCard(state, m, cur.team, cur.role, card, targetId, stat);
+
+    if (cur.role === 'offense') {
+      turn.current = { team: turn.defenseSide, role: 'defense' };
+    } else {
+      resolveExchange(state, m);
+    }
     return;
   }
 
-  if (turn.stage === 'reaction') {
-    const cur = turn.current;
-    const otherTeam = cur.team === 'a' ? m.b : m.a;
-    cur.reacts = otherTeam.human ? !!(payload && payload.reacts) : true; // AI always reacts if it can
-    pushLog(turn, 'reaction', cur.reacts ? `${otherTeam.name} answers with Injury Prevention.` : `${otherTeam.name} has no answer.`);
-    resolveStep(state, m);
+  if (turn.stage === 'resolved') {
+    if (turn.exchangeIndex === 0) {
+      turn.exchangeIndex = 1;
+      startExchange(m);
+    } else {
+      finishBench(state, m);
+    }
   }
 }

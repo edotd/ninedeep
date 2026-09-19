@@ -759,6 +759,9 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 
 .turn-waiting{font-family:var(--font-mono);font-size:12px;color:var(--ink-muted);padding:10px 0;}
 
+.turn-timer{font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;color:var(--franchise);border:1px solid var(--ink-rule);display:inline-block;padding:5px 10px;margin-bottom:10px;}
+.turn-timer.urgent{color:var(--bad);border-color:var(--bad);}
+
 /* ================= Playoff Bracket (2A, "the field") — brand handoff Screens: Playoffs &
    Match Play. Ink ground throughout; round-grouped columns of the actual QF/SF/Final matches
    (see PlayoffBracketScreen.jsx for why this doesn't literally mirror the mockup's

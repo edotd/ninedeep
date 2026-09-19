@@ -11,10 +11,8 @@ export function buildMatchEvents(m) {
   if (m.injA && m.injA.out) events.push({ kind: 'injury', team: 'a' });
   if (m.injB && m.injB.out) events.push({ kind: 'injury', team: 'b' });
   (m.cardNotes || []).forEach((note) => events.push({ kind: 'card', note }));
-  events.push({ kind: 'roll', team: 'a', stat: 'off' });
-  events.push({ kind: 'roll', team: 'b', stat: 'off' });
-  events.push({ kind: 'roll', team: 'a', stat: 'def' });
-  events.push({ kind: 'roll', team: 'b', stat: 'def' });
+  events.push({ kind: 'exchange', offense: 'a', defense: 'b' });
+  events.push({ kind: 'exchange', offense: 'b', defense: 'a' });
   events.push({ kind: 'bench', team: 'a' });
   events.push({ kind: 'bench', team: 'b' });
   events.push({ kind: 'total' });
@@ -43,14 +41,24 @@ function eventLogEntry(m, ev) {
   if (ev.kind === 'card') {
     return { icon: '🃏', text: ev.note.text, highlight: ev.note.cardName };
   }
-  if (ev.kind === 'roll') {
-    const team = ev.team === 'a' ? m.a : m.b;
-    const off = ev.stat === 'off';
-    const die = ev.team === 'a' ? (off ? m.aOffDie : m.aDefDie) : (off ? m.bOffDie : m.bDefDie);
-    const sides = ev.team === 'a' ? (off ? m.aOffSides : m.aDefSides) : (off ? m.bOffSides : m.bDefSides);
-    const mod = ev.team === 'a' ? (off ? m.aOffMod : m.aDefMod) : (off ? m.bOffMod : m.bDefMod);
-    const label = off ? 'Offense' : 'Defense';
-    return { icon: '🎲', text: `${team.name} rolls ${dieText(die, sides)} on ${label} — +${mod} = ${die + mod}.`, highlight: team.name };
+  if (ev.kind === 'exchange') {
+    const offTeam = ev.offense === 'a' ? m.a : m.b;
+    const defTeam = ev.defense === 'a' ? m.a : m.b;
+    const offDie = ev.offense === 'a' ? m.aOffDie : m.bOffDie;
+    const offSides = ev.offense === 'a' ? m.aOffSides : m.bOffSides;
+    const offTotal = ev.offense === 'a' ? m.aOffTotal : m.bOffTotal;
+    const offWon = ev.offense === 'a' ? m.aOffWon : m.bOffWon;
+    const defDie = ev.defense === 'a' ? m.aDefDie : m.bDefDie;
+    const defSides = ev.defense === 'a' ? m.aDefSides : m.bDefSides;
+    const defTotal = ev.defense === 'a' ? m.aDefTotal : m.bDefTotal;
+    const outcome = offWon
+      ? `${offTeam.name} wins the possession and banks the full ${offTotal}`
+      : `${defTeam.name} wins the possession — ${offTeam.name}'s offense is cut to ${offTotal}`;
+    return {
+      icon: '🎲',
+      text: `${offTeam.name} drives ${dieText(offDie, offSides)} on Offense vs ${defTeam.name}'s ${dieText(defDie, defSides)} on Defense — ${outcome}. ${defTeam.name}'s defense banks ${defTotal} regardless.`,
+      highlight: offTeam.name,
+    };
   }
   if (ev.kind === 'bench') {
     const team = ev.team === 'a' ? m.a : m.b;
@@ -118,10 +126,10 @@ export default function MatchupBox({ title, m, revealIndex = Infinity, onSkip })
   const isDone = shown >= events.length;
 
   const idxOf = (pred) => events.findIndex(pred);
-  const aOffIdx = idxOf((e) => e.kind === 'roll' && e.team === 'a' && e.stat === 'off');
-  const bOffIdx = idxOf((e) => e.kind === 'roll' && e.team === 'b' && e.stat === 'off');
-  const aDefIdx = idxOf((e) => e.kind === 'roll' && e.team === 'a' && e.stat === 'def');
-  const bDefIdx = idxOf((e) => e.kind === 'roll' && e.team === 'b' && e.stat === 'def');
+  const aOffIdx = idxOf((e) => e.kind === 'exchange' && e.offense === 'a');
+  const bOffIdx = idxOf((e) => e.kind === 'exchange' && e.offense === 'b');
+  const aDefIdx = idxOf((e) => e.kind === 'exchange' && e.defense === 'a');
+  const bDefIdx = idxOf((e) => e.kind === 'exchange' && e.defense === 'b');
   const aBenchIdx = idxOf((e) => e.kind === 'bench' && e.team === 'a');
   const bBenchIdx = idxOf((e) => e.kind === 'bench' && e.team === 'b');
   const totalIdx = idxOf((e) => e.kind === 'total');

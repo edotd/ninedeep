@@ -130,26 +130,46 @@ export function applyLiveFanbaseMod(team, opponent, extra, opponentIds, cardNote
   return removal.ids;
 }
 
+// One possession: offenseTeam rolls its offense die against defenseTeam's defense die. A tie
+// or higher offense roll banks the offense's full total; a higher defense roll cuts the
+// offense's total by the defending coach's defBonus. Defense's total always banks, win or
+// lose. Shared by the instant resolver below and the turn-by-turn engine (game/turn.js), which
+// keeps a watched match and a simulated one scoring possessions identically.
+function resolveExchange(offenseTeam, defenseTeam, offenseIds, defenseIds, offenseExtra, defenseExtra, offenseAdv, defenseAdv) {
+  const offSides = offenseDieSize(offenseTeam);
+  const defSides = defenseDieSize(defenseTeam);
+  const offRolled = supplementalRoll(offenseTeam, offenseIds, offenseExtra, 'offense', rollDie(offSides), rollDie(offSides), offenseAdv);
+  const defRolled = supplementalRoll(defenseTeam, defenseIds, defenseExtra, 'defense', rollDie(defSides), rollDie(defSides), defenseAdv);
+  const offenseWon = offRolled.die >= defRolled.die;
+  const haircut = (defenseTeam.coach && defenseTeam.coach.defBonus) || 0;
+  const offenseTotal = offenseWon ? offRolled.total : Math.round(offRolled.total * (1 - haircut) * 100) / 100;
+  return { offRolled, defRolled, offenseWon, offenseTotal, defenseTotal: defRolled.total, offSides, defSides };
+}
+
+// A match is two possessions: A on offense vs B on defense, then B on offense vs A on defense —
+// so each team gets exactly one offense roll and one defense roll, regardless of which order
+// they're resolved in (the sum doesn't depend on order, so no coin flip is needed here; the
+// turn-by-turn engine flips one only to decide narrative/UI order).
 export function playMatchup(a, b, advA, advB, idsA, idsB, extraA, extraB) {
   extraA = extraA || { offDelta: 0, defDelta: 0, leagueMod: 0 };
   extraB = extraB || { offDelta: 0, defDelta: 0, leagueMod: 0 };
-  const aOffSides = offenseDieSize(a), aDefSides = defenseDieSize(a);
-  const bOffSides = offenseDieSize(b), bDefSides = defenseDieSize(b);
-  const { die: aOffDie, mod: aOffMod, total: aOffTotal } = supplementalRoll(a, idsA, extraA, 'offense', rollDie(aOffSides), rollDie(aOffSides), advA);
-  const { die: aDefDie, mod: aDefMod, total: aDefTotal } = supplementalRoll(a, idsA, extraA, 'defense', rollDie(aDefSides), rollDie(aDefSides), advA);
+  const exA = resolveExchange(a, b, idsA, idsB, extraA, extraB, advA, advB);
+  const exB = resolveExchange(b, a, idsB, idsA, extraB, extraA, advB, advA);
   const aBench = benchScore(a, idsA);
-  const aLeagueMod = extraA.leagueMod || 0;
-  const aSum = aOffTotal + aDefTotal + aBench + aLeagueMod;
-  const { die: bOffDie, mod: bOffMod, total: bOffTotal } = supplementalRoll(b, idsB, extraB, 'offense', rollDie(bOffSides), rollDie(bOffSides), advB);
-  const { die: bDefDie, mod: bDefMod, total: bDefTotal } = supplementalRoll(b, idsB, extraB, 'defense', rollDie(bDefSides), rollDie(bDefSides), advB);
   const bBench = benchScore(b, idsB);
+  const aLeagueMod = extraA.leagueMod || 0;
   const bLeagueMod = extraB.leagueMod || 0;
-  const bSum = bOffTotal + bDefTotal + bBench + bLeagueMod;
+  const aSum = exA.offenseTotal + exB.defenseTotal + aBench + aLeagueMod;
+  const bSum = exB.offenseTotal + exA.defenseTotal + bBench + bLeagueMod;
   const winner = aSum === bSum ? (Math.random() < 0.5 ? a : b) : aSum > bSum ? a : b;
   return {
     a, b, advA: !!advA, advB: !!advB,
-    aOffDie, aOffMod, aOffTotal, aOffSides, aDefDie, aDefMod, aDefTotal, aDefSides, aBench, aLeagueMod, aSum,
-    bOffDie, bOffMod, bOffTotal, bOffSides, bDefDie, bDefMod, bDefTotal, bDefSides, bBench, bLeagueMod, bSum,
+    aOffDie: exA.offRolled.die, aOffMod: exA.offRolled.mod, aOffTotal: exA.offenseTotal, aOffSides: exA.offSides, aOffWon: exA.offenseWon,
+    aDefDie: exB.defRolled.die, aDefMod: exB.defRolled.mod, aDefTotal: exB.defenseTotal, aDefSides: exB.defSides,
+    aBench, aLeagueMod, aSum,
+    bOffDie: exB.offRolled.die, bOffMod: exB.offRolled.mod, bOffTotal: exB.offenseTotal, bOffSides: exB.offSides, bOffWon: exB.offenseWon,
+    bDefDie: exA.defRolled.die, bDefMod: exA.defRolled.mod, bDefTotal: exA.defenseTotal, bDefSides: exA.defSides,
+    bBench, bLeagueMod, bSum,
     winner,
   };
 }

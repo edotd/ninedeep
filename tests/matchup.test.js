@@ -86,25 +86,23 @@ test('extra draw excludes expired seeding cards; discard consumes opponent card;
   assert.equal(a.matchupCards.length,1);
 });
 
-test('turn engine applies late penalties to completed opposing rolls and survives JSON sync', () => {
+test('a card played during defense\'s blind window still cuts that same exchange\'s offense roll, and state survives JSON sync', () => {
   let state=game(); lockSeasonAndSeed(state); startPlayoffs(state); state.playoff.activeMatchIndex=0;
   let m=state.playoff.matches[0]; m.a.matchupCards=[];m.b.matchupCards=[];m.a.human=true;m.b.human=true;
-  beginTurn(state); advanceTurn(state);
-  const first=m.turn.order[0], second=m.turn.order[1];
-  second.matchupCards=[card('Scouted Tendencies')];
-  let prior, iterations=0;
-  while(m.turn.stage!=='complete' && iterations++<40) {
-    let payload={pass:true};
-    if(m.turn.stage==='action' && m[m.turn.current.team].id===second.id && m.turn.current.kind==='offense') {
-      const prefix=first.id===m.a.id?'a':'b'; prior=m.turn[`${prefix}OffMod`];
-      payload={cardId:'Scouted Tendencies'};
-    }
-    advanceTurn(state,payload);
-    state=rehydrateState(JSON.parse(JSON.stringify(state)));m=state.playoff.matches[0];
-  }
-  assert.equal(m.turn.stage,'complete');
-  const prefix=first.id===m.a.id?'a':'b'; assert(m.result[`${prefix}OffMod`]<prior);
-  assert(m.result.cardNotes.some(n=>n.cardName==='Scouted Tendencies'));
+  beginTurn(state); advanceTurn(state); // flips coin, opens Exchange 1's blind card window
+  state=rehydrateState(JSON.parse(JSON.stringify(state))); m=state.playoff.matches[0];
+  const offenseTeam = m.turn.offenseSide==='a' ? m.a : m.b;
+  const defenseTeam = m.turn.defenseSide==='a' ? m.a : m.b;
+  defenseTeam.matchupCards=[card('Scouted Tendencies')];
+  const baselineMod = supplementalRoll(offenseTeam, offenseTeam.activeIds, extra(), 'offense', 1, 1).mod;
+  advanceTurn(state,{pass:true}); // offense passes blind
+  state=rehydrateState(JSON.parse(JSON.stringify(state))); m=state.playoff.matches[0];
+  advanceTurn(state,{cardId:'Scouted Tendencies'}); // defense plays it blind, resolving the exchange
+  state=rehydrateState(JSON.parse(JSON.stringify(state))); m=state.playoff.matches[0];
+  assert.equal(m.turn.stage,'resolved');
+  const offSide = m.turn.offenseSide;
+  assert(m.turn[`${offSide}OffMod`] < baselineMod);
+  assert(m.turn.cardNotes.some(n=>n.cardName==='Scouted Tendencies'));
 });
 
 test('instant simulation executes new effects and finishes', () => {
