@@ -4,6 +4,7 @@ import FrontOfficeCard from '../components/FrontOfficeCard';
 import { formatCoins, rosterSalary } from '../game/economy';
 import { teamOutput } from '../game/matchup';
 import { teamExperience } from '../game/aging';
+import { teamSynergy } from '../game/skillsets';
 import { cardTier } from '../game/cards';
 import { FANBASE_BOOST_COST, FIRE_GM_COST } from '../game/constants';
 import MatchupCard from '../components/MatchupCard';
@@ -46,6 +47,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
 
   const output = team.coach && team.activeIds && team.activeIds.length > 0 ? teamOutput(team) : null;
   const chemistry = team.coach ? teamExperience(team) : null;
+  const synergy = teamSynergy(team);
 
   // Ranked against every other team that also has a lineup set — same "Nth of the league"
   // framing as Standings, but scoped to whatever this game's actual team count is rather than
@@ -72,38 +74,42 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
           <div className="ts-masthead-left">
             <div className="ts-masthead-label">TEAM FILE{team.market ? ` · ${team.market.name.toUpperCase()}` : ''}</div>
             <div className="ts-masthead-name">{team.name}</div>
-          </div>
-          <div className="ts-masthead-right">
-            <div className="ts-era">
-              <div className="ts-era-label">ERA 01 · YR {seasonNum} OF {ERA_LENGTH}</div>
-              <div className="ts-era-bar">
-                {Array.from({ length: ERA_LENGTH }, (_, i) => (
-                  <div key={i} className={'ts-era-seg' + (i < seasonNum ? ' done' : '')} />
-                ))}
+            <div className="ts-franchise-history">
+              <div className="ts-era">
+                <div className="ts-era-label">ERA 01 · YR {seasonNum} OF {ERA_LENGTH}</div>
+                <div className="ts-era-bar">
+                  {Array.from({ length: ERA_LENGTH }, (_, i) => (
+                    <div key={i} className={'ts-era-seg' + (i < seasonNum ? ' done' : '')} />
+                  ))}
+                </div>
+              </div>
+              <div className="ts-titles">
+                <div className="ts-titles-value">{team.titles}</div>
+                <div className="ts-titles-label">CHAMPIONSHIP{team.titles === 1 ? '' : 'S'}</div>
               </div>
             </div>
-            <div className="ts-titles">
-              <div className="ts-titles-label">TITLES</div>
-              <div className="ts-titles-value">{team.titles}</div>
+          </div>
+          <div className="ts-masthead-right">
+            <div className="ts-hero-metric chemistry">
+              <div className="ts-proj-label">Chemistry</div>
+              <div className="ts-hero-value">{synergy.grade}</div>
+              <div className="ts-proj-rank">Score {synergy.score}</div>
             </div>
-          </div>
-        </div>
-
-        <div className="ts-proj-row">
-          <div className="ts-proj-tile">
-            <div className="ts-proj-label">Proj Offense</div>
-            <div className="ts-proj-value accent">{output ? output.off : '—'}</div>
-            {output && <div className="ts-proj-rank">{ordinal(rankFor('off'))} of {rankedCount}</div>}
-          </div>
-          <div className="ts-proj-tile">
-            <div className="ts-proj-label">Proj Defense</div>
-            <div className="ts-proj-value">{output ? output.def : '—'}</div>
-            {output && <div className="ts-proj-rank">{ordinal(rankFor('def'))} of {rankedCount}</div>}
-          </div>
-          <div className="ts-proj-tile">
-            <div className="ts-proj-label">Bench Output</div>
-            <div className="ts-proj-value">{output ? output.bench : '—'}</div>
-            {output && <div className="ts-proj-rank">{ordinal(rankFor('bench'))} of {rankedCount}</div>}
+            <div className="ts-hero-metric">
+              <div className="ts-proj-label">Proj Offense</div>
+              <div className="ts-hero-value accent">{output ? output.off : '—'}</div>
+              {output && <div className="ts-proj-rank">{ordinal(rankFor('off'))} of {rankedCount}</div>}
+            </div>
+            <div className="ts-hero-metric">
+              <div className="ts-proj-label">Proj Defense</div>
+              <div className="ts-hero-value">{output ? output.def : '—'}</div>
+              {output && <div className="ts-proj-rank">{ordinal(rankFor('def'))} of {rankedCount}</div>}
+            </div>
+            <div className="ts-hero-metric">
+              <div className="ts-proj-label">Bench Output</div>
+              <div className="ts-hero-value">{output ? output.bench : '—'}</div>
+              {output && <div className="ts-proj-rank">{ordinal(rankFor('bench'))} of {rankedCount}</div>}
+            </div>
           </div>
         </div>
 

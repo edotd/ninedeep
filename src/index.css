@@ -566,17 +566,23 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 /* ================= Team Summary (1a, "the file") — brand handoff Screen: Team Summary.
    Filed once per season, right after the hand is dealt. ================= */
 .ts-screen{padding:0;}
-.ts-masthead{background:var(--ink);padding:20px 24px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;}
+.ts-masthead{background:var(--ink);padding:24px;display:flex;justify-content:space-between;align-items:stretch;gap:32px;flex-wrap:wrap;}
+.ts-masthead-left{display:flex;flex-direction:column;min-width:260px;flex:1;}
 .ts-masthead-label{font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;color:var(--ink-muted);}
 .ts-masthead-name{font-family:var(--font-display);font-size:44px;line-height:.82;color:var(--file);margin-top:4px;}
-.ts-masthead-right{display:flex;gap:26px;align-items:flex-end;}
+.ts-franchise-history{display:flex;align-items:flex-end;gap:22px;margin-top:18px;}
+.ts-masthead-right{display:grid;grid-template-columns:repeat(4,minmax(90px,1fr));gap:0;align-items:stretch;min-width:500px;}
 .ts-era-label{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;color:var(--ink-muted);}
 .ts-era-bar{display:flex;gap:3px;margin-top:5px;}
 .ts-era-seg{width:18px;height:7px;background:var(--ink-rule);}
 .ts-era-seg.done{background:var(--franchise);}
-.ts-titles{display:flex;flex-direction:column;align-items:flex-end;}
+.ts-titles{display:flex;align-items:baseline;gap:7px;}
 .ts-titles-label{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;color:var(--franchise);}
-.ts-titles-value{font-family:var(--font-display);font-size:40px;line-height:.86;color:var(--franchise);}
+.ts-titles-value{font-family:var(--font-display);font-size:34px;line-height:.86;color:var(--franchise);}
+.ts-hero-metric{display:flex;flex-direction:column;justify-content:flex-end;border-left:1px solid var(--ink-rule);padding:4px 18px 2px;}
+.ts-hero-metric.chemistry{padding-left:0;border-left:0;}
+.ts-hero-value{font-family:var(--font-display);font-size:46px;line-height:.86;color:var(--file);margin-top:5px;}
+.ts-hero-value.accent,.ts-hero-metric.chemistry .ts-hero-value{color:var(--franchise);}
 .ts-body{background:var(--file);padding:22px 24px;display:flex;flex-direction:column;gap:20px;}
 .ts-heading{font-family:var(--font-label);font-size:11px;letter-spacing:.14em;color:var(--ink);text-transform:uppercase;margin-bottom:9px;}
 /* Starters render as real, full-size PlayerCards now — see TeamSummaryScreen.jsx — matching
@@ -597,6 +603,15 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .ts-proj-value{font-family:var(--font-display);font-size:34px;line-height:.9;color:var(--file);margin-top:2px;}
 .ts-proj-value.accent{color:var(--franchise);}
 .ts-proj-rank{font-family:var(--font-mono);font-size:10px;color:var(--ink-muted);margin-top:3px;}
+
+@media (max-width:900px){
+  .ts-masthead-right{min-width:100%;}
+}
+@media (max-width:600px){
+  .ts-franchise-history{align-items:flex-start;flex-direction:column;gap:10px;}
+  .ts-masthead-right{grid-template-columns:repeat(2,1fr);row-gap:16px;}
+  .ts-hero-metric:nth-child(3){border-left:0;padding-left:0;}
+}
 
 .ts-fo-col{display:flex;flex-direction:column;}
 .ts-fo-action{margin-top:10px;}
