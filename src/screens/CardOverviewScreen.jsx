@@ -38,7 +38,7 @@ function sampleMatchupCard() {
 
 const PLAYER_NOTES = [
   { key: 'header', selector: '.pcard-header', label: 'Header plate', side: 'left',
-    text: 'Position and archetype, tier read by the plate colour behind them — amber franchise, ink standard, cream depth, stamp expiring.' },
+    text: 'Position at a glance, reinforced by a fixed plate color — cream Guard, yellow Forward, navy Big.' },
   { key: 'name', selector: '.pcard-name-block', label: 'Number and archetype', side: 'left',
     text: "No portraits in this game, so this block is the card. The number is how the persistent bar shows this player in their slot." },
   { key: 'stats', selector: '.pcard-stats', label: 'Stat block', side: 'left',

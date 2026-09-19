@@ -114,6 +114,8 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
         </div>
 
         <div className="ts-body">
+          <TeamChemistry team={team} />
+
           <div className="ts-section">
             <div className="ts-heading">Rotation</div>
             <div className="ts-roto-scroll">
@@ -137,13 +139,6 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
               </div>
             </div>
           </div>
-
-          <TeamChemistry
-            team={team}
-            canEdit={canEdit}
-            onSwap={(outgoing, incoming) => actions.swapStarter(myTeamId, outgoing, incoming)}
-            onPromote={(incoming) => actions.promoteToStarter(myTeamId, incoming)}
-          />
 
           <div className="ts-section">
             <div className="ts-heading">Budget Ledger</div>

@@ -1,29 +1,15 @@
-import { CHEMISTRY_GRADES, completedTeamYears } from '../game/chemistry';
-import { useState } from 'react';
-import { SKILLSETS, teamSynergy, skillsetFor } from '../game/skillsets';
-import { teamExperience, careerLevel, CAREER_STAGES } from '../game/aging';
-import { validateLineup } from '../game/roster';
+import { SKILLSETS, teamSynergy } from '../game/skillsets';
+import { teamExperience } from '../game/aging';
+import { relationshipBonus, retentionBonus } from '../game/cards';
 
 const nameFor = (id) => SKILLSETS.find((s) => s.id === id)?.name || id;
-const signed = (n) => `${n >= 0 ? '+' : ''}${n}`;
 const bonusValue = (n) => n > 0 ? `+${n}%` : 'N/A';
 
-export default function TeamChemistry({ team, canEdit, onSwap, onPromote }) {
-  const [incomingId, setIncomingId] = useState('');
-  const [error, setError] = useState('');
+export default function TeamChemistry({ team }) {
   const current = teamSynergy(team);
   const experience = team.coach ? teamExperience(team) : null;
-  const ids = team.activeIds || [];
-  const bench = team.hand.filter((p) => !ids.includes(p.id));
-  const starters = team.hand.filter((p) => ids.includes(p.id));
-
-  const totalTenure = starters.reduce((s, p) => s + completedTeamYears(p, team.id), 0);
-  const avgTenure = starters.length ? Math.round((totalTenure / starters.length) * 10) / 10 : 0;
-  const stageCounts = starters.reduce((acc, p) => {
-    const stage = careerLevel(p);
-    acc[stage] = (acc[stage] || 0) + 1;
-    return acc;
-  }, {});
+  const coachOffense = team.coach ? Math.round((team.coach.offBonus + retentionBonus(team) + relationshipBonus(team)) * 100) : 0;
+  const coachDefense = team.coach ? Math.round((team.coach.defBonus + retentionBonus(team) + relationshipBonus(team)) * 100) : 0;
   const offPairs = current.pairs.filter((p) => p.side === 'offense');
   const defPairs = current.pairs.filter((p) => p.side === 'defense');
 
@@ -37,33 +23,22 @@ export default function TeamChemistry({ team, canEdit, onSwap, onPromote }) {
             <span className="tc2-score">{current.score}</span>
           </div>
           <p className="tc2-note">Grade is the roster's Skillset fit, continuity, and Wise Veteran leadership read as one figure. Score: 50 base + {current.fitPoints} fit + {current.tenurePoints} tenure + {current.leadershipPoints} leadership.</p>
-          <details className="tc2-scale"><summary>Letter-grade scale</summary><p className="tc2-note">{CHEMISTRY_GRADES.map(([min, grade], i) => `${grade}: ${min}–${i ? CHEMISTRY_GRADES[i - 1][0] - 1 : 100}`).join(' · ')}</p></details>
         </div>
 
         <div className="tc2-bonus-row">
           <div className="tc2-bonus">
             <div className="tc2-bonus-label">Offensive Bonus</div>
-            <div className="tc2-bonus-value">{bonusValue(current.offense)}</div>
-            <div className="tc2-bonus-sub">from {offPairs.length} live pairing{offPairs.length === 1 ? '' : 's'}</div>
+            <div className="tc2-bonus-value">{bonusValue(current.offense + coachOffense)}</div>
+            <div className="tc2-bonus-sub">Chemistry {bonusValue(current.offense)} · Coach {bonusValue(coachOffense)} · {offPairs.length} live pairing{offPairs.length === 1 ? '' : 's'}</div>
           </div>
           <div className="tc2-bonus">
             <div className="tc2-bonus-label">Defensive Bonus</div>
-            <div className="tc2-bonus-value">{bonusValue(current.defense)}</div>
-            <div className="tc2-bonus-sub">from {defPairs.length} live pairing{defPairs.length === 1 ? '' : 's'}</div>
+            <div className="tc2-bonus-value">{bonusValue(current.defense + coachDefense)}</div>
+            <div className="tc2-bonus-sub">Chemistry {bonusValue(current.defense)} · Coach {bonusValue(coachDefense)} · {defPairs.length} live pairing{defPairs.length === 1 ? '' : 's'}</div>
           </div>
-        </div>
-
-        <div className="tc2-experience">
-          <div className="ts-heading">Collective Experience</div>
-          <div className="tc2-exp-figures">
-            <div><span className="tc2-exp-value">{totalTenure}</span><span className="tc2-exp-label">Seasons Played</span></div>
-            <div><span className="tc2-exp-value">{avgTenure}</span><span className="tc2-exp-label">Avg Per Man</span></div>
-            <div><span className="tc2-exp-value">{experience ?? '—'}</span><span className="tc2-exp-label">Experience /10</span></div>
-          </div>
-          <div className="tc2-stage-rows">
-            {CAREER_STAGES.filter((stage) => stageCounts[stage]).map((stage) => (
-              <div key={stage} className="tc2-stage-row"><span>{stage}</span><span>{stageCounts[stage]}</span></div>
-            ))}
+          <div className="tc2-experience-inline">
+            <div className="tc2-bonus-label">Experience</div>
+            <div className="tc2-exp-value">{experience ?? '—'}<span className="tc2-exp-total"> / 10</span></div>
           </div>
         </div>
       </div>
@@ -87,46 +62,6 @@ export default function TeamChemistry({ team, canEdit, onSwap, onPromote }) {
         {current.leadership > 0 && <p className="tc2-note">Wise Veteran adds +1% Offense and Defense from anywhere on the roster. Applies once.</p>}
       </div>
 
-      {canEdit && ids.length < 5 && (
-        <p className="tc2-note" role="alert">Your starting five has an open slot — add a bench player below before you can begin the season.</p>
-      )}
-
-      {canEdit && bench.length > 0 && (
-        <div className="tc2-swap-panel">
-          <label className="tc2-swap-label">{ids.length < 5 ? 'Add a bench player to the starting five' : 'Preview a bench player in the starting five'}
-            <select value={incomingId} onChange={(e) => { setIncomingId(e.target.value); setError(''); }}>
-              <option value="">Choose a player</option>
-              {bench.map((p) => <option key={p.id} value={p.id}>{p.position} · {p.archetype} · {skillsetFor(p)?.name || 'No Skillset'} · #{p.id}</option>)}
-            </select>
-          </label>
-          {bench.some((p) => p.id === incomingId) && (ids.length < 5 ? (() => {
-            const incoming = team.hand.find((p) => p.id === incomingId);
-            const nextIds = [...ids, incomingId];
-            const validation = nextIds.length === 5 ? validateLineup({ ...team, activeIds: nextIds }) : { valid: true };
-            const next = teamSynergy(team, nextIds);
-            return <button className="secondary tc2-swap-btn" disabled={!validation.valid} onClick={async () => {
-              const result = await onPromote(incomingId);
-              if (result?.ok === false) setError(result.msg); else { setIncomingId(''); setError(''); }
-            }}>
-              Add {incoming.archetype} · {incoming.position} · {skillsetFor(incoming)?.name || 'No Skillset'} · #{incoming.id} to the starting five
-              <br />{validation.valid ? `Chemistry ${current.grade} → ${next.grade} (${signed(next.score - current.score)} points): ${signed(next.offense - current.offense)}% Offense · ${signed(next.defense - current.defense)}% Defense` : validation.msg}
-            </button>;
-          })() : ids.map((outgoingId) => {
-            const outgoing = team.hand.find((p) => p.id === outgoingId);
-            const nextIds = ids.map((id) => id === outgoingId ? incomingId : id);
-            const validation = validateLineup({ ...team, activeIds: nextIds });
-            const next = teamSynergy(team, nextIds);
-            return <button key={outgoingId} className="secondary tc2-swap-btn" disabled={!validation.valid} onClick={async () => {
-              const result = await onSwap(outgoingId, incomingId);
-              if (result?.ok === false) setError(result.msg); else { setIncomingId(''); setError(''); }
-            }}>
-              Replace {outgoing.archetype} · {outgoing.position} · {skillsetFor(outgoing)?.name || 'No Skillset'} · #{outgoing.id}
-              <br />{validation.valid ? `Chemistry ${current.grade} → ${next.grade} (${signed(next.score - current.score)} points): ${signed(next.offense - current.offense)}% Offense · ${signed(next.defense - current.defense)}% Defense` : validation.msg}
-            </button>;
-          }))}
-          {error && <p role="alert" className="tc2-note">{error}</p>}
-        </div>
-      )}
     </section>
   );
 }

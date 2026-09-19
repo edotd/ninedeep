@@ -11,6 +11,7 @@ export default function PlayerCard({ card, onClick, selected, draftStyle, roster
   const yearsServed = Math.max(0, card.maxContract - card.contract);
   const level = careerLevel(card);
   const bonus = careerBonus(card, card.careerRoll);
+  const positionClass = ` position-${card.position.toLowerCase()}`;
   // The EXP card inverts to a dark ground, so the level indicator needs a light-on-dark
   // palette instead of the light-ground colors used everywhere else — otherwise Prime/
   // Declining/Young all read as illegibly dim navy-on-navy.
@@ -19,7 +20,7 @@ export default function PlayerCard({ card, onClick, selected, draftStyle, roster
     : (level === 'Prime' ? 'var(--approved)' : level === 'Declining' ? 'var(--stamp)' : 'var(--depth)');
 
   return (
-    <div className={`pcard tier-${tier}${compact ? ' pcard-compact' : ''}${selected ? ' selected' : ''}`} onClick={onClick}>
+    <div className={`pcard tier-${tier}${positionClass}${compact ? ' pcard-compact' : ''}${selected ? ' selected' : ''}`} onClick={onClick}>
       <CardTypeMark
         type="player"
         size={compact ? 90 : 170}
@@ -27,7 +28,7 @@ export default function PlayerCard({ card, onClick, selected, draftStyle, roster
         color={tier === 'EXP' ? 'var(--ink-rule)' : 'var(--depth-nontext)'}
       />
       <div className="pcard-header">
-        <span className="pcard-header-pos">{card.position} · {card.archetype}</span>
+        <span className="pcard-header-pos">{card.position}</span>
         <span className="pcard-grade" aria-label={`Player grade ${playerGrade(card)}`}>{playerGrade(card)}</span>
       </div>
       <div className="pcard-name-block">
