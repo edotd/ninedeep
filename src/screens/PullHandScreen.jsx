@@ -15,10 +15,13 @@ export default function PullHandScreen({ state, actions, myTeamId }) {
   const ordered = [...starters, ...bench];
   const [dealtCount, setDealtCount] = useState(0);
   const timersRef = useRef([]);
+  const cardRefs = useRef(new Map());
+  const animatedDealRef = useRef(true);
 
   useEffect(() => {
     const delay = ACTION_LOG_SPEEDS[state.settings.actionLogSpeed] ?? ACTION_LOG_SPEEDS.normal;
     if (delay === 0) {
+      animatedDealRef.current = false;
       setDealtCount(ordered.length);
       return;
     }
@@ -29,10 +32,19 @@ export default function PullHandScreen({ state, actions, myTeamId }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (!animatedDealRef.current || dealtCount === 0) return;
+    const current = ordered[dealtCount - 1];
+    cardRefs.current.get(current?.id)?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+    // `ordered` is fixed for this one-time deal; only advance when another card is revealed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dealtCount]);
+
   const dealtIds = new Set(ordered.slice(0, dealtCount).map((c) => c.id));
   const dealing = dealtCount < ordered.length;
   const handleSkip = () => {
     timersRef.current.forEach(clearTimeout);
+    animatedDealRef.current = false;
     setDealtCount(ordered.length);
   };
 
@@ -48,13 +60,13 @@ export default function PullHandScreen({ state, actions, myTeamId }) {
           <div className="deal-heading">Starters ({starters.length}/5)</div>
           <div className="deal-row-5">
             {starters.map((c) => dealtIds.has(c.id) && (
-              <div key={c.id} className="card-deal-in"><PlayerCard card={c} /></div>
+              <div key={c.id} ref={(node) => node ? cardRefs.current.set(c.id, node) : cardRefs.current.delete(c.id)} className="card-deal-in"><PlayerCard card={c} /></div>
             ))}
           </div>
           <div className="deal-heading">Bench ({bench.length}/4)</div>
           <div className="deal-row-4">
             {bench.map((c) => dealtIds.has(c.id) && (
-              <div key={c.id} className="card-deal-in"><PlayerCard card={c} /></div>
+              <div key={c.id} ref={(node) => node ? cardRefs.current.set(c.id, node) : cardRefs.current.delete(c.id)} className="card-deal-in"><PlayerCard card={c} /></div>
             ))}
           </div>
         </div>

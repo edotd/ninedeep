@@ -29,12 +29,12 @@ export function chemistryGrade(score) {
   return CHEMISTRY_GRADES.find(([minimum]) => Math.max(0, Math.min(100, Math.round(score))) >= minimum)[1];
 }
 
-export function chemistryDetails(team, ids, skillOffense, skillDefense, flat) {
+export function chemistryDetails(team, ids, skillOffense, skillDefense, leadership) {
   const active = new Set(ids);
   const starterYears = team.hand.filter((p) => active.has(p.id)).reduce((sum,p) => sum + completedTeamYears(p, team.id), 0);
   const fitPoints = Math.min(30, (skillOffense + skillDefense) * 2.5);
   const tenurePoints = Math.min(15, starterYears);
-  const leadershipPoints = flat ? 5 : 0;
+  const leadershipPoints = leadership ? 5 : 0;
   const score = Math.round(50 + fitPoints + tenurePoints + leadershipPoints);
   return { score, grade: chemistryGrade(score), starterYears, continuity: starterYears * 0.5, fitPoints, tenurePoints, leadershipPoints };
 }

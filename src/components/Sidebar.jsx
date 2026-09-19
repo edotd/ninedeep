@@ -8,6 +8,7 @@ function outputFor(team) {
 }
 const NAV_ITEMS = [
   { key: 'team', label: 'Team' },
+  { key: 'freeagency', label: 'Free Agency' },
   { key: 'standings', label: 'Standings' },
   { key: 'glossary', label: 'Glossary' },
   { key: 'settings', label: 'Settings' },
@@ -16,7 +17,7 @@ const NAV_ITEMS = [
 // Desktop sidebar, per the brand handoff's "Screen: Roster + Cap Sheet". The design's own
 // nav items (Roster/Cap Sheet/Free Agents/Season/Era Record) assume a screen structure this
 // game doesn't have — its flow is phase-driven (Front Office -> Hand -> Lineup -> Playoffs
-// -> Results -> Draft -> Free Agency, in a fixed order), not free-roaming tabs. So the nav
+// -> Results -> Contracts -> Draft, in a fixed order), not free-roaming tabs. So the nav
 // list here is the same always-available links the mobile top bar exposes today (Team /
 // Standings / Glossary / Settings as overlays on top of the current phase), just restyled
 // into the sidebar's vertical list. Team was dropped for a while when the persistent bar

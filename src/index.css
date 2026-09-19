@@ -52,13 +52,25 @@
 .of-kicker{display:flex;justify-content:space-between;gap:12px;background:var(--ink);color:var(--file);padding:12px 20px;font:10px var(--font-mono);letter-spacing:.13em;text-transform:uppercase}
 .of-title{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:16px 20px 11px;font:32px var(--font-display);border-bottom:2px solid var(--ink);text-transform:uppercase}
 .of-title span{font:10px var(--font-label);letter-spacing:.12em;color:var(--file-muted)}
-.of-index{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:2px solid var(--ink)}
+.of-index{display:grid;grid-template-columns:repeat(2,1fr);border-bottom:2px solid var(--ink)}
 .of-index>div{padding:10px 12px;border-right:1px solid var(--file-rule);font:11px var(--font-label);text-transform:uppercase;min-width:0}
 .of-index>div:last-child{border-right:0}
 .of-index small,.of-index em{display:block;font:9px var(--font-mono);letter-spacing:.08em;color:var(--file-muted);font-style:normal}
 .of-index small{margin-bottom:6px}.of-index em{margin-top:6px}
 .of-index .current{background:var(--ink);color:var(--form)}.of-index .current small,.of-index .current em{color:var(--franchise)}
 .of-index .filed em{color:var(--approved)}
+.fa-ticker{display:flex;align-items:stretch;background:var(--file);border-bottom:1px solid var(--file-rule);min-height:38px;overflow:hidden}
+.persistent-ticker{position:fixed;left:0;right:0;bottom:0;height:38px;z-index:11;border-top:1px solid var(--file-rule)}
+.persistent-ticker.with-bar{bottom:72px}
+.fa-ticker-label{display:flex;align-items:center;flex:0 0 auto;padding:8px 12px;background:var(--stamp);color:var(--form);font:9px var(--font-label);letter-spacing:.12em;text-transform:uppercase;z-index:1}
+.fa-ticker-window{display:flex;align-items:center;overflow:hidden;min-width:0}
+.fa-ticker-track{display:flex;width:max-content;animation:fa-wire 38s linear infinite}
+.fa-ticker-item{display:flex;align-items:center;gap:7px;padding:0 18px;white-space:nowrap;font:9px var(--font-mono);letter-spacing:.05em;text-transform:uppercase;border-right:1px solid var(--file-rule)}
+.fa-ticker-item b{color:var(--stamp);font-family:var(--font-label)}
+.fa-ticker-item em{color:var(--file-muted);font-style:normal;text-transform:none}
+.fa-ticker-empty{padding:0 18px;font:9px var(--font-mono);letter-spacing:.08em;color:var(--file-muted);text-transform:uppercase}
+@keyframes fa-wire{to{transform:translateX(-50%)}}
+@media(prefers-reduced-motion:reduce){.fa-ticker-track{animation:none}}
 .of-content{padding:22px 24px 30px;max-height:calc(100vh - 340px);overflow:auto}
 .of-content h1{font-size:46px;margin:8px 0 18px}.of-content .lede{max-width:680px}
 .of-section-label{font:10px var(--font-label);letter-spacing:.14em;color:var(--stamp);margin:14px 0 8px;text-transform:uppercase}
@@ -211,12 +223,13 @@ p.lede{color:var(--file-body);font-size:14px;line-height:1.5;margin:0 0 14px;}
 .banner.good{background:var(--form);border-color:var(--approved);color:var(--approved);}
 .banner.bad{background:var(--form);border-color:var(--stamp);color:var(--stamp);}
 
-.bottombar{position:fixed;bottom:72px;left:0;right:0;z-index:5;background:var(--ink);border-top:1px solid var(--ink-rule);padding:10px 16px;display:flex;gap:10px;max-width:var(--content-width);margin:0 auto;}
+.bottombar{position:fixed;right:16px;bottom:calc(72px + 38px + 16px);z-index:12;background:var(--ink);border:1px solid var(--ink-rule);padding:10px;display:flex;gap:10px;width:auto;max-width:min(420px,calc(100vw - 32px));box-shadow:6px 6px 0 rgba(30,43,71,.16);}
+.bottombar button{flex:none;min-width:190px;}
 
 /* A corner-docked action button, used in place of the full-width .bottombar where the
    screen has no persistent bar underneath it (e.g. Front Office) and a floating button
    reads better than a bar spanning the whole width. */
-.corner-dock{position:fixed;right:20px;bottom:calc(72px + 20px + env(safe-area-inset-bottom));z-index:5;}
+.corner-dock{position:fixed;right:16px;bottom:calc(72px + 38px + 16px + env(safe-area-inset-bottom));z-index:12;}
 .corner-dock button.primary{flex:none;padding:16px 32px;}
 
 /* ---------- Persistent Bar (see brand handoff, "Component: Persistent Bar" — mobile) ---------- */
@@ -235,6 +248,8 @@ p.lede{color:var(--file-body);font-size:14px;line-height:1.5;margin:0 0 14px;}
 .persistent-bar-metric-label{font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;color:var(--ink-muted);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .persistent-bar-metric-value{font-family:var(--font-display);font-size:20px;color:var(--file);white-space:nowrap;}
 .persistent-bar-metric-value.accent{color:var(--franchise);}
+.persistent-bar-metric-value.over-budget{color:var(--stamp);}
+.persistent-budget-owed{font:8px var(--font-mono);letter-spacing:.05em;color:var(--stamp-ink);white-space:nowrap;text-transform:uppercase;}
 .persistent-bar-chevron{flex-shrink:0;width:30px;height:30px;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 0 1.5px var(--ink-rule);color:var(--ink-muted);font-family:var(--font-mono);font-size:12px;}
 button{font-family:var(--font-label);letter-spacing:.05em;}
 button.primary{flex:1;background:var(--franchise);color:var(--ink);border:none;padding:14px;font-size:13px;font-weight:400;text-transform:uppercase;letter-spacing:.1em;transition:background 120ms ease-out;}
@@ -253,6 +268,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 }
 @media (min-width: 1000px){
   :root{ --content-width: 760px; }
+  .persistent-ticker.with-bar{bottom:var(--desktop-bar-height)}
   /* The desktop shell (.desktop-shell) manages its own bottom clearance internally —
      the body-level padding below is only for the mobile single-column layout's fixed bars. */
   body{ padding-bottom: 0; }
@@ -361,15 +377,15 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .sidebar-titles-value{font-family:var(--font-display);font-size:30px;line-height:.8;color:var(--franchise);}
 .sidebar-titles-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;color:var(--franchise);text-transform:uppercase;}
 
-.desktop-content{flex:1;min-width:0;padding-bottom:calc(var(--desktop-bar-height) + 34px);}
+.desktop-content{flex:1;min-width:0;padding-bottom:calc(var(--desktop-bar-height) + 38px + 34px);}
 /* .screen/.bottombar's base rule (mobile-first) caps width at --content-width and centers
    with margin:0 auto — those two properties have to be explicitly cancelled here, not just
    have their padding overridden, or they keep applying on top of this rule since CSS merges
    declarations per-property rather than per-rule. That gap is what left visible margins down
    both sides of the desktop content pane even after this rule's padding was already in place. */
 .desktop-content .screen{max-width:none;margin:0;padding:28px;}
-.desktop-content .bottombar{max-width:none;margin:0;left:220px;right:0;bottom:var(--desktop-bar-height);padding:14px 28px;}
-.desktop-content .corner-dock{bottom:calc(var(--desktop-bar-height) + 20px);}
+.desktop-content .bottombar{left:auto;right:20px;bottom:calc(var(--desktop-bar-height) + 38px + 20px);padding:10px;}
+.desktop-content .corner-dock{bottom:calc(var(--desktop-bar-height) + 38px + 20px);}
 
 /* Sized to comfortably fit a ~1440px viewport without horizontal scroll (a 1280px window
    still fits with the bar's overflow-x:auto as a safety net) — bigger and more legible than
@@ -435,6 +451,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .db-budget-figures.over .committed{color:var(--stamp);}
 .db-budget-room{font-family:var(--font-mono);font-size:11px;letter-spacing:.04em;color:var(--approved-file);text-transform:uppercase;white-space:nowrap;}
 .db-budget-room.over{color:var(--stamp-text);}
+.db-budget-owed{font-family:var(--font-mono);font-size:9px;letter-spacing:.04em;color:var(--stamp-text);text-transform:uppercase;white-space:nowrap;}
 
 .db-output-breakdown{display:flex;justify-content:center;gap:10px;font-family:var(--font-mono);font-size:11px;letter-spacing:.04em;color:var(--ink-muted);text-transform:uppercase;white-space:nowrap;}
 
@@ -470,7 +487,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 
 /* ================= Front Office card (see brand handoff, "Components: Front Office &
    Matchup Cards") — landscape, ink ground, distinct silhouette from the player card. ============= */
-.fo2-card{position:relative;overflow:hidden;background:var(--ink);border:2px solid var(--ink);width:100%;max-width:340px;margin:0 auto 14px;font-family:var(--font-mono);}
+.fo2-card{position:relative;overflow:hidden;background:var(--ink);border:2px solid var(--ink);width:100%;max-width:340px;margin:0 auto 14px;font-family:var(--font-mono);display:flex;flex-direction:column;}
 .fo2-watermark{position:absolute;right:-20px;bottom:-18px;z-index:-1;opacity:.16;pointer-events:none;}
 .fo2-header{display:flex;justify-content:space-between;align-items:center;padding:10px 13px;border-bottom:1px solid var(--ink-rule);}
 .fo2-kind-group{display:inline-flex;align-items:center;gap:8px;color:var(--file);}
@@ -491,7 +508,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .fo2-effect-value.stamp-ink{color:var(--stamp-ink);}
 .fo2-effect-value.file{color:var(--file);}
 .fo2-mod-detail{border-top:1px solid var(--ink-rule);padding:7px 13px;color:var(--file);font:10px/1.4 var(--font-mono);}
-.fo2-footer{display:flex;justify-content:space-between;padding:7px 13px;background:var(--ink-deep);font-size:9px;letter-spacing:.06em;color:var(--ink-muted);text-transform:uppercase;}
+.fo2-footer{display:flex;justify-content:space-between;padding:7px 13px;background:var(--ink-deep);font-size:9px;letter-spacing:.06em;color:var(--ink-muted);text-transform:uppercase;margin-top:auto;}
 
 /* ================= Matchup card — square, form ground, torn stamp edge. ================= */
 .mu2-card{position:relative;overflow:hidden;background:var(--form);border:3px solid var(--stamp);width:100%;max-width:280px;margin:0 auto 14px;display:flex;flex-direction:column;font-family:var(--font-mono);}
@@ -533,6 +550,9 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
    guarantees all 3 sit in one row down to the tablet breakpoint. */
 .fo-deal-row,.mu-deal-row{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1080px;margin:0 auto 20px;}
 .fo-deal-row .fo2-wrap,.mu-deal-row .mu2-wrap{width:100%;max-width:none;}
+.fo-deal-row .card-deal-in,.mu-deal-row .card-deal-in{display:flex;height:100%;}
+.fo-deal-row .fo2-wrap,.mu-deal-row .mu2-wrap{display:flex;flex-direction:column;height:100%;}
+.fo-deal-row .fo2-card,.mu-deal-row .mu2-card{flex:1;margin-bottom:0;}
 @media (max-width:820px){.fo-deal-row,.mu-deal-row{grid-template-columns:repeat(2,1fr);}}
 @media (max-width:480px){.fo-deal-row,.mu-deal-row{grid-template-columns:1fr;}}
 
@@ -988,6 +1008,8 @@ html[data-theme="dark"] .wordmark-ink{color:var(--file);}
    deal into a single row instead of the 3-column fa-grid wrapping to a second line. */
 .deal-row-5{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;max-width:1200px;margin:0 auto;}
 .deal-row-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;max-width:1000px;margin:0 auto;}
+.deal-row-5 .card-deal-in,.deal-row-4 .card-deal-in{display:flex;height:100%;}
+.deal-row-5 .pcard,.deal-row-4 .pcard{height:100%;margin-bottom:0;}
 @media (max-width:900px){.deal-row-5{grid-template-columns:repeat(3,1fr);}.deal-row-4{grid-template-columns:repeat(2,1fr);}}
 @media (max-width:520px){.deal-row-5,.deal-row-4{grid-template-columns:1fr;}}
 .deal-heading{font-family:var(--font-display);font-size:28px;line-height:.86;color:var(--ink);letter-spacing:.01em;text-transform:none;margin:0 0 12px;}

@@ -20,6 +20,7 @@ import {
   checkInjury, playCardEffect, playMatchup, wantsAdvantage, cardChoicesFor, playableCards,
   isMatchUnlocked, hasHomeCourt, applyLiveFanbaseMod,
 } from './matchup';
+import { rosterSalary } from './economy';
 import { applyPlayoffWinMilestone } from './fanbase';
 
 function humanTeams(state) {
@@ -109,6 +110,9 @@ export function finishSeasonSimulation(state) {
 // season actually locks (seeding, etc.) only once every human has confirmed.
 export function confirmLineup(state, teamIdx) {
   const team = state.teams[teamIdx];
+  if (team.hand.length !== 9) return { valid: false, msg: `Resolve your roster before the season begins. You currently have ${team.hand.length} of 9 players.` };
+  const committed = rosterSalary(team);
+  if (committed > team.seasonCap) return { valid: false, msg: `Get under budget before the season begins. You are using ${committed} of ${team.seasonCap}.` };
   const v = validateLineup(team);
   if (!v.valid) return v;
   team.lineupConfirmed = true;
@@ -259,7 +263,6 @@ export function updateSettings(state, patch) {
 // already rolled dice against.
 export function swapStarter(state, teamIdx, outgoingId, incomingId) {
   const team = state.teams[teamIdx];
-  if (state.phase === 'offseasonlineup' && state.offseason?.lineupFiled?.[team?.id]) return { ok: false, msg: 'Lineup already filed.' };
   if (!team || !team.hand || !team.activeIds || team.activeIds.length !== 5) return { ok: false, msg: 'Nothing to substitute yet.' };
   const inLiveMatch = state.playoff && state.playoff.matches.some((m) => m.turn && !m.result && (m.a === team || m.b === team));
   if (inLiveMatch) return { ok: false, msg: "Can't change your lineup mid-match." };
@@ -277,7 +280,6 @@ export function swapStarter(state, teamIdx, outgoingId, incomingId) {
 // activeIds shrinks below 5 and stays there until this fills it back up.
 export function promoteToStarter(state, teamIdx, incomingId) {
   const team = state.teams[teamIdx];
-  if (state.phase === 'offseasonlineup' && state.offseason?.lineupFiled?.[team?.id]) return { ok: false, msg: 'Lineup already filed.' };
   if (!team || !team.hand) return { ok: false, msg: 'Nothing to add yet.' };
   const activeIds = team.activeIds || [];
   if (activeIds.length >= 5) return { ok: false, msg: 'Your starting five is already full.' };

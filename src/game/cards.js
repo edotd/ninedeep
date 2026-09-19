@@ -51,7 +51,7 @@ export function statsToCoins(total) {
   return Math.max(0, Math.min(5, v));
 }
 
-export function makeCard(state, archName, position, tier) {
+export function makeCard(state, archName, position, tier, forcedCareerStage = null) {
   const arch = ARCHETYPES[archName];
   const peakKeys = tier.forceStats || (tier.forceStat ? [tier.forceStat] : [arch.peak]);
   const stats = {};
@@ -70,13 +70,13 @@ export function makeCard(state, archName, position, tier) {
   const contractDeviation = tier.contract - contract; // positive = shorter than typical for this tier
   let salary = statsToCoins(total) * (1 + contractDeviation * 0.15);
   salary = Math.max(0, Math.round(salary * 2) / 2);
-  // League Accolade tiers only roll on players in their prime, except Generational Talent.
-  const careerStage = tier.accolade && !tier.primeExempt ? 'Prime' : randomCareerStage();
+  // League Accolade tiers only roll on players in their prime.
+  const careerStage = forcedCareerStage || (tier.accolade ? 'Prime' : randomCareerStage());
   return {
     id: nextCardId(state),
     archetype: archName,
     position,
-    skillsetId: rollSkillset(position, archName),
+    skillsetId: rollSkillset(position, archName, careerStage),
     tierName: tier.name,
     stats,
     salary,
@@ -107,7 +107,7 @@ const STAT_ARCHETYPES = {
 // Team, the High IQ/Hustler base tiers, etc.) names the stat the card is built around — so the
 // archetype drawn for it should actually be good at that stat too, instead of randomArch()
 // occasionally handing a Scoring Champion card to a Pass-First archetype. Tiers with no forced
-// stat (All-League 1st/2nd Team, MVP Candidate, Generational Talent, Role Player, ...) stay
+// stat (All-League 1st/2nd Team, Most Valuable Player, Generational Talent, Role Player, ...) stay
 // fully random — those honors plausibly go to any kind of player.
 export function randomArchForTier(tier) {
   const stats = tier.forceStats || (tier.forceStat ? [tier.forceStat] : null);

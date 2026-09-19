@@ -4,12 +4,11 @@
 // deduction (real dead-cap treatment: you eat the outgoing contract while also taking on the
 // incoming one, which then keeps counting against the budget normally via rosterSalary going
 // forward).
-import {
-  FANBASE_BOOST_COST, FANBASE_BOOST_AMOUNT, FIRE_GM_COST,
-} from './constants';
+import { FANBASE_BOOST_COST, FANBASE_BOOST_AMOUNT, FIRE_GM_COST } from './constants';
 import { drawCoachCard } from './cards';
 import { rosterSalary } from './economy';
 import { drawGM } from './gm';
+import { recordFreeAgencyActivity } from './freeAgencyActivity';
 
 function budgetRoom(team) {
   return (team.seasonCap || 0) - rosterSalary(team);
@@ -23,6 +22,7 @@ export function fireCoach(state, teamIdx) {
   const room = budgetRoom(team);
   if (room < cost) return { ok: false, msg: `Not enough budget room — this move costs ${cost}, you have ${Math.round(room * 10) / 10}.` };
   team.seasonCap -= cost;
+  team.deadMoney = (team.deadMoney || 0) + cost;
   team.coach = newCoach;
   team.retainedStreak = 0;
   team.lastCoachName = newCoach.name;
@@ -40,6 +40,7 @@ export function fireGM(state, teamIdx) {
   team.gmType = next.type;
   team.market = next.market;
   team.seasonCap += capChange - FIRE_GM_COST;
+  team.deadMoney = (team.deadMoney || 0) + FIRE_GM_COST;
   team.gmChangeSeason = state.season;
   return { ok: true };
 }
@@ -57,12 +58,14 @@ export function releasePlayer(state, teamIdx, cardId) {
   const card = team.hand[idx];
   const deadMoney = card.salary;
   const room = budgetRoom(team);
-  if (room < deadMoney) return { ok: false, msg: `Not enough budget room — releasing ${card.archetype} carries ${deadMoney} in dead money, you have ${Math.round(room * 10) / 10}.` };
+  if (room < deadMoney && state.phase !== 'teamsummary') return { ok: false, msg: `Not enough budget room — releasing ${card.archetype} carries ${deadMoney} in dead money, you have ${Math.round(room * 10) / 10}.` };
   team.hand.splice(idx, 1);
   if (team.activeIds) team.activeIds = team.activeIds.filter((id) => id !== cardId);
   team.seasonCap -= deadMoney;
   team.deadMoney = (team.deadMoney || 0) + deadMoney;
-  state.freeAgents.push(Object.assign({}, card, { contract: card.maxContract, lastTeamId: team.id }));
+  const released = Object.assign({}, card, { contract: card.maxContract, lastTeamId: team.id });
+  state.freeAgents.push(released);
+  recordFreeAgencyActivity(state, 'released', released, team);
   return { ok: true };
 }
 

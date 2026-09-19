@@ -1,9 +1,12 @@
 import { acquireOffseasonPlayer } from './gm';
-import { TIERS, LEAGUE_ACCOLADES, POSITIONS } from './constants';
-import { makeCard, randomArchForTier, cardTotal, neededPosition } from './cards';
+import { TIERS, POSITIONS, REPLACEMENT_TIER } from './constants';
+import { makeCard, randomArch, randomArchForTier, cardTotal, neededPosition } from './cards';
+import { autoSelectFive } from './roster';
+import { startNewSeasonRoster } from './season';
+import { recordFreeAgencyActivity } from './freeAgencyActivity';
 
-// Extra cards beyond exactly what's needed to fill every open roster spot, so there's
-// real choice (and something worth trading for) at the draft table.
+// Extra cards beyond the one selection per team, so there's real choice (and something
+// worth trading for) at the draft table.
 const DRAFT_POOL_PADDING = 5;
 
 function pickWeightedTier(pool) {
@@ -16,23 +19,24 @@ function pickWeightedTier(pool) {
   return pool[pool.length - 1];
 }
 
-// Cards of varying rarity — drawn from the same tier pools (Player Modifiers + League
-// Accolades) used to build the season-1 star pool, weighted by each tier's relative count.
+// Draft prospects use Player Modifiers only. Every prospect enters the league Young;
+// accolades are earned distinctions and never generated in the draft pool.
 export function buildDraftPool(state, count) {
-  const tierPool = [...TIERS, ...LEAGUE_ACCOLADES];
+  const tierPool = TIERS;
   const cards = [];
   for (let i = 0; i < count; i++) {
     const tier = pickWeightedTier(tierPool);
     const posPool = tier.allowedPositions || POSITIONS;
     const pos = posPool[Math.floor(Math.random() * posPool.length)];
-    cards.push(makeCard(state, randomArchForTier(tier), pos, tier));
+    const card = makeCard(state, randomArchForTier(tier), pos, tier, 'Young');
+    cards.push(card);
   }
   return cards;
 }
 
-// One pick per team with an open slot leaves meaningful roster work for free agency.
+// Every team receives one pick, even when that temporarily takes its roster above nine.
 function buildPickQueue(teams, order) {
-  return order.filter((t) => teams.includes(t) && t.hand.length < 9);
+  return order.filter((t) => teams.includes(t));
 }
 
 export function startDraft(state) {
@@ -63,7 +67,39 @@ function assignPick(state, team, card) {
 
 function finishDraftIfDone(state) {
   if (state.draft.queue.length === 0 || state.draft.pool.length === 0) {
-    state.phase = 'freeagency';
+    state.teams.filter((team) => !team.human).forEach((team) => {
+      while (team.hand.length > 9) {
+        const released = team.hand.reduce((worst, card) => (cardTotal(card) < cardTotal(worst) ? card : worst), team.hand[0]);
+        team.hand.splice(team.hand.indexOf(released), 1);
+        team.activeIds = (team.activeIds || []).filter((id) => id !== released.id);
+        const available = { ...released, contract: released.maxContract, lastTeamId: team.id };
+        state.freeAgents.push(available);
+        recordFreeAgencyActivity(state, 'released', available, team);
+      }
+      while (team.hand.length < 9) {
+        const need = neededPosition(team);
+        const candidates = need ? state.freeAgents.filter((c) => c.position === need) : state.freeAgents;
+        const card = candidates.length
+          ? candidates.reduce((best, c) => (cardTotal(c) > cardTotal(best) ? c : best), candidates[0])
+          : makeCard(state, randomArch(), need || POSITIONS[Math.floor(Math.random() * 3)], REPLACEMENT_TIER);
+        const poolIndex = state.freeAgents.findIndex((c) => c.id === card.id);
+        if (poolIndex >= 0) state.freeAgents.splice(poolIndex, 1);
+        const signed = acquireOffseasonPlayer(team, card);
+        recordFreeAgencyActivity(state, 'signed', signed, team);
+      }
+      team.activeIds = autoSelectFive(team.hand);
+      team.lineupConfirmed = false;
+    });
+    state.teams.filter((team) => team.human).forEach((team) => {
+      team.activeIds = autoSelectFive(team.hand);
+      team.lineupConfirmed = false;
+    });
+    state.season++;
+    if (state.season > 8) state.phase = 'era_end';
+    else {
+      startNewSeasonRoster(state);
+      state.phase = 'teamsummary';
+    }
   }
 }
 

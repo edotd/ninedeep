@@ -41,6 +41,7 @@ test('firing a GM draws type and market together, costs budget, and is once per 
   assert.notEqual(team.gmType, 'Neutral');
   assert(MARKETS.some((m) => m.name === team.market.name));
   assert.equal(team.gmChangeSeason, 2);
+  assert.equal(team.deadMoney, FIRE_GM_COST);
   assert(team.seasonCap <= 20 + 3.5 - 0.5 - FIRE_GM_COST);
   assert.equal(fireGM(state, 0).ok, false);
   const otherGM = drawGM();

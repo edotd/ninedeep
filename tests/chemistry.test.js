@@ -35,7 +35,7 @@ test('approved +8% skill example with three-year starters and a leader earns A�
  [6,1,10,9,2].forEach((n,i)=>addToRoster(t,{id:`p${i}`,skillsetId:`skill-${String(n).padStart(2,'0')}`}));
  addToRoster(t,{id:'leader',skillsetId:'skill-03'});
  for(let year=1;year<=3;year++)creditTeamSeason(t,year);
- const s=teamSynergy(t);assert.equal(s.score,90);assert.equal(s.grade,'A−');assert.equal(s.offense,15.5);assert.equal(s.defense,7.5);assert.equal(s.flat,1);
+ const s=teamSynergy(t);assert.equal(s.score,90);assert.equal(s.grade,'A−');assert.equal(s.offense,16.5);assert.equal(s.defense,8.5);assert.equal(s.leadership,1);
 });
 test('real season completion credits retained and expired players, free-agent transfer resets',()=>{
  const state=newEraState();startEra(state,'Test');proceedFromCardOverview(state);proceedFromHand(state);proceedToSeason1(state);

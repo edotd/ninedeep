@@ -23,7 +23,7 @@ export default function DraftScreen({ state, actions, myTeamId }) {
     <OffseasonFile state={state} team={myTeam}>
       <div className="of-section-label">02 / DRAFT</div><h1>Draft — Season {state.season}</h1>
       <p className="lede">
-        Every team with an open spot gets one pick, worst record first.{' '}
+        Every team gets one pick, worst record first. Draft picks can take a roster above nine players; resolve your final nine on the Team screen after the draft.{' '}
         {onTheClock
           ? "You're on the clock — draft a card, or trade your pick down to another team for a cap bonus next season."
           : draft.queue[0] ? `Waiting on ${draft.queue[0].name} to pick…` : ''}

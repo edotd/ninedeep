@@ -23,22 +23,22 @@ test('24 skillsets, 35 unique mutual pairings; every pairing resolves at its app
     t.hand.reverse();assert.equal(teamSynergy(t)[pair.side],pair.percent);
   }
 });
-test('approved example totals +8% offense; bench aura adds flat one without stacking',()=>{
+test('approved example totals +8% offense; Wise Veteran adds one percent without stacking',()=>{
   const t=team([6,1,10,9,2]);assert.equal(teamSynergy(t).offense,8);assert.equal(teamSynergy(t).defense,0);
   t.hand.push({...t.hand[0],id:'bench1',skillsetId:sid(3)},{...t.hand[0],id:'bench2',skillsetId:sid(3)});
-  assert.equal(teamSynergy(t).flat,1);assert.equal(teamSynergy(t).offense,8);
+  assert.equal(teamSynergy(t).leadership,1);assert.equal(teamSynergy(t).offense,9);assert.equal(teamSynergy(t).defense,1);
 });
 test('duplicate combinations count once; missing partners and legacy players are neutral',()=>{
-  const t=team([1,1,5,5,3]);assert.equal(teamSynergy(t).offense,3);
-  assert.equal(teamSynergy(t,['p0','p1']).offense,0);
-  assert.equal(teamSynergy(t,['p0','p1']).flat,1);
-  t.hand.forEach(p=>{delete p.skillsetId;});assert.equal(teamSynergy(t).flat,0);assert.equal(teamSynergy(t).pairs.length,0);
+  const t=team([1,1,5,5,3]);assert.equal(teamSynergy(t).offense,4);
+  assert.equal(teamSynergy(t,['p0','p1']).offense,1);
+  assert.equal(teamSynergy(t,['p0','p1']).leadership,1);
+  t.hand.forEach(p=>{delete p.skillsetId;});assert.equal(teamSynergy(t).leadership,0);assert.equal(teamSynergy(t).pairs.length,0);
 });
 test('independent caps apply and injury lineup overrides remove inactive pairings',()=>{
   const t=team(SKILLSETS.map((_,i)=>i+1));const s=teamSynergy(t);
-  assert.equal(s.offense,12);assert.equal(s.defense,12);assert(s.rawOffense>12);
-  assert.equal(teamSynergy(t,['p17','p18']).defense,3);
-  assert.equal(teamSynergy(t,['p17']).defense,0);
+  assert.equal(s.offense,13);assert.equal(s.defense,13);assert(s.rawOffense>12);
+  assert.equal(teamSynergy(t,['p17','p18']).defense,4);
+  assert.equal(teamSynergy(t,['p17']).defense,1);
 });
 test('skillset persists in generated player JSON; only player cards roll skillsets',()=>{
   const state={};
@@ -47,17 +47,17 @@ test('skillset persists in generated player JSON; only player cards roll skillse
     assert(SKILLSETS.some(s=>s.id===c.skillsetId));
     const saved=JSON.parse(JSON.stringify(c));saved.contract--;saved.age++;
     assert.equal(saved.skillsetId,c.skillsetId);
-    for(let i=0;i<30;i++){const rolled=rollSkillset(position);assert(SKILLSETS.some(s=>s.id===rolled));}
+    for(let i=0;i<30;i++){const rolled=rollSkillset(position, 'Balanced', 'Young');assert(SKILLSETS.some(s=>s.id===rolled));assert.notEqual(rolled,sid(3));}
   }
   assert.equal(drawCoachCard().skillsetId,undefined);assert.equal(drawMatchupModifierCard(state).skillsetId,undefined);
 });
-test('fractional synergy appears in scoring and projections; bench aura is exactly +1',()=>{
+test('fractional synergy and Wise Veteran percentages appear in scoring and projections',()=>{
   const t=team([6,1,10,9,2]);const plain=structuredClone(t);plain.hand.forEach(p=>{delete p.skillsetId;});
   const base=offenseModifier(plain);assert.equal(offenseModifier(t),Math.round(base*1.08*100)/100);
   assert.equal(defenseModifier(t),defenseModifier(plain));
   t.hand.push({...t.hand[0],id:'bench',skillsetId:sid(3)});
-  assert.equal(offenseModifier(t),Math.round((base*1.08+1)*100)/100);
-  assert.equal(defenseModifier(t),defenseModifier(plain)+1);
+  assert.equal(offenseModifier(t),Math.round(base*1.09*100)/100);
+  assert.equal(defenseModifier(t),Math.round(defenseModifier(plain)*1.01*100)/100);
   assert.equal(teamOutput(t).off,Math.round((offenseModifier(t)+3.5)*100)/100);
   const result=playMatchup(t,plain,false,false,t.activeIds,plain.activeIds);
   assert.equal(result.aOffMod,offenseModifier(t));

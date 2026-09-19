@@ -1,6 +1,6 @@
 import { rosterSalary, formatCoins } from '../game/economy';
 
-const STEPS = [['contracts', 'Contracts'], ['draft', 'Draft'], ['freeagency', 'Free Agency'], ['roster', 'Roster'], ['offseasonlineup', 'Lineup']];
+const STEPS = [['contracts', 'Contracts'], ['draft', 'Draft']];
 
 export default function OffseasonFile({ state, team, children }) {
   const current = STEPS.findIndex(([phase]) => phase === state.phase);

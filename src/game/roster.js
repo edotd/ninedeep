@@ -43,7 +43,7 @@ export function effectiveRating(team) {
   const bonus = retentionBonus(team) + relationshipBonus(team) + handsOffBonus(team);
   const synergy = teamSynergy(team);
   const synergyAvg = (synergy.offense + synergy.defense) / 200;
-  return activeStatSum(team) * (1 + (team.coach.offBonus + bonus + team.coach.defBonus + bonus) / 2 + synergyAvg) + synergy.flat;
+  return activeStatSum(team) * (1 + (team.coach.offBonus + bonus + team.coach.defBonus + bonus) / 2 + synergyAvg);
 }
 
 // SCO/PLM (offense) and DEF/REB (defense) contributions are scaled per-card by that

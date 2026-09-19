@@ -25,9 +25,8 @@ function coachContent(team) {
     qualifier: team.retainedStreak ? `Retained ${team.retainedStreak} season${team.retainedStreak === 1 ? '' : 's'}` : 'League appointment',
     disposition: coach.modifier,
     dispositionTone: 'approved-ink',
-    badge: 'SYS',
-    badgeTone: 'approved-ink',
     effects: [
+      { label: 'Cost', value: formatCoins(coach.salary), tone: 'file' },
       { label: 'Off Bonus', value: `+${Math.round((coach.offBonus + bonus) * 100)}%`, tone: 'approved-ink' },
       { label: 'Def Bonus', value: `+${Math.round((coach.defBonus + bonus) * 100)}%`, tone: 'approved-ink' },
       { label: 'Player Relations', value: coach.playerRelationship, tone: 'file' },
@@ -52,8 +51,6 @@ function fanbaseContent(team) {
     // instead of sharing top billing with something that actually changes every season.
     disposition: mod ? mod.name : 'No Modifier',
     dispositionTone: 'approved-ink',
-    badge: 'MOOD',
-    badgeTone: 'approved-ink',
     effects: [
       { label: 'Disposition', value: FANBASE_DISPOSITION[archetype.name] || archetype.name, tone: archetype.name === 'Fair Weather' ? 'franchise' : 'file' },
       { label: 'Attendance', value: `${attendance}%`, tone: 'file' },
@@ -75,9 +72,8 @@ function marketContent(team) {
     qualifier: 'General Manager',
     disposition: null,
     dispositionTone: 'approved-ink',
-    badge: 'ECON',
-    badgeTone: 'approved-ink',
     effects: [
+      { label: 'Cost', value: formatCoins(type === 'Neutral' ? 0 : 1), tone: type === 'Neutral' ? 'file' : 'stamp-ink' },
       { label: 'Budget Increase', value: `+${formatCoins(m.capAdj)}`, tone: 'approved-ink' },
       { label: 'Market Size', value: m.name, tone: 'file' },
       { label: 'GM Bonus', value: type === 'Aggressive' ? `${GM_BONUS_RATE * 100}% off offseason requests` : type === 'Hands-Off' ? `+${Math.round(handsOffBonus(team) * 100)}% continuity` : 'None', tone: type === 'Neutral' ? 'file' : 'approved-ink' },
@@ -99,7 +95,6 @@ export default function FrontOfficeCard({ kind, team }) {
             <CardTypeMark type="frontoffice" size={16} />
             <span className="fo2-kind-label">{meta.label}</span>
           </span>
-          {content.badge && <span className={'fo2-kind-badge ' + content.badgeTone}>{content.badge}</span>}
         </div>
         <div className="fo2-name-row">
           <div className="fo2-name-col">
@@ -122,11 +117,6 @@ export default function FrontOfficeCard({ kind, team }) {
           <span>Nine Deep</span>
         </div>
       </div>
-      <ul className="fo2-bullets">
-        {content.disposition && <li>Disposition: {content.disposition}</li>}
-        {content.effects.map((e, i) => <li key={i}>{e.label}: {e.value}</li>)}
-        {content.detail && <li>{content.detail}</li>}
-      </ul>
     </div>
   );
 }

@@ -227,6 +227,14 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
         {team.lineupConfirmed && waitingOn.length > 0 && (
           <div className="statusline" style={{ marginTop: 16 }}>Season locked — waiting on {waitingOn.map((t) => t.name).join(', ')}…</div>
         )}
+        {state.phase === 'teamsummary' && team.hand.length !== 9 && (
+          <div className="statusline" style={{ marginTop: 16 }}>
+            Resolve your roster before the season begins: {team.hand.length > 9 ? `release ${team.hand.length - 9} player${team.hand.length - 9 === 1 ? '' : 's'}` : `sign ${9 - team.hand.length} player${9 - team.hand.length === 1 ? '' : 's'} from Free Agency`}.
+          </div>
+        )}
+        {state.phase === 'teamsummary' && team.hand.length === 9 && committed > cap && (
+          <div className="statusline" style={{ marginTop: 16 }}>Get under budget before the season begins. Reduce committed costs by {formatCoins(committed - cap)}.</div>
+        )}
       </div>
       <div className="bottombar">
         {onBack ? (
@@ -240,7 +248,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
               if (res && res.valid === false) alert(res.msg);
             }}
           >
-            {team.lineupConfirmed ? 'Waiting…' : 'Begin Season'}
+            {team.lineupConfirmed ? 'Waiting…' : team.hand.length !== 9 ? `Resolve Roster · ${team.hand.length}/9` : committed > cap ? 'Resolve Budget' : 'Begin Season'}
           </button>
         )}
       </div>

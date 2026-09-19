@@ -23,15 +23,16 @@ export const POSITION_MOD = {
 export const TIERS = [
   { name: 'Role Player', uniform: 1.00, peak: 1.00, contract: 7, count: 7 },
   { name: 'Bench Player', uniform: 1.05, peak: 1.10, contract: 6, count: 4 },
-  { name: 'All-Star', uniform: 1.10, peak: 1.20, contract: 4, count: 4 },
   { name: 'High IQ', uniform: 1.10, peak: 1.20, contract: 4, count: 4, forceStat: 'PLM' },
   { name: 'Hustler', uniform: 1.10, peak: 1.20, contract: 4, count: 4, forceStats: ['DEF', 'REB'] },
+  { name: 'Generational Talent', uniform: 1.30, peak: 1.65, contract: 2, count: 2 },
 ];
 export const REPLACEMENT_TIER = { name: 'Undrafted', uniform: 1, peak: 1, contract: 6 };
 
-// League Accolades — elite, statistical-distinction tiers. These can only roll on a player
-// in the Prime career stage, with Generational Talent exempt from that restriction.
+// League Accolades — elite, statistical-distinction tiers. These only roll on players in
+// the Prime career stage and never appear in the draft.
 export const LEAGUE_ACCOLADES = [
+  { name: 'All-Star', uniform: 1.10, peak: 1.20, contract: 4, count: 4, accolade: true },
   { name: 'All-League Defensive Team', uniform: 1.10, peak: 1.30, contract: 4, count: 3, forceStat: 'DEF', accolade: true },
   { name: 'All-League 2nd Team', uniform: 1.15, peak: 1.30, contract: 4, count: 4, accolade: true },
   { name: 'All-League 1st Team', uniform: 1.20, peak: 1.40, contract: 3, count: 3, accolade: true },
@@ -39,8 +40,7 @@ export const LEAGUE_ACCOLADES = [
   { name: 'Scoring Champion', uniform: 1.15, peak: 1.50, contract: 2, count: 2, forceStat: 'SCO', accolade: true },
   { name: 'Rebounding Champion', uniform: 1.15, peak: 1.50, contract: 2, count: 2, forceStat: 'REB', allowedPositions: ['Forward', 'Big'], accolade: true },
   { name: 'Assist Leader', uniform: 1.15, peak: 1.50, contract: 2, count: 2, forceStat: 'PLM', accolade: true },
-  { name: 'MVP Candidate', uniform: 1.25, peak: 1.55, contract: 2, count: 3, accolade: true },
-  { name: 'Generational Talent', uniform: 1.30, peak: 1.65, contract: 2, count: 2, accolade: true, primeExempt: true },
+  { name: 'Most Valuable Player', uniform: 1.25, peak: 1.55, contract: 2, count: 3, accolade: true },
 ];
 
 export const COACH_ARCHETYPES = {

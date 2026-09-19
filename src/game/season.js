@@ -3,7 +3,7 @@ import { TIERS, LEAGUE_ACCOLADES, REPLACEMENT_TIER, AI_NAMES, AI_TRICODES, POSIT
 import { drawGM, acquireOffseasonPlayer } from './gm';
 import { advanceCareer } from './aging';
 import { shuffle, weightedPick } from './rng';
-import { makeCard, randomArch, randomArchForTier, cardTotal, neededPosition, drawCoachCard, applyCoachRetention, drawMatchupModifierCard, resetMatchupDeck } from './cards';
+import { makeCard, randomArch, randomArchForTier, neededPosition, drawCoachCard, applyCoachRetention, drawMatchupModifierCard, resetMatchupDeck } from './cards';
 import { finalizeCap, rosterSalary } from './economy';
 import { autoSelectFive, effectiveRating, activeStatSum, validateLineup } from './roster';
 import { retentionBonus, relationshipBonus } from './cards';
@@ -13,6 +13,7 @@ import { initAttendance, rollFanbaseMod, recomputeSeasonAttendance, applyPlayoff
 import { tricodeFor } from './names';
 import { simulateSeasonOutput, teamOutput } from './matchup';
 import { teamSynergy } from './skillsets';
+import { recordFreeAgencyActivity } from './freeAgencyActivity';
 
 export function newEraState() {
   return {
@@ -23,6 +24,7 @@ export function newEraState() {
     starPool: [],
     lastExpiredPlayers: [],
     log: [],
+    freeAgencyActivity: [],
     cardCounter: 0,
     settings: {
       injuryChance: INJURY_CHANCE,
@@ -151,6 +153,7 @@ export function startNewSeasonRoster(state) {
     if (!team.activeIds || !validateLineup(team).valid) team.activeIds = autoSelectFive(team.hand);
     team.lineupConfirmed = false;
     team.financeBoostUsedThisSeason = false;
+    team.deadMoney = 0;
   });
   initSeasonModifierCards(state);
 }
@@ -199,7 +202,7 @@ export function lockSeasonAndSeed(state) {
         Team: t.name,
         'Raw 4-Stat Sum': raw,
         'Coach+Rel Bonus %': t.coach ? Math.round(bonus * 1000) / 10 : '—',
-        'Synergy Off/Def %': synergy ? `+${synergy.offense}% / +${synergy.defense}%${synergy.flat ? ' (+1 flat)' : ''}` : '—',
+        'Synergy Off/Def %': synergy ? `${synergy.offense > 0 ? `+${synergy.offense}%` : 'N/A'} / ${synergy.defense > 0 ? `+${synergy.defense}%` : 'N/A'}` : '—',
         'Effective Rating (incl. synergy)': Math.round(base * 10) / 10,
         'Random Roll': `${Math.round((randomMult - 1) * 1000) / 10}%`,
         'Seeding Card Bonus %': seedingCardPct + (favorableSchedule ? ' +10 (Favorable Schedule)' : ''),
@@ -308,7 +311,7 @@ export function proceedFromResults(state) {
     });
   });
   state.lastExpiredPlayers = [];
-  state.offseason = { contractsFiled: {}, rosterFiled: {}, lineupFiled: {} };
+  state.offseason = { contractsFiled: {} };
   state.teams.forEach((team) => {
     creditTeamSeason(team, state.season);
     const kept = [];
@@ -321,6 +324,7 @@ export function proceedFromResults(state) {
         // carries lastTeamId) so that filter can actually match.
         const expiredCard = Object.assign({}, c, { contract: c.maxContract, lastTeamId: team.id });
         state.freeAgents.push(expiredCard);
+        recordFreeAgencyActivity(state, 'released', expiredCard, team);
         if (team.human) state.lastExpiredPlayers.push(expiredCard);
       } else kept.push(c);
     });
@@ -352,74 +356,19 @@ export function renewExpiredContract(state, teamIdx, cardId) {
   const index = state.freeAgents.findIndex((c) => c.id === cardId && c.lastTeamId === team.id);
   if (index < 0) return { ok: false, msg: 'Player is not available for renewal.' };
   const [card] = state.freeAgents.splice(index, 1);
-  acquireOffseasonPlayer(team, card);
-  return { ok: true };
-}
-
-export function fileRoster(state, teamIdx) {
-  const team = state.teams[teamIdx];
-  if (state.phase !== 'roster' || !team?.human || team.hand.length !== 9) return { ok: false, msg: 'Fill all nine roster spots first.' };
-  state.offseason.rosterFiled[team.id] = true;
-  if (allHumanFiled(state, 'rosterFiled')) {
-    state.teams.forEach((t) => { t.activeIds = autoSelectFive(t.hand); t.lineupConfirmed = false; });
-    state.phase = 'offseasonlineup';
-  }
-  return { ok: true };
-}
-
-export function fileOffseasonLineup(state, teamIdx) {
-  const team = state.teams[teamIdx];
-  if (state.phase !== 'offseasonlineup' || !team?.human) return { ok: false, msg: 'Lineups are not open.' };
-  const { valid, msg } = validateLineup(team);
-  if (!valid) return { ok: false, msg };
-  state.offseason.lineupFiled[team.id] = true;
-  if (allHumanFiled(state, 'lineupFiled')) {
-    state.season++;
-    if (state.season > 8) state.phase = 'era_end';
-    else { startNewSeasonRoster(state); state.phase = 'seasontransition'; }
-  }
+  const signed = acquireOffseasonPlayer(team, card);
+  recordFreeAgencyActivity(state, 'signed', signed, team);
   return { ok: true };
 }
 
 export function signFreeAgent(state, cardId, teamIdx) {
-  if (state.phase !== 'freeagency') return { ok: false, msg: 'Free agency is closed.' };
   const idx = state.freeAgents.findIndex((c) => c.id === cardId);
   if (idx < 0) return { ok: false, msg: 'Card not available.' };
   const team = state.teams[teamIdx];
   if (team.hand.length >= 9) return { ok: false, msg: 'Your roster is full.' };
   const [card] = state.freeAgents.splice(idx, 1);
-  acquireOffseasonPlayer(team, card);
-  return { ok: true };
-}
-
-export function signReplacement(state, teamIdx) {
-  if (state.phase !== 'freeagency') return { ok: false, msg: 'Free agency is closed.' };
-  const team = state.teams[teamIdx];
-  if (team.hand.length >= 9) return { ok: false, msg: 'Your roster is full.' };
-  acquireOffseasonPlayer(team, makeCard(state, randomArch(), neededPosition(team) || POSITIONS[Math.floor(Math.random() * 3)], REPLACEMENT_TIER));
-  return { ok: true };
-}
-
-export function finishFreeAgency(state) {
-  if (state.phase !== 'freeagency') return { ok: false, msg: 'Free agency is closed.' };
-  if (state.teams.some((t) => t.human && t.hand.length !== 9)) return { ok: false, msg: 'Every human team must fill its roster.' };
-  state.teams.filter((t) => !t.human).forEach((team) => {
-    while (team.hand.length < 9) {
-      const need = neededPosition(team);
-      const poolMatch = need ? state.freeAgents.find((c) => c.position === need) : null;
-      if (poolMatch) {
-        acquireOffseasonPlayer(team, state.freeAgents.splice(state.freeAgents.indexOf(poolMatch), 1)[0]);
-      } else if (state.freeAgents.length > 0 && !need) {
-        let bestIdx = 0, bestVal = -1;
-        state.freeAgents.forEach((c, i) => { const v = cardTotal(c); if (v > bestVal) { bestVal = v; bestIdx = i; } });
-        const [card] = state.freeAgents.splice(bestIdx, 1);
-        acquireOffseasonPlayer(team, card);
-      } else {
-        acquireOffseasonPlayer(team, makeCard(state, randomArch(), need || POSITIONS[Math.floor(Math.random() * 3)], REPLACEMENT_TIER));
-      }
-    }
-  });
-  state.phase = 'roster';
+  const signed = acquireOffseasonPlayer(team, card);
+  recordFreeAgencyActivity(state, 'signed', signed, team);
   return { ok: true };
 }
 

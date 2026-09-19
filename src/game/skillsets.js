@@ -9,7 +9,7 @@ import { weightedPick } from './rng';
 const rows = [
   ['Three and D', 'Spaces the floor and defends the perimeter.', 'Guard,Forward', 'SCO,DEF'],
   ['Vertical Finisher', 'Finishes lobs above the rim.', 'Forward,Big', 'SCO'],
-  ['Locker Room Guy', 'Adds +1 flat Offense and Defense from anywhere on the roster; does not stack.', 'Guard,Forward,Big', 'ANY'],
+  ['Wise Veteran', 'Adds +1% Offense and Defense from anywhere on the roster; does not stack.', 'Guard,Forward,Big', 'ANY'],
   ['Three Point Specialist', 'Punishes defenses that leave a shooter open.', 'Guard,Forward', 'SCO'],
   ['Drive and Kick', 'Penetrates and finds open shooters.', 'Guard', 'PLM'],
   ['Pick-and-Roll Maestro', 'Creates advantages through ball screens.', 'Guard', 'PLM'],
@@ -45,11 +45,12 @@ const ARCHETYPE_FAMILY = {
   'Marksman': 'SCO', 'Rebounder': 'REB', 'Defender': 'DEF',
 };
 
-export function rollSkillset(position, archetype) {
+export function rollSkillset(position, archetype, careerStage) {
   const family = ARCHETYPE_FAMILY[archetype];
-  const eligible = !family || family === 'ANY'
+  let eligible = !family || family === 'ANY'
     ? SKILLSETS
     : SKILLSETS.filter((s) => s.families.includes('ANY') || s.families.includes(family));
+  eligible = eligible.filter((s) => s.id !== 'skill-03' || careerStage === 'Veteran');
   return weightedPick(eligible.map((s) => ({ ...s, weight: s.positions.includes(position) ? 3 : 1 }))).id;
 }
 
@@ -72,15 +73,15 @@ export function teamSynergy(team, ids = team.activeIds || []) {
   const pairs = SKILLSET_PAIRS.filter((rule) => rule.skills.every((id) => skills.has(id)));
   const rawOffense = pairs.filter((p) => p.side === 'offense').reduce((n,p) => n+p.percent, 0);
   const rawDefense = pairs.filter((p) => p.side === 'defense').reduce((n,p) => n+p.percent, 0);
-  const flat = (team.hand || []).some((p) => p.skillsetId === 'skill-03') ? 1 : 0;
+  const leadership = (team.hand || []).some((p) => p.skillsetId === 'skill-03') ? 1 : 0;
   const skillOffense = Math.min(SYNERGY_CAP, rawOffense);
   const skillDefense = Math.min(SYNERGY_CAP, rawDefense);
-  const chemistry = chemistryDetails(team, ids, skillOffense, skillDefense, flat);
-  return { pairs, rawOffense, rawDefense, skillOffense, skillDefense, flat, ...chemistry,
-    offense: skillOffense + chemistry.continuity, defense: skillDefense + chemistry.continuity };
+  const chemistry = chemistryDetails(team, ids, skillOffense, skillDefense, leadership);
+  return { pairs, rawOffense, rawDefense, skillOffense, skillDefense, leadership, ...chemistry,
+    offense: skillOffense + chemistry.continuity + leadership, defense: skillDefense + chemistry.continuity + leadership };
 }
 
 export function applySynergy(base, team, ids, side) {
   const synergy = teamSynergy(team, ids);
-  return Math.round((base * (1 + synergy[side] / 100) + synergy.flat) * 100) / 100;
+  return Math.round(base * (1 + synergy[side] / 100) * 100) / 100;
 }

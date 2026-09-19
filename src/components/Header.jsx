@@ -7,7 +7,7 @@ const ERA_LENGTH = 8;
 // screen and Sidebar, and the championship bar is shown, more prominently, on Standings
 // itself. Removing it gives every screen's own heading the space right at the top instead of
 // competing with a second header band above it.
-export default function Header({ state, myTeamId, overlay, onTeam, onGlossary, onStandings, onSettings }) {
+export default function Header({ state, myTeamId, overlay, onTeam, onFreeAgency, onGlossary, onStandings, onSettings }) {
   const team = state.teams[myTeamId];
   const seasonNum = Math.min(state.season, ERA_LENGTH);
   return (
@@ -27,6 +27,7 @@ export default function Header({ state, myTeamId, overlay, onTeam, onGlossary, o
       </div>
       <div className="topbar-nav">
         <button className={'reset-link' + (overlay === 'team' ? ' active' : '')} onClick={onTeam}>Team</button>
+        <button className={'reset-link' + (overlay === 'freeagency' ? ' active' : '')} onClick={onFreeAgency}>Free Agency</button>
         <button className={'reset-link' + (overlay === 'standings' ? ' active' : '')} onClick={onStandings}>Standings</button>
         <button className={'reset-link' + (overlay === 'glossary' ? ' active' : '')} onClick={onGlossary}>Glossary</button>
         <button className={'reset-link' + (overlay === 'settings' ? ' active' : '')} onClick={onSettings}>Settings</button>

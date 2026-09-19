@@ -129,7 +129,7 @@ export default function GlossaryScreen({ state, onBack }) {
         {TIERS.map((t) => <TierBlock key={t.name} t={t} />)}
 
         <h2 id="league-accolades">League Accolades</h2>
-        <p className="lede">Elite, statistical-distinction tiers roll on players in the Prime career stage. Generational Talent is the exception and can appear at any stage.</p>
+        <p className="lede">Elite, statistical-distinction tiers roll on players in the Prime career stage. Draft prospects cannot roll League Accolades.</p>
         {LEAGUE_ACCOLADES.map((t) => <TierBlock key={t.name} t={t} />)}
 
         <h2 id="aging-experience">Aging &amp; Experience</h2>
@@ -227,7 +227,7 @@ export default function GlossaryScreen({ state, onBack }) {
         <p className="lede">Fire and replace your coach, fire your GM, or invest in your fanbase — all spent from this season's budget room. Firing a coach pays both the outgoing and incoming salaries. Firing a GM costs {formatCoins(FIRE_GM_COST)}, is limited to once per season, and draws a random GM and market size.</p>
 
         <h2 id="skillsets-chemistry">Player Skillsets and Team Chemistry</h2>
-        <p className="lede">Each new player rolls one permanent Skillset. Elite Fit pairs add +3% and Good Fit pairs +1% to Offense or Defense, capped at +12% on each side. Only the active five count; each distinct pairing counts once. Locker Room Guy adds +1 flat Offense and Defense from anywhere on the roster, without stacking. Team Chemistry uses a 0–100 score: 50 base points, up to 30 for Skillset fit (2.5 per percentage point across both sides), up to 15 for starter tenure (1 per completed player-year), and 5 for Locker Room Guy. Grades: A+ 97, A 93, A− 90, B+ 87, B 83, B− 80, C+ 77, C 73, C− 70, D+ 67, D 63, D− 60, F below 60. Each completed starter-year also adds +0.5% Offense and Defense beyond the Skillset cap. Bench players earn tenure but contribute only while starting. Joining a different team resets tenure. The experience rating stays separate. Legacy players without a Skillset remain unchanged.</p>
+        <p className="lede">Each new player rolls one permanent Skillset. Elite Fit pairs add +3% and Good Fit pairs +1% to Offense or Defense, capped at +12% on each side. Only the active five count; each distinct pairing counts once. Wise Veteran can only roll on Veteran players and adds +1% Offense and Defense from anywhere on the roster, without stacking. Team Chemistry uses a 0–100 score: 50 base points, up to 30 for Skillset fit (2.5 per percentage point across both sides), up to 15 for starter tenure (1 per completed player-year), and 5 for Wise Veteran. Grades: A+ 97, A 93, A− 90, B+ 87, B 83, B− 80, C+ 77, C 73, C− 70, D+ 67, D 63, D− 60, F below 60. Each completed starter-year also adds +0.5% Offense and Defense beyond the Skillset cap. Bench players earn tenure but contribute only while starting. Joining a different team resets tenure. The experience rating stays separate. Legacy players without a Skillset remain unchanged.</p>
         {SKILLSETS.map((skill) => <div key={skill.id} className="matchup-box">
           <div className="matchup-title">{skill.name}</div><p>{skill.description}</p>
           <p>Favored positions: {skill.positions.join(', ')} (3× draw weight; all positions eligible).</p>

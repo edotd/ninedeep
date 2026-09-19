@@ -24,6 +24,9 @@ export default function PersistentBar({ state, myTeamId, onExpand }) {
   const chemistry = teamExperience(team);
   const cap = team.seasonCap;
   const salary = hand.length ? rosterSalary(team) : 0;
+  const overBudget = cap !== undefined && salary > cap;
+  const owed = team.deadMoney || 0;
+  const bonus = (value, side) => value > 0 ? `+${value}% ${side}` : `N/A ${side}`;
 
   const slots = Array.from({ length: 9 }, (_, i) => {
     const card = hand[i];
@@ -43,11 +46,12 @@ export default function PersistentBar({ state, myTeamId, onExpand }) {
       <div className="persistent-bar-metric">
         <div className="persistent-bar-metric-label">Chemistry</div>
         <div className="persistent-bar-metric-value">{chemistry !== null ? synergy.grade : '—'}</div>
-        <div className="chemistry-bar-detail">{synergy.score}/100 · +{synergy.offense}% OFF · +{synergy.defense}% DEF{synergy.flat ? ' · +1 flat' : ''}</div>
+        <div className="chemistry-bar-detail">{synergy.score}/100 · {bonus(synergy.offense, 'OFF')} · {bonus(synergy.defense, 'DEF')}</div>
       </div>
       <div className="persistent-bar-metric">
         <div className="persistent-bar-metric-label">Budget</div>
-        <div className="persistent-bar-metric-value">{cap !== undefined ? `${formatCoins(salary)} / ${formatCoins(cap)}` : '—'}</div>
+        <div className={'persistent-bar-metric-value' + (overBudget ? ' over-budget' : '')}>{cap !== undefined ? `${formatCoins(salary).replace('🪙', '🪙 ')} / ${formatCoins(cap).replace('🪙', '')}` : '—'}</div>
+        <div className="persistent-budget-owed">(+{owed} Owed)</div>
       </div>
       <div className="persistent-bar-metric">
         <div className="persistent-bar-metric-label">Proj. Output</div>

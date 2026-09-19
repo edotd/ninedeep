@@ -6,6 +6,7 @@ import { validateLineup } from '../game/roster';
 
 const nameFor = (id) => SKILLSETS.find((s) => s.id === id)?.name || id;
 const signed = (n) => `${n >= 0 ? '+' : ''}${n}`;
+const bonusValue = (n) => n > 0 ? `+${n}%` : 'N/A';
 
 export default function TeamChemistry({ team, canEdit, onSwap, onPromote }) {
   const [incomingId, setIncomingId] = useState('');
@@ -35,19 +36,19 @@ export default function TeamChemistry({ team, canEdit, onSwap, onPromote }) {
             <span className="tc2-grade">{current.grade}</span>
             <span className="tc2-score">{current.score}</span>
           </div>
-          <p className="tc2-note">Grade is the roster's Skillset fit, continuity, and Locker Room leadership read as one figure. Score: 50 base + {current.fitPoints} fit + {current.tenurePoints} tenure + {current.leadershipPoints} leadership.</p>
+          <p className="tc2-note">Grade is the roster's Skillset fit, continuity, and Wise Veteran leadership read as one figure. Score: 50 base + {current.fitPoints} fit + {current.tenurePoints} tenure + {current.leadershipPoints} leadership.</p>
           <details className="tc2-scale"><summary>Letter-grade scale</summary><p className="tc2-note">{CHEMISTRY_GRADES.map(([min, grade], i) => `${grade}: ${min}–${i ? CHEMISTRY_GRADES[i - 1][0] - 1 : 100}`).join(' · ')}</p></details>
         </div>
 
         <div className="tc2-bonus-row">
           <div className="tc2-bonus">
             <div className="tc2-bonus-label">Offensive Bonus</div>
-            <div className="tc2-bonus-value">+{current.offense}%{current.flat ? ' +1 flat' : ''}</div>
+            <div className="tc2-bonus-value">{bonusValue(current.offense)}</div>
             <div className="tc2-bonus-sub">from {offPairs.length} live pairing{offPairs.length === 1 ? '' : 's'}</div>
           </div>
           <div className="tc2-bonus">
             <div className="tc2-bonus-label">Defensive Bonus</div>
-            <div className="tc2-bonus-value">+{current.defense}%{current.flat ? ' +1 flat' : ''}</div>
+            <div className="tc2-bonus-value">{bonusValue(current.defense)}</div>
             <div className="tc2-bonus-sub">from {defPairs.length} live pairing{defPairs.length === 1 ? '' : 's'}</div>
           </div>
         </div>
@@ -83,7 +84,7 @@ export default function TeamChemistry({ team, canEdit, onSwap, onPromote }) {
           </div>
         ) : <p className="tc2-note">No active Skillset pairings in this starting five.</p>}
         {(current.rawOffense > 12 || current.rawDefense > 12) && <p className="tc2-note">The +12% Skillset cap is applied before adding tenure bonuses.</p>}
-        {current.flat > 0 && <p className="tc2-note">Locker Room Guy: +1 flat Offense and Defense from your roster, including the bench. Applies once.</p>}
+        {current.leadership > 0 && <p className="tc2-note">Wise Veteran adds +1% Offense and Defense from anywhere on the roster. Applies once.</p>}
       </div>
 
       {canEdit && ids.length < 5 && (

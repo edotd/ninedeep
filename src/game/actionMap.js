@@ -1,7 +1,7 @@
 // Single source of truth for "action name -> mutator function" used by both useLocalGame
 // (solo, in-memory) and useRoomGame (Firestore-backed). Every mutator has the same signature
 // either way: (state, ...args) => result | undefined, mutating state in place.
-import { newEraState, signFreeAgent, signReplacement, finishFreeAgency, proceedFromResults, proceedFromSeasonRecap, proceedFromSeasonTransition, finishPlayoffs, fileContracts, fileRoster, fileOffseasonLineup, renewExpiredContract } from './season';
+import { newEraState, signFreeAgent, proceedFromResults, proceedFromSeasonRecap, proceedFromSeasonTransition, finishPlayoffs, fileContracts, renewExpiredContract } from './season';
 import { draftPick, tradeDown } from './draft';
 import { fireCoach, fireGM, investInFanbase, releasePlayer } from './finances';
 import * as engine from './engine';
@@ -36,13 +36,9 @@ export const actionMap = {
   proceedFromSeasonRecap,
   fileContracts,
   renewExpiredContract,
-  fileRoster,
-  fileOffseasonLineup,
   draftPick,
   tradeDown,
   signFreeAgent,
-  signReplacement,
-  finishFreeAgency,
   proceedFromSeasonTransition,
   fireCoach,
   fireGM,
