@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { playableCards } from '../game/matchup';
 import { PLAYER_STATS, eligibleStatTargets } from '../game/supplementalEffects';
+import { cardTier, jerseyNumber } from '../game/cards';
 
 // Decision clock for a blind matchup-card choice — long enough to read your hand, short
 // enough to put real pressure on the pick. Auto-passes on timeout so a stalled player can't
@@ -32,6 +33,66 @@ const RAIL_ITEMS = [
   { num: '03', label: 'Exchange 2', meta: '3 stages' },
   { num: '04', label: 'Bench', meta: '1 stage' },
 ];
+
+function PlayerChip({ card }) {
+  if (!card) return <div className="t2-chip t2-chip-player empty" />;
+  const tier = cardTier(card);
+  return (
+    <div className={`t2-chip t2-chip-player tier-${tier.toLowerCase()}`}>
+      <div className="t2-chip-number">{jerseyNumber(card)}</div>
+      <div className="t2-chip-position">{card.position[0]}</div>
+    </div>
+  );
+}
+
+// Face-down until the card has actually been played (card.used) — never the moment a team is
+// mid-decision, so a live human opponent's blind pick can't be read off this strip before it
+// resolves. Once used it flips face-up for the rest of the match — this strip is meant to
+// persist across every stage, so a card revealed in Exchange 1 stays revealed through Bench.
+function MatchupChip({ card }) {
+  if (!card) return <div className="t2-chip t2-chip-matchup empty" />;
+  if (!card.used) return <div className="t2-chip t2-chip-matchup facedown">?</div>;
+  return <div className="t2-chip t2-chip-matchup used">{card.name}</div>;
+}
+
+function chipSlots(cards, count) {
+  return Array.from({ length: count }, (_, i) => cards[i] || null);
+}
+
+// One team's persistent card strip — Offense/Defense (the same active five under both, since
+// both rolls draw on it), Bench, and Matchup rows. Rendered above and below the stage body so
+// both rosters stay visible through the whole turn, not just at tip-off; the row matching this
+// team's role for the *current* exchange is highlighted.
+function TeamStrip({ team, ids, activeRole }) {
+  const hand = team.hand || [];
+  const activeIds = ids || team.activeIds || [];
+  const starters = activeIds.map((id) => hand.find((c) => c.id === id)).filter(Boolean);
+  const bench = hand.filter((c) => !activeIds.includes(c.id));
+  const matchupCards = team.matchupCards || [];
+  return (
+    <div className="t2-teamstrip">
+      <div className="t2-teamstrip-name">{team.name}</div>
+      <div className="t2-teamstrip-rows">
+        <div className={'t2-teamstrip-row' + (activeRole === 'offense' ? ' active-role' : '')}>
+          <span className="t2-teamstrip-label">Offense</span>
+          <div className="t2-teamstrip-chips">{chipSlots(starters, 5).map((c, i) => <PlayerChip key={i} card={c} />)}</div>
+        </div>
+        <div className={'t2-teamstrip-row' + (activeRole === 'defense' ? ' active-role' : '')}>
+          <span className="t2-teamstrip-label">Defense</span>
+          <div className="t2-teamstrip-chips">{chipSlots(starters, 5).map((c, i) => <PlayerChip key={i} card={c} />)}</div>
+        </div>
+        <div className="t2-teamstrip-row">
+          <span className="t2-teamstrip-label">Bench</span>
+          <div className="t2-teamstrip-chips">{chipSlots(bench, 4).map((c, i) => <PlayerChip key={i} card={c} />)}</div>
+        </div>
+        <div className="t2-teamstrip-row">
+          <span className="t2-teamstrip-label">Matchup</span>
+          <div className="t2-teamstrip-chips">{chipSlots(matchupCards, 3).map((c, i) => <MatchupChip key={i} card={c} />)}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function railStatusFor(index, turn) {
   const inCoin = turn.stage === 'coinflip' || turn.stage === 'coinflipped';
@@ -156,6 +217,8 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
         </div>
 
         <div className="t2-stage">
+          <TeamStrip team={teamA} ids={turn.idsA} activeRole={turn.offenseSide === 'a' ? 'offense' : turn.defenseSide === 'a' ? 'defense' : null} />
+
           <div className="t2-stage-bar">
             <span>{stageBarLabel}</span>
             <span className="t2-stage-bar-dot" />
@@ -297,6 +360,8 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
               <button className="t2-advance-btn" onClick={() => advance()}>{advanceLabel}</button>
             )}
           </div>
+
+          <TeamStrip team={teamB} ids={turn.idsB} activeRole={turn.offenseSide === 'b' ? 'offense' : turn.defenseSide === 'b' ? 'defense' : null} />
         </div>
 
         <div className="t2-log">

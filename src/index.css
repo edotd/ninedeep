@@ -767,6 +767,33 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .t2-advance-btn{background:var(--franchise);border:none;color:var(--ink);font-family:var(--font-label);font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:12px 22px;cursor:pointer;flex-shrink:0;}
 .t2-advance-btn:hover{background:#ffb455;}
 
+/* Persistent per-team card strip — rendered above and below the stage body so both rosters
+   stay visible through every stage of the turn, not just at tip-off. */
+.t2-teamstrip{padding:10px 14px;}
+.t2-stage > .t2-teamstrip:first-child{border-bottom:1px solid var(--ink-rule);}
+.t2-stage > .t2-teamstrip:last-child{border-top:1px solid var(--ink-rule);}
+.t2-teamstrip-name{font-family:var(--font-label);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--file);margin-bottom:8px;}
+.t2-teamstrip-rows{display:flex;flex-direction:column;gap:6px;}
+.t2-teamstrip-row{display:flex;align-items:center;gap:8px;padding:3px 6px;border-left:2px solid transparent;}
+.t2-teamstrip-row.active-role{border-left-color:var(--franchise);background:var(--ink);}
+.t2-teamstrip-label{flex:0 0 56px;font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-muted);}
+.t2-teamstrip-row.active-role .t2-teamstrip-label{color:var(--franchise);}
+.t2-teamstrip-chips{display:flex;gap:4px;flex-wrap:wrap;}
+
+.t2-chip{box-sizing:border-box;flex-shrink:0;}
+.t2-chip-player{width:28px;height:32px;background:var(--form);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;}
+.t2-chip-player.empty{background:none;box-shadow:inset 0 0 0 1px var(--ink-rule);}
+.t2-chip-number{font-family:var(--font-display);font-size:12px;color:var(--stamp);line-height:1;}
+.t2-chip-position{font-family:var(--font-mono);font-size:7px;color:var(--file-muted);text-transform:uppercase;}
+.t2-chip-player.tier-a .t2-chip-number{color:var(--franchise);}
+.t2-chip-player.tier-d .t2-chip-number{color:var(--depth);}
+.t2-chip-player.tier-exp{box-shadow:inset 0 0 0 1px var(--stamp);}
+
+.t2-chip-matchup{min-width:52px;height:32px;padding:0 6px;background:var(--ink);box-shadow:inset 0 0 0 1px var(--stamp);display:flex;align-items:center;justify-content:center;text-align:center;font-family:var(--font-mono);font-size:8px;letter-spacing:.04em;color:var(--file);text-transform:uppercase;}
+.t2-chip-matchup.empty{box-shadow:inset 0 0 0 1px var(--ink-rule);}
+.t2-chip-matchup.facedown{color:var(--ink-muted);font-family:var(--font-display);font-size:14px;}
+.t2-chip-matchup.used{box-shadow:inset 0 0 0 1px var(--ink-rule);color:var(--ink-muted);text-decoration:line-through;}
+
 .t2-log{background:var(--ink-deep);border:1px solid var(--ink-rule);padding:14px;display:flex;flex-direction:column;min-height:0;}
 .t2-log-heading{font-family:var(--font-label);font-size:10px;letter-spacing:.12em;color:var(--ink-muted);text-transform:uppercase;margin-bottom:10px;}
 .t2-log-body{flex:1;overflow-y:auto;max-height:420px;}
