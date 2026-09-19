@@ -6,37 +6,6 @@ import GlossaryScreen from './GlossaryScreen';
 import SettingsScreen from './SettingsScreen';
 import { randomFranchiseName } from '../game/names';
 
-const GLOSSARY_TABS = [
-  {
-    key: 'basics', label: 'The Basics', rows: [
-      { label: 'The Era', text: '10 teams, 8 seasons. Finish the era with the most championships to win the game.' },
-      { label: 'The Nine', text: 'Each player gets nine cards to compete with. Supplement your rotation with front office and matchup cards for the best chance at winning.' },
-      { label: 'Player Turns', text: 'Each turn has three stages. The season, the playoffs, the draft.' },
-    ],
-  },
-  {
-    key: 'cards', label: 'The Cards', rows: [
-      { label: 'Player Cards', text: "Rotations consist of 5 starters and 4 bench players. Find the best combination to maximize your team's potential output." },
-      { label: 'Front Office Cards', text: 'Use Coach, Fanbase and GM cards to apply bonuses and modifiers to your team.' },
-      { label: 'Matchup Cards', text: 'Use matchup cards to target and negatively affect opposing players and teams, or apply bonuses to your own.' },
-    ],
-  },
-  {
-    key: 'money', label: 'The Money', rows: [
-      { label: 'Budget', text: 'TBD' },
-      { label: 'Contracts', text: 'TBD' },
-      { label: 'Front Office Moves', text: 'Firing your coach or GM and investing in your fanbase all spend budget room directly — the same pool that funds your roster.' },
-    ],
-  },
-  {
-    key: 'playoffs', label: 'The Playoffs', rows: [
-      { label: 'The Bracket', text: '8 teams, single elimination, three rounds.' },
-      { label: 'Turn Flow', text: 'Each team gets three rolls: offense, defense and bench. Maximize all three for the best chance at winning.' },
-      { label: 'Win Condition', text: 'Choose how a winner is decided: win outright, or surpass the championship bar.' },
-    ],
-  },
-];
-
 // The Entry screen — "1B · The Marquee" from the design brand handoff's Nine Deep Entry
 // file. Replaces the old two-step flow (a mode-picker LandingScreen, then a separate
 // SetupScreen for naming the solo franchise) with one screen: an ink hero half that carries
@@ -45,7 +14,6 @@ const GLOSSARY_TABS = [
 // action here; all configuration lives on the linked Settings screen.
 export default function EntryScreen({ pendingJoinCode, soloState, soloActions, onStartSolo, onEnterRoom }) {
   const [tab, setTab] = useState(pendingJoinCode ? 'join' : 'solo');
-  const [glossaryTab, setGlossaryTab] = useState('basics');
   const [overlay, setOverlay] = useState(null); // null | 'glossary' | 'settings'
 
   const [teamName, setTeamName] = useState('');
@@ -69,7 +37,6 @@ export default function EntryScreen({ pendingJoinCode, soloState, soloActions, o
   if (overlay === 'glossary') return <GlossaryScreen state={soloState} onBack={() => setOverlay(null)} />;
   if (overlay === 'settings') return <SettingsScreen state={soloState} actions={soloActions} onBack={() => setOverlay(null)} />;
 
-  const activeGlossary = GLOSSARY_TABS.find((t) => t.key === glossaryTab) || GLOSSARY_TABS[0];
 
   const handleStartSolo = () => {
     soloActions.startEra(teamName);
@@ -120,24 +87,11 @@ export default function EntryScreen({ pendingJoinCode, soloState, soloActions, o
           <p className="entry-tagline">You run a club: sign the rotation, pay the cap, survive the playoffs. Play solo against seven AI ownership groups, or open a room and run the era with friends.</p>
 
           <div className="entry-glossary">
-            <div className="entry-glossary-tabs">
-              {GLOSSARY_TABS.map((t) => (
-                <button
-                  key={t.key}
-                  className={'entry-glossary-tab' + (glossaryTab === t.key ? ' active' : '')}
-                  onClick={() => setGlossaryTab(t.key)}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
+            <div className="entry-glossary-tabs"><div className="entry-glossary-tab active">How To Play</div></div>
             <div className="entry-glossary-rows">
-              {activeGlossary.rows.map((row) => (
-                <div className="entry-glossary-row" key={row.label}>
-                  <div className="entry-glossary-row-label">{row.label}</div>
-                  <div className="entry-glossary-row-text">{row.text}</div>
-                </div>
-              ))}
+              <div className="entry-glossary-row">
+                <div className="entry-glossary-row-text">Each turn is a full season: regular season, playoffs, and the draft. Player, Front Office, and Matchup cards are dealt to each player at random. Assemble a cohesive unit and end the era with the most titles to claim victory.</div>
+              </div>
             </div>
             <button className="entry-glossary-link" onClick={() => setOverlay('glossary')}>
               Open The Full Glossary <span>→</span>
