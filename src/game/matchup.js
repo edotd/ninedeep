@@ -159,8 +159,11 @@ export function playMatchup(a, b, advA, advB, idsA, idsB, extraA, extraB) {
   const bBench = benchScore(b, idsB);
   const aLeagueMod = extraA.leagueMod || 0;
   const bLeagueMod = extraB.leagueMod || 0;
-  const aSum = exA.offenseTotal + exB.defenseTotal + aBench + aLeagueMod;
-  const bSum = exB.offenseTotal + exA.defenseTotal + bBench + bLeagueMod;
+  // Round the sum too, not just its inputs — several already-rounded floats (e.g. 11.06 +
+  // 12.08) routinely land on values like 22.06000000000002 that MatchupBox would otherwise
+  // print raw (see teamOutput's identical fix, in this same file, for the same reason).
+  const aSum = Math.round((exA.offenseTotal + exB.defenseTotal + aBench + aLeagueMod) * 100) / 100;
+  const bSum = Math.round((exB.offenseTotal + exA.defenseTotal + bBench + bLeagueMod) * 100) / 100;
   const winner = aSum === bSum ? (Math.random() < 0.5 ? a : b) : aSum > bSum ? a : b;
   return {
     a, b, advA: !!advA, advB: !!advB,

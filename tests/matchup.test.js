@@ -89,7 +89,7 @@ test('extra draw excludes expired seeding cards; discard consumes opponent card;
 test('a card played during defense\'s blind window still cuts that same exchange\'s offense roll, and state survives JSON sync', () => {
   let state=game(); lockSeasonAndSeed(state); startPlayoffs(state); state.playoff.activeMatchIndex=0;
   let m=state.playoff.matches[0]; m.a.matchupCards=[];m.b.matchupCards=[];m.a.human=true;m.b.human=true;
-  beginTurn(state); advanceTurn(state); // flips coin, opens Exchange 1's blind card window
+  beginTurn(state); advanceTurn(state); advanceTurn(state); // flips coin, then opens Exchange 1's blind card window
   state=rehydrateState(JSON.parse(JSON.stringify(state))); m=state.playoff.matches[0];
   const offenseTeam = m.turn.offenseSide==='a' ? m.a : m.b;
   const defenseTeam = m.turn.defenseSide==='a' ? m.a : m.b;

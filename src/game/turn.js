@@ -68,8 +68,9 @@ function flipCoin(m) {
   const turn = m.turn;
   const firstIsA = Math.random() < 0.5;
   turn.order = firstIsA ? [m.a, m.b] : [m.b, m.a];
+  turn.coinFace = firstIsA ? 'HEADS' : 'TAILS'; // cosmetic only — a fixed function of who's first
   pushLog(turn, 'pregame', `Coin flip — ${turn.order[0].name} starts on offense.`);
-  startExchange(m);
+  turn.stage = 'coinflipped';
 }
 
 function startExchange(m) {
@@ -153,20 +154,23 @@ function resolveExchange(state, m) {
   turn.stage = 'resolved';
 }
 
-function finishBench(state, m) {
+function computeBench(m) {
   const turn = m.turn;
   const aBench = benchScore(m.a, turn.idsA);
   const bBench = benchScore(m.b, turn.idsB);
   turn.aBench = aBench; turn.bBench = bBench;
   pushLog(turn, 'resolution', `${m.a.name}'s bench contributes +${aBench}.`);
   pushLog(turn, 'resolution', `${m.b.name}'s bench contributes +${bBench}.`);
-  finishTurn(state, m);
+  turn.current = null;
+  turn.stage = 'bench';
 }
 
 function finishTurn(state, m) {
   const turn = m.turn;
-  const aSum = turn.aOffTotal + turn.aDefTotal + turn.aBench + turn.extraA.leagueMod;
-  const bSum = turn.bOffTotal + turn.bDefTotal + turn.bBench + turn.extraB.leagueMod;
+  // Round the sum too, not just its inputs — see matchup.js's playMatchup for why (several
+  // already-rounded floats can still add up to something like 22.06000000000002).
+  const aSum = Math.round((turn.aOffTotal + turn.aDefTotal + turn.aBench + turn.extraA.leagueMod) * 100) / 100;
+  const bSum = Math.round((turn.bOffTotal + turn.bDefTotal + turn.bBench + turn.extraB.leagueMod) * 100) / 100;
   const winner = aSum === bSum ? (Math.random() < 0.5 ? m.a : m.b) : aSum > bSum ? m.a : m.b;
   m.result = {
     a: m.a, b: m.b, advA: !!turn.advA, advB: !!turn.advB,
@@ -194,6 +198,7 @@ export function advanceTurn(state, payload) {
   if (!turn || turn.stage === 'complete') return;
 
   if (turn.stage === 'coinflip') { flipCoin(m); return; }
+  if (turn.stage === 'coinflipped') { startExchange(m); return; }
 
   if (turn.stage === 'card') {
     const cur = turn.current;
@@ -224,7 +229,10 @@ export function advanceTurn(state, payload) {
       turn.exchangeIndex = 1;
       startExchange(m);
     } else {
-      finishBench(state, m);
+      computeBench(m);
     }
+    return;
   }
+
+  if (turn.stage === 'bench') { finishTurn(state, m); }
 }

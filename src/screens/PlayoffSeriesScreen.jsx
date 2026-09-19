@@ -153,7 +153,7 @@ export default function PlayoffSeriesScreen({ state, actions, myTeamId }) {
             </div>
           )}
           <button className="primary" style={{ width: '100%', padding: 18, margin: '8px 0 0', fontSize: 16 }} onClick={() => actions.beginTurn()}>
-            Tip Off
+            Start Game
           </button>
         </div>
       </div>
