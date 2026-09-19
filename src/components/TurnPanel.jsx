@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { playableCards } from '../game/matchup';
 import { PLAYER_STATS, eligibleStatTargets } from '../game/supplementalEffects';
 import { cardTier, jerseyNumber } from '../game/cards';
+import { offenseDieSize, defenseDieSize } from '../game/roster';
+import Die from './Die';
 
 // Decision clock for a blind matchup-card choice — long enough to read your hand, short
 // enough to put real pressure on the pick. Auto-passes on timeout so a stalled player can't
@@ -23,7 +25,6 @@ function stageKey(turn) {
 
 function stageNumber(turn) {
   const idx = STAGE_ORDER.indexOf(stageKey(turn));
-  // coinflip and coinflipped both read as stage 1.
   return Math.max(1, idx === 0 ? 1 : idx);
 }
 
@@ -33,66 +34,6 @@ const RAIL_ITEMS = [
   { num: '03', label: 'Exchange 2', meta: '3 stages' },
   { num: '04', label: 'Bench', meta: '1 stage' },
 ];
-
-function PlayerChip({ card }) {
-  if (!card) return <div className="t2-chip t2-chip-player empty" />;
-  const tier = cardTier(card);
-  return (
-    <div className={`t2-chip t2-chip-player tier-${tier.toLowerCase()}`}>
-      <div className="t2-chip-number">{jerseyNumber(card)}</div>
-      <div className="t2-chip-position">{card.position[0]}</div>
-    </div>
-  );
-}
-
-// Face-down until the card has actually been played (card.used) — never the moment a team is
-// mid-decision, so a live human opponent's blind pick can't be read off this strip before it
-// resolves. Once used it flips face-up for the rest of the match — this strip is meant to
-// persist across every stage, so a card revealed in Exchange 1 stays revealed through Bench.
-function MatchupChip({ card }) {
-  if (!card) return <div className="t2-chip t2-chip-matchup empty" />;
-  if (!card.used) return <div className="t2-chip t2-chip-matchup facedown">?</div>;
-  return <div className="t2-chip t2-chip-matchup used">{card.name}</div>;
-}
-
-function chipSlots(cards, count) {
-  return Array.from({ length: count }, (_, i) => cards[i] || null);
-}
-
-// One team's persistent card strip — Offense/Defense (the same active five under both, since
-// both rolls draw on it), Bench, and Matchup rows. Rendered above and below the stage body so
-// both rosters stay visible through the whole turn, not just at tip-off; the row matching this
-// team's role for the *current* exchange is highlighted.
-function TeamStrip({ team, ids, activeRole }) {
-  const hand = team.hand || [];
-  const activeIds = ids || team.activeIds || [];
-  const starters = activeIds.map((id) => hand.find((c) => c.id === id)).filter(Boolean);
-  const bench = hand.filter((c) => !activeIds.includes(c.id));
-  const matchupCards = team.matchupCards || [];
-  return (
-    <div className="t2-teamstrip">
-      <div className="t2-teamstrip-name">{team.name}</div>
-      <div className="t2-teamstrip-rows">
-        <div className={'t2-teamstrip-row' + (activeRole === 'offense' ? ' active-role' : '')}>
-          <span className="t2-teamstrip-label">Offense</span>
-          <div className="t2-teamstrip-chips">{chipSlots(starters, 5).map((c, i) => <PlayerChip key={i} card={c} />)}</div>
-        </div>
-        <div className={'t2-teamstrip-row' + (activeRole === 'defense' ? ' active-role' : '')}>
-          <span className="t2-teamstrip-label">Defense</span>
-          <div className="t2-teamstrip-chips">{chipSlots(starters, 5).map((c, i) => <PlayerChip key={i} card={c} />)}</div>
-        </div>
-        <div className="t2-teamstrip-row">
-          <span className="t2-teamstrip-label">Bench</span>
-          <div className="t2-teamstrip-chips">{chipSlots(bench, 4).map((c, i) => <PlayerChip key={i} card={c} />)}</div>
-        </div>
-        <div className="t2-teamstrip-row">
-          <span className="t2-teamstrip-label">Matchup</span>
-          <div className="t2-teamstrip-chips">{chipSlots(matchupCards, 3).map((c, i) => <MatchupChip key={i} card={c} />)}</div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function railStatusFor(index, turn) {
   const inCoin = turn.stage === 'coinflip' || turn.stage === 'coinflipped';
@@ -105,11 +46,83 @@ function railStatusFor(index, turn) {
   return inBench ? 'active' : inCoin || inEx1 || inEx2 ? 'pending' : 'done';
 }
 
+function PlayerSlot({ card }) {
+  if (!card) return <div className="t2-pslot empty" />;
+  const tier = cardTier(card);
+  return (
+    <div className={`t2-pslot tier-${tier.toLowerCase()}`}>
+      <div className="t2-pslot-number">{jerseyNumber(card)}</div>
+      <div className="t2-pslot-name">{card.archetype}</div>
+      <div className="t2-pslot-position">{card.position}</div>
+    </div>
+  );
+}
+
+// Face-down until the card has actually been played (card.used) — never the moment a team is
+// mid-decision, so a live human opponent's blind pick can't be read off this strip before it
+// resolves. Once used it flips face-up for the rest of the match — this strip persists across
+// every stage, so a card revealed in Exchange 1 stays revealed through Bench.
+function MatchupSlot({ card }) {
+  if (!card) return <div className="t2-mslot empty" />;
+  if (!card.used) return <div className="t2-mslot facedown">Held</div>;
+  return (
+    <div className="t2-mslot used">
+      <div className="t2-mslot-category">{card.category}</div>
+      <div className="t2-mslot-name">{card.name}</div>
+      <div className="t2-mslot-status">Spent</div>
+    </div>
+  );
+}
+
+function chipSlots(cards, count) {
+  return Array.from({ length: count }, (_, i) => cards[i] || null);
+}
+
+// One team's full board strip: Front Office facts, team name (with a Home Court tag and a
+// status line), and its 3 matchup-card slots, followed by its starters and bench rows —
+// rendered above and below the roll zone so both rosters and both front offices "stay on the
+// table" for the whole turn, per the design doc's 5A caption.
+function TeamBoard({ team, ids, hca, statusLabel, isActive }) {
+  const hand = team.hand || [];
+  const activeIds = ids || team.activeIds || [];
+  const starters = activeIds.map((id) => hand.find((c) => c.id === id)).filter(Boolean);
+  const bench = hand.filter((c) => !activeIds.includes(c.id));
+  const matchupCards = team.matchupCards || [];
+  return (
+    <div className={'t2-teamboard' + (isActive ? ' active' : '')}>
+      <div className="t2-teamboard-head">
+        <div className="t2-teamboard-fo">
+          <div className="t2-fo-item"><span>Coach</span><b>{team.coach ? team.coach.modifier : '—'}</b></div>
+          <div className="t2-fo-item"><span>GM</span><b>{team.market ? (team.gmType || 'Neutral') : '—'}</b></div>
+          <div className="t2-fo-item"><span>Fanbase</span><b>{team.fanbaseArchetype ? team.fanbaseArchetype.name : '—'}</b></div>
+        </div>
+        <div className="t2-teamboard-name">
+          {hca && <span className="t2-hca-tag">Home Court</span>}
+          <div className="t2-teamboard-name-text">{team.name}</div>
+          <div className="t2-teamboard-status">{statusLabel}</div>
+        </div>
+        <div className="t2-teamboard-matchup">
+          {chipSlots(matchupCards, 3).map((c, i) => <MatchupSlot key={i} card={c} />)}
+        </div>
+      </div>
+      <div className="t2-teamboard-row">
+        <span className="t2-teamboard-row-label">Starters</span>
+        <div className="t2-teamboard-slots">{chipSlots(starters, 5).map((c, i) => <PlayerSlot key={i} card={c} />)}</div>
+      </div>
+      <div className="t2-teamboard-row">
+        <span className="t2-teamboard-row-label">Bench</span>
+        <div className="t2-teamboard-slots">{chipSlots(bench, 4).map((c, i) => <PlayerSlot key={i} card={c} />)}</div>
+      </div>
+    </div>
+  );
+}
+
 // Drives one turn (coin flip, then two offense/defense exchanges, then bench) stage by stage —
 // see game/turn.js for the state machine this renders. Stays mounted until m.turn.stage
 // becomes 'complete', at which point m.result exists and PlayoffSeriesScreen swaps back to
-// the existing MatchupBox reveal. Laid out per the "Nine Deep Match Flow" design's 2C screen:
-// a header naming both clubs and who has possession, a turn-sequence rail, a stage panel, and
+// the existing MatchupBox reveal. Laid out per the "Nine Deep Match Flow" design's 5A match
+// board: a turn-sequence rail with an Advantage panel, a center board with both teams' full
+// rosters/front offices/matchup cards persisting above and below one shared roll circle, and
 // a game log — collapsing to one column below the desktop breakpoint.
 export default function TurnPanel({ state, actions, m, myTeamId }) {
   const turn = m.turn;
@@ -166,36 +179,68 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
   // waiting on their own pick can't read what the opponent just locked in.
   const visibleLog = turn.log.filter((e) => e.stepIndex < turn.exchangeIndex || turn.stage === 'resolved' || turn.stage === 'bench');
 
-  const stageBarLabel = turn.stage === 'coinflip' || turn.stage === 'coinflipped'
-    ? 'Coin Flip'
-    : turn.stage === 'card'
-      ? `Exchange ${turn.exchangeIndex + 1} — ${cur.role === 'offense' ? 'Offense' : 'Defense'} Card`
-      : turn.stage === 'resolved'
-        ? `Exchange ${turn.exchangeIndex + 1} Result`
-        : 'Bench';
-
-  const advanceLabel = turn.stage === 'coinflip' ? 'Flip Coin' : 'Continue';
+  const advanceLabel = turn.stage === 'coinflip' ? 'Flip Coin' : turn.stage === 'bench' ? 'Finish Turn' : 'Continue';
   const showGenericAdvance = (turn.stage !== 'card') || (!myTurnToAct && !waitingOnOpponent);
+
+  const statusFor = (side) => {
+    const team = side === 'a' ? teamA : teamB;
+    if (turn.stage === 'coinflip') return 'Awaiting Tip-Off';
+    if (turn.stage === 'bench') return 'Bench · No Cards';
+    if (offenseTeam === team) return 'On Offense · Cards Face Down Until Played';
+    if (defenseTeam === team) return 'On Defense · Cards Face Down Until Played';
+    return possessionTeam === team ? 'Won The Tip' : 'Waiting';
+  };
+
+  // The roll-zone circle: the coin before/at the flip, then each exchange's two dice once
+  // rolled — the same circle is reused for every roll in the match, per the design's "clean
+  // look" note ("every roll of the match resolves in this circle").
+  const renderRollCircle = () => {
+    if (turn.stage === 'coinflip' || turn.stage === 'coinflipped') {
+      if (!turn.order) {
+        return (
+          <div className="t2-rollzone-coin">
+            <div className="t2-coin"><div className="t2-coin-face">Toss</div><div className="t2-coin-brand">Nine Deep</div></div>
+            <div className="t2-rollzone-caption">Coin Flip<br /><span>Winner opens on offense</span></div>
+          </div>
+        );
+      }
+      return (
+        <div className="t2-rollzone-coin">
+          <div className="t2-coin"><div className="t2-coin-face">{turn.coinFace}</div><div className="t2-coin-brand">Nine Deep</div></div>
+          <div className="t2-rollzone-caption">{turn.order[0].name} Wins The Tip<br /><span>Opens on offense for Exchange 1</span></div>
+        </div>
+      );
+    }
+    if (turn.stage === 'card') {
+      const sides = cur.role === 'offense' ? offenseDieSize(actingTeam) : defenseDieSize(actingTeam);
+      return (
+        <div className="t2-rollzone-die">
+          <Die sides={sides} value={sides} size={100} />
+          <div className="t2-rollzone-caption">D{sides} · {cur.role === 'offense' ? 'Offense' : 'Defense'}<br /><span>{actingTeam.name} is deciding</span></div>
+        </div>
+      );
+    }
+    if (turn.stage === 'resolved') {
+      const offSide = turn.offenseSide, defSide = turn.defenseSide;
+      const offDie = turn[`${offSide}OffDie`], offSides = turn[`${offSide}OffSides`];
+      const defDie = turn[`${defSide}DefDie`], defSides = turn[`${defSide}DefSides`];
+      return (
+        <div className="t2-rollzone-dual">
+          <div className="t2-rollzone-die"><Die sides={offSides} value={offDie} size={92} /><div className="t2-rollzone-caption">Offense<br /><span>{(offSide === 'a' ? teamA : teamB).name}</span></div></div>
+          <div className="t2-rollzone-die"><Die sides={defSides} value={defDie} size={92} /><div className="t2-rollzone-caption">Defense<br /><span>{(defSide === 'a' ? teamA : teamB).name}</span></div></div>
+        </div>
+      );
+    }
+    return (
+      <div className="t2-rollzone-coin">
+        <div className="t2-coin"><div className="t2-coin-face">🪑</div><div className="t2-coin-brand">Nine Deep</div></div>
+        <div className="t2-rollzone-caption">Bench<br /><span>Resolves straight from each roster</span></div>
+      </div>
+    );
+  };
 
   return (
     <div className="t2-shell">
-      <div className="t2-header">
-        <div className="t2-header-team">
-          <span className="t2-header-team-name">{teamA.name}</span>
-          <span className="t2-header-team-tag">User A</span>
-        </div>
-        <div className="t2-header-possession">
-          <span className="t2-header-possession-label">Possession</span>
-          <span className="t2-header-possession-badge">
-            {possessionTeam ? possessionTeam.name : 'Pending'}
-          </span>
-        </div>
-        <div className="t2-header-team right">
-          <span className="t2-header-team-tag">User B</span>
-          <span className="t2-header-team-name">{teamB.name}</span>
-        </div>
-      </div>
-
       <div className="t2-body">
         <div className="t2-rail">
           <div className="t2-rail-heading">Turn Sequence</div>
@@ -209,159 +254,121 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
               </div>
             );
           })}
-          <div className="t2-rail-note">
-            Each exchange is one team on offense against the other on defense — both lock in a
-            matchup card blind, then roll. Bench resolves straight from each team's roster, no
-            cards involved.
+
+          <div className="t2-advantage-panel">
+            <div className="t2-advantage-heading">Advantage</div>
+            {[['a', teamA, turn.advA], ['b', teamB, turn.advB]].map(([side, team, adv]) => (
+              <div className="t2-advantage-line" key={side}>
+                <b>{team.name}</b>
+                <span>{team.fanbaseArchetype && team.fanbaseArchetype.name === 'Die Hard'
+                  ? (adv ? 'Advantage used this match — rolled twice, kept the higher.' : team.advantageAvailable ? 'Advantage available.' : 'Advantage already spent.')
+                  : 'No Die Hard advantage.'}</span>
+              </div>
+            ))}
+            <div className="t2-advantage-note">The waiting side keeps its matchup cards face down until it plays one.</div>
           </div>
         </div>
 
-        <div className="t2-stage">
-          <TeamStrip team={teamA} ids={turn.idsA} activeRole={turn.offenseSide === 'a' ? 'offense' : turn.defenseSide === 'a' ? 'defense' : null} />
+        <div className="t2-board">
+          <TeamBoard team={teamA} ids={turn.idsA} hca={turn.hcaA} statusLabel={statusFor('a')} isActive={offenseTeam === teamA || defenseTeam === teamA} />
 
-          <div className="t2-stage-bar">
-            <span>{stageBarLabel}</span>
-            <span className="t2-stage-bar-dot" />
-          </div>
-          <div className="t2-stage-body">
-            {(turn.stage === 'coinflip' || turn.stage === 'coinflipped') && (
-              turn.order ? (
-                <div className="t2-coin-row">
-                  <div className="t2-coin">
-                    <div className="t2-coin-face">{turn.coinFace}</div>
-                    <div className="t2-coin-brand">Nine Deep</div>
-                  </div>
-                  <div className="t2-coin-result">
-                    <div className="t2-coin-result-eyebrow">Pregame · Possession</div>
-                    <div className="t2-coin-result-title">{turn.order[0].name} Wins Possession</div>
-                    <div className="t2-coin-result-sub">
-                      {turn.order[0].name} opens on offense for Exchange 1. Roles flip for
-                      Exchange 2, so both teams get one offense possession and one defense
-                      possession before Bench.
-                    </div>
-                  </div>
+          <div className="t2-rollzone">
+            {renderRollCircle()}
+
+            {turn.stage === 'card' && myTurnToAct && (
+              <div className="t2-carddecision">
+                <div className="t2-carddecision-head">
+                  <span>Play A Matchup Card?</span>
+                  <span className={'t2-timer' + (timeLeft <= 3 ? ' urgent' : '')}>{Math.ceil(timeLeft)}s</span>
                 </div>
-              ) : (
-                <>
-                  <div className="t2-stage-eyebrow">Pregame · Possession</div>
-                  <div className="t2-stage-title">Coin Flip</div>
-                  <div className="t2-stage-desc">
-                    Winner opens on offense for Exchange 1; the loser opens on defense. Roles
-                    flip for Exchange 2.
-                  </div>
-                  <div className="t2-coin-row">
-                    <div className="t2-coin">
-                      <div className="t2-coin-face">Toss</div>
-                      <div className="t2-coin-brand">Nine Deep</div>
-                    </div>
-                  </div>
-                </>
-              )
+                <div className="t2-carddecision-desc">Both teams lock in a card — or pass — blind, before either die is rolled.</div>
+                <div className="t2-cards">
+                  {myOptions.length === 0 && <div className="t2-waiting">No card to play this possession.</div>}
+                  {myOptions.map((c) => {
+                    const isPicking = targetPickerCardId === c.id;
+                    const targetTeam = c.target === 'self' ? myTeam : (actingTeam === teamA ? teamB : teamA);
+                    const targetIds = targetTeam === teamA ? turn.idsA : turn.idsB;
+                    const targetPlayers = eligibleStatTargets(targetTeam, targetIds, c);
+                    return (
+                      <div key={c.id}>
+                        <button
+                          className="t2-card-btn"
+                          disabled={c.targetsPlayer && targetPlayers.length === 0}
+                          onClick={() => {
+                            if (c.targetsPlayer) { setTargetPickerCardId(isPicking ? null : c.id); return; }
+                            advance({ cardId: c.id });
+                          }}
+                        >
+                          <span className="t2-card-name">{c.name}{c.rarity ? ` · ${c.rarity}` : ''}</span>
+                          {c.description && <span>{c.description} · </span>}
+                          {c.targetsPlayer && targetPlayers.length === 0 && <span>No eligible starter · </span>}
+                          {c.targetsPlayer ? `Choose a target on ${targetTeam.name}` : `Play on ${targetTeam.name}`}
+                        </button>
+                        {isPicking && (
+                          <div style={{ marginTop: 6, marginBottom: 6, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                            {targetPlayers.flatMap((oc) => (c.targetsPlayer && c.effectType ? PLAYER_STATS : [null]).map((stat) => (
+                              <button
+                                key={`${oc.id}-${stat}`}
+                                className="t2-card-btn"
+                                onClick={() => { advance({ cardId: c.id, targetId: oc.id, stat }); setTargetPickerCardId(null); }}
+                              >
+                                {oc.position} · {oc.archetype}{stat ? ` · ${stat} (${oc.stats[stat]})` : ''}{c.effectType === 'CAP_HIT_STAT' ? ` · +${oc.salary}` : ''}
+                              </button>
+                            )))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="t2-carddecision-actions">
+                  <button className="t2-pass-btn" onClick={() => advance({ pass: true })}>Pass</button>
+                </div>
+              </div>
             )}
 
-            {turn.stage === 'card' && (
-              <>
-                <div className="t2-stage-eyebrow">Exchange {turn.exchangeIndex + 1} · Blind Card</div>
-                <div className="t2-stage-desc">
-                  {offenseTeam.name} is on offense, {defenseTeam.name} is on defense. Both teams
-                  lock in a matchup card — or pass — blind, before either die is rolled.
-                </div>
-
-                {myTurnToAct && (
-                  <>
-                    <div className={'t2-timer' + (timeLeft <= 3 ? ' urgent' : '')}>{Math.ceil(timeLeft)}s to decide</div>
-                    <div className="t2-cards">
-                      {myOptions.length === 0 && <div className="t2-waiting">No card to play this possession.</div>}
-                      {myOptions.map((c) => {
-                        const isPicking = targetPickerCardId === c.id;
-                        const targetTeam = c.target === 'self' ? myTeam : (actingTeam === teamA ? teamB : teamA);
-                        const targetIds = targetTeam === teamA ? turn.idsA : turn.idsB;
-                        const targetPlayers = eligibleStatTargets(targetTeam, targetIds, c);
-                        return (
-                          <div key={c.id}>
-                            <button
-                              className="t2-card-btn"
-                              disabled={c.targetsPlayer && targetPlayers.length === 0}
-                              onClick={() => {
-                                if (c.targetsPlayer) { setTargetPickerCardId(isPicking ? null : c.id); return; }
-                                advance({ cardId: c.id });
-                              }}
-                            >
-                              <span className="t2-card-name">{c.name}{c.rarity ? ` · ${c.rarity}` : ''}</span>
-                              {c.description && <span>{c.description} · </span>}
-                              {c.targetsPlayer && targetPlayers.length === 0 && <span>No eligible starter · </span>}
-                              {c.targetsPlayer ? `Choose a target on ${targetTeam.name}` : `Play on ${targetTeam.name}`}
-                            </button>
-                            {isPicking && (
-                              <div style={{ marginTop: 6, marginBottom: 6, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                                {targetPlayers.flatMap((oc) => (c.targetsPlayer && c.effectType ? PLAYER_STATS : [null]).map((stat) => (
-                                  <button
-                                    key={`${oc.id}-${stat}`}
-                                    className="t2-card-btn"
-                                    onClick={() => { advance({ cardId: c.id, targetId: oc.id, stat }); setTargetPickerCardId(null); }}
-                                  >
-                                    {oc.position} · {oc.archetype}{stat ? ` · ${stat} (${oc.stats[stat]})` : ''}{c.effectType === 'CAP_HIT_STAT' ? ` · +${oc.salary}` : ''}
-                                  </button>
-                                )))}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                      <button className="t2-pass-btn" onClick={() => advance({ pass: true })}>Pass</button>
-                    </div>
-                  </>
-                )}
-
-                {waitingOnOpponent && (
-                  <div className="t2-waiting">Waiting on {actingTeam.name} to lock in a card…</div>
-                )}
-                {!myTurnToAct && !waitingOnOpponent && !actingTeam.human && (
-                  <div className="t2-waiting">{actingTeam.name} is locking in a card.</div>
-                )}
-              </>
+            {turn.stage === 'card' && waitingOnOpponent && (
+              <div className="t2-waiting">Waiting on {actingTeam.name} to lock in a card…</div>
+            )}
+            {turn.stage === 'card' && !myTurnToAct && !waitingOnOpponent && !actingTeam.human && (
+              <div className="t2-waiting">{actingTeam.name} is locking in a card.</div>
             )}
 
             {turn.stage === 'resolved' && (() => {
               const offSide = turn.offenseSide, defSide = turn.defenseSide;
               const offTeam = offSide === 'a' ? teamA : teamB;
               const defTeam = defSide === 'a' ? teamA : teamB;
-              const offDie = turn[`${offSide}OffDie`], offSides = turn[`${offSide}OffSides`], offTotal = turn[`${offSide}OffTotal`], offWon = turn[`${offSide}OffWon`];
-              const defDie = turn[`${defSide}DefDie`], defSides = turn[`${defSide}DefSides`], defTotal = turn[`${defSide}DefTotal`];
+              const offTotal = turn[`${offSide}OffTotal`], offWon = turn[`${offSide}OffWon`];
+              const defTotal = turn[`${defSide}DefTotal`];
               return (
-                <>
-                  <div className="t2-stage-eyebrow">Exchange {turn.exchangeIndex + 1} · Result</div>
-                  <div className="t2-report">
-                    <div className="t2-report-row"><span className="t2-report-label">{offTeam.name} rolls (Offense)</span><span>{offDie} / 1d{offSides}</span></div>
-                    <div className="t2-report-row"><span className="t2-report-label">{defTeam.name} rolls (Defense)</span><span>{defDie} / 1d{defSides}</span></div>
-                    <div className="t2-report-row"><span className="t2-report-label">Possession</span><span>{offWon ? `${offTeam.name} wins` : `${defTeam.name} wins`}</span></div>
-                    <div className="t2-report-row"><span className="t2-report-label">{offTeam.name} Offense</span><span>+{offTotal}{!offWon ? ' (reduced)' : ''}</span></div>
-                    <div className="t2-report-row"><span className="t2-report-label">{defTeam.name} Defense</span><span>+{defTotal}</span></div>
-                  </div>
-                </>
+                <div className="t2-report">
+                  <div className="t2-report-row"><span className="t2-report-label">Possession</span><span>{offWon ? `${offTeam.name} wins` : `${defTeam.name} wins`}</span></div>
+                  <div className="t2-report-row"><span className="t2-report-label">{offTeam.name} Offense</span><span>+{offTotal}{!offWon ? ' (reduced)' : ''}</span></div>
+                  <div className="t2-report-row"><span className="t2-report-label">{defTeam.name} Defense</span><span>+{defTotal}</span></div>
+                </div>
               );
             })()}
 
             {turn.stage === 'bench' && (
-              <>
-                <div className="t2-stage-eyebrow">Bench · No Cards</div>
-                <div className="t2-report">
-                  <div className="t2-report-row"><span className="t2-report-label">{teamA.name} Bench</span><span>+{turn.aBench}</span></div>
-                  <div className="t2-report-row"><span className="t2-report-label">{teamB.name} Bench</span><span>+{turn.bBench}</span></div>
-                </div>
-              </>
+              <div className="t2-report">
+                <div className="t2-report-row"><span className="t2-report-label">{teamA.name} Bench</span><span>+{turn.aBench}</span></div>
+                <div className="t2-report-row"><span className="t2-report-label">{teamB.name} Bench</span><span>+{turn.bBench}</span></div>
+              </div>
             )}
           </div>
 
-          <div className="t2-stage-footer">
-            <button className="t2-restart-btn" onClick={() => actions.beginTurn()}>Restart Turn</button>
-            <span className="t2-stage-counter">Stage {stageNumber(turn)} / {STAGE_ORDER.length - 1}</span>
-            {showGenericAdvance && (
-              <button className="t2-advance-btn" onClick={() => advance()}>{advanceLabel}</button>
-            )}
-          </div>
+          <TeamBoard team={teamB} ids={turn.idsB} hca={turn.hcaB} statusLabel={statusFor('b')} isActive={offenseTeam === teamB || defenseTeam === teamB} />
 
-          <TeamStrip team={teamB} ids={turn.idsB} activeRole={turn.offenseSide === 'b' ? 'offense' : turn.defenseSide === 'b' ? 'defense' : null} />
+          <div className="t2-board-footer">
+            <div className="t2-board-caption">Both rosters and both front offices stay on the table all game. Spent matchup cards hold their slot, struck through.</div>
+            <div className="t2-board-actions">
+              <button className="t2-restart-btn" onClick={() => actions.beginTurn()}>Restart Turn</button>
+              <span className="t2-stage-counter">Stage {stageNumber(turn)} / {STAGE_ORDER.length - 1}</span>
+              {showGenericAdvance && (
+                <button className="t2-advance-btn" onClick={() => advance()}>{advanceLabel}</button>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="t2-log">
