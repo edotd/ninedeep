@@ -6,10 +6,13 @@ const ERA_LENGTH = 8;
 function outputFor(team) {
   return team && team.coach && team.activeIds && team.activeIds.length > 0 ? teamOutput(team) : null;
 }
-const NAV_ITEMS = [
-  { key: 'team', label: 'Team' },
+const PRIMARY_NAV_ITEMS = [
+  { key: 'team', label: 'Your Franchise' },
   { key: 'freeagency', label: 'Free Agency' },
   { key: 'standings', label: 'Standings' },
+  { key: 'cardtypes', label: 'Card Types' },
+];
+const SUPPORT_NAV_ITEMS = [
   { key: 'glossary', label: 'Glossary' },
   { key: 'settings', label: 'Settings' },
 ];
@@ -46,7 +49,7 @@ export default function Sidebar({ state, myTeamId, overlay, onNav }) {
       </div>
       <div className="sidebar-team">{team.name}</div>
       <nav className="sidebar-nav">
-        {NAV_ITEMS.map((item) => (
+        {PRIMARY_NAV_ITEMS.map((item) => (
           <button
             key={item.key}
             className={'sidebar-nav-item' + (overlay === item.key ? ' active' : '')}
@@ -65,6 +68,17 @@ export default function Sidebar({ state, myTeamId, overlay, onNav }) {
             <span className="sidebar-standings-val">{output ? output.total.toFixed(2) : '—'}</span>
           </div>
         ))}
+        <nav className="sidebar-nav sidebar-nav-secondary">
+          {SUPPORT_NAV_ITEMS.map((item) => (
+            <button
+              key={item.key}
+              className={'sidebar-nav-item' + (overlay === item.key ? ' active' : '')}
+              onClick={() => onNav(item.key)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </nav>
       </div>
       <div className="sidebar-footer">
         <div className="sidebar-era-label">Era 01 · Year {seasonNum} of {ERA_LENGTH}</div>

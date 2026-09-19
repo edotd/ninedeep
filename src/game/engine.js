@@ -35,16 +35,16 @@ export function startEra(state, teamNameRaw) {
   state.teamName = val.length ? val.slice(0, 32) : 'Your Franchise';
   buildStarPool(state);
   buildTeams(state, defaultSoloSeats(state.teamName));
-  // "Before the Deal" (design brand handoff, 3A) — a one-time overview of the three card
-  // types, shown before any dealing starts. No per-team gating: it's read-only, so any one
-  // Continue click (in a shared room) advances everyone the same way Constructing does.
-  state.phase = 'cardoverview';
+  dealHands(state);
+  state.teams.forEach((t) => { t.activeIds = autoSelectFive(t.hand); });
+  state.phase = 'pullhand';
 }
 
 // Deals the 9-card hand first — see proceedFromHand/proceedToSeason1 below for why Front
 // Office now comes after the hand instead of before it (players, then front office, then
 // matchup cards, per the reordered deal sequence).
 export function proceedFromCardOverview(state) {
+  if (state.phase !== 'cardoverview') return;
   dealHands(state);
   state.teams.forEach((t) => { t.activeIds = autoSelectFive(t.hand); });
   state.phase = 'pullhand';

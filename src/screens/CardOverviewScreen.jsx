@@ -117,14 +117,10 @@ function CardOverviewSection({ accent, markType, eyebrow, title, body, howLabel,
   );
 }
 
-// "Before the Deal" (design brand handoff, 3A, rewritten) — a one-time overview of the three
-// card types, shown before any dealing starts. One real card per type, hand-annotated. Player
-// example is drawn straight from the real season pool (safe to preview — dealing hasn't
-// touched it yet); Front Office and Matchup examples are built from the same generators the
-// real pulls use, on throwaway data never written to any real team, since neither has
-// actually been pulled yet at this point in the flow.
-export default function CardOverviewScreen({ state, actions }) {
-  const playerExample = state.starPool[0];
+// An always-available reference for the three card types. Existing saved games can still
+// enter the old cardoverview phase, so the original deal action remains as a fallback.
+export default function CardOverviewScreen({ state, actions, myTeamId = 0, onBack }) {
+  const playerExample = state.teams?.[myTeamId]?.hand?.[0] || state.starPool?.[0];
   const sampleTeam = useMemo(() => buildSampleTeam(), []);
   const matchupExample = useMemo(() => sampleMatchupCard(), []);
 
@@ -134,7 +130,7 @@ export default function CardOverviewScreen({ state, actions }) {
         <div className="co-inner">
           <div className="co-masthead">
             <div>
-              <div className="co-eyebrow">{state.teamName || 'Your Franchise'} · Before The Deal</div>
+              <div className="co-eyebrow">{state.teamName || 'Your Franchise'} · {onBack ? 'Card Types' : 'Before The Deal'}</div>
               <h1 className="co-title">Your Nine</h1>
             </div>
             <div className="co-meta">
@@ -188,7 +184,7 @@ export default function CardOverviewScreen({ state, actions }) {
         </div>
       </div>
       <div className="bottombar">
-        <button className="primary" onClick={actions.proceedFromCardOverview}>Deal The Nine</button>
+        <button className="primary" onClick={onBack || actions.proceedFromCardOverview}>{onBack ? 'Back' : 'Deal The Nine'}</button>
       </div>
     </>
   );

@@ -84,8 +84,6 @@ export default function EntryScreen({ pendingJoinCode, soloState, soloActions, o
           </div>
 
           <h1 className="entry-headline">Eight seasons.<br />Nine cards<br />a season.</h1>
-          <p className="entry-tagline">You run a club: sign the rotation, pay the cap, survive the playoffs. Play solo against seven AI ownership groups, or open a room and run the era with friends.</p>
-
           <div className="entry-glossary">
             <div className="entry-glossary-tabs"><div className="entry-glossary-tab active">How To Play</div></div>
             <div className="entry-glossary-rows">
@@ -135,7 +133,7 @@ export default function EntryScreen({ pendingJoinCode, soloState, soloActions, o
                 </div>
               </div>
 
-              <div className="entry-start-block">
+              <div className="entry-start-block compact">
                 <button className="entry-start-btn" onClick={handleStartSolo}>
                   Start <span>→</span>
                 </button>

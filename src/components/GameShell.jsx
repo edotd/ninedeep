@@ -51,18 +51,18 @@ const SCREENS = {
 // show is about to be replaced by next season's, same full-screen treatment as Constructing.
 const HIDE_BAR_PHASES = new Set(['simulating', 'seasonrecap', 'seasontransition']);
 
-// Glossary/Standings/Settings/Team are client-local overlays, not part of the shared game
+// Glossary/Standings/Settings/Team/Card Types are client-local overlays, not part of the shared game
 // phase — a room's `state.phase` drives what everyone in the room sees, so if opening the
 // Glossary changed it, one player checking a rule would yank every other player's screen
 // to the Glossary too. Overlay state lives here instead and never touches Firestore.
 //
-// The game's *flow* (Card Overview -> Hand -> Front Office -> Matchup Cards -> Team Summary ->
+// The game's *flow* (Hand -> Front Office -> Matchup Cards -> Team Summary ->
 // Playoffs -> Results -> Contracts -> Draft -> Team) is identical on mobile and desktop — only the surrounding
 // shell changes at the desktop breakpoint: a Sidebar + full-width persistent bar per the
 // brand handoff, instead of the phone-width top bar + collapsed bottom bar. Same
 // `overlay`/`Screen` resolution feeds both shells so the two never drift out of sync.
 export default function GameShell({ state, actions, myTeamId, onNewEra }) {
-  const [overlay, setOverlay] = useState(null); // null | 'glossary' | 'settings' | 'standings' | 'team'
+  const [overlay, setOverlay] = useState(null); // null | 'glossary' | 'settings' | 'standings' | 'team' | 'freeagency' | 'cardtypes'
   const toggleOverlay = (name) => setOverlay((o) => (o === name ? null : name));
   const isDesktop = useIsDesktop();
 
@@ -87,6 +87,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
   else if (overlay === 'standings') overlayBody = <LeagueScreen state={state} myTeamId={myTeamId} onBack={close} />;
   else if (overlay === 'team') overlayBody = <TeamSummaryScreen state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
   else if (overlay === 'freeagency') overlayBody = <FreeAgencyScreen state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
+  else if (overlay === 'cardtypes') overlayBody = <CardOverviewScreen state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
 
   const Screen = SCREENS[state.phase];
   const mainBody = overlayBody || (Screen

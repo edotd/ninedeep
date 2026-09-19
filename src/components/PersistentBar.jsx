@@ -51,7 +51,7 @@ export default function PersistentBar({ state, myTeamId, onExpand }) {
       <div className="persistent-bar-metric">
         <div className="persistent-bar-metric-label">Budget</div>
         <div className={'persistent-bar-metric-value' + (overBudget ? ' over-budget' : '')}>{cap !== undefined ? `${formatCoins(salary).replace('🪙', '🪙 ')} / ${formatCoins(cap).replace('🪙', '')}` : '—'}</div>
-        <div className="persistent-budget-owed">(+{owed} Owed)</div>
+        {owed > 0 && <div className="persistent-budget-owed">(+{owed} Owed)</div>}
       </div>
       <div className="persistent-bar-metric">
         <div className="persistent-bar-metric-label">Proj. Output</div>

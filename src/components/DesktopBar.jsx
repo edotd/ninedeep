@@ -215,7 +215,7 @@ export default function DesktopBar({ state, myTeamId, actions }) {
           <span className="limit">{cap !== undefined ? formatCoins(cap).replace('🪙', '') : '—'}</span>
         </div>
         {room !== undefined && <div className={'db-budget-room' + (room < 0 ? ' over' : '')}>{room >= 0 ? '+' : ''}{Math.round(room * 10) / 10} Room</div>}
-        <div className="db-budget-owed">(+{owed} Owed)</div>
+        {owed > 0 && <div className="db-budget-owed">(+{owed} Owed)</div>}
       </div>
       <div className="db-section db-metric output">
         <div className="db-heading">Projected Output</div>
