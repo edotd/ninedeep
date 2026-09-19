@@ -1,4 +1,4 @@
-import { applySynergy } from './skillsets';
+import { applySynergy, teamSynergy } from './skillsets';
 import { POSITIONS } from './constants';
 import { cardTotal, retentionBonus, retentionDieBump, relationshipBonus } from './cards';
 import { handsOffBonus } from './gm';
@@ -33,9 +33,17 @@ export function validateLineup(team) {
 export function activeStatSum(team) {
   return team.activeIds.reduce((s, id) => { const c = team.hand.find((h) => h.id === id); return c ? s + cardTotal(c) : s; }, 0);
 }
+// Seeding needs to see the same Team Chemistry/Skillset synergy that Proj Offense/Defense
+// (offenseModifier/defenseModifier, below) already apply — otherwise a roster built around
+// chemistry can lead the league in projected output and still seed near the bottom, since the
+// bonus that's actually carrying it never touched the seeding math. Folded in the same way
+// the coach bonus already is: averaged across both sides into one blended multiplier, since
+// this is one undifferentiated stat total rather than separate offense/defense sums.
 export function effectiveRating(team) {
   const bonus = retentionBonus(team) + relationshipBonus(team) + handsOffBonus(team);
-  return activeStatSum(team) * (1 + (team.coach.offBonus + bonus + team.coach.defBonus + bonus) / 2);
+  const synergy = teamSynergy(team);
+  const synergyAvg = (synergy.offense + synergy.defense) / 200;
+  return activeStatSum(team) * (1 + (team.coach.offBonus + bonus + team.coach.defBonus + bonus) / 2 + synergyAvg) + synergy.flat;
 }
 
 // SCO/PLM (offense) and DEF/REB (defense) contributions are scaled per-card by that
