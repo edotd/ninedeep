@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { playableCards } from '../game/matchup';
 import { PLAYER_STATS, eligibleStatTargets } from '../game/supplementalEffects';
 import { cardTier, jerseyNumber } from '../game/cards';
@@ -11,11 +11,16 @@ import BallMark from './BallMark';
 // freeze the match for their opponent.
 const CARD_TIMER_SECONDS = 8;
 
-// Every sub-stage the engine (game/turn.js) can be in, in order, each tagged with which
-// numbered rail item it belongs to — drives both the "STAGE n / total" counter and which rail
-// row is highlighted. coinflip/coinflipped share rail item 1 (the coin only "advances" once,
-// from the player's point of view, even though the engine models the flip and its reveal as
-// two stages); 'card' appears twice per exchange (offense's window, then defense's).
+// How long the coin spins before the flip actually resolves, and how long the result reads
+// on screen before auto-advancing into the first card window — both purely presentational
+// delays around the instant, synchronous advanceTurn() call.
+const COIN_SPIN_MS = 900;
+const COIN_RESULT_MS = 1400;
+
+// Every sub-stage the engine (game/turn.js) can be in, in order — drives the "STAGE n / total"
+// footer counter. coinflip/coinflipped share stage 1 (the coin only "advances" once, from the
+// player's point of view, even though the engine models the flip and its reveal as two
+// stages); 'card' appears twice per exchange (offense's window, then defense's).
 const STAGE_ORDER = ['coinflip', 'coinflipped', 'card-offense-0', 'card-defense-0', 'resolved-0', 'card-offense-1', 'card-defense-1', 'resolved-1', 'bench'];
 
 function stageKey(turn) {
@@ -27,24 +32,6 @@ function stageKey(turn) {
 function stageNumber(turn) {
   const idx = STAGE_ORDER.indexOf(stageKey(turn));
   return Math.max(1, idx === 0 ? 1 : idx);
-}
-
-const RAIL_ITEMS = [
-  { num: '01', label: 'Coin Flip', meta: '' },
-  { num: '02', label: 'Exchange 1', meta: '3 stages' },
-  { num: '03', label: 'Exchange 2', meta: '3 stages' },
-  { num: '04', label: 'Bench', meta: '1 stage' },
-];
-
-function railStatusFor(index, turn) {
-  const inCoin = turn.stage === 'coinflip' || turn.stage === 'coinflipped';
-  const inEx1 = turn.exchangeIndex === 0 && (turn.stage === 'card' || turn.stage === 'resolved');
-  const inEx2 = turn.exchangeIndex === 1 && (turn.stage === 'card' || turn.stage === 'resolved');
-  const inBench = turn.stage === 'bench';
-  if (index === 0) return inCoin ? 'active' : 'done';
-  if (index === 1) return inEx1 ? 'active' : inCoin ? 'pending' : 'done';
-  if (index === 2) return inEx2 ? 'active' : inCoin || inEx1 ? 'pending' : 'done';
-  return inBench ? 'active' : inCoin || inEx1 || inEx2 ? 'pending' : 'done';
 }
 
 function PlayerSlot({ card }) {
@@ -124,9 +111,9 @@ function TeamBoard({ team, ids, hca, statusLabel, isActive }) {
 // see game/turn.js for the state machine this renders. Stays mounted until m.turn.stage
 // becomes 'complete', at which point m.result exists and PlayoffSeriesScreen swaps back to
 // the existing MatchupBox reveal. Laid out per the "Nine Deep Match Flow" design's 5A match
-// board: a turn-sequence rail with an Advantage panel, a center board with both teams' full
-// rosters/front offices/matchup cards persisting above and below one shared roll circle, and
-// a game log — collapsing to one column below the desktop breakpoint.
+// board: a center board with both teams' full rosters/front offices/matchup cards persisting
+// above and below one shared roll circle, and a game log — collapsing to one column below the
+// desktop breakpoint.
 export default function TurnPanel({ state, actions, m, myTeamId }) {
   const turn = m.turn;
   const teamA = m.a, teamB = m.b;
@@ -134,6 +121,8 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
   const humanInMatch = teamA === myTeam || teamB === myTeam;
   const [targetPickerCardId, setTargetPickerCardId] = useState(null);
   const [timeLeft, setTimeLeft] = useState(CARD_TIMER_SECONDS);
+  const [coinSpinning, setCoinSpinning] = useState(false);
+  const coinTimerRef = useRef(null);
 
   const cur = turn.current;
   const actingTeam = cur ? (cur.team === 'a' ? teamA : teamB) : null;
@@ -151,6 +140,27 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
   const waitingOnOpponent = turn.stage === 'card' && humanInMatch && actingTeam !== myTeam && actingTeam.human;
 
   const advance = (payload) => actions.advanceTurn(payload);
+
+  // Clicking the ball mark spins it in place for a beat before the (instant, synchronous)
+  // coin flip actually resolves, then the result reads for a moment before auto-advancing
+  // into the first card window — no separate Continue click for either step.
+  const startCoinFlip = () => {
+    if (coinSpinning) return;
+    setCoinSpinning(true);
+    coinTimerRef.current = setTimeout(() => {
+      advance();
+      setCoinSpinning(false);
+    }, COIN_SPIN_MS);
+  };
+
+  useEffect(() => () => clearTimeout(coinTimerRef.current), []);
+
+  useEffect(() => {
+    if (turn.stage !== 'coinflipped') return undefined;
+    const t = setTimeout(() => advance(), COIN_RESULT_MS);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [turn.stage]);
 
   useEffect(() => {
     setTargetPickerCardId(null);
@@ -183,9 +193,10 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
   const visibleLog = turn.log.filter((e) => e.stepIndex < turn.exchangeIndex || turn.stage === 'resolved' || turn.stage === 'bench');
 
   const advanceLabel = turn.stage === 'bench' ? 'Finish Turn' : 'Continue';
-  // The coin-flip stage has its own Start button (the ball mark, in the roll zone) — no
-  // separate footer button needed for it.
-  const showGenericAdvance = turn.stage !== 'coinflip' && ((turn.stage !== 'card') || (!myTurnToAct && !waitingOnOpponent));
+  // Neither coin-flip stage needs a footer button — the ball mark itself starts the flip, and
+  // the result auto-advances into the first card window on its own after a beat.
+  const showGenericAdvance = turn.stage !== 'coinflip' && turn.stage !== 'coinflipped'
+    && ((turn.stage !== 'card') || (!myTurnToAct && !waitingOnOpponent));
 
   const statusFor = (side) => {
     const team = side === 'a' ? teamA : teamB;
@@ -204,16 +215,20 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
       if (!turn.order) {
         return (
           <div className="t2-rollzone-coin">
-            <button className="t2-coin-start" onClick={() => advance()}>
+            <button
+              className={'t2-coin-start' + (coinSpinning ? ' spinning' : ' pulsing')}
+              onClick={startCoinFlip}
+              disabled={coinSpinning}
+              aria-label="Start — flip the coin"
+            >
               <BallMark size={56} variant="onInk" />
-              <span>Start</span>
             </button>
             <div className="t2-rollzone-caption">Coin Flip<br /><span>Winner opens on offense</span></div>
           </div>
         );
       }
       return (
-        <div className="t2-rollzone-coin">
+        <div className="t2-rollzone-coin t2-fade-in">
           <div className="t2-coin"><div className="t2-coin-face">{turn.coinFace}</div><div className="t2-coin-brand">Nine Deep</div></div>
           <div className="t2-rollzone-caption">{turn.order[0].name} Wins The Tip<br /><span>Opens on offense for Exchange 1</span></div>
         </div>
@@ -224,7 +239,6 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
       return (
         <div className="t2-rollzone-die">
           <Die sides={sides} value={sides} size={100} />
-          <div className="t2-rollzone-caption">D{sides} · {cur.role === 'offense' ? 'Offense' : 'Defense'}<br /><span>{actingTeam.name} is deciding</span></div>
         </div>
       );
     }
@@ -250,33 +264,6 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
   return (
     <div className="t2-shell">
       <div className="t2-body">
-        <div className="t2-rail">
-          <div className="t2-rail-heading">Turn Sequence</div>
-          {RAIL_ITEMS.map((item, i) => {
-            const status = railStatusFor(i, turn);
-            return (
-              <div key={item.num} className={`t2-rail-item ${status}`}>
-                <span className="t2-rail-num">{item.num}</span>
-                <span className="t2-rail-label">{item.label}</span>
-                <span className="t2-rail-meta">{status === 'active' ? 'Active' : item.meta}</span>
-              </div>
-            );
-          })}
-
-          <div className="t2-advantage-panel">
-            <div className="t2-advantage-heading">Advantage</div>
-            {[['a', teamA, turn.advA], ['b', teamB, turn.advB]].map(([side, team, adv]) => (
-              <div className="t2-advantage-line" key={side}>
-                <b>{team.name}</b>
-                <span>{team.fanbaseArchetype && team.fanbaseArchetype.name === 'Die Hard'
-                  ? (adv ? 'Advantage used this match — rolled twice, kept the higher.' : team.advantageAvailable ? 'Advantage available.' : 'Advantage already spent.')
-                  : 'No Die Hard advantage.'}</span>
-              </div>
-            ))}
-            <div className="t2-advantage-note">The waiting side keeps its matchup cards face down until it plays one.</div>
-          </div>
-        </div>
-
         <div className="t2-board">
           <TeamBoard team={teamA} ids={turn.idsA} hca={turn.hcaA} statusLabel={statusFor('a')} isActive={offenseTeam === teamA || defenseTeam === teamA} />
 
@@ -337,9 +324,6 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
 
             {turn.stage === 'card' && waitingOnOpponent && (
               <div className="t2-waiting">Waiting on {actingTeam.name} to lock in a card…</div>
-            )}
-            {turn.stage === 'card' && !myTurnToAct && !waitingOnOpponent && !actingTeam.human && (
-              <div className="t2-waiting">{actingTeam.name} is locking in a card.</div>
             )}
 
             {turn.stage === 'resolved' && (() => {

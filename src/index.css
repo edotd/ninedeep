@@ -673,55 +673,6 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .sr-footer{background:var(--ink);padding:16px 24px;display:flex;gap:28px;}
 @media (max-width:600px){.sr-contract-name{width:80px;}}
 
-/* ================= Tip-off (2B) — brand handoff Screens: Playoffs & Match Play. One-time
-   reveal before a match's turn engine starts: both clubs' seed, projected output, chemistry/
-   cap, rotation size, and matchup cards (opponent's held face down). Ink ground throughout,
-   padding-free like .ts-screen/.sr-screen so .tipoff-inner controls the actual gutter and the
-   background always fills whatever width the shell gives it. ================= */
-.tipoff-screen{background:var(--ink);padding:0;}
-.desktop-content .tipoff-screen{padding:0;max-width:none;margin:0;}
-.tipoff-inner{padding:20px 16px 28px;}
-@media (min-width:700px){.tipoff-inner{padding:24px 28px 32px;}}
-@media (min-width:1000px){.tipoff-inner{max-width:1080px;margin:0 auto;}}
-.tipoff-header-row{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--ink-rule);padding-bottom:12px;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
-.tipoff-label{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;color:var(--ink-muted);text-transform:uppercase;}
-.tipoff-tipoff-tag{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;color:var(--ink-muted);text-transform:uppercase;}
-.tipoff-row{display:flex;align-items:stretch;justify-content:center;gap:20px;margin-bottom:24px;}
-.tipoff-vs{position:relative;width:88px;height:70px;flex-shrink:0;align-self:center;display:flex;align-items:center;justify-content:center;}
-.tipoff-vs-text,.tipoff-vs-logo{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:68px;color:var(--stamp-ink);transition:opacity .4s ease;}
-.tipoff-vs-text.hidden,.tipoff-vs-logo.hidden{opacity:0;}
-.tipoff-team{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;}
-.tipoff-team.away{align-items:flex-end;text-align:right;}
-.tipoff-team-tags{display:flex;gap:10px;align-items:center;}
-.tipoff-team.away .tipoff-team-tags{flex-direction:row-reverse;}
-.tipoff-seed-badge{background:var(--franchise);padding:3px 7px;font-family:var(--font-label);font-size:9px;letter-spacing:.1em;color:var(--ink);text-transform:uppercase;}
-.tipoff-seed-badge.outline{background:none;box-shadow:inset 0 0 0 1px var(--ink-muted);color:var(--file);}
-.tipoff-team-tag{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;color:var(--ink-muted);text-transform:uppercase;}
-.tipoff-name{font-family:var(--font-display);font-size:40px;line-height:.85;color:var(--file);}
-.tipoff-output-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;color:var(--ink-muted);margin-top:8px;text-transform:uppercase;}
-.tipoff-output{font-family:var(--font-display);font-size:64px;line-height:.8;color:var(--file);}
-.tipoff-output.mine{color:var(--franchise);}
-.tipoff-substats{font-family:var(--font-mono);font-size:11px;color:var(--ink-muted);}
-.tipoff-cards-row{display:flex;gap:32px;border-top:1px solid var(--ink-rule);padding-top:20px;flex-wrap:wrap;justify-content:center;}
-.tipoff-cards-col{flex:1;min-width:260px;display:flex;flex-direction:column;gap:12px;}
-.tipoff-cards-col.away{align-items:flex-end;text-align:right;}
-.tipoff-cards-heading{font-family:var(--font-label);font-size:10px;letter-spacing:.12em;color:var(--file);text-transform:uppercase;}
-.tipoff-cards-list{display:flex;gap:12px;flex-wrap:wrap;}
-.tipoff-cards-col.away .tipoff-cards-list{justify-content:flex-end;}
-.tipoff-card{width:140px;font-family:var(--font-mono);font-size:11px;}
-.tipoff-card.faceup{background:var(--form);border:3px solid var(--stamp);display:flex;flex-direction:column;}
-.tipoff-card.facedown{background:var(--ink-deep);box-shadow:inset 0 0 0 1px var(--ink-rule);display:flex;flex-direction:column;}
-.tipoff-card.empty{color:var(--ink-muted);padding:8px 0;width:auto;}
-.tipoff-card-header{display:flex;justify-content:space-between;padding:6px 8px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;}
-.tipoff-card.faceup .tipoff-card-header{background:var(--stamp);color:var(--form);}
-.tipoff-card.facedown .tipoff-card-header{color:var(--ink-muted);}
-.tipoff-card-name{font-family:var(--font-display);font-size:20px;line-height:.85;color:var(--ink);padding:8px;flex:1;}
-.tipoff-card-footer{display:flex;justify-content:space-between;padding:6px 8px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;border-top:1px solid var(--form-rule);color:var(--file-muted);}
-.tipoff-card.facedown .tipoff-card-footer{border-top-color:var(--ink-rule);color:var(--ink-muted);}
-.tipoff-facedown-dots{display:grid;grid-template-columns:repeat(3,7px);gap:6px;justify-content:center;padding:16px 8px;}
-.tipoff-facedown-dot{width:7px;height:7px;border-radius:50%;background:var(--ink-muted);}
-.tipoff-facedown-dot.centre{background:var(--franchise);}
-@media (max-width:480px){.tipoff-name{font-size:26px;}.tipoff-output{font-size:40px;}.tipoff-row{flex-direction:column;}.tipoff-team.away{align-items:flex-start;text-align:left;}.tipoff-team.away .tipoff-team-tags{flex-direction:row;}.tipoff-cards-col.away{align-items:flex-start;text-align:left;}.tipoff-cards-col.away .tipoff-cards-list{justify-content:flex-start;}.tipoff-vs{align-self:flex-start;}}
 
 /* ================= The Die — "Nine Deep Die" design doc. A fixed three-quarter cube; only the
    front face's number ever changes between rolls, never the pose. ========= */
@@ -740,24 +691,8 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
    stacking to one column below the desktop breakpoint. ========= */
 .t2-shell{background:var(--ink);margin:0 -16px;padding:16px;color:var(--file);}
 
-.t2-body{display:grid;grid-template-columns:200px 1fr 220px;gap:14px;align-items:start;}
+.t2-body{display:grid;grid-template-columns:1fr 220px;gap:14px;align-items:start;}
 @media (max-width:899px){.t2-body{grid-template-columns:1fr;}}
-
-.t2-rail{background:var(--ink-deep);border:1px solid var(--ink-rule);padding:14px;}
-.t2-rail-heading{font-family:var(--font-label);font-size:10px;letter-spacing:.12em;color:var(--ink-muted);text-transform:uppercase;margin-bottom:10px;}
-.t2-rail-item{display:flex;align-items:center;gap:8px;padding:9px 8px;border-left:3px solid transparent;}
-.t2-rail-item.active{background:var(--ink);border-left-color:var(--franchise);}
-.t2-rail-item.done{opacity:.55;}
-.t2-rail-num{font-family:var(--font-mono);font-size:10px;color:var(--ink-muted);flex-shrink:0;}
-.t2-rail-label{font-family:var(--font-label);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--file);flex:1;}
-.t2-rail-item.active .t2-rail-label{color:var(--franchise);}
-.t2-rail-meta{font-family:var(--font-mono);font-size:9px;color:var(--ink-muted);text-transform:uppercase;flex-shrink:0;}
-
-.t2-advantage-panel{margin-top:14px;padding-top:14px;border-top:1px solid var(--ink-rule);}
-.t2-advantage-heading{font-family:var(--font-label);font-size:10px;letter-spacing:.12em;color:var(--ink-muted);text-transform:uppercase;margin-bottom:8px;}
-.t2-advantage-line{font-family:var(--font-mono);font-size:11px;line-height:1.5;color:var(--ink-muted);margin-bottom:8px;}
-.t2-advantage-line b{display:block;color:var(--file);font-family:var(--font-label);font-size:10px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px;}
-.t2-advantage-note{font-family:var(--font-mono);font-size:10px;line-height:1.5;color:var(--ink-muted);margin-top:10px;padding-top:10px;border-top:1px solid var(--ink-rule);}
 
 .t2-board{background:var(--ink-deep);border:1px solid var(--ink-rule);display:flex;flex-direction:column;min-width:0;}
 
@@ -806,9 +741,17 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .t2-coin{width:96px;height:96px;border-radius:50%;background:var(--file);box-shadow:inset 0 0 0 3px var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex-shrink:0;}
 .t2-coin-face{font-family:var(--font-display);font-size:20px;line-height:.9;color:var(--ink);text-transform:uppercase;}
 .t2-coin-brand{font-family:var(--font-mono);font-size:8px;letter-spacing:.1em;color:var(--file-muted);text-transform:uppercase;}
-.t2-coin-start{width:96px;height:96px;border-radius:50%;background:var(--franchise);border:3px solid var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;flex-shrink:0;cursor:pointer;padding:0;}
+.t2-coin-start{width:96px;height:96px;border-radius:50%;background:var(--franchise);border:3px solid var(--ink);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;padding:0;}
 .t2-coin-start:hover{background:#ffb455;}
-.t2-coin-start span{font-family:var(--font-label);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);}
+.t2-coin-start.pulsing{animation:t2-coin-pulse 1.8s ease-in-out infinite;}
+.t2-coin-start.spinning{animation:t2-coin-spin 0.9s cubic-bezier(.25,.7,.3,1) both;cursor:default;}
+@keyframes t2-coin-pulse{0%,100%{box-shadow:0 0 0 0 rgba(240,160,61,.55);}50%{box-shadow:0 0 0 12px rgba(240,160,61,0);}}
+@keyframes t2-coin-spin{from{transform:rotate(0deg);}to{transform:rotate(1080deg);}}
+@media(prefers-reduced-motion:reduce){.t2-coin-start.pulsing,.t2-coin-start.spinning{animation:none;}}
+
+.t2-fade-in{animation:t2-fade-in 450ms ease-out both;}
+@keyframes t2-fade-in{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+@media(prefers-reduced-motion:reduce){.t2-fade-in{animation:none;}}
 .t2-rollzone-caption{font-family:var(--font-label);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--file);text-align:center;line-height:1.5;}
 .t2-rollzone-caption span{display:block;font-family:var(--font-mono);font-size:10px;letter-spacing:.02em;color:var(--ink-muted);text-transform:none;margin-top:2px;}
 
@@ -1361,7 +1304,7 @@ body:has(.entry-screen){padding-bottom:0;}
 
 /* ================= Season transition ("The Odometer", design brand handoff "Nine Deep
    Transitions" 2A) — a one-time beat between seasons, for every season after the first. Ink
-   ground, full-bleed like the other brand-fixed screens (co-screen/tipoff-screen/etc). ==== */
+   ground, full-bleed like the other brand-fixed screens (co-screen/etc). ==== */
 /* min-height:100vh, not the usual calc(100vh - <bar height>) other full-bleed ink screens use
    — this phase hides the persistent bar entirely (HIDE_BAR_PHASES), so there's no bar height
    to reserve space for on either shell, and subtracting one left a bare strip of body
