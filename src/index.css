@@ -823,10 +823,8 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .t2-log{background:var(--ink-deep);border:1px solid var(--ink-rule);padding:20px;display:flex;flex-direction:column;min-height:0;}
 .t2-log-heading{font-family:var(--font-label);font-size:12px;letter-spacing:.12em;color:var(--ink-muted);text-transform:uppercase;margin-bottom:12px;}
 .t2-log-body{flex:1;overflow-y:auto;max-height:640px;}
-.t2-log-entry{font-family:var(--font-mono);font-size:13px;line-height:1.6;color:var(--file-muted);padding:10px 0;border-top:1px dashed var(--ink-rule);}
+.t2-log-entry{font-family:var(--font-mono);font-size:13px;line-height:1.6;color:#fff;padding:10px 0;border-top:1px dashed var(--ink-rule);}
 .t2-log-entry:first-child{border-top:none;}
-.t2-log-entry-tag{font-family:var(--font-label);font-size:10px;letter-spacing:.1em;color:var(--franchise);text-transform:uppercase;display:block;margin-bottom:4px;}
-.t2-log-footer{font-family:var(--font-mono);font-size:10px;font-style:italic;color:var(--ink-muted);padding-top:12px;margin-top:12px;border-top:1px solid var(--ink-rule);}
 
 /* ================= Playoff Bracket (2A, "the field") — brand handoff Screens: Playoffs &
    Match Play. Ink ground throughout; round-grouped columns of the actual QF/SF/Final matches

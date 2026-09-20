@@ -210,10 +210,7 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
 
   const myOptions = myTurnToAct ? playableCards(myTeam) : [];
 
-  // Blind by convention: never surface an in-progress exchange's card-play log entries — only
-  // entries from an already-resolved exchange (or the finished match) are shown, so a human
-  // waiting on their own pick can't read what the opponent just locked in.
-  const visibleLog = turn.log.filter((e) => e.stepIndex < turn.exchangeIndex || turn.stage === 'resolved' || turn.stage === 'bench');
+  const visibleLog = turn.log;
 
   const advanceLabel = 'Finish Turn';
   // Only the bench stage still needs a manual footer button — the coin flip, a card decision
@@ -443,13 +440,9 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
           <div className="t2-log-heading">Game Log</div>
           <div className="t2-log-body">
             {visibleLog.map((n, i) => (
-              <div key={i} className="t2-log-entry">
-                <span className="t2-log-entry-tag">{n.tag}</span>
-                {n.text}
-              </div>
+              <div key={i} className="t2-log-entry">{n.text}</div>
             ))}
           </div>
-          <div className="t2-log-footer">Every roll is filed. The log is the receipt a season recap is built from.</div>
         </div>
       </div>
     </div>
