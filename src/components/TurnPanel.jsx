@@ -4,8 +4,8 @@ import { PLAYER_STATS, eligibleStatTargets } from '../game/supplementalEffects';
 import { offenseDieSize, defenseDieSize } from '../game/roster';
 import Die, { ROLL_DURATION_MS } from './Die';
 import BallMark from './BallMark';
-import PlayerCard from './PlayerCard';
-import FrontOfficeCard from './FrontOfficeCard';
+import CompactPlayerTile from './CompactPlayerTile';
+import CompactCoachCard from './CompactCoachCard';
 
 // Decision clock for a blind matchup-card choice — long enough to read your hand, short
 // enough to put real pressure on the pick. Auto-passes on timeout so a stalled player can't
@@ -47,48 +47,35 @@ function chipSlots(cards, count) {
   return Array.from({ length: count }, (_, i) => cards[i] || null);
 }
 
-// One team's full board strip: Front Office facts and team name (with a Home Court tag and a
-// status line), followed by its starters and bench rows of full player cards — rendered above
-// and below the roll zone so both rosters and both front offices "stay on the table" for the
-// whole turn.
-// "Coach in front" layout, per the Match Flow design doc: each team's roster sits at the
-// board's outer edge, with its Head Coach card and team name/status sitting closer to the
-// shared roll zone in between — the coach card is the visual bridge between "who's playing"
-// and "what's being rolled." `flip` mirrors the bottom team's board (via a CSS
-// column-reverse over this same [roster, coach, head] order) so it reads roster-outer,
-// head-inner for both teams even though the head block is physically last in the markup.
+// "Coach in front" layout, per the Match Flow design doc's 8A board: all nine rotation tiles
+// (starters then bench, no separate grouping) line up in one row at the board's outer edge,
+// with the Head Coach card overlapping the row's near-center edge and the team name sitting
+// closer still to the shared roll zone in between. `flip` mirrors the bottom team's board (via
+// a CSS column-reverse over this [roster, name] pair) so the roster stays at the outer edge
+// and the name stays innermost for both teams; `edge` tells each tile/coach card which of its
+// own sides faces the roll zone, so the accent border and the coach card's overlap land on the
+// right side for either team.
 function TeamBoard({ team, ids, hca, statusLabel, isActive, flip }) {
   const hand = team.hand || [];
   const activeIds = ids || team.activeIds || [];
   const starters = activeIds.map((id) => hand.find((c) => c.id === id)).filter(Boolean);
   const bench = hand.filter((c) => !activeIds.includes(c.id));
+  const edge = flip ? 'top' : 'bottom';
   return (
     <div className={'t2-teamboard' + (isActive ? ' active' : '') + (flip ? ' flip' : '')}>
-      <div className="t2-teamboard-roster">
-        <div className="t2-teamboard-group">
-          <span className="t2-teamboard-row-label">Starters</span>
-          <div className="t2-teamboard-slots">{chipSlots(starters, 5).map((c, i) => (c ? <PlayerCard key={i} card={c} /> : <div key={i} className="t2-pslot empty" />))}</div>
-        </div>
-        <div className="t2-teamboard-group">
-          <span className="t2-teamboard-row-label">Bench</span>
-          <div className="t2-teamboard-slots">{chipSlots(bench, 4).map((c, i) => (c ? <PlayerCard key={i} card={c} /> : <div key={i} className="t2-pslot empty" />))}</div>
-        </div>
+      <div className="nd2-roster">
+        {chipSlots(starters, 5).map((c, i) => (c ? <CompactPlayerTile key={`s${i}`} card={c} isStarter edge={edge} /> : <div key={`s${i}`} className="nd2-tile empty" />))}
+        {chipSlots(bench, 4).map((c, i) => (c ? <CompactPlayerTile key={`b${i}`} card={c} edge={edge} /> : <div key={`b${i}`} className="nd2-tile empty" />))}
+        {team.coach && (
+          <div className={'nd2-coach-slot' + (edge === 'top' ? ' edge-top' : ' edge-bottom')}>
+            <CompactCoachCard team={team} edge={edge} />
+          </div>
+        )}
       </div>
-      {team.coach && (
-        <div className="t2-coachcard">
-          <FrontOfficeCard kind="coach" team={team} />
-        </div>
-      )}
-      <div className="t2-teamboard-head">
-        <div className="t2-teamboard-fo">
-          <div className="t2-fo-item"><span>GM</span><b>{team.market ? (team.gmType || 'Neutral') : '—'}</b></div>
-          <div className="t2-fo-item"><span>Fanbase</span><b>{team.fanbaseArchetype ? team.fanbaseArchetype.name : '—'}</b></div>
-        </div>
-        <div className="t2-teamboard-name">
-          {hca && <span className="t2-hca-tag">Home Court</span>}
-          <div className="t2-teamboard-name-text">{team.name}</div>
-          {statusLabel && <div className="t2-teamboard-status">{statusLabel}</div>}
-        </div>
+      <div className="t2-teamboard-name">
+        {hca && <span className="t2-hca-tag">Home Court</span>}
+        <div className="t2-teamboard-name-text">{team.name}</div>
+        {statusLabel && <div className="t2-teamboard-status">{statusLabel}</div>}
       </div>
     </div>
   );
