@@ -29,6 +29,15 @@ export const TIERS = [
 ];
 export const REPLACEMENT_TIER = { name: 'Undrafted', uniform: 1, peak: 1, contract: 6 };
 
+// Cheap, low-output fillers seeded into free agency at era start. dealHands doesn't check
+// budget, so some teams start over cap — these give every team an immediate, low-commitment
+// way to shed salary instead of waiting for the first round of releases/expirations to stock
+// the free agent pool. Below-floor stat totals still clamp to MIN_PLAYER_SALARY in cardTotal.
+export const FREE_AGENT_TIER = { name: 'Undrafted', uniform: 0.7, peak: 1, contract: 3 };
+export const FREE_AGENT_POOL_SIZE = 12;
+export const MIN_PLAYER_SALARY = 0.5;
+export const MIN_GM_COST = 0.5;
+
 // League Accolades — elite, statistical-distinction tiers. These only roll on players in
 // the Prime career stage and never appear in the draft.
 export const LEAGUE_ACCOLADES = [
@@ -95,7 +104,6 @@ export const MARKETS = [
 export const GM_TYPES = ['Aggressive', 'Hands-Off', 'Neutral'];
 export const GM_BONUS_RATE = 0.02;
 export const HANDS_OFF_BONUS_CAP = 0.12;
-export const FIRE_GM_COST = 2;
 
 // Front-office moves (fire coach, fire GM, invest in fanbase) spend budget room —
 // see game/finances.js — rather than a separate currency, so these costs are tuned to

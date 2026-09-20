@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { GM_BONUS_RATE, FIRE_GM_COST, MARKETS, GM_TYPES } from '../src/game/constants.js';
+import { GM_BONUS_RATE, MARKETS, GM_TYPES } from '../src/game/constants.js';
 import { acquireOffseasonPlayer, drawGM, handsOffBonus, offseasonPrice } from '../src/game/gm.js';
-import { rosterSalary, formatCoins } from '../src/game/economy.js';
+import { rosterSalary, formatCoins, gmCost } from '../src/game/economy.js';
 import { fireGM } from '../src/game/finances.js';
 import { offenseModifier } from '../src/game/roster.js';
 
@@ -32,17 +32,18 @@ test('hands-off bonus follows coach and complete starting-five continuity', () =
   assert.equal(handsOffBonus(team), 0.12);
 });
 
-test('firing a GM draws type and market together, costs budget, and is once per season', () => {
+test('firing a GM draws type and market together, credits next season, and is once per season', () => {
   const team = { id: 0, gmType: 'Neutral', market: { name: 'Small', capAdj: 0.5 }, seasonCap: 20, attendance: 0.5, hand: [], coach: { salary: 0 } };
   const state = { season: 2, teams: [team] };
+  const outgoingCost = gmCost(team.gmType);
   const result = fireGM(state, 0);
   assert.equal(result.ok, true);
   assert(GM_TYPES.includes(team.gmType));
   assert.notEqual(team.gmType, 'Neutral');
   assert(MARKETS.some((m) => m.name === team.market.name));
   assert.equal(team.gmChangeSeason, 2);
-  assert.equal(team.deadMoney, FIRE_GM_COST);
-  assert(team.seasonCap <= 20 + 3.5 - 0.5 - FIRE_GM_COST);
+  assert.deepEqual(team.pendingCapCredits, [{ amount: Math.round((outgoingCost / 2) * 100) / 100, yearsLeft: 1 }]);
+  assert(team.seasonCap <= 20 + 3.5);
   assert.equal(fireGM(state, 0).ok, false);
   const otherGM = drawGM();
   assert(MARKETS.some((m) => m.name === otherGM.market.name));

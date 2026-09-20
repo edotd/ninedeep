@@ -1,12 +1,12 @@
 import TeamChemistry from '../components/TeamChemistry';
 import PlayerCard from '../components/PlayerCard';
 import FrontOfficeCard from '../components/FrontOfficeCard';
-import { formatCoins, rosterSalary } from '../game/economy';
+import { formatCoins, rosterSalary, gmCost } from '../game/economy';
 import { teamOutput } from '../game/matchup';
 import { teamExperience } from '../game/aging';
 import { teamSynergy } from '../game/skillsets';
 import { cardTier } from '../game/cards';
-import { FANBASE_BOOST_COST, FIRE_GM_COST } from '../game/constants';
+import { FANBASE_BOOST_COST } from '../game/constants';
 import MatchupCard from '../components/MatchupCard';
 
 const ERA_LENGTH = 8;
@@ -29,9 +29,9 @@ function ordinal(n) {
 export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) {
   const team = state.teams[myTeamId];
   const seasonNum = Math.min(state.season, ERA_LENGTH);
-  // A quick preview of the buyout cost — the actual new hire is drawn fresh when the button
-  // is clicked, so this number is an estimate (their salary could land higher or lower).
-  const fireCostEstimate = team.coach ? Math.round((team.coach.salary + team.coach.salary) * 10) / 10 : 0;
+  // The outgoing coach's credit is exact; the incoming hire's salary (also charged this
+  // season) is drawn fresh when the button is clicked, so it isn't part of this figure.
+  const fireCoachCredit = team.coach ? Math.round((team.coach.salary / 2) * 100) / 100 : 0;
   const activeSet = new Set(team.activeIds || []);
   const starters = team.hand.filter((c) => activeSet.has(c.id));
   const bench = team.hand.filter((c) => !activeSet.has(c.id));
@@ -62,7 +62,9 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
 
   const canEdit = state.phase === 'teamsummary' && !team.lineupConfirmed;
   const handleRelease = (card) => {
-    if (!window.confirm(`Release ${card.archetype} · ${card.position}? This carries ${formatCoins(card.salary)} in dead money against your budget this season.`)) return;
+    const credit = Math.round((card.salary / 2) * 100) / 100;
+    const years = Math.max(1, card.contract);
+    if (!window.confirm(`Release ${card.archetype} · ${card.position}? Adds ${formatCoins(credit)} to your budget each of the next ${years} season${years === 1 ? '' : 's'}.`)) return;
     const res = actions.releasePlayer(myTeamId, card.id);
     if (res && res.ok === false) alert(res.msg);
   };
@@ -158,7 +160,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
               ))}
             </div>
             <div className="ts-ledger-row"><span>Committed This Season</span><span>{formatCoins(committed)}</span></div>
-            <div className="ts-ledger-row"><span>GM Budget Hit</span><span>{formatCoins(team.gmType === 'Aggressive' || team.gmType === 'Hands-Off' ? 1 : 0)}</span></div>
+            <div className="ts-ledger-row"><span>GM Budget Hit</span><span>{formatCoins(gmCost(team.gmType))}</span></div>
             <div className="ts-ledger-row"><span>Expiring This Season</span><span className={expiring.length ? 'bad' : ''}>{expiring.length ? `${formatCoins(expiringTotal)} · ${expiring.map((c) => c.archetype).join(', ')}` : 'None'}</span></div>
             <div className="ts-metrics">
               <div><div className="ts-metric-label">Experience</div><div className="ts-metric-value">{chemistry !== null ? chemistry : '—'}</div></div>
@@ -180,7 +182,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
                       if (res && res.ok === false) alert(res.msg);
                     }}
                   >
-                    Fire Coach — Est. {formatCoins(fireCostEstimate)}+ Dead
+                    Fire Coach — +{formatCoins(fireCoachCredit)} Next Season
                   </button>
                 </div>
                 <div className="ts-fo-col">
@@ -208,7 +210,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
                       if (res && res.ok === false) alert(res.msg);
                     }}
                   >
-                    {team.gmChangeSeason === state.season ? 'GM Replaced This Season' : `Fire GM — ${formatCoins(FIRE_GM_COST)}`}
+                    {team.gmChangeSeason === state.season ? 'GM Replaced This Season' : `Fire GM — +${formatCoins(Math.round((gmCost(team.gmType) / 2) * 100) / 100)} Next Season`}
                   </button>
                 </div>
               </div>

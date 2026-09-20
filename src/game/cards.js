@@ -1,5 +1,5 @@
 import { rollSkillset } from './skillsets';
-import { ARCHETYPES, POSITIONS, POSITION_MOD, COACH_ARCHETYPES, COACH_MODIFIERS, MATCHUP_MODIFIER_TYPES, PLAYER_RELATIONSHIP_MIN, PLAYER_RELATIONSHIP_MAX, LEAGUE_ACCOLADES } from './constants';
+import { ARCHETYPES, POSITIONS, POSITION_MOD, COACH_ARCHETYPES, COACH_MODIFIERS, MATCHUP_MODIFIER_TYPES, PLAYER_RELATIONSHIP_MIN, PLAYER_RELATIONSHIP_MAX, LEAGUE_ACCOLADES, MIN_PLAYER_SALARY } from './constants';
 import { rollWithVariance, weightedPick, shuffle } from './rng';
 import { randomCareerStage, careerMultiplier } from './aging';
 
@@ -48,7 +48,7 @@ export function playerGrade(card) {
 
 export function statsToCoins(total) {
   let v = Math.round(((total - 12) / 6) * 2) / 2;
-  return Math.max(0, Math.min(5, v));
+  return Math.max(MIN_PLAYER_SALARY, Math.min(5, v));
 }
 
 export function makeCard(state, archName, position, tier, forcedCareerStage = null) {
@@ -69,7 +69,7 @@ export function makeCard(state, archName, position, tier, forcedCareerStage = nu
   const contract = Math.max(1, rollWithVariance(tier.contract, 1));
   const contractDeviation = tier.contract - contract; // positive = shorter than typical for this tier
   let salary = statsToCoins(total) * (1 + contractDeviation * 0.15);
-  salary = Math.max(0, Math.round(salary * 2) / 2);
+  salary = Math.max(MIN_PLAYER_SALARY, Math.round(salary * 2) / 2);
   // League Accolade tiers only roll on players in their prime.
   const careerStage = forcedCareerStage || (tier.accolade ? 'Prime' : randomCareerStage());
   return {

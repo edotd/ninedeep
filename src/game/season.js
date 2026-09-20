@@ -1,5 +1,5 @@
 import { addToRoster, creditTeamSeason } from './chemistry';
-import { TIERS, LEAGUE_ACCOLADES, REPLACEMENT_TIER, AI_NAMES, AI_TRICODES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_ARCHETYPES, MATCHUP_CARD_DRAW_COUNT } from './constants';
+import { TIERS, LEAGUE_ACCOLADES, REPLACEMENT_TIER, FREE_AGENT_TIER, FREE_AGENT_POOL_SIZE, AI_NAMES, AI_TRICODES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_ARCHETYPES, MATCHUP_CARD_DRAW_COUNT } from './constants';
 import { drawGM, acquireOffseasonPlayer } from './gm';
 import { advanceCareer } from './aging';
 import { shuffle, weightedPick } from './rng';
@@ -46,6 +46,17 @@ export function buildStarPool(state) {
     }
   });
   shuffle(state.starPool);
+  seedFreeAgentPool(state);
+}
+
+// dealHands doesn't check budget, so some teams start over cap with no way to fix it until
+// the first round of releases/expirations stocks free agency — these cheap, low-output
+// fillers (see FREE_AGENT_TIER) give every team an immediate option to shed salary instead.
+export function seedFreeAgentPool(state) {
+  for (let i = 0; i < FREE_AGENT_POOL_SIZE; i++) {
+    const position = POSITIONS[i % POSITIONS.length];
+    state.freeAgents.push(makeCard(state, randomArch(), position, FREE_AGENT_TIER));
+  }
 }
 
 // teamSeats: array of { name, human, ownerUid } — seat 0 is always the primary/local seat in solo mode.
@@ -153,7 +164,6 @@ export function startNewSeasonRoster(state) {
     if (!team.activeIds || !validateLineup(team).valid) team.activeIds = autoSelectFive(team.hand);
     team.lineupConfirmed = false;
     team.financeBoostUsedThisSeason = false;
-    team.deadMoney = 0;
   });
   initSeasonModifierCards(state);
 }

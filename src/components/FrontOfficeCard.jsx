@@ -1,4 +1,4 @@
-import { formatCoins } from '../game/economy';
+import { formatCoins, gmCost } from '../game/economy';
 import { retentionBonus, relationshipBonus } from '../game/cards';
 import CardTypeMark from './CardTypeMark';
 import { GM_BONUS_RATE, HANDS_OFF_BONUS_CAP } from '../game/constants';
@@ -73,7 +73,7 @@ function marketContent(team) {
     disposition: null,
     dispositionTone: 'approved-ink',
     effects: [
-      { label: 'Cost', value: formatCoins(type === 'Neutral' ? 0 : 1), tone: type === 'Neutral' ? 'file' : 'stamp-ink' },
+      { label: 'Cost', value: formatCoins(gmCost(type)), tone: type === 'Neutral' ? 'file' : 'stamp-ink' },
       { label: 'Budget Increase', value: `+${formatCoins(m.capAdj)}`, tone: 'approved-ink' },
       { label: 'Market Size', value: m.name, tone: 'file' },
       { label: 'GM Bonus', value: type === 'Aggressive' ? `${GM_BONUS_RATE * 100}% off offseason requests` : type === 'Hands-Off' ? `+${Math.round(handsOffBonus(team) * 100)}% continuity` : 'None', tone: type === 'Neutral' ? 'file' : 'approved-ink' },

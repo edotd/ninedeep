@@ -33,10 +33,14 @@ test('every team drafts a Young non-accolade player and resolves an oversized ro
   assert.equal(state.season, 3);
   assert.equal(team.hand.length, 10);
   assert.equal(team.activeIds.length, 5);
-  const releasedSalary = team.hand[9].salary;
+  const releasedCard = team.hand[9];
+  const releasedSalary = releasedCard.salary;
+  const releasedYears = Math.max(1, releasedCard.contract);
   assert.equal(releasePlayer(state, 0, team.hand[9].id).ok, true);
   assert.equal(team.hand.length, 9);
-  assert.equal(team.deadMoney, releasedSalary);
+  const credit = team.pendingCapCredits.find((c) => c.yearsLeft === releasedYears);
+  assert(credit, 'expected a pending cap credit for the released player');
+  assert.equal(credit.amount, Math.round((releasedSalary / 2) * 100) / 100);
   assert(state.freeAgencyActivity.some((item) => item.type === 'released'));
 });
 
