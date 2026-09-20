@@ -4,7 +4,7 @@ import { careerLevel, careerBonus } from '../game/aging';
 import { cardTier, jerseyNumber, playerGrade } from '../game/cards';
 import CardTypeMark from './CardTypeMark';
 
-export default function PlayerCard({ card, onClick, selected, draftStyle, rosterLabel, compact, onRelease }) {
+export default function PlayerCard({ card, onClick, selected, rosterLabel, compact, onRelease }) {
   const pillLabel = rosterLabel || (selected ? 'Selected' : null);
   const tier = cardTier(card);
   const skillset = skillsetFor(card);
@@ -65,7 +65,6 @@ export default function PlayerCard({ card, onClick, selected, draftStyle, roster
         <div className="pcard-skillset">
           <div className="pcard-skillset-head">
             <span className="pcard-microlabel">Skillset</span>
-            <span className="pcard-microlabel">Rolled At Print</span>
           </div>
           <div className="pcard-skillset-name" title={skillset?.description}>{skillset?.name || 'None · Legacy Card'}</div>
         </div>
@@ -73,7 +72,7 @@ export default function PlayerCard({ card, onClick, selected, draftStyle, roster
       {!compact && (
         <div className="pcard-contract pcard-age-row" style={{ alignItems: 'flex-start' }}>
           <div>
-            <div className="pcard-microlabel" style={{ marginBottom: 3 }}>Career Stage{draftStyle ? '' : ` · Yr ${yearsServed + 1}/${card.maxContract}`}</div>
+            <div className="pcard-microlabel" style={{ marginBottom: 3 }}>Career Stage</div>
             <div className="pcard-microlabel pcard-level" style={{ color: levelColor }}>
               {level} ({bonus >= 0 ? '+' : ''}{bonus.toFixed(2)})
             </div>
