@@ -8,7 +8,6 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
   const pillLabel = rosterLabel || (selected ? 'Selected' : null);
   const tier = cardTier(card);
   const skillset = skillsetFor(card);
-  const yearsServed = Math.max(0, card.maxContract - card.contract);
   const level = careerLevel(card);
   const bonus = careerBonus(card, card.careerRoll);
   const positionClass = ` position-${card.position.toLowerCase()}`;
@@ -43,9 +42,7 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
         <div className="pcard-contract pcard-years-row">
           <span className="pcard-microlabel">Years Left</span>
           <div className="pcard-dots">
-            {Array.from({ length: card.maxContract }, (_, i) => (
-              <div key={i} className={'pcard-dot' + (i < yearsServed ? '' : ' empty')} />
-            ))}
+            {Array.from({ length: card.contract }, (_, i) => <div key={i} className="pcard-dot" />)}
           </div>
         </div>
       )}
