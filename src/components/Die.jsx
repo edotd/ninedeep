@@ -16,10 +16,10 @@ function otherFaceValues(sides, value) {
   return [top, right];
 }
 
-export default function Die({ sides = 6, value = 1, size = 120 }) {
+export default function Die({ sides = 6, value = 1, size = 120, pulsing = false }) {
   const [topValue, rightValue] = useMemo(() => otherFaceValues(sides, value), [sides, value]);
   return (
-    <div className="nd-die" style={{ '--die-size': `${size}px` }}>
+    <div className={'nd-die' + (pulsing ? ' pulsing' : '')} style={{ '--die-size': `${size}px` }}>
       <div className="nd-die-cube">
         <div className="nd-die-face nd-die-top">{topValue}</div>
         <div className="nd-die-face nd-die-right">{rightValue}</div>
