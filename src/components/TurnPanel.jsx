@@ -5,6 +5,7 @@ import { offenseDieSize, defenseDieSize } from '../game/roster';
 import Die, { ROLL_DURATION_MS } from './Die';
 import BallMark from './BallMark';
 import PlayerCard from './PlayerCard';
+import FrontOfficeCard from './FrontOfficeCard';
 
 // Decision clock for a blind matchup-card choice — long enough to read your hand, short
 // enough to put real pressure on the pick. Auto-passes on timeout so a stalled player can't
@@ -50,9 +51,12 @@ function chipSlots(cards, count) {
 // status line), followed by its starters and bench rows of full player cards — rendered above
 // and below the roll zone so both rosters and both front offices "stay on the table" for the
 // whole turn.
-// `flip` mirrors the bottom team's board — its roster renders above its name/front-office
-// block (via a CSS column-reverse) so both teams' rosters sit closest to the shared roll zone
-// between them, matching the top team's roster sitting just above that same zone.
+// "Coach in front" layout, per the Match Flow design doc: each team's roster sits at the
+// board's outer edge, with its Head Coach card and team name/status sitting closer to the
+// shared roll zone in between — the coach card is the visual bridge between "who's playing"
+// and "what's being rolled." `flip` mirrors the bottom team's board (via a CSS
+// column-reverse over this same [roster, coach, head] order) so it reads roster-outer,
+// head-inner for both teams even though the head block is physically last in the markup.
 function TeamBoard({ team, ids, hca, statusLabel, isActive, flip }) {
   const hand = team.hand || [];
   const activeIds = ids || team.activeIds || [];
@@ -60,18 +64,6 @@ function TeamBoard({ team, ids, hca, statusLabel, isActive, flip }) {
   const bench = hand.filter((c) => !activeIds.includes(c.id));
   return (
     <div className={'t2-teamboard' + (isActive ? ' active' : '') + (flip ? ' flip' : '')}>
-      <div className="t2-teamboard-head">
-        <div className="t2-teamboard-fo">
-          <div className="t2-fo-item"><span>Coach</span><b>{team.coach ? team.coach.modifier : '—'}</b></div>
-          <div className="t2-fo-item"><span>GM</span><b>{team.market ? (team.gmType || 'Neutral') : '—'}</b></div>
-          <div className="t2-fo-item"><span>Fanbase</span><b>{team.fanbaseArchetype ? team.fanbaseArchetype.name : '—'}</b></div>
-        </div>
-        <div className="t2-teamboard-name">
-          {hca && <span className="t2-hca-tag">Home Court</span>}
-          <div className="t2-teamboard-name-text">{team.name}</div>
-          {statusLabel && <div className="t2-teamboard-status">{statusLabel}</div>}
-        </div>
-      </div>
       <div className="t2-teamboard-roster">
         <div className="t2-teamboard-group">
           <span className="t2-teamboard-row-label">Starters</span>
@@ -80,6 +72,22 @@ function TeamBoard({ team, ids, hca, statusLabel, isActive, flip }) {
         <div className="t2-teamboard-group">
           <span className="t2-teamboard-row-label">Bench</span>
           <div className="t2-teamboard-slots">{chipSlots(bench, 4).map((c, i) => (c ? <PlayerCard key={i} card={c} /> : <div key={i} className="t2-pslot empty" />))}</div>
+        </div>
+      </div>
+      {team.coach && (
+        <div className="t2-coachcard">
+          <FrontOfficeCard kind="coach" team={team} />
+        </div>
+      )}
+      <div className="t2-teamboard-head">
+        <div className="t2-teamboard-fo">
+          <div className="t2-fo-item"><span>GM</span><b>{team.market ? (team.gmType || 'Neutral') : '—'}</b></div>
+          <div className="t2-fo-item"><span>Fanbase</span><b>{team.fanbaseArchetype ? team.fanbaseArchetype.name : '—'}</b></div>
+        </div>
+        <div className="t2-teamboard-name">
+          {hca && <span className="t2-hca-tag">Home Court</span>}
+          <div className="t2-teamboard-name-text">{team.name}</div>
+          {statusLabel && <div className="t2-teamboard-status">{statusLabel}</div>}
         </div>
       </div>
     </div>
@@ -116,12 +124,22 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
   const possessionTeam = offenseTeam || (turn.order ? turn.order[0] : null);
 
   const myTurnToAct = turn.stage === 'card' && humanInMatch && actingTeam === myTeam;
-  // Only a live human opponent (online play) has nothing to prompt here — an AI's card choice
-  // still needs this client to call advanceTurn() to actually process it, so that case falls
-  // through to the generic Advance button instead of stalling on a wait message.
+  // Only a live human opponent (online play) has nothing to prompt here — a wait message is
+  // all that's shown, since only that person's own client can submit their pick.
   const waitingOnOpponent = turn.stage === 'card' && humanInMatch && actingTeam !== myTeam && actingTeam.human;
+  const aiCardTurn = turn.stage === 'card' && actingTeam && !actingTeam.human;
 
   const advance = (payload) => actions.advanceTurn(payload);
+
+  // An AI-controlled team's card decision needs this client to call advanceTurn() to actually
+  // process it, but it should never wait on a click — it submits on its own, same as the coin
+  // flip's result and a finished roll auto-advancing.
+  useEffect(() => {
+    if (!aiCardTurn) return undefined;
+    const t = setTimeout(() => advance(), COIN_RESULT_MS);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aiCardTurn, turn.exchangeIndex, cur?.team, cur?.role]);
 
   // Clicking the ball mark spins it in place for a beat before the (instant, synchronous)
   // coin flip actually resolves, then the result reads for a moment before auto-advancing
@@ -210,11 +228,11 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
   // waiting on their own pick can't read what the opponent just locked in.
   const visibleLog = turn.log.filter((e) => e.stepIndex < turn.exchangeIndex || turn.stage === 'resolved' || turn.stage === 'bench');
 
-  const advanceLabel = turn.stage === 'bench' ? 'Finish Turn' : 'Continue';
-  // Neither coin-flip stage nor a resolving roll needs a footer button — the ball mark starts
-  // the flip, and both the tip result and the roll sequence auto-advance on their own.
-  const showGenericAdvance = turn.stage !== 'coinflip' && turn.stage !== 'coinflipped' && turn.stage !== 'resolved'
-    && ((turn.stage !== 'card') || (!myTurnToAct && !waitingOnOpponent));
+  const advanceLabel = 'Finish Turn';
+  // Only the bench stage still needs a manual footer button — the coin flip, a card decision
+  // (human's own picker, a wait message for a live opponent, or the auto-advance above for an
+  // AI), and a resolving roll all move themselves along without one.
+  const showGenericAdvance = turn.stage === 'bench';
 
   const statusFor = (side) => {
     const team = side === 'a' ? teamA : teamB;
