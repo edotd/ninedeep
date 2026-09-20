@@ -681,15 +681,20 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
    roughly 1.5x the face size, centered, so neighboring elements never get overlapped/clipped
    by the 3D bleed regardless of how the cube is tilted. */
 .nd-die{width:calc(var(--die-size) * 1.5);height:calc(var(--die-size) * 1.5);perspective:calc(var(--die-size) * 4);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
-.nd-die-cube{width:var(--die-size);height:var(--die-size);flex-shrink:0;position:relative;transform-style:preserve-3d;transform:rotateX(-18deg) rotateY(35deg);}
-.nd-die.pulsing .nd-die-cube{animation:nd-die-pulse 900ms ease-in-out infinite;}
+.nd-die-cube{width:var(--die-size);height:var(--die-size);flex-shrink:0;position:relative;transform-style:preserve-3d;transform:rotateX(-18deg) rotateY(35deg);transition:transform 220ms ease-out;}
+/* Rolling: the cube tumbles continuously past its fixed rest pose (two full X turns against
+   three full Y turns, so it never repeats the same face-on moment) while Die's own JS flickers
+   the front face through random values — together they read as an actual roll, not a static
+   die sitting still. Removing .pulsing drops the animation and the transition above eases the
+   cube back to its fixed three-quarter rest pose showing the real value. */
+.nd-die.pulsing .nd-die-cube{animation:nd-die-tumble 900ms linear infinite;transition:none;}
 .nd-die-face{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);border:2px solid var(--ink);box-sizing:border-box;line-height:1;}
-.nd-die-front{background:var(--franchise);color:var(--ink);font-size:calc(var(--die-size) * 0.42);transform:translateZ(calc(var(--die-size) / 2));animation:nd-die-pop 180ms ease-out both;}
+.nd-die-front{background:var(--franchise);color:var(--ink);font-size:calc(var(--die-size) * 0.42);transform:translateZ(calc(var(--die-size) / 2));animation:nd-die-pop 90ms ease-out both;}
 .nd-die-top{background:var(--file);color:var(--ink-muted);font-size:calc(var(--die-size) * 0.26);transform:rotateX(90deg) translateZ(calc(var(--die-size) / 2));}
 .nd-die-right{background:var(--form);color:var(--ink-muted);font-size:calc(var(--die-size) * 0.26);transform:rotateY(90deg) translateZ(calc(var(--die-size) / 2));}
-@keyframes nd-die-pulse{0%,100%{transform:rotateX(-18deg) rotateY(35deg) scale(1);}50%{transform:rotateX(-18deg) rotateY(35deg) scale(1.12);}}
+@keyframes nd-die-tumble{0%{transform:rotateX(0deg) rotateY(0deg);}100%{transform:rotateX(720deg) rotateY(1080deg);}}
 @keyframes nd-die-pop{from{filter:brightness(1.6);}to{filter:brightness(1);}}
-@media(prefers-reduced-motion:reduce){.nd-die-front{animation:none;}.nd-die.pulsing .nd-die-cube{animation:none;}}
+@media(prefers-reduced-motion:reduce){.nd-die-front{animation:none;}.nd-die.pulsing .nd-die-cube{animation:none;}.nd-die-cube{transition:none;}}
 
 /* ================= The Turn (5A/5B) — "Nine Deep Match Flow" design doc. Ink ground, three
    columns: turn-sequence rail (+ Advantage panel), the match board (both teams' full rosters
