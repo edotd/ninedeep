@@ -26,6 +26,35 @@ const COIN_RESULT_MS = 1400;
 const ROLL_REVEAL_MS = 700;
 const ROLL_BOTH_READ_MS = 1600;
 
+// The bench stage reveals the same way: the coin-toss winner's bench figure first, a read
+// pause, then the other team's, then a final read pause before the result card appears.
+const BENCH_REVEAL_MS = 1300;
+const BENCH_RESULT_MS = 1300;
+
+// A few phrasings per margin band so the final-result card doesn't read the same way every
+// turn — picked once when the result actually appears, not re-rolled on every render.
+const NAIL_BITER_BLURBS = [
+  '{w} escapes in a nail-biter, {d} points to spare.',
+  '{w} survives a dogfight with {l}, winning by just {d}.',
+  'Down to the wire — {w} holds on by {d}.',
+];
+const COMFORTABLE_BLURBS = [
+  '{w} pulls away for a comfortable win.',
+  '{w} controls it from the front, {d} points clear of {l}.',
+  '{w} closes it out cleanly over {l}.',
+];
+const BLOWOUT_BLURBS = [
+  '{w} blows the doors off, winning by {d}.',
+  '{w} runs away with it in a blowout.',
+  '{w} dominates {l} from wire to wire.',
+];
+
+function matchBlurb(winnerName, loserName, diff) {
+  const pool = diff <= 3 ? NAIL_BITER_BLURBS : diff <= 10 ? COMFORTABLE_BLURBS : BLOWOUT_BLURBS;
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  return pick.replace('{w}', winnerName).replace('{l}', loserName).replace('{d}', diff.toFixed(1));
+}
+
 // Every sub-stage the engine (game/turn.js) can be in, in order — drives the "STAGE n / total"
 // footer counter. coinflip/coinflipped share stage 1 (the coin only "advances" once, from the
 // player's point of view, even though the engine models the flip and its reveal as two
@@ -100,6 +129,10 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
   // 'idle-off' | 'rolling-off' | 'revealed-off' | 'idle-def' | 'rolling-def' | 'revealed-def' | 'both'
   const [rollPhase, setRollPhase] = useState('idle-off');
   const rollTimerRef = useRef(null);
+  // 'first' | 'second' | 'result' — the bench stage's own reveal sequence, mirroring rollPhase.
+  const [benchPhase, setBenchPhase] = useState('first');
+  const benchTimerRef = useRef(null);
+  const [resultBlurb, setResultBlurb] = useState('');
 
   const cur = turn.current;
   const actingTeam = cur ? (cur.team === 'a' ? teamA : teamB) : null;
@@ -185,6 +218,38 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rollPhase]);
 
+  // The bench stage reveals the coin-toss winner's contribution, then the other team's, then
+  // the final result — both numbers are already final the instant turn.stage becomes 'bench',
+  // same as the exchange rolls, this is purely the presentational sequencing.
+  useEffect(() => {
+    if (turn.stage === 'bench') setBenchPhase('first');
+  }, [turn.stage]);
+
+  useEffect(() => {
+    clearTimeout(benchTimerRef.current);
+    if (turn.stage !== 'bench') return undefined;
+    if (benchPhase === 'first') {
+      benchTimerRef.current = setTimeout(() => setBenchPhase('second'), BENCH_REVEAL_MS);
+    } else if (benchPhase === 'second') {
+      benchTimerRef.current = setTimeout(() => setBenchPhase('result'), BENCH_RESULT_MS);
+    }
+    return () => clearTimeout(benchTimerRef.current);
+  }, [benchPhase, turn.stage]);
+
+  useEffect(() => () => clearTimeout(benchTimerRef.current), []);
+
+  // The winner/margin blurb is picked once, right when the result card first appears — not
+  // re-rolled on every render, and not shown at all until both bench figures have revealed.
+  useEffect(() => {
+    if (benchPhase !== 'result' || turn.stage !== 'bench') return;
+    const aSum = Math.round((turn.aOffTotal + turn.aDefTotal + turn.aBench + turn.extraA.leagueMod) * 100) / 100;
+    const bSum = Math.round((turn.bOffTotal + turn.bDefTotal + turn.bBench + turn.extraB.leagueMod) * 100) / 100;
+    const winnerTeam = aSum >= bSum ? teamA : teamB;
+    const loserTeam = winnerTeam === teamA ? teamB : teamA;
+    setResultBlurb(matchBlurb(winnerTeam.name, loserTeam.name, Math.abs(aSum - bSum)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [benchPhase, turn.stage]);
+
   useEffect(() => {
     setTargetPickerCardId(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -210,13 +275,17 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
 
   const myOptions = myTurnToAct ? playableCards(myTeam) : [];
 
-  const visibleLog = turn.log;
+  // Blind by convention: a card play is logged the instant it's chosen, but withheld from
+  // display until its own exchange resolves — otherwise the second team to act (or a
+  // spectator watching both) would read the first team's pick before committing their own.
+  // Everything else (coin flip, rolls, resolutions) shows the moment it happens.
+  const visibleLog = turn.log.filter((e) => e.tag !== 'action' || e.stepIndex < turn.exchangeIndex || turn.stage === 'resolved' || turn.stage === 'bench');
 
   const advanceLabel = 'Finish Turn';
   // Only the bench stage still needs a manual footer button — the coin flip, a card decision
   // (human's own picker, a wait message for a live opponent, or the auto-advance above for an
   // AI), and a resolving roll all move themselves along without one.
-  const showGenericAdvance = turn.stage === 'bench';
+  const showGenericAdvance = turn.stage === 'bench' && benchPhase === 'result';
 
   const statusFor = (side) => {
     const team = side === 'a' ? teamA : teamB;
@@ -326,10 +395,34 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
         </div>
       );
     }
+    // Bench: reveals the coin-toss winner's contribution, then the other team's, then a final
+    // result card naming the winner and a margin-flavored blurb — see the benchPhase effects.
+    const benchOrder = turn.order && turn.order.length === 2 ? turn.order : [teamA, teamB];
+    const [firstTeam, secondTeam] = benchOrder;
+    const benchFor = (t) => (t === teamA ? turn.aBench : turn.bBench);
+    if (benchPhase === 'first') {
+      return (
+        <div className="t2-rollzone-coin">
+          <div className="t2-coin"><div className="t2-coin-face">+{benchFor(firstTeam)}</div><div className="t2-coin-brand">Bench</div></div>
+          <div className="t2-rollzone-caption">{firstTeam.name} Bench Contributes<br /><span>+{benchFor(firstTeam)} points</span></div>
+        </div>
+      );
+    }
+    if (benchPhase === 'second') {
+      return (
+        <div className="t2-rollzone-coin t2-fade-in">
+          <div className="t2-coin"><div className="t2-coin-face">+{benchFor(secondTeam)}</div><div className="t2-coin-brand">Bench</div></div>
+          <div className="t2-rollzone-caption">{secondTeam.name} Bench Contributes<br /><span>+{benchFor(secondTeam)} points</span></div>
+        </div>
+      );
+    }
+    const aSum = Math.round((turn.aOffTotal + turn.aDefTotal + turn.aBench + turn.extraA.leagueMod) * 100) / 100;
+    const bSum = Math.round((turn.bOffTotal + turn.bDefTotal + turn.bBench + turn.extraB.leagueMod) * 100) / 100;
+    const winnerTeam = aSum >= bSum ? teamA : teamB;
     return (
-      <div className="t2-rollzone-coin">
-        <div className="t2-coin"><div className="t2-coin-face">🪑</div><div className="t2-coin-brand">Nine Deep</div></div>
-        <div className="t2-rollzone-caption">Bench<br /><span>Resolves straight from each roster</span></div>
+      <div className="t2-rollzone-coin t2-fade-in">
+        <div className="t2-coin"><div className="t2-coin-face">🏆</div><div className="t2-coin-brand">Final</div></div>
+        <div className="t2-rollzone-caption">{winnerTeam.name} Wins<br /><span>{resultBlurb}</span></div>
       </div>
     );
   };
@@ -414,12 +507,6 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
               );
             })()}
 
-            {turn.stage === 'bench' && (
-              <div className="t2-report">
-                <div className="t2-report-row"><span className="t2-report-label">{teamA.name} Bench</span><span>+{turn.aBench}</span></div>
-                <div className="t2-report-row"><span className="t2-report-label">{teamB.name} Bench</span><span>+{turn.bBench}</span></div>
-              </div>
-            )}
           </div>
 
           <TeamBoard team={teamB} ids={turn.idsB} hca={turn.hcaB} statusLabel={statusFor('b')} isActive={offenseTeam === teamB || defenseTeam === teamB} flip />
