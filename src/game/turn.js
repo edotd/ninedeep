@@ -159,8 +159,8 @@ function computeBench(m) {
   const aBench = benchScore(m.a, turn.idsA);
   const bBench = benchScore(m.b, turn.idsB);
   turn.aBench = aBench; turn.bBench = bBench;
-  pushLog(turn, 'resolution', `${m.a.name}'s bench contributes +${aBench}.`);
-  pushLog(turn, 'resolution', `${m.b.name}'s bench contributes +${bBench}.`);
+  pushLog(turn, 'bench', `${m.a.name}'s bench contributes +${aBench}.`);
+  pushLog(turn, 'bench', `${m.b.name}'s bench contributes +${bBench}.`);
   turn.current = null;
   turn.stage = 'bench';
 }

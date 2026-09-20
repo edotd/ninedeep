@@ -218,6 +218,19 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rollPhase]);
 
+  // Only the side's own controlling human ever clicks its die — an AI-controlled side (or the
+  // other real player's side, in online play) never waits on this client's click. AI sides
+  // start themselves after a short beat, same idea as the AI card auto-advance above; a human
+  // opponent's side just sits idle here until their own client calls startRoll.
+  useEffect(() => {
+    if (turn.stage !== 'resolved') return undefined;
+    let t;
+    if (rollPhase === 'idle-off' && offenseTeam && !offenseTeam.human) t = setTimeout(() => startRoll('off'), 500);
+    else if (rollPhase === 'idle-def' && defenseTeam && !defenseTeam.human) t = setTimeout(() => startRoll('def'), 500);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rollPhase, turn.stage]);
+
   // The bench stage reveals the coin-toss winner's contribution, then the other team's, then
   // the final result — both numbers are already final the instant turn.stage becomes 'bench',
   // same as the exchange rolls, this is purely the presentational sequencing.
@@ -278,8 +291,16 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
   // Blind by convention: a card play is logged the instant it's chosen, but withheld from
   // display until its own exchange resolves — otherwise the second team to act (or a
   // spectator watching both) would read the first team's pick before committing their own.
-  // Everything else (coin flip, rolls, resolutions) shows the moment it happens.
-  const visibleLog = turn.log.filter((e) => e.tag !== 'action' || e.stepIndex < turn.exchangeIndex || turn.stage === 'resolved' || turn.stage === 'bench');
+  // A roll's numbers are likewise final in game state well before the click-to-roll animation
+  // plays them out — an exchange's "resolution" line waits for rollPhase to actually reach
+  // 'both', and the two "bench" lines wait for the bench reveal's own 'result' phase, so the
+  // log never spoils a result the roll-zone hasn't shown yet.
+  const visibleLog = turn.log.filter((e) => {
+    if (e.tag === 'action') return e.stepIndex < turn.exchangeIndex || turn.stage === 'resolved' || turn.stage === 'bench';
+    if (e.tag === 'resolution') return !(turn.stage === 'resolved' && e.stepIndex === turn.exchangeIndex) || rollPhase === 'both';
+    if (e.tag === 'bench') return turn.stage !== 'bench' || benchPhase === 'result';
+    return true;
+  });
 
   const advanceLabel = 'Finish Turn';
   // Only the bench stage still needs a manual footer button — the coin flip, a card decision
@@ -350,15 +371,17 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
       const defDie = turn[`${defSide}DefDie`], defSides = turn[`${defSide}DefSides`];
 
       // Idle and rolling both show the die at rest/spinning respectively — only the reveal
-      // afterward needs its own real value; a click on the die itself or the Roll button next
-      // to it is what actually starts that side's roll.
+      // afterward needs its own real value. Only the acting side's own controlling human ever
+      // gets the clickable die/Roll button; an AI side rolls itself (see the effect above),
+      // and a human opponent's side just sits idle here until their own client rolls it.
       if (rollPhase === 'idle-off' || rollPhase === 'rolling-off') {
         const rolling = rollPhase === 'rolling-off';
+        const mine = offTeam === myTeam;
         return (
           <div className="t2-rollzone-die">
-            <div className="t2-die-stage t2-die-clickable" onClick={() => startRoll('off')}><Die sides={offSides} value={offSides} size={150} rolling={rolling} /></div>
+            <div className={'t2-die-stage' + (mine ? ' t2-die-clickable' : '')} onClick={mine ? () => startRoll('off') : undefined}><Die sides={offSides} value={offSides} size={150} rolling={rolling} /></div>
             <div className="t2-rollzone-caption">{offTeam.name} Rolls For Offense</div>
-            {!rolling && <button className="t2-roll-btn" onClick={() => startRoll('off')}>Roll</button>}
+            {!rolling && mine && <button className="t2-roll-btn" onClick={() => startRoll('off')}>Roll</button>}
           </div>
         );
       }
@@ -372,11 +395,12 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
       }
       if (rollPhase === 'idle-def' || rollPhase === 'rolling-def') {
         const rolling = rollPhase === 'rolling-def';
+        const mine = defTeam === myTeam;
         return (
           <div className="t2-rollzone-die">
-            <div className="t2-die-stage t2-die-clickable" onClick={() => startRoll('def')}><Die sides={defSides} value={defSides} size={150} rolling={rolling} /></div>
+            <div className={'t2-die-stage' + (mine ? ' t2-die-clickable' : '')} onClick={mine ? () => startRoll('def') : undefined}><Die sides={defSides} value={defSides} size={150} rolling={rolling} /></div>
             <div className="t2-rollzone-caption">{defTeam.name} Rolls For Defense</div>
-            {!rolling && <button className="t2-roll-btn" onClick={() => startRoll('def')}>Roll</button>}
+            {!rolling && mine && <button className="t2-roll-btn" onClick={() => startRoll('def')}>Roll</button>}
           </div>
         );
       }
