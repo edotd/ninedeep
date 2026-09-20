@@ -4,6 +4,7 @@ import { PLAYER_STATS, eligibleStatTargets } from '../game/supplementalEffects';
 import { cardTier, jerseyNumber } from '../game/cards';
 import { offenseDieSize, defenseDieSize } from '../game/roster';
 import Die from './Die';
+import BallMark from './BallMark';
 
 // Decision clock for a blind matchup-card choice — long enough to read your hand, short
 // enough to put real pressure on the pick. Auto-passes on timeout so a stalled player can't
@@ -105,13 +106,15 @@ function TeamBoard({ team, ids, hca, statusLabel, isActive }) {
           {chipSlots(matchupCards, 3).map((c, i) => <MatchupSlot key={i} card={c} />)}
         </div>
       </div>
-      <div className="t2-teamboard-row">
-        <span className="t2-teamboard-row-label">Starters</span>
-        <div className="t2-teamboard-slots">{chipSlots(starters, 5).map((c, i) => <PlayerSlot key={i} card={c} />)}</div>
-      </div>
-      <div className="t2-teamboard-row">
-        <span className="t2-teamboard-row-label">Bench</span>
-        <div className="t2-teamboard-slots">{chipSlots(bench, 4).map((c, i) => <PlayerSlot key={i} card={c} />)}</div>
+      <div className="t2-teamboard-roster">
+        <div className="t2-teamboard-group">
+          <span className="t2-teamboard-row-label">Starters</span>
+          <div className="t2-teamboard-slots">{chipSlots(starters, 5).map((c, i) => <PlayerSlot key={i} card={c} />)}</div>
+        </div>
+        <div className="t2-teamboard-group">
+          <span className="t2-teamboard-row-label">Bench</span>
+          <div className="t2-teamboard-slots">{chipSlots(bench, 4).map((c, i) => <PlayerSlot key={i} card={c} />)}</div>
+        </div>
       </div>
     </div>
   );
@@ -179,8 +182,10 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
   // waiting on their own pick can't read what the opponent just locked in.
   const visibleLog = turn.log.filter((e) => e.stepIndex < turn.exchangeIndex || turn.stage === 'resolved' || turn.stage === 'bench');
 
-  const advanceLabel = turn.stage === 'coinflip' ? 'Flip Coin' : turn.stage === 'bench' ? 'Finish Turn' : 'Continue';
-  const showGenericAdvance = (turn.stage !== 'card') || (!myTurnToAct && !waitingOnOpponent);
+  const advanceLabel = turn.stage === 'bench' ? 'Finish Turn' : 'Continue';
+  // The coin-flip stage has its own Start button (the ball mark, in the roll zone) — no
+  // separate footer button needed for it.
+  const showGenericAdvance = turn.stage !== 'coinflip' && ((turn.stage !== 'card') || (!myTurnToAct && !waitingOnOpponent));
 
   const statusFor = (side) => {
     const team = side === 'a' ? teamA : teamB;
@@ -199,7 +204,10 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
       if (!turn.order) {
         return (
           <div className="t2-rollzone-coin">
-            <div className="t2-coin"><div className="t2-coin-face">Toss</div><div className="t2-coin-brand">Nine Deep</div></div>
+            <button className="t2-coin-start" onClick={() => advance()}>
+              <BallMark size={56} variant="onInk" />
+              <span>Start</span>
+            </button>
             <div className="t2-rollzone-caption">Coin Flip<br /><span>Winner opens on offense</span></div>
           </div>
         );

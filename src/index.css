@@ -786,8 +786,9 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .t2-mslot.used .t2-mslot-name{color:var(--ink-muted);text-decoration:line-through;}
 .t2-mslot-status{font-family:var(--font-label);font-size:7px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);}
 
-.t2-teamboard-row{display:flex;align-items:center;gap:10px;margin-top:8px;}
-.t2-teamboard-row-label{flex:0 0 52px;font-family:var(--font-label);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);}
+.t2-teamboard-roster{display:flex;gap:24px;flex-wrap:wrap;margin-top:8px;}
+.t2-teamboard-group{display:flex;flex-direction:column;gap:6px;}
+.t2-teamboard-row-label{font-family:var(--font-label);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);}
 .t2-teamboard-slots{display:flex;gap:5px;flex-wrap:wrap;}
 
 .t2-pslot{box-sizing:border-box;width:52px;height:60px;background:var(--form);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;position:relative;}
@@ -805,6 +806,9 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .t2-coin{width:96px;height:96px;border-radius:50%;background:var(--file);box-shadow:inset 0 0 0 3px var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex-shrink:0;}
 .t2-coin-face{font-family:var(--font-display);font-size:20px;line-height:.9;color:var(--ink);text-transform:uppercase;}
 .t2-coin-brand{font-family:var(--font-mono);font-size:8px;letter-spacing:.1em;color:var(--file-muted);text-transform:uppercase;}
+.t2-coin-start{width:96px;height:96px;border-radius:50%;background:var(--franchise);border:3px solid var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;flex-shrink:0;cursor:pointer;padding:0;}
+.t2-coin-start:hover{background:#ffb455;}
+.t2-coin-start span{font-family:var(--font-label);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);}
 .t2-rollzone-caption{font-family:var(--font-label);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--file);text-align:center;line-height:1.5;}
 .t2-rollzone-caption span{display:block;font-family:var(--font-mono);font-size:10px;letter-spacing:.02em;color:var(--ink-muted);text-transform:none;margin-top:2px;}
 
