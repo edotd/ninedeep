@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { playableCards } from '../game/matchup';
 import { PLAYER_STATS, eligibleStatTargets } from '../game/supplementalEffects';
-import { cardTier, jerseyNumber } from '../game/cards';
 import { offenseDieSize, defenseDieSize } from '../game/roster';
-import Die from './Die';
+import Die, { ROLL_DURATION_MS } from './Die';
 import BallMark from './BallMark';
+import PlayerCard from './PlayerCard';
 
 // Decision clock for a blind matchup-card choice — long enough to read your hand, short
 // enough to put real pressure on the pick. Auto-passes on timeout so a stalled player can't
@@ -18,10 +18,10 @@ const COIN_SPIN_MS = 900;
 const COIN_RESULT_MS = 1400;
 
 // The engine resolves both of an exchange's dice in one atomic step, but the roll zone plays
-// them back as a little sequence — pulse offense, reveal it, pulse defense, reveal it, then
-// show both together — before auto-advancing. All purely presentational timing around numbers
-// that are already final the moment turn.stage becomes 'resolved'.
-const ROLL_PULSE_MS = 700;
+// them back as a little sequence a click at a time — offense's die sits at rest until Roll is
+// clicked, spins for ROLL_DURATION_MS and reveals, then after a read pause defense's die does
+// the same, then both sit together before auto-advancing. All purely presentational timing
+// around numbers that are already final the moment turn.stage becomes 'resolved'.
 const ROLL_REVEAL_MS = 700;
 const ROLL_BOTH_READ_MS = 1600;
 
@@ -42,42 +42,14 @@ function stageNumber(turn) {
   return Math.max(1, idx === 0 ? 1 : idx);
 }
 
-function PlayerSlot({ card }) {
-  if (!card) return <div className="t2-pslot empty" />;
-  const tier = cardTier(card);
-  return (
-    <div className={`t2-pslot tier-${tier.toLowerCase()}`}>
-      <div className="t2-pslot-number">{jerseyNumber(card)}</div>
-      <div className="t2-pslot-name">{card.archetype}</div>
-      <div className="t2-pslot-position">{card.position}</div>
-    </div>
-  );
-}
-
-// Face-down until the card has actually been played (card.used) — never the moment a team is
-// mid-decision, so a live human opponent's blind pick can't be read off this strip before it
-// resolves. Once used it flips face-up for the rest of the match — this strip persists across
-// every stage, so a card revealed in Exchange 1 stays revealed through Bench.
-function MatchupSlot({ card }) {
-  if (!card) return <div className="t2-mslot empty" />;
-  if (!card.used) return <div className="t2-mslot facedown">Held</div>;
-  return (
-    <div className="t2-mslot used">
-      <div className="t2-mslot-category">{card.category}</div>
-      <div className="t2-mslot-name">{card.name}</div>
-      <div className="t2-mslot-status">Spent</div>
-    </div>
-  );
-}
-
 function chipSlots(cards, count) {
   return Array.from({ length: count }, (_, i) => cards[i] || null);
 }
 
-// One team's full board strip: Front Office facts, team name (with a Home Court tag and a
-// status line), and its 3 matchup-card slots, followed by its starters and bench rows —
-// rendered above and below the roll zone so both rosters and both front offices "stay on the
-// table" for the whole turn, per the design doc's 5A caption.
+// One team's full board strip: Front Office facts and team name (with a Home Court tag and a
+// status line), followed by its starters and bench rows of full player cards — rendered above
+// and below the roll zone so both rosters and both front offices "stay on the table" for the
+// whole turn.
 // `flip` mirrors the bottom team's board — its roster renders above its name/front-office
 // block (via a CSS column-reverse) so both teams' rosters sit closest to the shared roll zone
 // between them, matching the top team's roster sitting just above that same zone.
@@ -86,7 +58,6 @@ function TeamBoard({ team, ids, hca, statusLabel, isActive, flip }) {
   const activeIds = ids || team.activeIds || [];
   const starters = activeIds.map((id) => hand.find((c) => c.id === id)).filter(Boolean);
   const bench = hand.filter((c) => !activeIds.includes(c.id));
-  const matchupCards = team.matchupCards || [];
   return (
     <div className={'t2-teamboard' + (isActive ? ' active' : '') + (flip ? ' flip' : '')}>
       <div className="t2-teamboard-head">
@@ -100,18 +71,15 @@ function TeamBoard({ team, ids, hca, statusLabel, isActive, flip }) {
           <div className="t2-teamboard-name-text">{team.name}</div>
           {statusLabel && <div className="t2-teamboard-status">{statusLabel}</div>}
         </div>
-        <div className="t2-teamboard-matchup">
-          {chipSlots(matchupCards, 3).map((c, i) => <MatchupSlot key={i} card={c} />)}
-        </div>
       </div>
       <div className="t2-teamboard-roster">
         <div className="t2-teamboard-group">
           <span className="t2-teamboard-row-label">Starters</span>
-          <div className="t2-teamboard-slots">{chipSlots(starters, 5).map((c, i) => <PlayerSlot key={i} card={c} />)}</div>
+          <div className="t2-teamboard-slots">{chipSlots(starters, 5).map((c, i) => (c ? <PlayerCard key={i} card={c} /> : <div key={i} className="t2-pslot empty" />))}</div>
         </div>
         <div className="t2-teamboard-group">
           <span className="t2-teamboard-row-label">Bench</span>
-          <div className="t2-teamboard-slots">{chipSlots(bench, 4).map((c, i) => <PlayerSlot key={i} card={c} />)}</div>
+          <div className="t2-teamboard-slots">{chipSlots(bench, 4).map((c, i) => (c ? <PlayerCard key={i} card={c} /> : <div key={i} className="t2-pslot empty" />))}</div>
         </div>
       </div>
     </div>
@@ -134,8 +102,9 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
   const [timeLeft, setTimeLeft] = useState(CARD_TIMER_SECONDS);
   const [coinSpinning, setCoinSpinning] = useState(false);
   const coinTimerRef = useRef(null);
-  const [rollPhase, setRollPhase] = useState('both');
-  const rollTimersRef = useRef([]);
+  // 'idle-off' | 'rolling-off' | 'revealed-off' | 'idle-def' | 'rolling-def' | 'revealed-def' | 'both'
+  const [rollPhase, setRollPhase] = useState('idle-off');
+  const rollTimerRef = useRef(null);
 
   const cur = turn.current;
   const actingTeam = cur ? (cur.team === 'a' ? teamA : teamB) : null;
@@ -175,23 +144,41 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [turn.stage]);
 
-  // Both dice are already resolved the instant turn.stage becomes 'resolved' — this just
-  // plays that result back as a little sequence (pulse offense, reveal it, pulse defense,
-  // reveal it, show both) before auto-advancing, so there's never a Continue click for a roll.
+  // Both dice are already resolved the instant turn.stage becomes 'resolved', but nothing
+  // rolls on screen until Roll is actually clicked — reset to the offense side's idle (waiting
+  // to roll) state whenever a new exchange's result arrives.
   useEffect(() => {
-    rollTimersRef.current.forEach(clearTimeout);
-    rollTimersRef.current = [];
-    if (turn.stage !== 'resolved') return undefined;
-    setRollPhase('pulse-off');
-    const schedule = (fn, delay) => { rollTimersRef.current.push(setTimeout(fn, delay)); };
-    schedule(() => setRollPhase('reveal-off'), ROLL_PULSE_MS);
-    schedule(() => setRollPhase('pulse-def'), ROLL_PULSE_MS + ROLL_REVEAL_MS);
-    schedule(() => setRollPhase('reveal-def'), ROLL_PULSE_MS * 2 + ROLL_REVEAL_MS);
-    schedule(() => setRollPhase('both'), ROLL_PULSE_MS * 2 + ROLL_REVEAL_MS * 2);
-    schedule(() => advance(), ROLL_PULSE_MS * 2 + ROLL_REVEAL_MS * 2 + ROLL_BOTH_READ_MS);
-    return () => rollTimersRef.current.forEach(clearTimeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    clearTimeout(rollTimerRef.current);
+    if (turn.stage === 'resolved') setRollPhase('idle-off');
   }, [turn.stage, turn.exchangeIndex]);
+
+  useEffect(() => () => clearTimeout(rollTimerRef.current), []);
+
+  // Clicking the die (or the Roll button) while a side is idle starts that side's roll — every
+  // other transition (spin finishing, a reveal's read pause elapsing, the final auto-advance)
+  // is scheduled centrally below, all keyed off rollPhase itself so there's exactly one place
+  // that ever sets rollTimerRef.
+  const startRoll = (which) => {
+    if (rollPhase !== `idle-${which}`) return;
+    setRollPhase(`rolling-${which}`);
+  };
+
+  useEffect(() => {
+    clearTimeout(rollTimerRef.current);
+    if (rollPhase === 'rolling-off') {
+      rollTimerRef.current = setTimeout(() => setRollPhase('revealed-off'), ROLL_DURATION_MS);
+    } else if (rollPhase === 'revealed-off') {
+      rollTimerRef.current = setTimeout(() => setRollPhase('idle-def'), ROLL_REVEAL_MS);
+    } else if (rollPhase === 'rolling-def') {
+      rollTimerRef.current = setTimeout(() => setRollPhase('revealed-def'), ROLL_DURATION_MS);
+    } else if (rollPhase === 'revealed-def') {
+      rollTimerRef.current = setTimeout(() => setRollPhase('both'), ROLL_REVEAL_MS);
+    } else if (rollPhase === 'both') {
+      rollTimerRef.current = setTimeout(() => advance(), ROLL_BOTH_READ_MS);
+    }
+    return () => clearTimeout(rollTimerRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rollPhase]);
 
   useEffect(() => {
     setTargetPickerCardId(null);
@@ -235,10 +222,10 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
     if (turn.stage === 'bench') return 'Bench · No Cards';
     if (turn.stage === 'resolved') {
       if (offenseTeam === team) {
-        return rollPhase === 'pulse-off' ? 'On Offense' : `Offense Roll — ${turn[`${side}OffDie`]}`;
+        return (rollPhase === 'idle-off' || rollPhase === 'rolling-off') ? 'On Offense' : `Offense Roll — ${turn[`${side}OffDie`]}`;
       }
       if (defenseTeam === team) {
-        return (rollPhase === 'reveal-def' || rollPhase === 'both') ? `Defense Roll — ${turn[`${side}DefDie`]}` : 'On Defense';
+        return (rollPhase === 'revealed-def' || rollPhase === 'both') ? `Defense Roll — ${turn[`${side}DefDie`]}` : 'On Defense';
       }
       return '';
     }
@@ -261,7 +248,7 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
               disabled={coinSpinning}
               aria-label="Start — flip the coin"
             >
-              <BallMark size={90} variant="onInk" />
+              <BallMark size={130} variant="onInk" />
             </button>
             <div className="t2-rollzone-caption">Coin Flip<br /><span>Winner opens on offense</span></div>
           </div>
@@ -275,10 +262,12 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
       );
     }
     if (turn.stage === 'card') {
+      // Nothing is actually being rolled yet at this point (cards aren't even decided) — this
+      // is just a preview of the die size in play, sitting at rest.
       const sides = cur.role === 'offense' ? offenseDieSize(actingTeam) : defenseDieSize(actingTeam);
       return (
         <div className="t2-rollzone-die">
-          <div className="t2-die-stage"><Die sides={sides} value={sides} size={100} pulsing /></div>
+          <div className="t2-die-stage"><Die sides={sides} value={sides} size={150} /></div>
         </div>
       );
     }
@@ -289,42 +278,49 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
       const offDie = turn[`${offSide}OffDie`], offSides = turn[`${offSide}OffSides`];
       const defDie = turn[`${defSide}DefDie`], defSides = turn[`${defSide}DefSides`];
 
-      if (rollPhase === 'pulse-off') {
+      // Idle and rolling both show the die at rest/spinning respectively — only the reveal
+      // afterward needs its own real value; a click on the die itself or the Roll button next
+      // to it is what actually starts that side's roll.
+      if (rollPhase === 'idle-off' || rollPhase === 'rolling-off') {
+        const rolling = rollPhase === 'rolling-off';
         return (
           <div className="t2-rollzone-die">
-            <div className="t2-die-stage"><Die sides={offSides} value={offSides} size={100} pulsing /></div>
+            <div className="t2-die-stage t2-die-clickable" onClick={() => startRoll('off')}><Die sides={offSides} value={offSides} size={150} rolling={rolling} /></div>
             <div className="t2-rollzone-caption">{offTeam.name} Rolls For Offense</div>
+            {!rolling && <button className="t2-roll-btn" onClick={() => startRoll('off')}>Roll</button>}
           </div>
         );
       }
-      if (rollPhase === 'reveal-off') {
+      if (rollPhase === 'revealed-off') {
         return (
           <div className="t2-rollzone-die">
-            <div className="t2-die-stage"><Die sides={offSides} value={offDie} size={100} /></div>
+            <div className="t2-die-stage"><Die sides={offSides} value={offDie} size={150} /></div>
             <div className="t2-rollzone-caption t2-fade-in">{offTeam.name} Rolls {offDie}</div>
           </div>
         );
       }
-      if (rollPhase === 'pulse-def') {
+      if (rollPhase === 'idle-def' || rollPhase === 'rolling-def') {
+        const rolling = rollPhase === 'rolling-def';
         return (
           <div className="t2-rollzone-die">
-            <div className="t2-die-stage"><Die sides={defSides} value={defSides} size={100} pulsing /></div>
+            <div className="t2-die-stage t2-die-clickable" onClick={() => startRoll('def')}><Die sides={defSides} value={defSides} size={150} rolling={rolling} /></div>
             <div className="t2-rollzone-caption">{defTeam.name} Rolls For Defense</div>
+            {!rolling && <button className="t2-roll-btn" onClick={() => startRoll('def')}>Roll</button>}
           </div>
         );
       }
-      if (rollPhase === 'reveal-def') {
+      if (rollPhase === 'revealed-def') {
         return (
           <div className="t2-rollzone-die">
-            <div className="t2-die-stage"><Die sides={defSides} value={defDie} size={100} /></div>
+            <div className="t2-die-stage"><Die sides={defSides} value={defDie} size={150} /></div>
             <div className="t2-rollzone-caption t2-fade-in">{defTeam.name} Rolls {defDie}</div>
           </div>
         );
       }
       return (
         <div className="t2-rollzone-dual t2-fade-in">
-          <div className="t2-rollzone-die"><div className="t2-die-stage"><Die sides={offSides} value={offDie} size={92} /></div><div className="t2-rollzone-caption">Offense<br /><span>{offTeam.name}</span></div></div>
-          <div className="t2-rollzone-die"><div className="t2-die-stage"><Die sides={defSides} value={defDie} size={92} /></div><div className="t2-rollzone-caption">Defense<br /><span>{defTeam.name}</span></div></div>
+          <div className="t2-rollzone-die"><div className="t2-die-stage"><Die sides={offSides} value={offDie} size={130} /></div><div className="t2-rollzone-caption">Offense<br /><span>{offTeam.name}</span></div></div>
+          <div className="t2-rollzone-die"><div className="t2-die-stage"><Die sides={defSides} value={defDie} size={130} /></div><div className="t2-rollzone-caption">Defense<br /><span>{defTeam.name}</span></div></div>
         </div>
       );
     }
