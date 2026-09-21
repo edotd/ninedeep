@@ -1,7 +1,7 @@
 import { MIN_GM_COST } from './constants';
 
-export function baseCap(season) {
-  return 20 + (season - 1) * 1;
+export function baseCap() {
+  return 20;
 }
 
 export function formatCoins(n) {
@@ -17,8 +17,8 @@ export function rollMarketCapAdj(market) {
   return Math.round(v * 2) / 2;
 }
 
-export function finalizeCap(team, season) {
-  const base = baseCap(season);
+export function finalizeCap(team) {
+  const base = baseCap();
   const attendanceMult = 0.9 + (team.attendance !== undefined ? team.attendance : 0.5) * 0.2;
   let cap = (base + (team.market ? team.market.capAdj : 0) + (team.draftTradeBonus || 0)) * attendanceMult - (team.lastOverage || 0);
   cap = Math.max(cap, Math.round(base * 0.7));

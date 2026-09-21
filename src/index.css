@@ -1411,11 +1411,16 @@ body:has(.entry-screen){padding-bottom:0;}
 .tc2-pairs-panel{margin-top:20px;border-top:1px solid var(--ink-rule);padding-top:16px;}
 .tc2-pairs-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
 .tc2-pairs-count{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--approved-ink);}
-.tc2-synergy-total{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--ink-deep);padding:12px 14px;margin-bottom:12px;}
+/* Block-stacked rather than a right-aligned row sharing space with the totals — the app's own
+   floating bottombar action button (fixed bottom-right on every overlay, see .bottombar) sits
+   in that same corner at narrower widths and would otherwise render on top of a right-aligned
+   button here, hiding it. Full-width and clear of that corner avoids the collision outright
+   instead of chasing its exact position. */
+.tc2-synergy-total{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--ink-deep);padding:12px 14px;margin-bottom:8px;}
 .tc2-synergy-total-value{font-family:var(--font-display);font-size:22px;line-height:1;}
 .tc2-synergy-total-value.offense{color:var(--franchise);}
 .tc2-synergy-total-value.defense{color:var(--approved-ink);}
-.tc2-synergy-btn{margin-left:auto;background:none;border:1px solid var(--franchise);color:var(--franchise);font-family:var(--font-label);font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:9px 14px;cursor:pointer;}
+.tc2-synergy-btn{display:block;width:100%;background:none;border:1px solid var(--franchise);color:var(--franchise);font-family:var(--font-label);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:11px 14px;margin-bottom:12px;cursor:pointer;}
 .tc2-synergy-btn:hover{background:var(--franchise);color:var(--ink);}
 .tc2-pairs-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
 .tc2-pair-row{background:var(--ink-deep);padding:8px 10px;display:flex;flex-direction:column;align-items:flex-start;gap:3px;}

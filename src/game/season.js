@@ -132,7 +132,7 @@ export function initFrontOffice(state) {
     team.gmType = gm.type;
     initAttendance(team);
     refreshAdvantage(team);
-    finalizeCap(team, state.season);
+    finalizeCap(team);
   });
 }
 
@@ -160,7 +160,7 @@ export function startNewSeasonRoster(state) {
   state.teams.forEach((team) => {
     applyCoachRetention(team, team.coach);
     refreshAdvantage(team);
-    finalizeCap(team, state.season);
+    finalizeCap(team);
     if (!team.activeIds || !validateLineup(team).valid) team.activeIds = autoSelectFive(team.hand);
     team.lineupConfirmed = false;
     team.financeBoostUsedThisSeason = false;

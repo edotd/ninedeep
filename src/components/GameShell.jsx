@@ -110,12 +110,12 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
 
   const Screen = SCREENS[state.phase];
   const mainBody = overlayBody || (Screen
-    ? <Screen state={state} actions={actions} myTeamId={myTeamId} onViewTeam={(id) => openTeamView(id, null)} />
+    ? <Screen state={state} actions={actions} myTeamId={myTeamId} onViewTeam={(id) => openTeamView(id, null)} onEndGame={onNewEra} />
     : (
       <div className="screen">
         <h1>Something broke</h1>
         <p className="lede">Unknown phase: {state.phase}</p>
-        <button className="secondary" style={{ width: '100%', marginTop: 14 }} onClick={onNewEra}>Start New Era</button>
+        <button className="secondary" style={{ width: '100%', marginTop: 14 }} onClick={onNewEra}>Reset Game</button>
       </div>
     ));
 

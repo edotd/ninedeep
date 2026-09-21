@@ -1,4 +1,4 @@
-export default function EraEndScreen({ state, actions }) {
+export default function EraEndScreen({ state, onEndGame }) {
   const sorted = [...state.teams].sort((a, b) => b.titles - a.titles);
   const top = sorted[0].titles;
   const champs = sorted.filter((t) => t.titles === top);
@@ -19,7 +19,7 @@ export default function EraEndScreen({ state, actions }) {
         ))}
       </div>
       <div className="bottombar">
-        <button className="primary" onClick={actions.newEra}>Start New Era</button>
+        <button className="primary" onClick={onEndGame}>End Game</button>
       </div>
     </>
   );

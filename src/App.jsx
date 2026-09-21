@@ -21,7 +21,12 @@ function AppInner() {
   }, []);
 
   if (mode === 'solo') {
-    return <GameShell state={localGame.state} actions={localGame.actions} myTeamId={localGame.myTeamId} onNewEra={localGame.actions.newEra} />;
+    // Resets the local game state AND returns to the entry/setup screen — GameShell has no
+    // screen for the freshly-reset 'setup' phase (that's EntryScreen's job, one level up), so
+    // resetting state in place while staying mounted here used to hit the "Unknown phase"
+    // fallback the instant the reset landed.
+    const onNewEra = () => { localGame.actions.newEra(); setMode(null); };
+    return <GameShell state={localGame.state} actions={localGame.actions} myTeamId={localGame.myTeamId} onNewEra={onNewEra} />;
   }
   if (mode && mode.roomCode) {
     return <OnlineGame roomCode={mode.roomCode} myUid={mode.uid} onExit={() => setMode(null)} />;
