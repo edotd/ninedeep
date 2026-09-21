@@ -1,12 +1,15 @@
-import { SKILLSETS, teamSynergy } from '../game/skillsets';
+import { useState } from 'react';
+import { SKILLSETS, SYNERGY_CAP, teamSynergy } from '../game/skillsets';
 import { teamExperience } from '../game/aging';
 import { relationshipBonus, retentionBonus } from '../game/cards';
+import TeamSynergyModal from './TeamSynergyModal';
 
 const nameFor = (id) => SKILLSETS.find((s) => s.id === id)?.name || id;
 const bonusValue = (n) => n > 0 ? `+${n}%` : 'N/A';
 
 export default function TeamChemistry({ team }) {
   const current = teamSynergy(team);
+  const [synergyOpen, setSynergyOpen] = useState(false);
   const experience = team.coach ? teamExperience(team) : null;
   const coachOffense = team.coach ? Math.round((team.coach.offBonus + retentionBonus(team) + relationshipBonus(team)) * 100) : 0;
   const coachDefense = team.coach ? Math.round((team.coach.defBonus + retentionBonus(team) + relationshipBonus(team)) * 100) : 0;
@@ -45,8 +48,13 @@ export default function TeamChemistry({ team }) {
 
       <div className="tc2-pairs-panel">
         <div className="tc2-pairs-head">
-          <div className="ts-heading" style={{ marginBottom: 0 }}>Skillset Pairings</div>
+          <div className="ts-heading" style={{ marginBottom: 0 }}>Team Synergy</div>
           <span className="tc2-pairs-count">{current.pairs.length} Live</span>
+        </div>
+        <div className="tc2-synergy-total">
+          <span className="tc2-synergy-total-value offense">+{current.skillOffense}% OFF</span>
+          <span className="tc2-synergy-total-value defense">+{current.skillDefense}% DEF</span>
+          <button className="tc2-synergy-btn" onClick={() => setSynergyOpen(true)}>Open Team Synergy Table</button>
         </div>
         {current.pairs.length ? (
           <div className="tc2-pairs-grid">
@@ -58,10 +66,11 @@ export default function TeamChemistry({ team }) {
             ))}
           </div>
         ) : <p className="tc2-note">No active Skillset pairings in this starting five.</p>}
-        {(current.rawOffense > 12 || current.rawDefense > 12) && <p className="tc2-note">The +12% Skillset cap is applied before adding tenure bonuses.</p>}
+        {(current.rawOffense > SYNERGY_CAP || current.rawDefense > SYNERGY_CAP) && <p className="tc2-note">The +{SYNERGY_CAP}% Skillset cap is applied before adding tenure bonuses.</p>}
         {current.leadership > 0 && <p className="tc2-note">Wise Veteran adds +1% Offense and Defense from anywhere on the roster. Applies once.</p>}
       </div>
 
+      {synergyOpen && <TeamSynergyModal team={team} onClose={() => setSynergyOpen(false)} />}
     </section>
   );
 }
