@@ -65,6 +65,13 @@ function readLogCollapsed() {
   try { return sessionStorage.getItem(LOG_COLLAPSED_KEY) === '1'; } catch { return false; }
 }
 
+// Whether the post-roll report (after each exchange resolves) advances on its own instead of
+// waiting on a click — same session-only persistence as the log-collapsed setting.
+const AUTO_PROGRESS_KEY = 'nd_auto_progress';
+function readAutoProgress() {
+  try { return sessionStorage.getItem(AUTO_PROGRESS_KEY) === '1'; } catch { return false; }
+}
+
 // "Coach in front" layout, per the Match Flow design doc's 8A board: all nine rotation tiles
 // (starters then bench, no separate grouping) line up in one row at the board's outer edge,
 // with the Head Coach card overlapping the row's near-center edge and the team name sitting
@@ -132,6 +139,11 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
       try { sessionStorage.setItem(LOG_COLLAPSED_KEY, next ? '1' : '0'); } catch { /* ignore */ }
       return next;
     });
+  };
+  const [autoProgress, setAutoProgress] = useState(readAutoProgress);
+  const toggleAutoProgress = (checked) => {
+    setAutoProgress(checked);
+    try { sessionStorage.setItem(AUTO_PROGRESS_KEY, checked ? '1' : '0'); } catch { /* ignore */ }
   };
 
   const cur = turn.current;
@@ -211,12 +223,14 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
       rollTimerRef.current = setTimeout(() => setRollPhase('revealed-def'), ROLL_DURATION_MS);
     } else if (rollPhase === 'revealed-def') {
       rollTimerRef.current = setTimeout(() => setRollPhase('both'), ROLL_REVEAL_MS);
-    } else if (rollPhase === 'both' && turn.exchangeIndex > 0) {
+    } else if (rollPhase === 'both' && autoProgress) {
+      // With auto-progress off (the default), both post-roll reports wait on their own
+      // "Start Next Possession" / "See Bench Contributions" click instead of advancing here.
       rollTimerRef.current = setTimeout(() => advance(), ROLL_BOTH_READ_MS);
     }
     return () => clearTimeout(rollTimerRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rollPhase, turn.exchangeIndex]);
+  }, [rollPhase, turn.exchangeIndex, autoProgress]);
 
   // Only the side's own controlling human ever clicks its die — an AI-controlled side (or the
   // other real player's side, in online play) never waits on this client's click. AI sides
@@ -389,12 +403,14 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
     if (turn.stage === 'card') {
       // Nothing is actually being rolled yet at this point (cards aren't even decided) — this
       // previews both dice at rest, sized to what each side would actually roll, so the board
-      // always shows two dice the whole exchange, never just one. The possession arrow points
-      // at whichever side is currently making its (blind) card decision — offense first, then
-      // defense — same visual language as the resolved stage's roll possession arrow.
+      // always shows two dice the whole exchange, never just one. Offense is always the left
+      // die and defense the right one for the whole exchange (both here and in the resolved
+      // stage below), so the possession arrow just points at offense the whole time — it used
+      // to also flip to track whichever side was currently acting (card pick, then roll), which
+      // read as flickering back and forth for no real reason since the two sides never actually
+      // swap screen position mid-exchange.
       const offSides = offenseDieSize(offenseTeam);
       const defSides = defenseDieSize(defenseTeam);
-      const possessionOnOffense = cur.role === 'offense';
       return (
         <div className="t2-rollzone-dual">
           <div className="t2-rollzone-die">
@@ -403,7 +419,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
           </div>
           <div className="t2-possession">
             <div className="t2-possession-label">Possession</div>
-            <div className={'t2-possession-arrow' + (possessionOnOffense ? ' t2-possession-left' : ' t2-possession-right')}>{possessionOnOffense ? '←' : '→'}</div>
+            <div className="t2-possession-arrow" />
           </div>
           <div className="t2-rollzone-die">
             <div className="t2-die-stage"><Die sides={defSides} value={defSides} size={140} /></div>
@@ -420,18 +436,18 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
       const defDie = turn[`${defSide}DefDie`], defSides = turn[`${defSide}DefSides`];
 
       // Both dice stay on the board the whole exchange — offense's sits at its rest/size
-      // preview until it settles, defense's does the same — with a Possession arrow between
-      // them pointing at whichever side is currently up. Only the acting side's own
-      // controlling human ever gets the clickable die/Roll button for their turn; an AI side
-      // rolls itself (see the effect above), and a human opponent's side just sits idle here
-      // until their own client rolls it.
+      // preview until it settles, defense's does the same — with a static Possession arrow
+      // between them pointing at offense (always the left die for the whole exchange, in both
+      // this stage and the card stage above). Only the acting side's own controlling human ever
+      // gets the clickable die/Roll button for their turn; an AI side rolls itself (see the
+      // effect above), and a human opponent's side just sits idle here until their own client
+      // rolls it.
       const offRolling = rollPhase === 'rolling-off';
       const offSettled = !['idle-off', 'rolling-off'].includes(rollPhase);
       const offInteractive = rollPhase === 'idle-off' && offTeam === myTeam;
       const defRolling = rollPhase === 'rolling-def';
       const defSettled = ['revealed-def', 'both'].includes(rollPhase);
       const defInteractive = rollPhase === 'idle-def' && defTeam === myTeam;
-      const possessionOnOffense = !['idle-def', 'rolling-def', 'revealed-def', 'both'].includes(rollPhase);
       const offBreakdown = turn[`${offSide}OffBreakdown`], offMod = turn[`${offSide}OffMod`];
       const defBreakdown = turn[`${defSide}DefBreakdown`], defMod = turn[`${defSide}DefMod`];
       const offWon = turn[`${offSide}OffWon`], offRaw = turn[`${offSide}OffRaw`], offTotal = turn[`${offSide}OffTotal`];
@@ -464,7 +480,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
 
           <div className="t2-possession">
             <div className="t2-possession-label">Possession</div>
-            <div className={'t2-possession-arrow' + (possessionOnOffense ? ' t2-possession-left' : ' t2-possession-right')}>{possessionOnOffense ? '←' : '→'}</div>
+            <div className="t2-possession-arrow" />
           </div>
 
           <div className="t2-rollzone-die">
@@ -579,10 +595,18 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
                     <span className="t2-report-label">{offTeam.name} Offense</span>
                     <span>{offWon ? `+${offTotal}` : <span className="t2-report-cut"><s>+{offRaw}</s> +{offTotal} <em>(−{haircutPct}% from {defTeam.name}'s defense)</em></span>}</span>
                   </div>
-                  <div className="t2-report-row"><span className="t2-report-label">{defTeam.name} Defense</span><span>+{defTotal}</span></div>
-                  {turn.exchangeIndex === 0 && (
-                    <button className="t2-next-possession" onClick={() => advance()}>Start Next Possession</button>
-                  )}
+                  <div className="t2-report-row t2-report-row-last"><span className="t2-report-label">{defTeam.name} Defense</span><span>+{defTotal}</span></div>
+                  <div className="t2-report-footer">
+                    {!autoProgress && (
+                      <button className="t2-next-possession" onClick={() => advance()}>
+                        {turn.exchangeIndex === 0 ? 'Start Next Possession' : 'See Bench Contributions'}
+                      </button>
+                    )}
+                    <label className="t2-auto-progress">
+                      <input type="checkbox" checked={autoProgress} onChange={(e) => toggleAutoProgress(e.target.checked)} />
+                      Auto-progress
+                    </label>
+                  </div>
                 </div>
               );
             })()}
