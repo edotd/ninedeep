@@ -6,6 +6,13 @@ const ERA_LENGTH = 8;
 function outputFor(team) {
   return team && team.coach && team.activeIds && team.activeIds.length > 0 ? teamOutput(team) : null;
 }
+// Phases that only ever occur after this season's lineup has been confirmed and
+// lockSeasonAndSeed has run (see game/season.js) — state.seeds holds THIS season's real seed
+// order by then, not a stale one left over from the season before. Everything earlier
+// (dealing hands, front office, matchup cards, team summary) is still pre-seeding, so the
+// sidebar has nothing but each team's own projected output to sort and show.
+const POST_SEED_PHASES = new Set(['simulating', 'standings', 'playoffs', 'results', 'seasonrecap', 'contracts', 'draft', 'era_end']);
+
 const PRIMARY_NAV_ITEMS = [
   { key: 'team', label: 'Your Franchise' },
   { key: 'freeagency', label: 'Free Agency' },
@@ -26,21 +33,25 @@ const SUPPORT_NAV_ITEMS = [
 // into the sidebar's vertical list. Team was dropped for a while when the persistent bar
 // alone covered the roster/front-office/matchup view, but it's the only way to reach the
 // front-office moves (fire coach or GM, invest in fanbase), so it's back.
-export default function Sidebar({ state, myTeamId, overlay, onNav }) {
+export default function Sidebar({ state, myTeamId, overlay, onNav, onViewTeam }) {
   const team = state.teams[myTeamId];
   const seasonNum = Math.min(state.season, ERA_LENGTH);
-  // A quick glance at where you stand relative to the rest of the league without leaving
-  // whatever screen you're on — sorted by Projected Output (each rotation's expected points,
-  // same figure the persistent bar and bracket show), teams that haven't set a lineup yet
-  // (no coach/active five) sink to the bottom rather than sorting as a false zero.
-  const standings = state.teams
-    .map((t) => ({ t, output: outputFor(t) }))
-    .sort((a, b) => {
-      if (a.output && b.output) return b.output.total - a.output.total;
-      if (a.output) return -1;
-      if (b.output) return 1;
-      return a.t.id - b.t.id;
-    });
+  // Once this season is actually seeded, state.seeds IS the real standings order (see
+  // game/season.js's lockSeasonAndSeed) — rank is each team's real seed, not just wherever
+  // its own projection currently sorts to. Before that, there's no seed yet, only each team's
+  // own projected output to sort and show — teams without a lineup set sink to the bottom
+  // rather than sorting as a false zero.
+  const seeded = POST_SEED_PHASES.has(state.phase) && !!state.seeds;
+  const standings = seeded
+    ? state.seeds.map(({ t }) => ({ t, output: outputFor(t) }))
+    : state.teams
+        .map((t) => ({ t, output: outputFor(t) }))
+        .sort((a, b) => {
+          if (a.output && b.output) return b.output.total - a.output.total;
+          if (a.output) return -1;
+          if (b.output) return 1;
+          return a.t.id - b.t.id;
+        });
   return (
     <div className="sidebar">
       <div className="sidebar-lockup">
@@ -60,10 +71,20 @@ export default function Sidebar({ state, myTeamId, overlay, onNav }) {
         ))}
       </nav>
       <div className="sidebar-standings">
-        <div className="sidebar-standings-heading">Live Standings</div>
+        <div className="sidebar-standings-heading">{seeded ? 'Live Standings' : 'Projected Output'}</div>
+        <div className="sidebar-standings-row head">
+          <span className="sidebar-standings-rank">{seeded ? 'Seed' : '#'}</span>
+          <span className="sidebar-standings-tri">Team</span>
+          <span className="sidebar-standings-val">{seeded ? 'Output' : 'Proj'}</span>
+        </div>
         {standings.map(({ t, output }, i) => (
-          <div key={t.id} className={'sidebar-standings-row' + (t.id === myTeamId ? ' you' : '')}>
-            <span className="sidebar-standings-rank">{i + 1}</span>
+          <div
+            key={t.id}
+            className={'sidebar-standings-row' + (t.id === myTeamId ? ' you' : '')}
+            onClick={onViewTeam ? () => onViewTeam(t.id) : undefined}
+            style={{ cursor: onViewTeam ? 'pointer' : undefined }}
+          >
+            <span className="sidebar-standings-rank">{seeded ? t.seed : i + 1}</span>
             <span className="sidebar-standings-tri">{t.tricode}</span>
             <span className="sidebar-standings-val">{output ? output.total.toFixed(2) : '—'}</span>
           </div>

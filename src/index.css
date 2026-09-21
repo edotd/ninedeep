@@ -374,6 +374,9 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .sidebar-standings-val{flex-shrink:0;font-size:14px;color:var(--ink-muted);}
 .sidebar-standings-row.you{color:var(--franchise);}
 .sidebar-standings-row.you .sidebar-standings-tri,.sidebar-standings-row.you .sidebar-standings-val,.sidebar-standings-row.you .sidebar-standings-rank{color:var(--franchise);}
+.sidebar-standings-row.head{font-size:9px;letter-spacing:.08em;text-transform:uppercase;border-top:none!important;padding-bottom:4px;}
+.sidebar-standings-row.head .sidebar-standings-rank,.sidebar-standings-row.head .sidebar-standings-tri,.sidebar-standings-row.head .sidebar-standings-val{font-size:9px;color:var(--ink-muted);}
+.sidebar-standings-row:not(.head):hover{background:var(--ink-deep);}
 .sidebar-nav-secondary{border-top:1px solid var(--ink-rule);margin-top:8px;padding-top:6px;}
 .sidebar-footer{border-top:1px solid var(--ink-rule);padding-top:14px;margin-top:14px;padding-bottom:calc(var(--desktop-bar-height) + 38px);}
 .sidebar-era-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--ink-muted);text-transform:uppercase;margin-bottom:6px;}

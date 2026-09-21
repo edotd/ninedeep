@@ -122,7 +122,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
   if (isDesktop && showChrome) {
     return (
       <div className="desktop-shell">
-        <Sidebar state={state} myTeamId={myTeamId} overlay={overlay} onNav={handleNav} />
+        <Sidebar state={state} myTeamId={myTeamId} overlay={overlay} onNav={handleNav} onViewTeam={(id) => openTeamView(id, overlay)} />
         <div className="desktop-content">
           {mainBody}
         </div>
