@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import TeamChemistry from '../components/TeamChemistry';
 import PlayerCard from '../components/PlayerCard';
 import FrontOfficeCard from '../components/FrontOfficeCard';
@@ -63,6 +64,34 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
   };
 
   const canEdit = state.phase === 'teamsummary' && !team.lineupConfirmed;
+
+  // Substitutions: click a starter then a bench player (either order) to swap them, click the
+  // same card again to deselect, or a different card in the same group to move the selection
+  // instead. If a starting slot is actually open (activeIds under 5 — only reachable right
+  // after releasing an active starter), there's no outgoing player to pick, so a bare click on
+  // any bench card fills it directly via promoteToStarter instead of requiring a selection.
+  const [selectedId, setSelectedId] = useState(null);
+  useEffect(() => { setSelectedId(null); }, [myTeamId, canEdit]);
+  const handleCardClick = (card) => {
+    if (!canEdit) return;
+    const isStarter = activeSet.has(card.id);
+    if (activeSet.size < 5 && !isStarter) {
+      setSelectedId(null);
+      const res = actions.promoteToStarter(myTeamId, card.id);
+      if (res && res.ok === false) alert(res.msg);
+      return;
+    }
+    if (!selectedId) { setSelectedId(card.id); return; }
+    if (selectedId === card.id) { setSelectedId(null); return; }
+    const selectedIsStarter = activeSet.has(selectedId);
+    if (selectedIsStarter === isStarter) { setSelectedId(card.id); return; }
+    const outgoingId = selectedIsStarter ? selectedId : card.id;
+    const incomingId = selectedIsStarter ? card.id : selectedId;
+    setSelectedId(null);
+    const res = actions.swapStarter(myTeamId, outgoingId, incomingId);
+    if (res && res.ok === false) alert(res.msg);
+  };
+
   const handleRelease = (card) => {
     const years = card.contract;
     const deadCapCharge = Math.round((card.salary / 2) * 100) / 100;
@@ -129,7 +158,15 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
             <div className="ts-heading">Rotation</div>
             <div className="ts-roto-scroll">
               <div className="ts-roto-grid">
-                {starters.map((c) => <PlayerCard key={c.id} card={c} onRelease={canEdit ? handleRelease : undefined} />)}
+                {starters.map((c) => (
+                  <PlayerCard
+                    key={c.id}
+                    card={c}
+                    selected={selectedId === c.id}
+                    onClick={canEdit ? () => handleCardClick(c) : undefined}
+                    onRelease={canEdit ? handleRelease : undefined}
+                  />
+                ))}
               </div>
             </div>
           </div>
@@ -138,7 +175,15 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
             <div className="ts-heading">Bench</div>
             <div className="ts-roto-scroll">
               <div className="ts-roto-grid">
-                {bench.map((c) => <PlayerCard key={c.id} card={c} onRelease={canEdit ? handleRelease : undefined} />)}
+                {bench.map((c) => (
+                  <PlayerCard
+                    key={c.id}
+                    card={c}
+                    selected={selectedId === c.id}
+                    onClick={canEdit ? () => handleCardClick(c) : undefined}
+                    onRelease={canEdit ? handleRelease : undefined}
+                  />
+                ))}
                 {Array.from({ length: Math.max(0, openSlots) }, (_, i) => (
                   <div key={'open' + i} className="ts-bench-open">OPEN</div>
                 ))}
