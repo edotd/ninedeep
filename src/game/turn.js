@@ -141,13 +141,18 @@ function resolveExchange(state, m) {
   const defRolled = supplementalRoll(defenseTeam, defenseIds, defenseExtra, 'defense', rollDie(defSidesN), rollDie(defSidesN), defAdv);
 
   const offenseWon = offRolled.die >= defRolled.die;
-  const haircut = (defenseTeam.coach && defenseTeam.coach.defBonus) || 0;
+  // The haircut draws on the same bonus stack that built the defense's own modifier — coach
+  // bonus, roster chemistry, and skillset synergy — so a defense that's actually elite (not
+  // just coached well) suppresses the offense more, same as it banks more on its own side.
+  const db = defRolled.breakdown;
+  const haircut = db.coachBonus + db.retention + db.relationship + db.handsOff + (db.synergyPct || 0) / 100;
   const offenseOutput = offenseWon ? offRolled.total : Math.round(offRolled.total * (1 - haircut) * 100) / 100;
   const defenseOutput = defRolled.total;
 
   turn[`${offSide}OffDie`] = offRolled.die; turn[`${offSide}OffDieOther`] = offRolled.dieOther; turn[`${offSide}OffMode`] = offRolled.mode;
   turn[`${offSide}OffMod`] = offRolled.mod; turn[`${offSide}OffTotal`] = offenseOutput; turn[`${offSide}OffSides`] = offSides;
   turn[`${offSide}OffWon`] = offenseWon; turn[`${offSide}OffBreakdown`] = offRolled.breakdown;
+  turn[`${offSide}OffRaw`] = offRolled.total; turn[`${offSide}Haircut`] = offenseWon ? 0 : haircut;
   turn[`${defSide}DefDie`] = defRolled.die; turn[`${defSide}DefDieOther`] = defRolled.dieOther; turn[`${defSide}DefMode`] = defRolled.mode;
   turn[`${defSide}DefMod`] = defRolled.mod; turn[`${defSide}DefTotal`] = defenseOutput; turn[`${defSide}DefSides`] = defSidesN;
   turn[`${defSide}DefBreakdown`] = defRolled.breakdown;
@@ -160,7 +165,7 @@ function resolveExchange(state, m) {
   pushLog(turn, 'resolution',
     (offenseWon
       ? `Offense wins the possession — ${offenseTeam.name} banks the full ${offenseOutput}.`
-      : `Defense wins the possession — ${offenseTeam.name}'s offense is cut to ${offenseOutput} (${Math.round(haircut * 100)}% haircut from ${defenseTeam.name}'s coaching).`) +
+      : `Defense wins the possession — ${offenseTeam.name}'s offense is cut from ${offRolled.total} to ${offenseOutput} (${Math.round(haircut * 100)}% haircut from ${defenseTeam.name}'s coaching, chemistry, and synergy).`) +
     ` ${defenseTeam.name}'s defense banks ${defenseOutput} regardless.`);
 
   turn.current = null;

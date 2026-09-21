@@ -132,7 +132,9 @@ export function applyLiveFanbaseMod(team, opponent, extra, opponentIds, cardNote
 
 // One possession: offenseTeam rolls its offense die against defenseTeam's defense die. A tie
 // or higher offense roll banks the offense's full total; a higher defense roll cuts the
-// offense's total by the defending coach's defBonus. Defense's total always banks, win or
+// offense's total by the defending team's coach bonus, roster chemistry, and skillset synergy —
+// the same bonus stack that built the defense's own modifier, so an elite defensive roster (not
+// just a well-coached one) suppresses the offense more. Defense's total always banks, win or
 // lose. Shared by the instant resolver below and the turn-by-turn engine (game/turn.js), which
 // keeps a watched match and a simulated one scoring possessions identically.
 function resolveExchange(offenseTeam, defenseTeam, offenseIds, defenseIds, offenseExtra, defenseExtra, offenseAdv, defenseAdv) {
@@ -141,9 +143,10 @@ function resolveExchange(offenseTeam, defenseTeam, offenseIds, defenseIds, offen
   const offRolled = supplementalRoll(offenseTeam, offenseIds, offenseExtra, 'offense', rollDie(offSides), rollDie(offSides), offenseAdv);
   const defRolled = supplementalRoll(defenseTeam, defenseIds, defenseExtra, 'defense', rollDie(defSides), rollDie(defSides), defenseAdv);
   const offenseWon = offRolled.die >= defRolled.die;
-  const haircut = (defenseTeam.coach && defenseTeam.coach.defBonus) || 0;
+  const db = defRolled.breakdown;
+  const haircut = db.coachBonus + db.retention + db.relationship + db.handsOff + (db.synergyPct || 0) / 100;
   const offenseTotal = offenseWon ? offRolled.total : Math.round(offRolled.total * (1 - haircut) * 100) / 100;
-  return { offRolled, defRolled, offenseWon, offenseTotal, defenseTotal: defRolled.total, offSides, defSides };
+  return { offRolled, defRolled, offenseWon, offenseTotal, defenseTotal: defRolled.total, offSides, defSides, haircut: offenseWon ? 0 : haircut };
 }
 
 // A match is two possessions: A on offense vs B on defense, then B on offense vs A on defense —

@@ -434,11 +434,16 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
       const possessionOnOffense = !['idle-def', 'rolling-def', 'revealed-def', 'both'].includes(rollPhase);
       const offBreakdown = turn[`${offSide}OffBreakdown`], offMod = turn[`${offSide}OffMod`];
       const defBreakdown = turn[`${defSide}DefBreakdown`], defMod = turn[`${defSide}DefMod`];
+      const offWon = turn[`${offSide}OffWon`], offRaw = turn[`${offSide}OffRaw`], offTotal = turn[`${offSide}OffTotal`];
+      const haircutPct = Math.round((turn[`${offSide}Haircut`] || 0) * 100);
+      // Only knowable once defense's own die has actually revealed — same gate as the full
+      // report below, so this never spoils the outcome before defense's roll lands on screen.
+      const showCut = rollPhase === 'both' && !offWon;
 
       return (
         <div className="t2-rollzone-dual">
           <div className="t2-rollzone-die">
-            <div className={'t2-die-stage' + (offInteractive ? ' t2-die-clickable' : '')} onClick={offInteractive ? () => startRoll('off') : undefined}>
+            <div className={'t2-die-stage' + (offInteractive ? ' t2-die-clickable' : '') + (showCut ? ' t2-die-cut' : '')} onClick={offInteractive ? () => startRoll('off') : undefined}>
               <Die sides={offSides} value={offSettled ? offDie : offSides} size={140} rolling={offRolling} />
             </div>
             <div className="t2-rollzone-caption">
@@ -449,6 +454,12 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
             </div>
             {rollPhase === 'idle-off' && offInteractive && <button className="t2-roll-btn" onClick={() => startRoll('off')}>Roll</button>}
             {breakdownOpen === 'off' && renderModBreakdown(offTeam, 'offense', offBreakdown)}
+            {showCut && (
+              <div className="t2-cut-badge t2-fade-in">
+                <span className="t2-cut-badge-label">{defTeam.name} defense cuts it</span>
+                <span className="t2-cut-badge-value"><s>{offRaw}</s> → {offTotal}<b>−{haircutPct}%</b></span>
+              </div>
+            )}
           </div>
 
           <div className="t2-possession">
@@ -559,11 +570,15 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
               const offTeam = offSide === 'a' ? teamA : teamB;
               const defTeam = defSide === 'a' ? teamA : teamB;
               const offTotal = turn[`${offSide}OffTotal`], offWon = turn[`${offSide}OffWon`];
+              const offRaw = turn[`${offSide}OffRaw`], haircutPct = Math.round((turn[`${offSide}Haircut`] || 0) * 100);
               const defTotal = turn[`${defSide}DefTotal`];
               return (
                 <div className="t2-report t2-fade-in">
                   <div className="t2-report-row"><span className="t2-report-label">Possession</span><span>{offWon ? `${offTeam.name} wins` : `${defTeam.name} wins`}</span></div>
-                  <div className="t2-report-row"><span className="t2-report-label">{offTeam.name} Offense</span><span>+{offTotal}{!offWon ? ` (${defTeam.name} applied a ${Math.round(((defTeam.coach && defTeam.coach.defBonus) || 0) * 100)}% reduction)` : ''}</span></div>
+                  <div className="t2-report-row">
+                    <span className="t2-report-label">{offTeam.name} Offense</span>
+                    <span>{offWon ? `+${offTotal}` : <span className="t2-report-cut"><s>+{offRaw}</s> +{offTotal} <em>(−{haircutPct}% from {defTeam.name}'s defense)</em></span>}</span>
+                  </div>
                   <div className="t2-report-row"><span className="t2-report-label">{defTeam.name} Defense</span><span>+{defTotal}</span></div>
                   {turn.exchangeIndex === 0 && (
                     <button className="t2-next-possession" onClick={() => advance()}>Start Next Possession</button>
