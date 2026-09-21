@@ -518,6 +518,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .fo2-header{display:flex;justify-content:space-between;align-items:center;padding:10px 13px;border-bottom:1px solid var(--ink-rule);}
 .fo2-kind-group{display:inline-flex;align-items:center;gap:8px;color:var(--file);}
 .fo2-kind-label{font-family:var(--font-display);font-size:26px;line-height:1;letter-spacing:.02em;text-transform:uppercase;color:var(--file);}
+.fo2-dice{font-family:var(--font-mono);font-size:11px;letter-spacing:.03em;color:var(--file-muted);white-space:nowrap;}
 .fo2-kind-badge{font-family:var(--font-label);font-size:9px;letter-spacing:.06em;}
 .fo2-kind-badge.franchise{color:var(--franchise);}
 .fo2-kind-badge.approved-ink{color:var(--approved-ink);}

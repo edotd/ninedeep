@@ -3,6 +3,7 @@ import { retentionBonus, relationshipBonus } from '../game/cards';
 import CardTypeMark from './CardTypeMark';
 import { GM_BONUS_RATE, HANDS_OFF_BONUS_CAP } from '../game/constants';
 import { handsOffBonus } from '../game/gm';
+import { offenseDieSize, defenseDieSize } from '../game/roster';
 
 // Front Office card, per the brand handoff's "Components: Front Office & Matchup Cards" —
 // landscape, ink ground, told apart from a Player card by shape alone. One component covers
@@ -95,6 +96,7 @@ export default function FrontOfficeCard({ kind, team }) {
             <CardTypeMark type="frontoffice" size={16} />
             <span className="fo2-kind-label">{meta.label}</span>
           </span>
+          {kind === 'coach' && <span className="fo2-dice">🎲 Off {offenseDieSize(team)} · Def {defenseDieSize(team)}</span>}
         </div>
         <div className="fo2-name-row">
           <div className="fo2-name-col">
