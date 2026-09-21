@@ -184,10 +184,11 @@ p.lede{color:var(--file-body);font-size:14px;line-height:1.5;margin:0 0 14px;}
    flipped, then filed into the bar): each card lands with a small scale/rotation settle
    rather than a flat fade, and alternates its landing tilt left/right (nth-child) so a row
    of them doesn't all twist the same way. */
-@keyframes card-deal{from{opacity:0;transform:translateY(-26px) scale(.82) rotate(-6deg);}55%{opacity:1;}to{opacity:1;transform:none;}}
-@keyframes card-deal-alt{from{opacity:0;transform:translateY(-26px) scale(.82) rotate(6deg);}55%{opacity:1;}to{opacity:1;transform:none;}}
-.card-deal-in{animation:card-deal 340ms cubic-bezier(.2,.8,.25,1) both;}
+@keyframes card-deal{from{opacity:0;transform:translateY(-70px) scale(.7) rotate(-10deg);}45%{opacity:1;}to{opacity:1;transform:none;}}
+@keyframes card-deal-alt{from{opacity:0;transform:translateY(-70px) scale(.7) rotate(10deg);}45%{opacity:1;}to{opacity:1;transform:none;}}
+.card-deal-in{animation:card-deal 620ms cubic-bezier(.2,.8,.25,1) both;}
 .card-deal-in:nth-child(even){animation-name:card-deal-alt;}
+@media(prefers-reduced-motion:reduce){.card-deal-in{animation:none;}}
 
 /* The bar slot "filing in" the instant a card type's own phase ends — the deal animation's
    payoff on the persistent bar, per the same 4A spec. Only plays once, the moment a slot's
