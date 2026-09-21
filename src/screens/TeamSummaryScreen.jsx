@@ -24,11 +24,18 @@ function ordinal(n) {
 // the season on the auto-selected five, the last stop before the season locks), and — when
 // passed `onBack` — as the "Team" overlay reachable from the sidebar/top bar on any phase,
 // where the button instead just closes the overlay and the front-office moves (fire/hire
-// coach, fire GM, invest in fanbase — all funded out of budget room) are available.
+// coach, fire GM, invest in fanbase — all funded out of budget room) are available. Passing
+// `viewTeamId` (set by clicking another team in Standings) shows that team's file instead of
+// the caller's own — fully read-only, since every mutation here always targets `myTeamId`
+// regardless of whose file is on screen.
 // Read-only otherwise, organised by category: rotation, budget ledger, front office. No
 // nine-slot navigation here (that's the persistent bar's job on every other screen).
-export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) {
-  const team = state.teams[myTeamId];
+export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId, onBack }) {
+  // viewTeamId lets this screen show a DIFFERENT team's file — reached by clicking a team in
+  // Standings — read-only: no substitutions, releases, or front-office moves, since those
+  // actions always take myTeamId regardless of which file is on screen.
+  const readOnly = viewTeamId != null && viewTeamId !== myTeamId;
+  const team = state.teams[readOnly ? viewTeamId : myTeamId];
   const seasonNum = Math.min(state.season, ERA_LENGTH);
   // The outgoing coach's dead cap is exact; the incoming hire's salary (also charged this
   // season, on top of it) is drawn fresh when the button is clicked, so it isn't part of
@@ -63,7 +70,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
     return better + 1;
   };
 
-  const canEdit = state.phase === 'teamsummary' && !team.lineupConfirmed;
+  const canEdit = !readOnly && state.phase === 'teamsummary' && !team.lineupConfirmed;
 
   // Substitutions: click a starter then a bench player (either order) to swap them, click the
   // same card again to deselect, or a different card in the same group to move the selection
@@ -71,7 +78,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
   // after releasing an active starter), there's no outgoing player to pick, so a bare click on
   // any bench card fills it directly via promoteToStarter instead of requiring a selection.
   const [selectedId, setSelectedId] = useState(null);
-  useEffect(() => { setSelectedId(null); }, [myTeamId, canEdit]);
+  useEffect(() => { setSelectedId(null); }, [team.id, canEdit]);
   const handleCardClick = (card) => {
     if (!canEdit) return;
     const isStarter = activeSet.has(card.id);
@@ -227,44 +234,50 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
               <div className="fo-deal-row" style={{ margin: 0 }}>
                 <div className="ts-fo-col">
                   <FrontOfficeCard kind="coach" team={team} />
-                  <button
-                    className="secondary ts-fo-action"
-                    style={{ width: '100%' }}
-                    onClick={() => {
-                      const res = actions.fireCoach(myTeamId);
-                      if (res && res.ok === false) alert(res.msg);
-                    }}
-                  >
-                    Fire Coach — {formatCoins(fireCoachDeadCap)} Dead Cap
-                  </button>
+                  {!readOnly && (
+                    <button
+                      className="secondary ts-fo-action"
+                      style={{ width: '100%' }}
+                      onClick={() => {
+                        const res = actions.fireCoach(myTeamId);
+                        if (res && res.ok === false) alert(res.msg);
+                      }}
+                    >
+                      Fire Coach — {formatCoins(fireCoachDeadCap)} Dead Cap
+                    </button>
+                  )}
                 </div>
                 <div className="ts-fo-col">
                   <FrontOfficeCard kind="fanbase" team={team} />
-                  <button
-                    className="secondary ts-fo-action"
-                    style={{ width: '100%' }}
-                    disabled={team.financeBoostUsedThisSeason}
-                    onClick={() => {
-                      const res = actions.investInFanbase(myTeamId);
-                      if (res && res.ok === false) alert(res.msg);
-                    }}
-                  >
-                    {team.financeBoostUsedThisSeason ? 'Already Invested This Season' : `Invest — ${formatCoins(FANBASE_BOOST_COST)}`}
-                  </button>
+                  {!readOnly && (
+                    <button
+                      className="secondary ts-fo-action"
+                      style={{ width: '100%' }}
+                      disabled={team.financeBoostUsedThisSeason}
+                      onClick={() => {
+                        const res = actions.investInFanbase(myTeamId);
+                        if (res && res.ok === false) alert(res.msg);
+                      }}
+                    >
+                      {team.financeBoostUsedThisSeason ? 'Already Invested This Season' : `Invest — ${formatCoins(FANBASE_BOOST_COST)}`}
+                    </button>
+                  )}
                 </div>
                 <div className="ts-fo-col">
                   <FrontOfficeCard kind="market" team={team} />
-                  <button
-                    className="secondary ts-fo-action"
-                    style={{ width: '100%' }}
-                    disabled={team.gmChangeSeason === state.season}
-                    onClick={() => {
-                      const res = actions.fireGM(myTeamId);
-                      if (res && res.ok === false) alert(res.msg);
-                    }}
-                  >
-                    {team.gmChangeSeason === state.season ? 'GM Replaced This Season' : `Fire GM — ${formatCoins(Math.round((gmCost(team.gmType) / 2) * 100) / 100)} Dead Cap`}
-                  </button>
+                  {!readOnly && (
+                    <button
+                      className="secondary ts-fo-action"
+                      style={{ width: '100%' }}
+                      disabled={team.gmChangeSeason === state.season}
+                      onClick={() => {
+                        const res = actions.fireGM(myTeamId);
+                        if (res && res.ok === false) alert(res.msg);
+                      }}
+                    >
+                      {team.gmChangeSeason === state.season ? 'GM Replaced This Season' : `Fire GM — ${formatCoins(Math.round((gmCost(team.gmType) / 2) * 100) / 100)} Dead Cap`}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

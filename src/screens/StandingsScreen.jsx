@@ -6,7 +6,7 @@ function ordinal(n) {
   return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }
 
-export default function StandingsScreen({ state, actions, myTeamId }) {
+export default function StandingsScreen({ state, actions, myTeamId, onViewTeam }) {
   const team = state.teams[myTeamId];
   const madeIt = team.seed <= 8;
   const outright = state.settings && state.settings.winCondition === 'outright';
@@ -39,7 +39,12 @@ export default function StandingsScreen({ state, actions, myTeamId }) {
             {state.seeds.map((s) => {
               const seedingCards = (s.t.matchupCards || []).filter((c) => c.effectType === 'SEEDING_PERCENT' && c.used);
               return (
-              <div key={s.t.name} className={'standings-row' + (s.t === team ? ' you' : '') + (s.t.seed > 8 ? ' out' : '')}>
+              <div
+                key={s.t.name}
+                className={'standings-row' + (s.t === team ? ' you' : '') + (s.t.seed > 8 ? ' out' : '')}
+                style={{ cursor: onViewTeam ? 'pointer' : undefined }}
+                onClick={onViewTeam ? () => onViewTeam(s.t.id) : undefined}
+              >
                 <span className="standings-team">
                   <span className="standings-seed">#{s.t.seed}</span> {s.t.name}
                   {seedingCards.length > 0 && (

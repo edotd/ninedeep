@@ -166,6 +166,7 @@ p.lede{color:var(--file-body);font-size:14px;line-height:1.5;margin:0 0 14px;}
 
 .standing-row{display:flex;justify-content:space-between;padding:9px 10px;border-bottom:1px solid var(--form-rule);font-size:14px;font-family:var(--font-mono);}
 .standing-row.you{color:var(--stamp);font-weight:500;}
+.standing-row:hover{background:var(--form-rule);}
 
 .matchup-box{background:var(--form);border:1px solid var(--form-rule);padding:10px 12px;margin-bottom:12px;}
 .matchup-title{font-family:var(--font-label);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--file-muted);margin-bottom:8px;}

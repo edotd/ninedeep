@@ -7,7 +7,7 @@ function safeOutput(team) {
   return teamOutput(team);
 }
 
-export default function LeagueScreen({ state, myTeamId, onBack }) {
+export default function LeagueScreen({ state, myTeamId, onBack, onViewTeam }) {
   const rows = state.teams.map((t) => ({ t, out: safeOutput(t), exp: teamExperience(t) }));
   rows.sort((a, b) => (b.out ? b.out.total : -Infinity) - (a.out ? a.out.total : -Infinity));
 
@@ -15,9 +15,14 @@ export default function LeagueScreen({ state, myTeamId, onBack }) {
     <>
       <div className="screen">
         <h1>Standings</h1>
-        <p className="lede">Every team's current coach and matchup output — the deterministic part of their score (offense modifier + defense modifier + bench), before dice are rolled — plus a Chemistry letter grade from Skillset fit, starter tenure, and leadership, alongside the separate experience rating. Not visible until hands are dealt for the season.</p>
+        <p className="lede">Every team's current coach and matchup output — the deterministic part of their score (offense modifier + defense modifier + bench), before dice are rolled — plus a Chemistry letter grade from Skillset fit, starter tenure, and leadership, alongside the separate experience rating. Not visible until hands are dealt for the season. Click a team to view its franchise file.</p>
         {rows.map(({ t, out, exp }) => (
-          <div key={t.name} className={'standing-row' + (t.id === myTeamId ? ' you' : '')} style={{ alignItems: 'center' }}>
+          <div
+            key={t.name}
+            className={'standing-row' + (t.id === myTeamId ? ' you' : '')}
+            style={{ alignItems: 'center', cursor: onViewTeam ? 'pointer' : undefined }}
+            onClick={onViewTeam ? () => onViewTeam(t.id) : undefined}
+          >
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span>{t.name}</span>
               <span style={{ fontSize: 11, color: 'var(--muted)' }}>{t.coach ? t.coach.name : 'No coach yet'}</span>

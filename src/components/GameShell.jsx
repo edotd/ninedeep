@@ -63,8 +63,27 @@ const HIDE_BAR_PHASES = new Set(['simulating', 'seasonrecap', 'seasontransition'
 // `overlay`/`Screen` resolution feeds both shells so the two never drift out of sync.
 export default function GameShell({ state, actions, myTeamId, onNewEra }) {
   const [overlay, setOverlay] = useState(null); // null | 'glossary' | 'settings' | 'standings' | 'team' | 'freeagency' | 'cardtypes'
+  // Clicking another team in Standings opens the Team overlay on THEIR file instead of the
+  // caller's own (viewTeamId), remembering whatever overlay (or none, for a phase screen like
+  // StandingsScreen) was showing so Back returns there rather than dumping out to the base game.
+  const [viewTeamId, setViewTeamId] = useState(null);
+  const [returnOverlay, setReturnOverlay] = useState(null);
   const toggleOverlay = (name) => setOverlay((o) => (o === name ? null : name));
+  // Navigating to 'team' via the sidebar/header (as opposed to jumping in from Standings)
+  // always means "show my own file" — reset any leftover viewTeamId from a prior jump.
+  const handleNav = (name) => { if (name === 'team') setViewTeamId(null); toggleOverlay(name); };
   const isDesktop = useIsDesktop();
+
+  const openTeamView = (teamId, fromOverlay) => {
+    setReturnOverlay(fromOverlay);
+    setViewTeamId(teamId);
+    setOverlay('team');
+  };
+  const closeTeamView = () => {
+    setOverlay(returnOverlay);
+    setReturnOverlay(null);
+    setViewTeamId(null);
+  };
 
   const headerProps = {
     state,
@@ -73,7 +92,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
     onGlossary: () => toggleOverlay('glossary'),
     onStandings: () => toggleOverlay('standings'),
     onSettings: () => toggleOverlay('settings'),
-    onTeam: () => toggleOverlay('team'),
+    onTeam: () => handleNav('team'),
     onFreeAgency: () => toggleOverlay('freeagency'),
   };
 
@@ -84,14 +103,14 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
   let overlayBody = null;
   if (overlay === 'glossary') overlayBody = <GlossaryScreen state={state} onBack={close} />;
   else if (overlay === 'settings') overlayBody = <SettingsScreen state={state} actions={actions} onBack={close} onNewEra={onNewEra} />;
-  else if (overlay === 'standings') overlayBody = <LeagueScreen state={state} myTeamId={myTeamId} onBack={close} />;
-  else if (overlay === 'team') overlayBody = <TeamSummaryScreen state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
+  else if (overlay === 'standings') overlayBody = <LeagueScreen state={state} myTeamId={myTeamId} onBack={close} onViewTeam={(id) => openTeamView(id, 'standings')} />;
+  else if (overlay === 'team') overlayBody = <TeamSummaryScreen state={state} actions={actions} myTeamId={myTeamId} viewTeamId={viewTeamId} onBack={closeTeamView} />;
   else if (overlay === 'freeagency') overlayBody = <FreeAgencyScreen state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
   else if (overlay === 'cardtypes') overlayBody = <CardOverviewScreen state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
 
   const Screen = SCREENS[state.phase];
   const mainBody = overlayBody || (Screen
-    ? <Screen state={state} actions={actions} myTeamId={myTeamId} />
+    ? <Screen state={state} actions={actions} myTeamId={myTeamId} onViewTeam={(id) => openTeamView(id, null)} />
     : (
       <div className="screen">
         <h1>Something broke</h1>
@@ -103,7 +122,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
   if (isDesktop && showChrome) {
     return (
       <div className="desktop-shell">
-        <Sidebar state={state} myTeamId={myTeamId} overlay={overlay} onNav={toggleOverlay} />
+        <Sidebar state={state} myTeamId={myTeamId} overlay={overlay} onNav={handleNav} />
         <div className="desktop-content">
           {mainBody}
         </div>
@@ -118,7 +137,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
       {showChrome && <Header {...headerProps} />}
       {mainBody}
       {showChrome && <FreeAgencyTicker activity={state.freeAgencyActivity} withBar={showBar} />}
-      {showBar && <PersistentBar state={state} myTeamId={myTeamId} onExpand={() => toggleOverlay('team')} />}
+      {showBar && <PersistentBar state={state} myTeamId={myTeamId} onExpand={() => handleNav('team')} />}
     </>
   );
 }
