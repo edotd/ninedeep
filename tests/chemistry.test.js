@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { CHEMISTRY_GRADES, chemistryGrade, addToRoster, creditTeamSeason, completedTeamYears } from '../src/game/chemistry.js';
 import { teamSynergy } from '../src/game/skillsets.js';
 import { newEraState, proceedFromResults, signFreeAgent, startPlayoffs, lockSeasonAndSeed } from '../src/game/season.js';
-import { startEra, proceedFromCardOverview, proceedFromHand, proceedToSeason1 } from '../src/game/engine.js';
+import { startEra } from '../src/game/engine.js';
 
 test('every plus/minus boundary and adjacent score matches the scale',()=>{
  for(let i=0;i<CHEMISTRY_GRADES.length;i++){
@@ -42,7 +42,7 @@ test('approved skill example with three-year starters and a leader earns A+',()=
  const s=teamSynergy(t);assert.equal(s.score,100);assert.equal(s.grade,'A+');assert.equal(s.offense,38.5);assert.equal(s.defense,8.5);assert.equal(s.leadership,1);
 });
 test('real season completion credits retained and expired players, free-agent transfer resets',()=>{
- const state=newEraState();startEra(state,'Test');proceedFromCardOverview(state);proceedFromHand(state);proceedToSeason1(state);
+ const state=newEraState();startEra(state,'Test');
  lockSeasonAndSeed(state);startPlayoffs(state);state.playoffTeams=[];
  const player=state.teams[0].hand[0];player.contract=1;
  state.phase='results';proceedFromResults(state);

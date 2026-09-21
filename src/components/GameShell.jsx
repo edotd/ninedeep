@@ -9,7 +9,7 @@ import LeagueScreen from '../screens/LeagueScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import CardOverviewScreen from '../screens/CardOverviewScreen';
 import PullCardsScreen from '../screens/PullCardsScreen';
-import PullHandScreen from '../screens/PullHandScreen';
+import DealScreen from '../screens/DealScreen';
 import TeamSummaryScreen from '../screens/TeamSummaryScreen';
 import PullModifierScreen from '../screens/PullModifierScreen';
 import StandingsScreen from '../screens/StandingsScreen';
@@ -28,7 +28,7 @@ import FreeAgencyTicker from './FreeAgencyTicker';
 const SCREENS = {
   cardoverview: CardOverviewScreen,
   pullcards: PullCardsScreen,
-  pullhand: PullHandScreen,
+  pullhand: DealScreen,
   pullmodifier: PullModifierScreen,
   seasontransition: SeasonTransitionScreen,
   constructing: ConstructingScreen,

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { newEraState, renewExpiredContract } from '../src/game/season.js';
 import { startDraft, draftPick } from '../src/game/draft.js';
-import { startEra, proceedFromCardOverview, proceedFromHand, proceedToSeason1, confirmLineup } from '../src/game/engine.js';
+import { startEra, confirmLineup } from '../src/game/engine.js';
 import { releasePlayer } from '../src/game/finances.js';
 import { LEAGUE_ACCOLADES, TIERS } from '../src/game/constants.js';
 
@@ -16,9 +16,6 @@ test('Generational Talent is a modifier while All-Star and Most Valuable Player 
 test('every team drafts a Young non-accolade player and resolves an oversized roster on Team', () => {
   const state = newEraState();
   startEra(state, 'Test');
-  proceedFromCardOverview(state);
-  proceedFromHand(state);
-  proceedToSeason1(state);
   state.season = 2;
   state.seeds = state.teams.map((t) => ({ t }));
   const team = state.teams[0];

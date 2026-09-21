@@ -30,6 +30,15 @@ function allHumansReady(state, predicate) {
   return humanTeams(state).every(predicate);
 }
 
+// The Deal (design ref 4A): hand, Front Office, and the first season's Matchup Cards are all
+// dealt together here, synchronously, instead of across three separate pull screens — see
+// DealScreen.jsx, the one screen that shows all of it and holds until Continue (finishDeal,
+// below) sends the player straight to Team Summary. initFrontOffice and
+// initSeasonModifierCards still do the real per-team dealing work exactly as before (and
+// still run this same way every season after the first, via startNewSeasonRoster — only
+// Matchup Cards refresh season to season, so that's the only one with a recurring pull
+// screen); called back to back here, each one's own phase assignment is simply overridden by
+// the next line rather than shown.
 export function startEra(state, teamNameRaw) {
   const val = (teamNameRaw || '').trim();
   state.teamName = val.length ? val.slice(0, 32) : 'Your Franchise';
@@ -37,12 +46,13 @@ export function startEra(state, teamNameRaw) {
   buildTeams(state, defaultSoloSeats(state.teamName));
   dealHands(state);
   state.teams.forEach((t) => { t.activeIds = autoSelectFive(t.hand); });
+  initFrontOffice(state);
+  initSeasonModifierCards(state);
   state.phase = 'pullhand';
 }
 
-// Deals the 9-card hand first — see proceedFromHand/proceedToSeason1 below for why Front
-// Office now comes after the hand instead of before it (players, then front office, then
-// matchup cards, per the reordered deal sequence).
+// Legacy fallback from an earlier deal sequence — nothing sets state.phase to 'cardoverview'
+// any more, so this never actually runs, but it's cheap to keep around.
 export function proceedFromCardOverview(state) {
   if (state.phase !== 'cardoverview') return;
   dealHands(state);
@@ -50,14 +60,17 @@ export function proceedFromCardOverview(state) {
   state.phase = 'pullhand';
 }
 
-// The hand is already dealt (see proceedFromCardOverview) — Front Office is pulled next,
-// auto-dealt for every team (see initFrontOffice) with no manual pull button any more.
-export function proceedFromHand(state) {
-  initFrontOffice(state);
+// The one-time Deal screen's Continue button — everything (hand, Front Office, this season's
+// Matchup Cards) is already dealt in state by startEra, so this just moves on.
+export function finishDeal(state) {
+  if (state.phase !== 'pullhand') return;
+  state.phase = 'teamsummary';
 }
 
 // Only moves on to Matchup Cards once every human-controlled team has pulled its Front
-// Office cards.
+// Office cards. Still used by the online room flow (see lobby.js's startEraOnline, which
+// deals Front Office on its own rather than through startEra above) — PullCardsScreen's
+// Continue button calls this directly.
 export function proceedToSeason1(state) {
   if (!allHumansReady(state, (t) => t.coach && t.fanbaseArchetype && t.market)) return;
   initSeasonModifierCards(state);

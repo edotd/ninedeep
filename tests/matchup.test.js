@@ -4,13 +4,13 @@ import { MATCHUP_MODIFIER_TYPES as deck } from '../src/game/supplementalCards.js
 import { drawMatchupModifierCard, resetMatchupDeck } from '../src/game/cards.js';
 import { applySupplementalCard, supplementalRoll } from '../src/game/supplementalEffects.js';
 import { newEraState, lockSeasonAndSeed, initSeasonModifierCards, startPlayoffs } from '../src/game/season.js';
-import { startEra, proceedFromCardOverview, proceedFromHand, proceedToSeason1, rollCurrentMatchup } from '../src/game/engine.js';
+import { startEra, rollCurrentMatchup } from '../src/game/engine.js';
 import { beginTurn, advanceTurn } from '../src/game/turn.js';
 import { rehydrateState } from '../src/game/rehydrate.js';
 const card = (name) => ({ ...deck.find((c) => c.name === name), id: name, used: false });
 function game() {
   const state = newEraState();
-  startEra(state, 'Test'); proceedFromCardOverview(state); proceedFromHand(state); proceedToSeason1(state);
+  startEra(state, 'Test');
   state.settings.injuryChance = 0;
   state.teams.forEach((t) => { t.fanbaseMod = null; });
   return state;

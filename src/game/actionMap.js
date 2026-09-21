@@ -12,7 +12,7 @@ export const actionMap = {
   startEra: engine.startEra,
   proceedFromCardOverview: engine.proceedFromCardOverview,
   proceedToSeason1: engine.proceedToSeason1,
-  proceedFromHand: engine.proceedFromHand,
+  finishDeal: engine.finishDeal,
   pullMatchupCard: engine.pullMatchupCard,
   pullAllMatchupCards: engine.pullAllMatchupCards,
   proceedToLineupFromModifier: engine.proceedToLineupFromModifier,
