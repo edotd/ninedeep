@@ -55,23 +55,6 @@ function matchBlurb(winnerName, loserName, diff) {
   return pick.replace('{w}', winnerName).replace('{l}', loserName).replace('{d}', diff.toFixed(1));
 }
 
-// Every sub-stage the engine (game/turn.js) can be in, in order — drives the "STAGE n / total"
-// footer counter. coinflip/coinflipped share stage 1 (the coin only "advances" once, from the
-// player's point of view, even though the engine models the flip and its reveal as two
-// stages); 'card' appears twice per exchange (offense's window, then defense's).
-const STAGE_ORDER = ['coinflip', 'coinflipped', 'card-offense-0', 'card-defense-0', 'resolved-0', 'card-offense-1', 'card-defense-1', 'resolved-1', 'bench'];
-
-function stageKey(turn) {
-  if (turn.stage === 'card') return `card-${turn.current.role}-${turn.exchangeIndex}`;
-  if (turn.stage === 'resolved') return `resolved-${turn.exchangeIndex}`;
-  return turn.stage;
-}
-
-function stageNumber(turn) {
-  const idx = STAGE_ORDER.indexOf(stageKey(turn));
-  return Math.max(1, idx === 0 ? 1 : idx);
-}
-
 function chipSlots(cards, count) {
   return Array.from({ length: count }, (_, i) => cards[i] || null);
 }
@@ -577,14 +560,6 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
           </div>
 
           <TeamBoard team={teamB} ids={turn.idsB} hca={turn.hcaB} statusLabel={statusFor('b')} isActive={offenseTeam === teamB || defenseTeam === teamB} flip />
-
-          <div className="t2-board-footer">
-            <div className="t2-board-caption">Both rosters and both front offices stay on the table all game. Spent matchup cards hold their slot, struck through.</div>
-            <div className="t2-board-actions">
-              <button className="t2-restart-btn" onClick={() => actions.beginTurn()}>Restart Turn</button>
-              <span className="t2-stage-counter">Stage {stageNumber(turn)} / {STAGE_ORDER.length - 1}</span>
-            </div>
-          </div>
         </div>
 
         <div className={'t2-log' + (logCollapsed ? ' collapsed' : '')}>
