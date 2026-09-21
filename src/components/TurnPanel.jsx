@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { playableCards } from '../game/matchup';
-import { PLAYER_STATS, eligibleStatTargets } from '../game/supplementalEffects';
 import { offenseDieSize, defenseDieSize } from '../game/roster';
 import Die, { ROLL_DURATION_MS } from './Die';
 import BallMark from './BallMark';
@@ -10,7 +8,7 @@ import CompactCoachCard from './CompactCoachCard';
 // Decision clock for a blind matchup-card choice — long enough to read your hand, short
 // enough to put real pressure on the pick. Auto-passes on timeout so a stalled player can't
 // freeze the match for their opponent.
-const CARD_TIMER_SECONDS = 8;
+const CARD_TIMER_SECONDS = 12;
 
 // How long the coin spins before the flip actually resolves, and how long the result reads
 // on screen before auto-advancing into the first card window — both purely presentational
@@ -113,7 +111,6 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
   const teamA = m.a, teamB = m.b;
   const myTeam = state.teams[myTeamId];
   const humanInMatch = teamA === myTeam || teamB === myTeam;
-  const [targetPickerCardId, setTargetPickerCardId] = useState(null);
   const [timeLeft, setTimeLeft] = useState(CARD_TIMER_SECONDS);
   const [coinSpinning, setCoinSpinning] = useState(false);
   const coinTimerRef = useRef(null);
@@ -272,11 +269,6 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
   }, [benchPhase, turn.stage]);
 
   useEffect(() => {
-    setTargetPickerCardId(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [turn.exchangeIndex, cur?.team, cur?.role, turn.stage]);
-
-  useEffect(() => {
     if (!myTurnToAct) { setTimeLeft(CARD_TIMER_SECONDS); return undefined; }
     setTimeLeft(CARD_TIMER_SECONDS);
     const start = Date.now();
@@ -293,8 +285,6 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
     return () => clearInterval(iv);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myTurnToAct, turn.exchangeIndex, cur?.team, cur?.role]);
-
-  const myOptions = myTurnToAct ? playableCards(myTeam) : [];
 
   // Blind by convention: a card play is logged the instant it's chosen, but withheld from
   // display until its own exchange resolves — otherwise the second team to act (or a
@@ -370,11 +360,27 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
     }
     if (turn.stage === 'card') {
       // Nothing is actually being rolled yet at this point (cards aren't even decided) — this
-      // is just a preview of the die size in play, sitting at rest.
-      const sides = cur.role === 'offense' ? offenseDieSize(actingTeam) : defenseDieSize(actingTeam);
+      // previews both dice at rest, sized to what each side would actually roll, so the board
+      // always shows two dice the whole exchange, never just one. The possession arrow points
+      // at whichever side is currently making its (blind) card decision — offense first, then
+      // defense — same visual language as the resolved stage's roll possession arrow.
+      const offSides = offenseDieSize(offenseTeam);
+      const defSides = defenseDieSize(defenseTeam);
+      const possessionOnOffense = cur.role === 'offense';
       return (
-        <div className="t2-rollzone-die">
-          <div className="t2-die-stage"><Die sides={sides} value={sides} size={150} /></div>
+        <div className="t2-rollzone-dual">
+          <div className="t2-rollzone-die">
+            <div className="t2-die-stage"><Die sides={offSides} value={offSides} size={140} /></div>
+            <div className="t2-rollzone-caption">{offenseTeam.name} On Offense</div>
+          </div>
+          <div className="t2-possession">
+            <div className="t2-possession-label">Possession</div>
+            <div className={'t2-possession-arrow' + (possessionOnOffense ? ' t2-possession-left' : ' t2-possession-right')}>{possessionOnOffense ? '←' : '→'}</div>
+          </div>
+          <div className="t2-rollzone-die">
+            <div className="t2-die-stage"><Die sides={defSides} value={defSides} size={140} /></div>
+            <div className="t2-rollzone-caption">{defenseTeam.name} On Defense</div>
+          </div>
         </div>
       );
     }
@@ -484,51 +490,12 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
             {teamBCardPlays.length > 0 && renderPlayedCards(teamBCardPlays)}
 
             {turn.stage === 'card' && myTurnToAct && (
-              <div className="t2-carddecision">
+              <div className="t2-carddecision t2-carddecision-compact">
                 <div className="t2-carddecision-head">
-                  <span>Play A Matchup Card?</span>
+                  <span>Play A Matchup Card</span>
                   <span className={'t2-timer' + (timeLeft <= 3 ? ' urgent' : '')}>{Math.ceil(timeLeft)}s</span>
                 </div>
-                <div className="t2-carddecision-desc">Both teams lock in a card — or pass — blind, before either die is rolled.</div>
-                <div className="t2-cards">
-                  {myOptions.length === 0 && <div className="t2-waiting">No card to play this possession.</div>}
-                  {myOptions.map((c) => {
-                    const isPicking = targetPickerCardId === c.id;
-                    const targetTeam = c.target === 'self' ? myTeam : (actingTeam === teamA ? teamB : teamA);
-                    const targetIds = targetTeam === teamA ? turn.idsA : turn.idsB;
-                    const targetPlayers = eligibleStatTargets(targetTeam, targetIds, c);
-                    return (
-                      <div key={c.id}>
-                        <button
-                          className="t2-card-btn"
-                          disabled={c.targetsPlayer && targetPlayers.length === 0}
-                          onClick={() => {
-                            if (c.targetsPlayer) { setTargetPickerCardId(isPicking ? null : c.id); return; }
-                            advance({ cardId: c.id });
-                          }}
-                        >
-                          <span className="t2-card-name">{c.name}{c.rarity ? ` · ${c.rarity}` : ''}</span>
-                          {c.description && <span>{c.description} · </span>}
-                          {c.targetsPlayer && targetPlayers.length === 0 && <span>No eligible starter · </span>}
-                          {c.targetsPlayer ? `Choose a target on ${targetTeam.name}` : `Play on ${targetTeam.name}`}
-                        </button>
-                        {isPicking && (
-                          <div style={{ marginTop: 6, marginBottom: 6, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                            {targetPlayers.flatMap((oc) => (c.targetsPlayer && c.effectType ? PLAYER_STATS : [null]).map((stat) => (
-                              <button
-                                key={`${oc.id}-${stat}`}
-                                className="t2-card-btn"
-                                onClick={() => { advance({ cardId: c.id, targetId: oc.id, stat }); setTargetPickerCardId(null); }}
-                              >
-                                {oc.position} · {oc.archetype}{stat ? ` · ${stat} (${oc.stats[stat]})` : ''}{c.effectType === 'CAP_HIT_STAT' ? ` · +${oc.salary}` : ''}
-                              </button>
-                            )))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                <div className="t2-carddecision-desc">Click a card in your bar below, or pass — blind, before either die is rolled.</div>
                 <div className="t2-carddecision-actions">
                   <button className="t2-pass-btn" onClick={() => advance({ pass: true })}>Pass</button>
                 </div>

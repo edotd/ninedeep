@@ -430,10 +430,18 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .db-fo-value{font-family:var(--font-display);font-size:14px;color:var(--file);line-height:1.15;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
 .db-fo-value.notable{color:var(--franchise);}
 
-.db-matchup-slot{width:88px;height:66px;background:var(--ink);box-shadow:inset 0 0 0 1.5px var(--stamp);padding:6px 7px;display:flex;flex-direction:column;justify-content:space-between;}
+.db-matchup-slot{width:88px;height:66px;background:var(--ink);box-shadow:inset 0 0 0 1.5px var(--depth);padding:6px 7px;display:flex;flex-direction:column;justify-content:space-between;}
 .db-matchup-slot.empty{box-shadow:inset 0 0 0 1.5px var(--ink-rule);align-items:center;justify-content:center;}
 .db-matchup-slot.used{box-shadow:inset 0 0 0 1.5px var(--ink-rule);}
-.db-matchup-label{font-family:var(--font-mono);font-size:8px;letter-spacing:.06em;color:var(--stamp);text-transform:uppercase;}
+/* Playable during a live turn's card stage — this is the "play a card" affordance now that
+   the match board itself only prompts to act, it doesn't list the options. */
+.db-matchup-slot.playable{box-shadow:inset 0 0 0 2px var(--franchise);cursor:pointer;animation:db-matchup-pulse 1.8s ease-in-out infinite;}
+.db-matchup-slot.playable:hover{background:var(--ink-deep);}
+.db-matchup-slot.picking{animation:none;box-shadow:inset 0 0 0 2px var(--franchise);background:var(--ink-deep);}
+@keyframes db-matchup-pulse{0%,100%{box-shadow:inset 0 0 0 2px var(--franchise);}50%{box-shadow:inset 0 0 0 2px var(--franchise), 0 0 0 4px rgba(240,160,61,.35);}}
+@media(prefers-reduced-motion:reduce){.db-matchup-slot.playable{animation:none;}}
+.db-matchup-label{font-family:var(--font-mono);font-size:8px;letter-spacing:.06em;color:var(--depth-nontext);text-transform:uppercase;}
+.db-matchup-slot.playable .db-matchup-label{color:var(--franchise);}
 .db-matchup-slot.used .db-matchup-label{color:var(--ink-muted);}
 .db-matchup-value{font-family:var(--font-display);font-size:13px;color:var(--file);line-height:1.15;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
 .db-matchup-slot.used .db-matchup-value{color:var(--ink-muted);text-decoration:line-through;}
@@ -492,6 +500,15 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
    preview's bottom sits just above the slot regardless of the card's own height. */
 .db-card-preview{position:fixed;transform:translateX(-50%);z-index:20;pointer-events:none;filter:drop-shadow(0 14px 28px rgba(0,0,0,.45));animation:db-preview-in 120ms ease-out both;}
 .db-card-preview .fo2-bullets,.db-card-preview .mu2-bullets{display:none;}
+
+/* Target picker for a matchup card played straight from the bar — same fixed-position escape
+   from .desktop-bar's overflow-x:auto as the hover preview above, just interactive instead of
+   pointer-events:none, and with real buttons instead of a card render. */
+.db-target-picker{position:fixed;transform:translateX(-50%);z-index:20;background:var(--ink-deep);border:2px solid var(--franchise);box-shadow:0 14px 28px rgba(0,0,0,.45);padding:10px;display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto;animation:db-preview-in 120ms ease-out both;}
+.db-target-picker-head{font-family:var(--font-label);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--franchise);margin-bottom:2px;}
+.db-target-picker-empty{font-family:var(--font-mono);font-size:11px;color:var(--ink-muted);}
+.db-target-btn{display:block;width:100%;text-align:left;background:var(--form);border:1px solid var(--form-rule);color:var(--ink);padding:9px 10px;font-family:var(--font-mono);font-size:11px;cursor:pointer;}
+.db-target-btn:hover{background:var(--file);}
 @keyframes db-preview-in{from{opacity:0;transform:translateX(-50%) translateY(6px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
 
 /* ================= Front Office card (see brand handoff, "Components: Front Office &
@@ -821,9 +838,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .t2-report-row:last-of-type{border-bottom:none;}
 .t2-report-label{color:var(--file-muted);}
 
-.t2-cards{display:flex;flex-direction:column;gap:10px;}
-.t2-card-btn{display:block;width:100%;text-align:left;background:var(--form);border:1px solid var(--form-rule);color:var(--ink);padding:16px;font-family:var(--font-mono);font-size:14px;cursor:pointer;}
-.t2-card-name{font-family:var(--font-label);font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--stamp-text);display:block;margin-bottom:5px;}
+.t2-carddecision-compact{max-width:420px;padding:16px 20px;}
 .t2-pass-btn{width:100%;background:none;border:1px solid var(--ink-rule);color:var(--ink-muted);padding:14px;font-family:var(--font-label);font-size:12px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;}
 .t2-timer{font-family:var(--font-mono);font-size:13px;letter-spacing:.06em;color:var(--franchise);}
 .t2-timer.urgent{color:var(--bad);}
