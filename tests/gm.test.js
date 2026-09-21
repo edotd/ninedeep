@@ -32,7 +32,7 @@ test('hands-off bonus follows coach and complete starting-five continuity', () =
   assert.equal(handsOffBonus(team), 0.12);
 });
 
-test('firing a GM draws type and market together, credits next season, and is once per season', () => {
+test('firing a GM draws type and market together, leaves one season of dead cap, and is once per season', () => {
   const team = { id: 0, gmType: 'Neutral', market: { name: 'Small', capAdj: 0.5 }, seasonCap: 20, attendance: 0.5, hand: [], coach: { salary: 0 } };
   const state = { season: 2, teams: [team] };
   const outgoingCost = gmCost(team.gmType);
@@ -42,7 +42,8 @@ test('firing a GM draws type and market together, credits next season, and is on
   assert.notEqual(team.gmType, 'Neutral');
   assert(MARKETS.some((m) => m.name === team.market.name));
   assert.equal(team.gmChangeSeason, 2);
-  assert.deepEqual(team.pendingCapCredits, [{ amount: Math.round((outgoingCost / 2) * 100) / 100, yearsLeft: 1 }]);
+  assert.deepEqual(team.deadCap, [{ amount: Math.round((outgoingCost / 2) * 100) / 100, seasonsLeft: 1 }]);
+  assert.equal(rosterSalary(team), gmCost(team.gmType) + Math.round((outgoingCost / 2) * 100) / 100);
   assert(team.seasonCap <= 20 + 3.5);
   assert.equal(fireGM(state, 0).ok, false);
   const otherGM = drawGM();

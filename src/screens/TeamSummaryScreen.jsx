@@ -29,9 +29,11 @@ function ordinal(n) {
 export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) {
   const team = state.teams[myTeamId];
   const seasonNum = Math.min(state.season, ERA_LENGTH);
-  // The outgoing coach's credit is exact; the incoming hire's salary (also charged this
-  // season) is drawn fresh when the button is clicked, so it isn't part of this figure.
-  const fireCoachCredit = team.coach ? Math.round((team.coach.salary / 2) * 100) / 100 : 0;
+  // The outgoing coach's dead cap is exact; the incoming hire's salary (also charged this
+  // season, on top of it) is drawn fresh when the button is clicked, so it isn't part of
+  // this figure.
+  const fireCoachDeadCap = team.coach ? Math.round((team.coach.salary / 2) * 100) / 100 : 0;
+  const deadCapDue = (team.deadCap || []).reduce((s, c) => s + c.amount, 0);
   const activeSet = new Set(team.activeIds || []);
   const starters = team.hand.filter((c) => activeSet.has(c.id));
   const bench = team.hand.filter((c) => !activeSet.has(c.id));
@@ -62,9 +64,14 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
 
   const canEdit = state.phase === 'teamsummary' && !team.lineupConfirmed;
   const handleRelease = (card) => {
-    const credit = Math.round((card.salary / 2) * 100) / 100;
-    const years = Math.max(1, card.contract);
-    if (!window.confirm(`Release ${card.archetype} · ${card.position}? Adds ${formatCoins(credit)} to your budget each of the next ${years} season${years === 1 ? '' : 's'}.`)) return;
+    const years = card.contract;
+    const deadCapCharge = Math.round((card.salary / 2) * 100) / 100;
+    const msg = years <= 0
+      ? `Release ${card.archetype} · ${card.position}? Their contract is already expired, so this leaves no dead cap.`
+      : years === 1
+        ? `Release ${card.archetype} · ${card.position}? Leaves ${formatCoins(deadCapCharge)} in dead cap against your budget this season.`
+        : `Release ${card.archetype} · ${card.position}? Leaves ${formatCoins(deadCapCharge)} in dead cap against your budget for each of the next ${years} seasons, starting this one.`;
+    if (!window.confirm(msg)) return;
     const res = actions.releasePlayer(myTeamId, card.id);
     if (res && res.ok === false) alert(res.msg);
   };
@@ -161,6 +168,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
             </div>
             <div className="ts-ledger-row"><span>Committed This Season</span><span>{formatCoins(committed)}</span></div>
             <div className="ts-ledger-row"><span>GM Budget Hit</span><span>{formatCoins(gmCost(team.gmType))}</span></div>
+            {deadCapDue > 0 && <div className="ts-ledger-row"><span>Dead Cap</span><span className="bad">{formatCoins(deadCapDue)}</span></div>}
             <div className="ts-ledger-row"><span>Expiring This Season</span><span className={expiring.length ? 'bad' : ''}>{expiring.length ? `${formatCoins(expiringTotal)} · ${expiring.map((c) => c.archetype).join(', ')}` : 'None'}</span></div>
             <div className="ts-metrics">
               <div><div className="ts-metric-label">Experience</div><div className="ts-metric-value">{chemistry !== null ? chemistry : '—'}</div></div>
@@ -182,7 +190,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
                       if (res && res.ok === false) alert(res.msg);
                     }}
                   >
-                    Fire Coach — +{formatCoins(fireCoachCredit)} Next Season
+                    Fire Coach — {formatCoins(fireCoachDeadCap)} Dead Cap
                   </button>
                 </div>
                 <div className="ts-fo-col">
@@ -210,7 +218,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, onBack }) 
                       if (res && res.ok === false) alert(res.msg);
                     }}
                   >
-                    {team.gmChangeSeason === state.season ? 'GM Replaced This Season' : `Fire GM — +${formatCoins(Math.round((gmCost(team.gmType) / 2) * 100) / 100)} Next Season`}
+                    {team.gmChangeSeason === state.season ? 'GM Replaced This Season' : `Fire GM — ${formatCoins(Math.round((gmCost(team.gmType) / 2) * 100) / 100)} Dead Cap`}
                   </button>
                 </div>
               </div>

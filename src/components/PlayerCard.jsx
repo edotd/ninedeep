@@ -85,7 +85,7 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
       )}
       {!compact && onRelease && (
         <button className="pcard-release" onClick={(e) => { e.stopPropagation(); onRelease(card); }}>
-          Release <span className="pcard-release-cost">+{formatCoins(Math.round((card.salary / 2) * 100) / 100)} × {Math.max(1, card.contract)}yr</span>
+          Release <span className="pcard-release-cost">{card.contract > 0 ? `${formatCoins(Math.round((card.salary / 2) * 100) / 100)} Dead × ${card.contract}yr` : 'No Dead Cap'}</span>
         </button>
       )}
     </div>

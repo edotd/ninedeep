@@ -20,29 +20,34 @@ export function rollMarketCapAdj(market) {
 export function finalizeCap(team, season) {
   const base = baseCap(season);
   const attendanceMult = 0.9 + (team.attendance !== undefined ? team.attendance : 0.5) * 0.2;
-  const credits = team.pendingCapCredits || [];
-  const creditTotal = credits.reduce((s, c) => s + c.amount, 0);
-  let cap = (base + (team.market ? team.market.capAdj : 0) + (team.draftTradeBonus || 0) + creditTotal) * attendanceMult - (team.lastOverage || 0);
+  let cap = (base + (team.market ? team.market.capAdj : 0) + (team.draftTradeBonus || 0)) * attendanceMult - (team.lastOverage || 0);
   cap = Math.max(cap, Math.round(base * 0.7));
   cap = Math.round(cap * 2) / 2;
   team.seasonCap = cap;
   team.lastOverage = 0;
   team.draftTradeBonus = 0;
-  // Each credit (half the salary of a released player, or a fired coach/GM) applies for
-  // exactly as many seasons as it was granted for, then falls off — see finances.js.
-  team.pendingCapCredits = credits
-    .map((c) => ({ amount: c.amount, yearsLeft: c.yearsLeft - 1 }))
-    .filter((c) => c.yearsLeft > 0);
+  // Dead cap (see finances.js/deadCapDue below) shrinks by one season every time the roster
+  // turns over into a new season — a charge scheduled for `seasonsLeft` seasons (including
+  // the one it was created in) falls off once every one of those seasons has been charged.
+  team.deadCap = (team.deadCap || [])
+    .map((c) => ({ amount: c.amount, seasonsLeft: c.seasonsLeft - 1 }))
+    .filter((c) => c.seasonsLeft > 0);
 }
 
-// Every GM costs at least MIN_GM_COST — a Neutral GM used to be free, but a GM firing now
-// credits half its cost back to the budget (see finances.js), and a free GM would make that
-// credit worthless.
+// Every GM costs at least MIN_GM_COST — a Neutral GM used to be free, but firing one now
+// leaves dead cap behind (see finances.js), and a free GM would make that charge meaningless.
 export function gmCost(gmType) {
   return gmType === 'Aggressive' || gmType === 'Hands-Off' ? 1 : MIN_GM_COST;
 }
 
+// Dead cap owed this season — half the salary of a player cut (or coach/GM fired) with time
+// left on their deal, charged every season from the cut through however many they had left.
+// See finances.js for how entries get created and the salary-cap spec this implements.
+export function deadCapDue(team) {
+  return (team.deadCap || []).reduce((s, c) => s + c.amount, 0);
+}
+
 export function rosterSalary(team) {
-  const total = team.hand.reduce((s, c) => s + c.salary, 0) + (team.coach ? team.coach.salary : 0) + (team.gmType ? gmCost(team.gmType) : 0);
+  const total = team.hand.reduce((s, c) => s + c.salary, 0) + (team.coach ? team.coach.salary : 0) + (team.gmType ? gmCost(team.gmType) : 0) + deadCapDue(team);
   return Math.round(total * 100) / 100;
 }

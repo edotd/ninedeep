@@ -25,7 +25,7 @@ export default function PersistentBar({ state, myTeamId, onExpand }) {
   const cap = team.seasonCap;
   const salary = hand.length ? rosterSalary(team) : 0;
   const overBudget = cap !== undefined && salary > cap;
-  const nextYearCredit = (team.pendingCapCredits || []).reduce((s, c) => s + c.amount, 0);
+  const deadCap = (team.deadCap || []).reduce((s, c) => s + c.amount, 0);
   const bonus = (value, side) => value > 0 ? `+${value}% ${side}` : `N/A ${side}`;
 
   const slots = Array.from({ length: 9 }, (_, i) => {
@@ -51,7 +51,7 @@ export default function PersistentBar({ state, myTeamId, onExpand }) {
       <div className="persistent-bar-metric">
         <div className="persistent-bar-metric-label">Budget</div>
         <div className={'persistent-bar-metric-value' + (overBudget ? ' over-budget' : '')}>{cap !== undefined ? `${formatCoins(salary).replace('🪙', '🪙 ')} / ${formatCoins(cap).replace('🪙', '')}` : '—'}</div>
-        {nextYearCredit > 0 && <div className="persistent-budget-credit">(+{nextYearCredit} Next Yr)</div>}
+        {deadCap > 0 && <div className="persistent-budget-owed">(+{deadCap} Dead Cap)</div>}
       </div>
       <div className="persistent-bar-metric">
         <div className="persistent-bar-metric-label">Proj. Output</div>

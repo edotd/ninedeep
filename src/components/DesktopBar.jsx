@@ -115,7 +115,7 @@ export default function DesktopBar({ state, myTeamId, actions }) {
   const salary = hand.length ? rosterSalary(team) : 0;
   const overBudget = cap !== undefined && salary > cap;
   const room = cap !== undefined ? cap - salary : undefined;
-  const nextYearCredit = (team.pendingCapCredits || []).reduce((s, c) => s + c.amount, 0);
+  const deadCap = (team.deadCap || []).reduce((s, c) => s + c.amount, 0);
 
   const [preview, setPreview] = useState(null); // { rect, type, content }
   const handleHover = (el, type, content) => setPreview({ rect: el.getBoundingClientRect(), type, content });
@@ -215,7 +215,7 @@ export default function DesktopBar({ state, myTeamId, actions }) {
           <span className="limit">{cap !== undefined ? formatCoins(cap).replace('🪙', '') : '—'}</span>
         </div>
         {room !== undefined && <div className={'db-budget-room' + (room < 0 ? ' over' : '')}>{room >= 0 ? '+' : ''}{Math.round(room * 10) / 10} Room</div>}
-        {nextYearCredit > 0 && <div className="db-budget-credit">(+{nextYearCredit} Next Yr)</div>}
+        {deadCap > 0 && <div className="db-budget-owed">(+{deadCap} Dead Cap)</div>}
       </div>
       <div className="db-section db-metric output">
         <div className="db-heading">Projected Output</div>

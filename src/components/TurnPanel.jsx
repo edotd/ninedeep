@@ -381,52 +381,42 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
       const offDie = turn[`${offSide}OffDie`], offSides = turn[`${offSide}OffSides`];
       const defDie = turn[`${defSide}DefDie`], defSides = turn[`${defSide}DefSides`];
 
-      // Idle and rolling both show the die at rest/spinning respectively — only the reveal
-      // afterward needs its own real value. Only the acting side's own controlling human ever
-      // gets the clickable die/Roll button; an AI side rolls itself (see the effect above),
-      // and a human opponent's side just sits idle here until their own client rolls it.
-      if (rollPhase === 'idle-off' || rollPhase === 'rolling-off') {
-        const rolling = rollPhase === 'rolling-off';
-        const mine = offTeam === myTeam;
-        return (
-          <div className="t2-rollzone-die">
-            <div className={'t2-die-stage' + (mine ? ' t2-die-clickable' : '')} onClick={mine ? () => startRoll('off') : undefined}><Die sides={offSides} value={offSides} size={150} rolling={rolling} /></div>
-            <div className="t2-rollzone-caption">{offTeam.name} Rolls For Offense</div>
-            {!rolling && mine && <button className="t2-roll-btn" onClick={() => startRoll('off')}>Roll</button>}
-          </div>
-        );
-      }
-      if (rollPhase === 'revealed-off') {
-        return (
-          <div className="t2-rollzone-die">
-            <div className="t2-die-stage"><Die sides={offSides} value={offDie} size={150} /></div>
-            <div className="t2-rollzone-caption t2-fade-in">{offTeam.name} Rolls {offDie}</div>
-          </div>
-        );
-      }
-      if (rollPhase === 'idle-def' || rollPhase === 'rolling-def') {
-        const rolling = rollPhase === 'rolling-def';
-        const mine = defTeam === myTeam;
-        return (
-          <div className="t2-rollzone-die">
-            <div className={'t2-die-stage' + (mine ? ' t2-die-clickable' : '')} onClick={mine ? () => startRoll('def') : undefined}><Die sides={defSides} value={defSides} size={150} rolling={rolling} /></div>
-            <div className="t2-rollzone-caption">{defTeam.name} Rolls For Defense</div>
-            {!rolling && mine && <button className="t2-roll-btn" onClick={() => startRoll('def')}>Roll</button>}
-          </div>
-        );
-      }
-      if (rollPhase === 'revealed-def') {
-        return (
-          <div className="t2-rollzone-die">
-            <div className="t2-die-stage"><Die sides={defSides} value={defDie} size={150} /></div>
-            <div className="t2-rollzone-caption t2-fade-in">{defTeam.name} Rolls {defDie}</div>
-          </div>
-        );
-      }
+      // Both dice stay on the board the whole exchange — offense's sits at its rest/size
+      // preview until it settles, defense's does the same — with a Possession arrow between
+      // them pointing at whichever side is currently up. Only the acting side's own
+      // controlling human ever gets the clickable die/Roll button for their turn; an AI side
+      // rolls itself (see the effect above), and a human opponent's side just sits idle here
+      // until their own client rolls it.
+      const offRolling = rollPhase === 'rolling-off';
+      const offSettled = !['idle-off', 'rolling-off'].includes(rollPhase);
+      const offInteractive = rollPhase === 'idle-off' && offTeam === myTeam;
+      const defRolling = rollPhase === 'rolling-def';
+      const defSettled = ['revealed-def', 'both'].includes(rollPhase);
+      const defInteractive = rollPhase === 'idle-def' && defTeam === myTeam;
+      const possessionOnOffense = !['idle-def', 'rolling-def', 'revealed-def', 'both'].includes(rollPhase);
+
       return (
-        <div className="t2-rollzone-dual t2-fade-in">
-          <div className="t2-rollzone-die"><div className="t2-die-stage"><Die sides={offSides} value={offDie} size={130} /></div><div className="t2-rollzone-caption">Offense<br /><span>{offTeam.name}</span></div></div>
-          <div className="t2-rollzone-die"><div className="t2-die-stage"><Die sides={defSides} value={defDie} size={130} /></div><div className="t2-rollzone-caption">Defense<br /><span>{defTeam.name}</span></div></div>
+        <div className="t2-rollzone-dual">
+          <div className="t2-rollzone-die">
+            <div className={'t2-die-stage' + (offInteractive ? ' t2-die-clickable' : '')} onClick={offInteractive ? () => startRoll('off') : undefined}>
+              <Die sides={offSides} value={offSettled ? offDie : offSides} size={140} rolling={offRolling} />
+            </div>
+            <div className="t2-rollzone-caption">{offSettled ? `${offTeam.name} Rolls ${offDie}` : `${offTeam.name} On Offense`}</div>
+            {rollPhase === 'idle-off' && offInteractive && <button className="t2-roll-btn" onClick={() => startRoll('off')}>Roll</button>}
+          </div>
+
+          <div className="t2-possession">
+            <div className="t2-possession-label">Possession</div>
+            <div className={'t2-possession-arrow' + (possessionOnOffense ? ' t2-possession-left' : ' t2-possession-right')}>{possessionOnOffense ? '←' : '→'}</div>
+          </div>
+
+          <div className="t2-rollzone-die">
+            <div className={'t2-die-stage' + (defInteractive ? ' t2-die-clickable' : '')} onClick={defInteractive ? () => startRoll('def') : undefined}>
+              <Die sides={defSides} value={defSettled ? defDie : defSides} size={140} rolling={defRolling} />
+            </div>
+            <div className="t2-rollzone-caption">{defSettled ? `${defTeam.name} Rolls ${defDie}` : `${defTeam.name} On Defense`}</div>
+            {rollPhase === 'idle-def' && defInteractive && <button className="t2-roll-btn" onClick={() => startRoll('def')}>Roll</button>}
+          </div>
         </div>
       );
     }
