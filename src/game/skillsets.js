@@ -1,11 +1,15 @@
 import { chemistryDetails } from './chemistry';
 import { weightedPick } from './rng';
 
-// Position preferences affect draw odds (3:1), never eligibility. `families` is which
-// archetype peak-stat(s) (SCO/PLM/REB/DEF) the skillset's flavor actually fits, or 'ANY' for
-// the handful with no stat identity — it's an eligibility gate, not a weight: an archetype
-// never rolls a skillset outside its families (see rollSkillset/ARCHETYPE_FAMILY below), so a
-// Pass-First guard can't come up Rim Runner just at low odds — it simply can't happen.
+// `positions` and `families` are both hard eligibility gates, not weights — a player can only
+// roll a skillset whose position list includes their own position, and whose family list
+// matches their archetype's peak stat (or 'ANY'). Position used to be a 3:1 draw-odds
+// preference instead of a real gate, which let a low-odds roll still land badly-fit skillsets
+// on the wrong position (a Guard coming up Floor-Stretching Big or Rim Protector, a Big-only
+// flavor). `families` is which archetype peak-stat(s) (SCO/PLM/REB/DEF) the skillset's flavor
+// actually fits, or 'ANY' for the handful with no stat identity: an archetype never rolls a
+// skillset outside its families (see rollSkillset/ARCHETYPE_FAMILY below), so a Pass-First
+// guard can't come up Rim Runner — it simply can't happen.
 const rows = [
   ['Three and D', 'Spaces the floor and defends the perimeter.', 'Guard,Forward', 'SCO,DEF'],
   ['Vertical Finisher', 'Finishes lobs above the rim.', 'Forward,Big', 'SCO'],
@@ -47,11 +51,12 @@ const ARCHETYPE_FAMILY = {
 
 export function rollSkillset(position, archetype, careerStage) {
   const family = ARCHETYPE_FAMILY[archetype];
-  let eligible = !family || family === 'ANY'
-    ? SKILLSETS
-    : SKILLSETS.filter((s) => s.families.includes('ANY') || s.families.includes(family));
+  let eligible = SKILLSETS.filter((s) => s.positions.includes(position));
+  if (family && family !== 'ANY') {
+    eligible = eligible.filter((s) => s.families.includes('ANY') || s.families.includes(family));
+  }
   eligible = eligible.filter((s) => s.id !== 'skill-03' || careerStage === 'Veteran');
-  return weightedPick(eligible.map((s) => ({ ...s, weight: s.positions.includes(position) ? 3 : 1 }))).id;
+  return weightedPick(eligible.map((s) => ({ ...s, weight: 1 }))).id;
 }
 
 // Each unordered pairing appears once. All unspecified pairs, including duplicates, are neutral.
