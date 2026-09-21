@@ -76,6 +76,14 @@ function chipSlots(cards, count) {
   return Array.from({ length: count }, (_, i) => cards[i] || null);
 }
 
+// Whether the game log starts collapsed — remembered for the session (sessionStorage, not
+// localStorage) so it holds across matches and reloads in this tab but doesn't leak into a
+// fresh session.
+const LOG_COLLAPSED_KEY = 'nd_log_collapsed';
+function readLogCollapsed() {
+  try { return sessionStorage.getItem(LOG_COLLAPSED_KEY) === '1'; } catch { return false; }
+}
+
 // "Coach in front" layout, per the Match Flow design doc's 8A board: all nine rotation tiles
 // (starters then bench, no separate grouping) line up in one row at the board's outer edge,
 // with the Head Coach card overlapping the row's near-center edge and the team name sitting
@@ -133,6 +141,14 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
   const [benchPhase, setBenchPhase] = useState('first');
   const benchTimerRef = useRef(null);
   const [resultBlurb, setResultBlurb] = useState('');
+  const [logCollapsed, setLogCollapsed] = useState(readLogCollapsed);
+  const toggleLogCollapsed = () => {
+    setLogCollapsed((v) => {
+      const next = !v;
+      try { sessionStorage.setItem(LOG_COLLAPSED_KEY, next ? '1' : '0'); } catch { /* ignore */ }
+      return next;
+    });
+  };
 
   const cur = turn.current;
   const actingTeam = cur ? (cur.team === 'a' ? teamA : teamB) : null;
@@ -318,6 +334,11 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
   const visibleBoardActions = (turn.boardActions || []).filter((entry) => (
     entry.stepIndex === turn.exchangeIndex && (turn.stage === 'resolved' || turn.stage === 'bench')
   ));
+  // Each played-card notice draws on the side of the board the team that played it sits on,
+  // rather than lumped together in the middle — teamA's play appears above the roll circle
+  // (next to teamA's board), teamB's below (next to teamB's).
+  const teamACardPlays = visibleBoardActions.filter((entry) => entry.teamName === teamA.name);
+  const teamBCardPlays = visibleBoardActions.filter((entry) => entry.teamName === teamB.name);
 
   const statusFor = (side) => {
     const team = side === 'a' ? teamA : teamB;
@@ -455,25 +476,29 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
     );
   };
 
+  const renderPlayedCards = (entries) => (
+    <div className="t2-played-cards">
+      {entries.map((entry, i) => (
+        <div className="t2-played-card" key={`${entry.stepIndex}-${entry.teamName}-${entry.cardName}-${i}`}>
+          <div className="t2-played-card-title">{entry.teamName} played {entry.cardName}</div>
+          {entry.description && <div className="t2-played-card-description">{entry.description}</div>}
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <div className="t2-shell">
-      <div className="t2-body">
+      <div className={'t2-body' + (logCollapsed ? ' log-collapsed' : '')}>
         <div className="t2-board">
           <TeamBoard team={teamA} ids={turn.idsA} hca={turn.hcaA} statusLabel={statusFor('a')} isActive={offenseTeam === teamA || defenseTeam === teamA} />
 
           <div className="t2-rollzone">
+            {teamACardPlays.length > 0 && renderPlayedCards(teamACardPlays)}
+
             {renderRollCircle()}
 
-            {visibleBoardActions.length > 0 && (
-              <div className="t2-played-cards">
-                {visibleBoardActions.map((entry, i) => (
-                  <div className="t2-played-card" key={`${entry.stepIndex}-${entry.teamName}-${entry.cardName}-${i}`}>
-                    <div className="t2-played-card-title">{entry.teamName} played {entry.cardName}</div>
-                    {entry.description && <div className="t2-played-card-description">{entry.description}</div>}
-                  </div>
-                ))}
-              </div>
-            )}
+            {teamBCardPlays.length > 0 && renderPlayedCards(teamBCardPlays)}
 
             {turn.stage === 'card' && myTurnToAct && (
               <div className="t2-carddecision">
@@ -562,13 +587,25 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
           </div>
         </div>
 
-        <div className="t2-log">
-          <div className="t2-log-heading">Game Log</div>
-          <div className="t2-log-body">
-            {visibleLog.map((n, i) => (
-              <div key={i} className="t2-log-entry">{n.text}</div>
-            ))}
+        <div className={'t2-log' + (logCollapsed ? ' collapsed' : '')}>
+          <div className="t2-log-head">
+            {!logCollapsed && <div className="t2-log-heading">Game Log</div>}
+            <button
+              className="t2-log-toggle"
+              onClick={toggleLogCollapsed}
+              aria-label={logCollapsed ? 'Show game log' : 'Hide game log'}
+              title={logCollapsed ? 'Show game log' : 'Hide game log'}
+            >
+              {logCollapsed ? '☰' : '×'}
+            </button>
           </div>
+          {!logCollapsed && (
+            <div className="t2-log-body">
+              {visibleLog.map((n, i) => (
+                <div key={i} className="t2-log-entry">{n.text}</div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

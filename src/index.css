@@ -394,7 +394,13 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
    still fits with the bar's overflow-x:auto as a safety net) — bigger and more legible than
    the original spec-literal sizes, but not so large the row overflows the screen. */
 :root{ --desktop-bar-height: 108px; }
-.desktop-bar{position:fixed;bottom:0;left:0;right:0;z-index:10;height:var(--desktop-bar-height);box-sizing:border-box;background:var(--ink);border-top:2px solid var(--franchise);padding:10px 16px;display:flex;justify-content:center;align-items:stretch;overflow-x:auto;}
+/* z-index:15, not 10: this is a stacking context (position:fixed + z-index), so its
+   z-index:20 card-preview child (.db-card-preview below) only ever competes against
+   siblings within z-index:15's own tier — it can never outrank .persistent-ticker
+   (z-index:11) by having a bigger number of its own, since that comparison happens one
+   level up, between 15 and 11, not between 20 and 11. Hovering a slot near the bottom of
+   the bar was drawing the preview behind the ticker for exactly this reason. */
+.desktop-bar{position:fixed;bottom:0;left:0;right:0;z-index:15;height:var(--desktop-bar-height);box-sizing:border-box;background:var(--ink);border-top:2px solid var(--franchise);padding:10px 16px;display:flex;justify-content:center;align-items:stretch;overflow-x:auto;}
 .db-section{display:flex;flex-direction:column;justify-content:center;padding:0 12px;}
 .db-section + .db-section{border-left:1px solid var(--ink-rule);}
 .db-slots-fixed{flex-shrink:0;}
@@ -701,8 +707,9 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
    fixed column with empty space around it. ========= */
 .t2-shell{background:var(--ink);margin:0 -16px;padding:24px;color:var(--file);max-width:1600px;}
 
-.t2-body{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;}
-@media (max-width:899px){.t2-body{grid-template-columns:1fr;}}
+.t2-body{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;transition:grid-template-columns 200ms ease;}
+.t2-body.log-collapsed{grid-template-columns:1fr 40px;}
+@media (max-width:899px){.t2-body{grid-template-columns:1fr;}.t2-body.log-collapsed{grid-template-columns:1fr;}}
 
 .t2-board{background:var(--ink-deep);border:1px solid var(--ink-rule);display:flex;flex-direction:column;min-width:0;}
 
@@ -768,13 +775,16 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 
 .t2-rollzone{padding:44px 24px;border-bottom:1px solid var(--ink-rule);border-top:1px solid var(--ink-rule);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;min-height:300px;box-sizing:border-box;}
 .t2-rollzone-coin,.t2-rollzone-die{display:flex;flex-direction:column;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;width:100%;}
-.t2-rollzone-dual{display:flex;gap:clamp(8px,3vw,48px);flex-wrap:nowrap;justify-content:center;align-items:flex-start;width:100%;}
+.t2-rollzone-dual{display:flex;gap:clamp(8px,3vw,48px);flex-wrap:nowrap;justify-content:center;align-items:center;width:100%;}
 .t2-rollzone-dual > .t2-rollzone-die{width:auto;flex:1 1 0;min-width:0;}
-.t2-possession{display:flex;flex-direction:column;align-items:center;gap:6px;flex:0 0 auto;padding-top:20px;}
-.t2-possession-label{font-family:var(--font-label);font-size:10px;letter-spacing:.16em;color:var(--ink-muted);text-transform:uppercase;white-space:nowrap;}
-.t2-possession-arrow{font-size:30px;line-height:1;color:var(--franchise);transition:transform 300ms ease;}
-.t2-possession-arrow.t2-possession-left{transform:translateX(-4px);}
-.t2-possession-arrow.t2-possession-right{transform:translateX(4px);}
+/* Centered on the dual dice row itself (align-items:center above) rather than pinned to the
+   top with its own padding, so it always sits with equal space above and below regardless of
+   which die column is currently taller (a revealed Roll button adds height to one side). */
+.t2-possession{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;flex:0 0 auto;}
+.t2-possession-label{font-family:var(--font-label);font-size:14px;letter-spacing:.18em;color:var(--ink-muted);text-transform:uppercase;white-space:nowrap;}
+.t2-possession-arrow{font-size:52px;line-height:1;color:var(--franchise);transition:transform 300ms ease;}
+.t2-possession-arrow.t2-possession-left{transform:translateX(-6px);}
+.t2-possession-arrow.t2-possession-right{transform:translateX(6px);}
 .t2-die-stage{display:flex;align-items:center;justify-content:center;}
 .t2-coin{width:130px;height:130px;border-radius:50%;background:var(--file);box-shadow:inset 0 0 0 3px var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex-shrink:0;}
 .t2-coin-face{font-family:var(--font-display);font-size:26px;line-height:.9;color:var(--ink);text-transform:uppercase;}
@@ -791,13 +801,15 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 @media(prefers-reduced-motion:reduce){.t2-fade-in{animation:none;}}
 .t2-rollzone-caption{font-family:var(--font-label);font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--file);text-align:center;line-height:1.5;}
 .t2-rollzone-caption span{display:block;font-family:var(--font-mono);font-size:12px;letter-spacing:.02em;color:var(--ink-muted);text-transform:none;margin-top:2px;}
-.t2-played-cards{width:100%;max-width:640px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+/* One block per side now (rendered once above the roll circle for teamA's play, once below
+   for teamB's — see TurnPanel), so this is just a single stacked column, not the old shared
+   two-team grid. */
+.t2-played-cards{width:100%;max-width:420px;display:flex;flex-direction:column;gap:8px;}
 .t2-played-card{border:1px solid var(--ink-rule);background:var(--ink);padding:10px 12px;}
 .t2-played-card-title{font-family:var(--font-label);font-size:11px;line-height:1.35;letter-spacing:.06em;text-transform:uppercase;color:var(--franchise);}
 .t2-played-card-description{font-family:var(--font-mono);font-size:10px;line-height:1.45;color:var(--ink-muted);margin-top:4px;}
 .t2-next-possession{width:100%;margin-top:12px;padding:11px 14px;border:1px solid var(--franchise);background:var(--franchise);color:var(--ink);font-family:var(--font-label);font-size:12px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;}
 .t2-back-to-bracket{margin-top:4px;padding:12px 22px;border:1px solid var(--franchise);background:var(--franchise);color:var(--ink);font-family:var(--font-label);font-size:12px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;}
-@media(max-width:520px){.t2-played-cards{grid-template-columns:1fr;}}
 
 .t2-carddecision{width:100%;max-width:640px;border:1px solid var(--franchise);background:var(--ink);padding:20px;}
 .t2-carddecision-head{display:flex;align-items:center;justify-content:space-between;font-family:var(--font-label);font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--franchise);margin-bottom:8px;}
@@ -832,7 +844,12 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .t2-advance-btn:hover{background:var(--stamp-text);}
 
 .t2-log{background:var(--ink-deep);border:1px solid var(--ink-rule);padding:20px;display:flex;flex-direction:column;min-height:0;}
-.t2-log-heading{font-family:var(--font-label);font-size:12px;letter-spacing:.12em;color:var(--ink-muted);text-transform:uppercase;margin-bottom:12px;}
+.t2-log.collapsed{padding:16px 8px;align-items:center;}
+.t2-log-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;}
+.t2-log.collapsed .t2-log-head{margin-bottom:0;}
+.t2-log-heading{font-family:var(--font-label);font-size:12px;letter-spacing:.12em;color:var(--ink-muted);text-transform:uppercase;}
+.t2-log-toggle{flex-shrink:0;width:24px;height:24px;display:flex;align-items:center;justify-content:center;background:none;border:1px solid var(--ink-rule);color:var(--ink-muted);font-size:13px;line-height:1;cursor:pointer;}
+.t2-log-toggle:hover{border-color:var(--franchise);color:var(--franchise);}
 .t2-log-body{flex:1;overflow-y:auto;max-height:640px;}
 .t2-log-entry{font-family:var(--font-mono);font-size:13px;line-height:1.6;color:#fff;padding:10px 0;border-top:1px dashed var(--ink-rule);}
 .t2-log-entry:first-child{border-top:none;}
