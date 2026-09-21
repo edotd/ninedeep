@@ -1,4 +1,5 @@
 import { retentionBonus, relationshipBonus } from '../game/cards';
+import { offenseDieSize, defenseDieSize } from '../game/roster';
 
 // The "Head Coach" card from the Match Flow design's 8A layout — set in front of the rotation,
 // overlapping the boundary between the roster and the team name. Much smaller than the full
@@ -11,10 +12,15 @@ export default function CompactCoachCard({ team, edge = 'bottom' }) {
   const offPct = Math.round((coach.offBonus + bonus) * 100);
   const defPct = Math.round((coach.defBonus + bonus) * 100);
   const systemBonus = Math.max(offPct, defPct);
+  // The die's own top face, not "1dN" notation — a coach's die size only ever matters as "what's
+  // the best I can roll," so the header states that number directly.
+  const offDie = offenseDieSize(team);
+  const defDie = defenseDieSize(team);
   return (
     <div className={'nd2-coach' + (edge === 'top' ? ' edge-top' : ' edge-bottom')}>
       <div className="nd2-coach-head">
         <span>Head Coach</span>
+        <span className="nd2-coach-dice">🎲 Off {offDie} · Def {defDie}</span>
         <span>{coach.modifier}</span>
       </div>
       <div className="nd2-coach-body">

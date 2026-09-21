@@ -30,12 +30,16 @@ test('five starters for two years yield +5% both sides; fit and tenure caps are 
  for(let year=3;year<=7;year++)creditTeamSeason(t,year);
  assert.equal(teamSynergy(t).tenurePoints,15);assert.equal(teamSynergy(t).continuity,17.5);
 });
-test('approved +8% skill example with three-year starters and a leader earns A−',()=>{
+// Two Signature-tier pairings (Unstoppable Two-Man Game + Half-Court Clinic, +15% offense each)
+// already push raw synergy to 30 — the Skillset-fit score component (2.5 points per combined
+// percent, capped at 30) saturates well before that, at combined 12%, so this fixture maxes
+// both the synergy cap and the fit-score cap at once.
+test('approved skill example with three-year starters and a leader earns A+',()=>{
  const t={id:0,hand:[],activeIds:['p0','p1','p2','p3','p4']};
  [6,1,10,9,2].forEach((n,i)=>addToRoster(t,{id:`p${i}`,skillsetId:`skill-${String(n).padStart(2,'0')}`}));
  addToRoster(t,{id:'leader',skillsetId:'skill-03'});
  for(let year=1;year<=3;year++)creditTeamSeason(t,year);
- const s=teamSynergy(t);assert.equal(s.score,90);assert.equal(s.grade,'A−');assert.equal(s.offense,16.5);assert.equal(s.defense,8.5);assert.equal(s.leadership,1);
+ const s=teamSynergy(t);assert.equal(s.score,100);assert.equal(s.grade,'A+');assert.equal(s.offense,38.5);assert.equal(s.defense,8.5);assert.equal(s.leadership,1);
 });
 test('real season completion credits retained and expired players, free-agent transfer resets',()=>{
  const state=newEraState();startEra(state,'Test');proceedFromCardOverview(state);proceedFromHand(state);proceedToSeason1(state);

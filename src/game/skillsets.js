@@ -60,17 +60,47 @@ export function rollSkillset(position, archetype, careerStage) {
 }
 
 // Each unordered pairing appears once. All unspecified pairs, including duplicates, are neutral.
-const eliteOff = [[1,5],[2,6],[4,8],[7,13],[9,10],[9,24],[11,14],[12,15],[16,17]];
-const goodOff = [[1,6],[1,24],[2,7],[2,12],[4,5],[4,9],[4,11],[5,12],[6,10],[7,14],[8,10],[8,9],[13,16],[13,17],[15,16],[16,23],[17,23],[17,20]];
-const eliteDef = [[18,19],[20,22],[21,23]];
-const goodDef = [[1,18],[18,20],[19,21],[19,22],[21,22]];
-export const SKILLSET_PAIRS = [
-  ...eliteOff.map((pair) => ({ pair, side: 'offense', percent: 3 })),
-  ...goodOff.map((pair) => ({ pair, side: 'offense', percent: 1 })),
-  ...eliteDef.map((pair) => ({ pair, side: 'defense', percent: 3 })),
-  ...goodDef.map((pair) => ({ pair, side: 'defense', percent: 1 })),
-].map(({ pair, ...rule }) => ({ ...rule, skills: pair.map((n) => SKILLSETS[n - 1].id) }));
-export const SYNERGY_CAP = 12;
+// Formerly a flat "Elite Fit" (+3%) / "Good Fit" (+1%) tier per pair; now each pairing is a
+// named, formerly-playable Matchup card retired into a passive bonus — same flavor and value it
+// had as a card, just always-on for whichever team starts both skillsets, instead of a blind
+// per-exchange play. The card itself is removed from supplementalCards.js's deck (see that
+// file's note on this same migration) so its effect exists in exactly one place. Legendary-rarity
+// cards are deliberately excluded from migration — a passive, guaranteed-if-you-roster-it bonus
+// doesn't carry the same weight as a rare, exciting draw, so "Offensive Avalanche" stays a card.
+const NAMED_PAIRS = [
+  // Offense — 5 Core (+5%), 4 Prime (+10%), 3 Signature (+15%).
+  { pair: [1, 5], side: 'offense', percent: 5, name: 'Second-Side Action' },
+  { pair: [2, 7], side: 'offense', percent: 5, name: 'Early Offense' },
+  { pair: [1, 24], side: 'offense', percent: 5, name: 'Extra Shooting Practice' },
+  { pair: [4, 5], side: 'offense', percent: 5, name: 'Drive and Kick' },
+  { pair: [4, 8], side: 'offense', percent: 5, name: 'Paint Touches' },
+  { pair: [9, 24], side: 'offense', percent: 10, name: 'Focused Film Session' },
+  { pair: [4, 12], side: 'offense', percent: 10, name: 'Five-Out Attack' },
+  { pair: [11, 14], side: 'offense', percent: 10, name: 'Hot Hand' },
+  { pair: [16, 17], side: 'offense', percent: 10, name: 'Pace and Space' },
+  { pair: [9, 10], side: 'offense', percent: 15, name: 'Half-Court Clinic' },
+  { pair: [12, 15], side: 'offense', percent: 15, name: 'Empty-Side Action' },
+  { pair: [2, 6], side: 'offense', percent: 15, name: 'Unstoppable Two-Man Game' },
+  // Defense — 5 Core (+5%), 4 Prime (+10%), 4 Signature (+15%).
+  { pair: [18, 23], side: 'defense', percent: 5, name: 'Active Hands' },
+  { pair: [22, 23], side: 'defense', percent: 5, name: 'Closeout Drill' },
+  { pair: [18, 20], side: 'defense', percent: 5, name: 'Protect the Paint' },
+  { pair: [19, 23], side: 'defense', percent: 5, name: 'Ball Pressure' },
+  { pair: [1, 23], side: 'defense', percent: 5, name: 'Deny the Wing' },
+  { pair: [1, 18], side: 'defense', percent: 10, name: 'Switch Everything' },
+  { pair: [19, 21], side: 'defense', percent: 10, name: 'Physical Coverage' },
+  { pair: [21, 22], side: 'defense', percent: 10, name: 'Shrink the Floor' },
+  { pair: [18, 21], side: 'defense', percent: 10, name: 'Ice the Screen' },
+  { pair: [19, 22], side: 'defense', percent: 15, name: 'Weak-Side Help' },
+  { pair: [21, 23], side: 'defense', percent: 15, name: 'Clamp Down' },
+  { pair: [20, 22], side: 'defense', percent: 15, name: 'No Easy Looks' },
+  { pair: [18, 19], side: 'defense', percent: 15, name: 'Fortress Defense' },
+];
+export const SKILLSET_PAIRS = NAMED_PAIRS.map(({ pair, ...rule }) => ({ ...rule, skills: pair.map((n) => SKILLSETS[n - 1].id) }));
+// Raised alongside the bigger per-pair values above (was 12, when pairs topped out at 3%) — a
+// single Signature pairing (+15%) used to be five separate elite pairs' worth of cap room, which
+// would have made the cap the only thing that mattered instead of which pairs you actually have.
+export const SYNERGY_CAP = 30;
 
 export function teamSynergy(team, ids = team.activeIds || []) {
   const active = new Set(ids);

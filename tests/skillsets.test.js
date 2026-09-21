@@ -14,30 +14,33 @@ function team(numbers) {
     coach:{offBonus:0,defBonus:0,offDie:6,defDie:6},matchupCards:[],
     hand:numbers.map((n,i)=>({id:`p${i}`,skillsetId:sid(n),position:['Guard','Guard','Forward','Big','Big'][i%5],archetype:'Balanced',stats:{SCO:10,PLM:10,DEF:10,REB:10},salary:1,age:27,careerRoll:0.5}))};
 }
-test('24 skillsets, 35 unique mutual pairings; every pairing resolves at its approved strength',()=>{
-  assert.equal(SKILLSETS.length,24);assert.equal(SKILLSET_PAIRS.length,35);
-  assert.equal(new Set(SKILLSET_PAIRS.map(p=>p.skills.slice().sort().join(':'))).size,35);
+test('24 skillsets, 25 unique mutual pairings; every pairing resolves at its approved strength',()=>{
+  assert.equal(SKILLSETS.length,24);assert.equal(SKILLSET_PAIRS.length,25);
+  assert.equal(new Set(SKILLSET_PAIRS.map(p=>p.skills.slice().sort().join(':'))).size,25);
+  // Each pairing is a named, formerly-playable card retired into a passive bonus (see
+  // skillsets.js) — every one needs a real name and a nonzero value, not just a percent tier.
+  assert(SKILLSET_PAIRS.every(p=>p.name&&p.percent>0));
   for(const pair of SKILLSET_PAIRS){
     const t=team([1,2]);t.hand.forEach((p,i)=>{p.skillsetId=pair.skills[i];});
     assert.equal(teamSynergy(t)[pair.side],pair.percent);
     t.hand.reverse();assert.equal(teamSynergy(t)[pair.side],pair.percent);
   }
 });
-test('approved example totals +8% offense; Wise Veteran adds one percent without stacking',()=>{
-  const t=team([6,1,10,9,2]);assert.equal(teamSynergy(t).offense,8);assert.equal(teamSynergy(t).defense,0);
+test('approved example totals +25% offense; Wise Veteran adds one percent without stacking',()=>{
+  const t=team([2,6,16,17,4]);assert.equal(teamSynergy(t).offense,25);assert.equal(teamSynergy(t).defense,0);
   t.hand.push({...t.hand[0],id:'bench1',skillsetId:sid(3)},{...t.hand[0],id:'bench2',skillsetId:sid(3)});
-  assert.equal(teamSynergy(t).leadership,1);assert.equal(teamSynergy(t).offense,9);assert.equal(teamSynergy(t).defense,1);
+  assert.equal(teamSynergy(t).leadership,1);assert.equal(teamSynergy(t).offense,26);assert.equal(teamSynergy(t).defense,1);
 });
 test('duplicate combinations count once; missing partners and legacy players are neutral',()=>{
-  const t=team([1,1,5,5,3]);assert.equal(teamSynergy(t).offense,4);
+  const t=team([1,1,5,5,3]);assert.equal(teamSynergy(t).offense,6);
   assert.equal(teamSynergy(t,['p0','p1']).offense,1);
   assert.equal(teamSynergy(t,['p0','p1']).leadership,1);
   t.hand.forEach(p=>{delete p.skillsetId;});assert.equal(teamSynergy(t).leadership,0);assert.equal(teamSynergy(t).pairs.length,0);
 });
 test('independent caps apply and injury lineup overrides remove inactive pairings',()=>{
   const t=team(SKILLSETS.map((_,i)=>i+1));const s=teamSynergy(t);
-  assert.equal(s.offense,13);assert.equal(s.defense,13);assert(s.rawOffense>12);
-  assert.equal(teamSynergy(t,['p17','p18']).defense,4);
+  assert.equal(s.offense,31);assert.equal(s.defense,31);assert(s.rawOffense>30);
+  assert.equal(teamSynergy(t,['p17','p18']).defense,16);
   assert.equal(teamSynergy(t,['p17']).defense,1);
 });
 test('skillset persists in generated player JSON; only player cards roll skillsets',()=>{
@@ -53,10 +56,10 @@ test('skillset persists in generated player JSON; only player cards roll skillse
 });
 test('fractional synergy and Wise Veteran percentages appear in scoring and projections',()=>{
   const t=team([6,1,10,9,2]);const plain=structuredClone(t);plain.hand.forEach(p=>{delete p.skillsetId;});
-  const base=offenseModifier(plain);assert.equal(offenseModifier(t),Math.round(base*1.08*100)/100);
+  const base=offenseModifier(plain);assert.equal(offenseModifier(t),Math.round(base*1.30*100)/100);
   assert.equal(defenseModifier(t),defenseModifier(plain));
   t.hand.push({...t.hand[0],id:'bench',skillsetId:sid(3)});
-  assert.equal(offenseModifier(t),Math.round(base*1.09*100)/100);
+  assert.equal(offenseModifier(t),Math.round(base*1.31*100)/100);
   assert.equal(defenseModifier(t),Math.round(defenseModifier(plain)*1.01*100)/100);
   assert.equal(teamOutput(t).off,Math.round((offenseModifier(t)+3.5)*100)/100);
   const result=playMatchup(t,plain,false,false,t.activeIds,plain.activeIds);
@@ -73,7 +76,7 @@ test('swap validates positions and ownership; blocked only mid-live-match; updat
   const state={phase:'teamsummary',teams:[t],playoff:{matches:[]}};
   assert.equal(swapStarter(state,0,'p0','missing').ok,false);
   assert.equal(swapStarter(state,0,'p2','bench').ok,false); // only Forward
-  assert.equal(swapStarter(state,0,'p0','bench').ok,true);assert.notEqual(teamSynergy(t).offense,8);
+  assert.equal(swapStarter(state,0,'p0','bench').ok,true);assert.notEqual(teamSynergy(t).offense,30);
   t.lineupConfirmed=true;assert.equal(swapStarter(state,0,'bench','p0').ok,true);
   state.phase='playoffs';assert.equal(swapStarter(state,0,'p0','bench').ok,true);
   state.playoff.matches=[{turn:{stage:'roll'},result:null,a:t,b:{}}];

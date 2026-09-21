@@ -1,4 +1,8 @@
-// Canonical 97-card deck. Values and rarities are fixed; each definition appears once per season.
+// Canonical 72-card deck. Values and rarities are fixed; each definition appears once per season.
+// Was 97 — 25 of the flat OFFENSE_PERCENT/DEFENSE_PERCENT cards (every positive one except the
+// Legendary "Offensive Avalanche") were retired from this deck and now live as named, passive
+// skillset-pair bonuses in skillsets.js's SKILLSET_PAIRS instead: same name, same value, but
+// always-on for whichever team starts both skillsets, rather than a blind per-exchange play.
 const DEFINITIONS = [
   {
     "definitionId": "matchup-001",
@@ -91,51 +95,6 @@ const DEFINITIONS = [
     "value": 25
   },
   {
-    "definitionId": "matchup-011",
-    "name": "Extra Shooting Practice",
-    "category": "Offense",
-    "description": "+5% Offensive Ability",
-    "rarity": "Core",
-    "effectType": "OFFENSE_PERCENT",
-    "value": 5
-  },
-  {
-    "definitionId": "matchup-012",
-    "name": "Early Offense",
-    "category": "Offense",
-    "description": "+5% Offensive Ability",
-    "rarity": "Core",
-    "effectType": "OFFENSE_PERCENT",
-    "value": 5
-  },
-  {
-    "definitionId": "matchup-013",
-    "name": "Second-Side Action",
-    "category": "Offense",
-    "description": "+5% Offensive Ability",
-    "rarity": "Core",
-    "effectType": "OFFENSE_PERCENT",
-    "value": 5
-  },
-  {
-    "definitionId": "matchup-014",
-    "name": "Paint Touches",
-    "category": "Offense",
-    "description": "+5% Offensive Ability",
-    "rarity": "Core",
-    "effectType": "OFFENSE_PERCENT",
-    "value": 5
-  },
-  {
-    "definitionId": "matchup-015",
-    "name": "Drive and Kick",
-    "category": "Offense",
-    "description": "+5% Offensive Ability",
-    "rarity": "Core",
-    "effectType": "OFFENSE_PERCENT",
-    "value": 5
-  },
-  {
     "definitionId": "matchup-016",
     "name": "Poor Spacing",
     "category": "Offense",
@@ -172,42 +131,6 @@ const DEFINITIONS = [
     "value": -5
   },
   {
-    "definitionId": "matchup-020",
-    "name": "Focused Film Session",
-    "category": "Offense",
-    "description": "+10% Offensive Ability",
-    "rarity": "Prime",
-    "effectType": "OFFENSE_PERCENT",
-    "value": 10
-  },
-  {
-    "definitionId": "matchup-021",
-    "name": "Five-Out Attack",
-    "category": "Offense",
-    "description": "+10% Offensive Ability",
-    "rarity": "Prime",
-    "effectType": "OFFENSE_PERCENT",
-    "value": 10
-  },
-  {
-    "definitionId": "matchup-022",
-    "name": "Hot Hand",
-    "category": "Offense",
-    "description": "+10% Offensive Ability",
-    "rarity": "Prime",
-    "effectType": "OFFENSE_PERCENT",
-    "value": 10
-  },
-  {
-    "definitionId": "matchup-023",
-    "name": "Pace and Space",
-    "category": "Offense",
-    "description": "+10% Offensive Ability",
-    "rarity": "Prime",
-    "effectType": "OFFENSE_PERCENT",
-    "value": 10
-  },
-  {
     "definitionId": "matchup-024",
     "name": "Scouted Tendencies",
     "category": "Offense",
@@ -217,33 +140,6 @@ const DEFINITIONS = [
     "value": -10
   },
   {
-    "definitionId": "matchup-025",
-    "name": "Empty-Side Action",
-    "category": "Offense",
-    "description": "+15% Offensive Ability",
-    "rarity": "Signature",
-    "effectType": "OFFENSE_PERCENT",
-    "value": 15
-  },
-  {
-    "definitionId": "matchup-026",
-    "name": "Half-Court Clinic",
-    "category": "Offense",
-    "description": "+15% Offensive Ability",
-    "rarity": "Signature",
-    "effectType": "OFFENSE_PERCENT",
-    "value": 15
-  },
-  {
-    "definitionId": "matchup-027",
-    "name": "Unstoppable Two-Man Game",
-    "category": "Offense",
-    "description": "+15% Offensive Ability",
-    "rarity": "Signature",
-    "effectType": "OFFENSE_PERCENT",
-    "value": 15
-  },
-  {
     "definitionId": "matchup-028",
     "name": "Offensive Avalanche",
     "category": "Offense",
@@ -251,51 +147,6 @@ const DEFINITIONS = [
     "rarity": "Legendary",
     "effectType": "OFFENSE_PERCENT",
     "value": 25
-  },
-  {
-    "definitionId": "matchup-029",
-    "name": "Active Hands",
-    "category": "Defense",
-    "description": "+5% Defensive Ability",
-    "rarity": "Core",
-    "effectType": "DEFENSE_PERCENT",
-    "value": 5
-  },
-  {
-    "definitionId": "matchup-030",
-    "name": "Closeout Drill",
-    "category": "Defense",
-    "description": "+5% Defensive Ability",
-    "rarity": "Core",
-    "effectType": "DEFENSE_PERCENT",
-    "value": 5
-  },
-  {
-    "definitionId": "matchup-031",
-    "name": "Protect the Paint",
-    "category": "Defense",
-    "description": "+5% Defensive Ability",
-    "rarity": "Core",
-    "effectType": "DEFENSE_PERCENT",
-    "value": 5
-  },
-  {
-    "definitionId": "matchup-032",
-    "name": "Ball Pressure",
-    "category": "Defense",
-    "description": "+5% Defensive Ability",
-    "rarity": "Core",
-    "effectType": "DEFENSE_PERCENT",
-    "value": 5
-  },
-  {
-    "definitionId": "matchup-033",
-    "name": "Deny the Wing",
-    "category": "Defense",
-    "description": "+5% Defensive Ability",
-    "rarity": "Core",
-    "effectType": "DEFENSE_PERCENT",
-    "value": 5
   },
   {
     "definitionId": "matchup-034",
@@ -334,42 +185,6 @@ const DEFINITIONS = [
     "value": -5
   },
   {
-    "definitionId": "matchup-038",
-    "name": "Switch Everything",
-    "category": "Defense",
-    "description": "+10% Defensive Ability",
-    "rarity": "Prime",
-    "effectType": "DEFENSE_PERCENT",
-    "value": 10
-  },
-  {
-    "definitionId": "matchup-039",
-    "name": "Physical Coverage",
-    "category": "Defense",
-    "description": "+10% Defensive Ability",
-    "rarity": "Prime",
-    "effectType": "DEFENSE_PERCENT",
-    "value": 10
-  },
-  {
-    "definitionId": "matchup-040",
-    "name": "Shrink the Floor",
-    "category": "Defense",
-    "description": "+10% Defensive Ability",
-    "rarity": "Prime",
-    "effectType": "DEFENSE_PERCENT",
-    "value": 10
-  },
-  {
-    "definitionId": "matchup-041",
-    "name": "Ice the Screen",
-    "category": "Defense",
-    "description": "+10% Defensive Ability",
-    "rarity": "Prime",
-    "effectType": "DEFENSE_PERCENT",
-    "value": 10
-  },
-  {
     "definitionId": "matchup-042",
     "name": "Foul Trouble",
     "category": "Defense",
@@ -377,42 +192,6 @@ const DEFINITIONS = [
     "rarity": "Prime",
     "effectType": "DEFENSE_PERCENT",
     "value": -10
-  },
-  {
-    "definitionId": "matchup-043",
-    "name": "Weak-Side Help",
-    "category": "Defense",
-    "description": "+15% Defensive Ability",
-    "rarity": "Signature",
-    "effectType": "DEFENSE_PERCENT",
-    "value": 15
-  },
-  {
-    "definitionId": "matchup-044",
-    "name": "Clamp Down",
-    "category": "Defense",
-    "description": "+15% Defensive Ability",
-    "rarity": "Signature",
-    "effectType": "DEFENSE_PERCENT",
-    "value": 15
-  },
-  {
-    "definitionId": "matchup-045",
-    "name": "No Easy Looks",
-    "category": "Defense",
-    "description": "+15% Defensive Ability",
-    "rarity": "Signature",
-    "effectType": "DEFENSE_PERCENT",
-    "value": 15
-  },
-  {
-    "definitionId": "matchup-046",
-    "name": "Fortress Defense",
-    "category": "Defense",
-    "description": "+15% Defensive Ability",
-    "rarity": "Signature",
-    "effectType": "DEFENSE_PERCENT",
-    "value": 15
   },
   {
     "definitionId": "matchup-047",

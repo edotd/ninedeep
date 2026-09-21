@@ -17,17 +17,17 @@ function game() {
 }
 const extra = () => ({ offDelta: 0, defDelta: 0, leagueMod: 0 });
 
-test('97 unique fixed definitions, three Legendaries, no replacement across serialized draws', () => {
-  assert.equal(deck.length, 97); assert.equal(new Set(deck.map(c => c.name)).size, 97);
+test('72 unique fixed definitions, three Legendaries, no replacement across serialized draws', () => {
+  assert.equal(deck.length, 72); assert.equal(new Set(deck.map(c => c.name)).size, 72);
   assert.equal(deck.filter(c => c.rarity === 'Legendary').length, 3);
   assert(deck.filter(c => c.passive === 'seeding').every(c => c.value > 0));
   let state = {}; const drawn = [];
-  for (let i = 0; i < 97; i++) { drawn.push(drawMatchupModifierCard(state)); state = JSON.parse(JSON.stringify(state)); }
-  assert.equal(new Set(drawn.map(c => c.definitionId)).size, 97);
+  for (let i = 0; i < 72; i++) { drawn.push(drawMatchupModifierCard(state)); state = JSON.parse(JSON.stringify(state)); }
+  assert.equal(new Set(drawn.map(c => c.definitionId)).size, 72);
   assert.equal(drawMatchupModifierCard(state), null);
   assert.equal(drawn.find(c => c.name === 'Biased Officiating').value, 3);
-  assert.equal(drawn.find(c => c.name === 'Focused Film Session').value, 10);
-  resetMatchupDeck(state); assert.equal(state.matchupDeck.length, 97);
+  assert.equal(drawn.find(c => c.name === 'Scouted Tendencies').value, -10);
+  resetMatchupDeck(state); assert.equal(state.matchupDeck.length, 72);
 });
 
 test('every playable definition resolves and consumes once without mutating roster stats', () => {
@@ -48,8 +48,8 @@ test('dice, percentages, advantage and disadvantage have exact scoring semantics
   const base = supplementalRoll(a,a.activeIds,ea,'offense',2,5);
   applySupplementalCard(state,a,b,card('Biased Officiating'),ea,eb,a.activeIds,b.activeIds);
   assert.equal(supplementalRoll(a,a.activeIds,ea,'offense',2,5).die,5);
-  applySupplementalCard(state,a,b,card('Focused Film Session'),ea,eb,a.activeIds,b.activeIds);
-  assert.equal(supplementalRoll(a,a.activeIds,ea,'offense',2,5).mod, Math.round(base.mod*1.1*100)/100);
+  applySupplementalCard(state,a,b,card('Offensive Avalanche'),ea,eb,a.activeIds,b.activeIds);
+  assert.equal(supplementalRoll(a,a.activeIds,ea,'offense',2,5).mod, Math.round(base.mod*1.25*100)/100);
   ea.cardAdvantage=true; assert.equal(supplementalRoll(a,a.activeIds,ea,'defense',2,5).die,5);
   ea.cardDisadvantage=true; assert.equal(supplementalRoll(a,a.activeIds,ea,'defense',2,5).die,2);
   ea.cardAdvantage=false; assert.equal(supplementalRoll(a,a.activeIds,ea,'defense',5,2).die,2);
@@ -157,8 +157,8 @@ test('position effects count only matchup starters and stack with flat bonuses',
   }
   const effects=extra();
   applySupplementalCard(state,a,b,card('Three-Guard Attack'),effects,extra(),a.activeIds,b.activeIds);
-  applySupplementalCard(state,a,b,card('Focused Film Session'),effects,extra(),a.activeIds,b.activeIds);
-  assert.equal(effects.offPercent,25);
+  applySupplementalCard(state,a,b,card('Offensive Avalanche'),effects,extra(),a.activeIds,b.activeIds);
+  assert.equal(effects.offPercent,40);
   const fewer=a.activeIds.slice(0,4), missing=extra();
   applySupplementalCard(state,a,b,card('Positionless Basketball'),missing,extra(),fewer,b.activeIds);
   assert.equal(missing.offPercent,0);

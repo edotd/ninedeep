@@ -53,7 +53,7 @@ export default function TeamChemistry({ team }) {
             {current.pairs.map((pair) => (
               <div key={pair.skills.join(':')} className="tc2-pair-row">
                 <span className="tc2-pair-names">{pair.skills.map(nameFor).join(' + ')}</span>
-                <span className={'tc2-pair-tag ' + pair.side}>{pair.percent === 3 ? 'Elite Fit' : 'Good Fit'} +{pair.percent}% {pair.side === 'offense' ? 'OFF' : 'DEF'}</span>
+                <span className={'tc2-pair-tag ' + pair.side}>{pair.name} +{pair.percent}% {pair.side === 'offense' ? 'OFF' : 'DEF'}</span>
               </div>
             ))}
           </div>
