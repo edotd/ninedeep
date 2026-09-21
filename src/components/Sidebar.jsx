@@ -33,9 +33,13 @@ const SUPPORT_NAV_ITEMS = [
 // into the sidebar's vertical list. Team was dropped for a while when the persistent bar
 // alone covered the roster/front-office/matchup view, but it's the only way to reach the
 // front-office moves (fire coach or GM, invest in fanbase), so it's back.
-export default function Sidebar({ state, myTeamId, overlay, onNav, onViewTeam }) {
+export default function Sidebar({ state, myTeamId, overlay, viewTeamId, onNav, onViewTeam }) {
   const team = state.teams[myTeamId];
   const seasonNum = Math.min(state.season, ERA_LENGTH);
+  // The Team overlay is showing someone else's file (opened from a standings row) when
+  // viewTeamId is set to a team other than the caller's own — "Your Franchise" should only
+  // read active for your own file, and the viewed team's own row should light up instead.
+  const viewingOther = overlay === 'team' && viewTeamId != null && viewTeamId !== myTeamId;
   // Once this season is actually seeded, state.seeds IS the real standings order (see
   // game/season.js's lockSeasonAndSeed) — rank is each team's real seed, not just wherever
   // its own projection currently sorts to. Before that, there's no seed yet, only each team's
@@ -63,7 +67,7 @@ export default function Sidebar({ state, myTeamId, overlay, onNav, onViewTeam })
         {PRIMARY_NAV_ITEMS.map((item) => (
           <button
             key={item.key}
-            className={'sidebar-nav-item' + (overlay === item.key ? ' active' : '')}
+            className={'sidebar-nav-item' + (overlay === item.key && !(item.key === 'team' && viewingOther) ? ' active' : '')}
             onClick={() => onNav(item.key)}
           >
             {item.label}
@@ -80,7 +84,7 @@ export default function Sidebar({ state, myTeamId, overlay, onNav, onViewTeam })
         {standings.map(({ t, output }, i) => (
           <div
             key={t.id}
-            className={'sidebar-standings-row' + (t.id === myTeamId ? ' you' : '')}
+            className={'sidebar-standings-row' + (t.id === myTeamId ? ' you' : '') + (viewingOther && t.id === viewTeamId ? ' viewing' : '')}
             onClick={onViewTeam ? () => onViewTeam(t.id) : undefined}
             style={{ cursor: onViewTeam ? 'pointer' : undefined }}
           >
