@@ -67,13 +67,26 @@ export function defenseStatSum(team, idsOverride) {
   }, 0);
   return Math.round(sum);
 }
+// Same math as offenseModifier/defenseModifier, but itemized — for the roll breakdown popover,
+// which needs each step (stat sum, coach bonus, roster chemistry, synergy) on its own rather
+// than just the final number.
+export function modifierBreakdown(team, idsOverride, kind) {
+  const off = kind === 'offense';
+  const statSum = off ? offenseStatSum(team, idsOverride) : defenseStatSum(team, idsOverride);
+  const coachBonus = off ? team.coach.offBonus : team.coach.defBonus;
+  const retention = retentionBonus(team);
+  const relationship = relationshipBonus(team);
+  const handsOff = handsOffBonus(team);
+  const preSynergyBase = Math.round((statSum * (1 + coachBonus + retention + relationship + handsOff)) / 20);
+  const synergyPct = teamSynergy(team, idsOverride)[kind];
+  const base = applySynergy(preSynergyBase, team, idsOverride, kind);
+  return { statSum, coachBonus, retention, relationship, handsOff, preSynergyBase, synergyPct, base };
+}
 export function offenseModifier(team, idsOverride) {
-  const base = Math.round((offenseStatSum(team, idsOverride) * (1 + team.coach.offBonus + retentionBonus(team) + relationshipBonus(team) + handsOffBonus(team))) / 20);
-  return applySynergy(base, team, idsOverride, 'offense');
+  return modifierBreakdown(team, idsOverride, 'offense').base;
 }
 export function defenseModifier(team, idsOverride) {
-  const base = Math.round((defenseStatSum(team, idsOverride) * (1 + team.coach.defBonus + retentionBonus(team) + relationshipBonus(team) + handsOffBonus(team))) / 20);
-  return applySynergy(base, team, idsOverride, 'defense');
+  return modifierBreakdown(team, idsOverride, 'defense').base;
 }
 export function offenseDieSize(team) { return team.coach.offDie + retentionDieBump(team); }
 export function defenseDieSize(team) { return team.coach.defDie + retentionDieBump(team); }

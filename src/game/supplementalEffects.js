@@ -1,6 +1,6 @@
 import { POSITIONS } from './constants';
 import { drawMatchupModifierCard } from './cards';
-import { offenseModifier, defenseModifier } from './roster';
+import { modifierBreakdown } from './roster';
 
 export const PLAYER_STATS = ['SCO', 'PLM', 'REB', 'DEF'];
 
@@ -64,22 +64,33 @@ export function applySupplementalCard(state, user, opponent, card, ownExtra, opp
   return `${user.name} played ${card.name} on ${team.name} — ${detail}.`;
 }
 
-export function supplementalRoll(team, ids, extra, kind, first, second, baseAdvantage = false) {
-  const advantage = !!(baseAdvantage || extra.cardAdvantage);
-  const disadvantage = !!extra.cardDisadvantage;
-  const mode = advantage === disadvantage ? 0 : advantage ? 1 : -1;
-  const rolled = mode > 0 ? Math.max(first, second) : mode < 0 ? Math.min(first, second) : first;
-  const adjusted = { ...team, hand: team.hand.map((player) => {
+// Applies any temporary player-stat-target card effects (extra.statChanges) on top of the
+// roster's real stats, without mutating it — same adjusted view supplementalRoll's own modifier
+// lookup uses, exposed so the breakdown popover can reconcile against the exact roll.
+export function statAdjustedTeam(team, extra) {
+  return { ...team, hand: team.hand.map((player) => {
     const stats = { ...player.stats };
     for (const change of extra.statChanges || []) {
       if (change.playerId === player.id) stats[change.stat] = Math.max(1, stats[change.stat] + change.value);
     }
     return { ...player, stats };
   }) };
+}
+
+export function supplementalRoll(team, ids, extra, kind, first, second, baseAdvantage = false) {
+  const advantage = !!(baseAdvantage || extra.cardAdvantage);
+  const disadvantage = !!extra.cardDisadvantage;
+  const mode = advantage === disadvantage ? 0 : advantage ? 1 : -1;
+  const rolled = mode > 0 ? Math.max(first, second) : mode < 0 ? Math.min(first, second) : first;
+  const adjusted = statAdjustedTeam(team, extra);
   const off = kind === 'offense';
-  const base = off ? offenseModifier(adjusted, ids) : defenseModifier(adjusted, ids);
+  const roster = modifierBreakdown(adjusted, ids, kind);
+  const base = roster.base;
   // Keep fractional bonuses so a +5% card cannot disappear through integer rounding.
-  const mod = Math.round((base * Math.max(0, 1 + (extra[off ? 'offPercent' : 'defPercent'] || 0) / 100) + (extra[off ? 'offDelta' : 'defDelta'] || 0)) * 100) / 100;
+  const cardPercent = extra[off ? 'offPercent' : 'defPercent'] || 0;
+  const cardDelta = extra[off ? 'offDelta' : 'defDelta'] || 0;
+  const mod = Math.round((base * Math.max(0, 1 + cardPercent / 100) + cardDelta) * 100) / 100;
   const die = Math.max(1, rolled + (extra[off ? 'offDice' : 'defDice'] || 0));
-  return { die, mod, total: Math.round((die + mod) * 100) / 100, dieOther: mode ? (rolled === first ? second : first) : null, mode };
+  const breakdown = { ...roster, cardPercent, cardDelta, mod };
+  return { die, mod, total: Math.round((die + mod) * 100) / 100, dieOther: mode ? (rolled === first ? second : first) : null, mode, breakdown };
 }

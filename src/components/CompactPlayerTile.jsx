@@ -9,11 +9,11 @@ import { jerseyNumber, playerGrade } from '../game/cards';
 // rotation" framing.
 const GRADE_TONE = { 'A+': 'var(--approved)', A: 'var(--approved)', B: 'var(--ink)', C: 'var(--stamp)', D: 'var(--stamp)', F: 'var(--stamp)' };
 
-export default function CompactPlayerTile({ card, isStarter, edge = 'bottom' }) {
+export default function CompactPlayerTile({ card, isStarter, edge = 'bottom', contributing }) {
   const grade = playerGrade(card);
   const skillset = skillsetFor(card);
   return (
-    <div className={'nd2-tile' + (edge === 'top' ? ' edge-top' : ' edge-bottom')}>
+    <div className={'nd2-tile' + (edge === 'top' ? ' edge-top' : ' edge-bottom') + (contributing ? ' contributing' : '')}>
       <div className="nd2-tile-head">
         <span>{card.archetype}</span>
         <span style={{ color: GRADE_TONE[grade] || 'var(--ink)' }}>{grade}</span>

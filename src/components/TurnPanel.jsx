@@ -73,7 +73,7 @@ function readLogCollapsed() {
 // and the name stays innermost for both teams; `edge` tells each tile/coach card which of its
 // own sides faces the roll zone, so the accent border and the coach card's overlap land on the
 // right side for either team.
-function TeamBoard({ team, ids, hca, statusLabel, isActive, flip }) {
+function TeamBoard({ team, ids, hca, statusLabel, isActive, flip, contributing }) {
   const hand = team.hand || [];
   const activeIds = ids || team.activeIds || [];
   const starters = activeIds.map((id) => hand.find((c) => c.id === id)).filter(Boolean);
@@ -82,7 +82,7 @@ function TeamBoard({ team, ids, hca, statusLabel, isActive, flip }) {
   return (
     <div className={'t2-teamboard' + (isActive ? ' active' : '') + (flip ? ' flip' : '')}>
       <div className="nd2-roster">
-        {chipSlots(starters, 5).map((c, i) => (c ? <CompactPlayerTile key={`s${i}`} card={c} isStarter edge={edge} /> : <div key={`s${i}`} className="nd2-tile empty" />))}
+        {chipSlots(starters, 5).map((c, i) => (c ? <CompactPlayerTile key={`s${i}`} card={c} isStarter edge={edge} contributing={contributing} /> : <div key={`s${i}`} className="nd2-tile empty" />))}
         {chipSlots(bench, 4).map((c, i) => (c ? <CompactPlayerTile key={`b${i}`} card={c} edge={edge} /> : <div key={`b${i}`} className="nd2-tile empty" />))}
         {team.coach && (
           <div className={'nd2-coach-slot' + (edge === 'top' ? ' edge-top' : ' edge-bottom')}>
@@ -121,6 +121,10 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
   const [benchPhase, setBenchPhase] = useState('first');
   const benchTimerRef = useRef(null);
   const [resultBlurb, setResultBlurb] = useState('');
+  // Which side's mod-breakdown popover is open, if any — 'off' | 'def' | null. Reset whenever
+  // the exchange or stage moves on, so it never lingers open over stale numbers.
+  const [breakdownOpen, setBreakdownOpen] = useState(null);
+  useEffect(() => { setBreakdownOpen(null); }, [turn.stage, turn.exchangeIndex]);
   const [logCollapsed, setLogCollapsed] = useState(readLogCollapsed);
   const toggleLogCollapsed = () => {
     setLogCollapsed((v) => {
@@ -331,6 +335,30 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
     return possessionTeam === team ? 'Won The Tip' : '';
   };
 
+  // The "why" behind a settled die's mod — stat sum through coach bonus, roster chemistry,
+  // skillset synergy, and any card modifier, in the order they're actually applied
+  // (roster.js's modifierBreakdown, then supplementalRoll's card layer on top).
+  const renderModBreakdown = (team, kind, b) => {
+    if (!b) return null;
+    const pct = (n) => `${n >= 0 ? '+' : ''}${Math.round(n * 100)}%`;
+    return (
+      <div className="t2-mod-breakdown t2-fade-in">
+        <div className="t2-mod-breakdown-head">{team.name} — {kind === 'offense' ? 'Offense' : 'Defense'}</div>
+        <div className="t2-mod-row"><span>{kind === 'offense' ? 'SCO + PLM' : 'DEF + REB'}</span><span>{b.statSum}</span></div>
+        <div className="t2-mod-row"><span>Coach Bonus</span><span>{pct(b.coachBonus)}</span></div>
+        {b.retention !== 0 && <div className="t2-mod-row"><span>Retention</span><span>{pct(b.retention)}</span></div>}
+        {b.relationship !== 0 && <div className="t2-mod-row"><span>Relationships</span><span>{pct(b.relationship)}</span></div>}
+        {b.handsOff !== 0 && <div className="t2-mod-row"><span>GM Approach</span><span>{pct(b.handsOff)}</span></div>}
+        <div className="t2-mod-row"><span>Roster Base</span><span>{b.preSynergyBase}</span></div>
+        {b.synergyPct !== 0 && <div className="t2-mod-row"><span>Skillset Synergy</span><span>{b.synergyPct >= 0 ? '+' : ''}{b.synergyPct}%</span></div>}
+        <div className="t2-mod-row t2-mod-subtotal"><span>Roster Mod</span><span>{b.base}</span></div>
+        {b.cardPercent !== 0 && <div className="t2-mod-row t2-mod-card"><span>Card Modifier</span><span>{b.cardPercent >= 0 ? '+' : ''}{b.cardPercent}%</span></div>}
+        {b.cardDelta !== 0 && <div className="t2-mod-row t2-mod-card"><span>Card Modifier</span><span>{b.cardDelta >= 0 ? '+' : ''}{b.cardDelta}</span></div>}
+        <div className="t2-mod-row t2-mod-total"><span>Final Mod</span><span>{b.mod}</span></div>
+      </div>
+    );
+  };
+
   // The roll-zone circle: the coin before/at the flip, then each exchange's two dice once
   // rolled — the same circle is reused for every roll in the match, per the design's "clean
   // look" note ("every roll of the match resolves in this circle").
@@ -404,6 +432,8 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
       const defSettled = ['revealed-def', 'both'].includes(rollPhase);
       const defInteractive = rollPhase === 'idle-def' && defTeam === myTeam;
       const possessionOnOffense = !['idle-def', 'rolling-def', 'revealed-def', 'both'].includes(rollPhase);
+      const offBreakdown = turn[`${offSide}OffBreakdown`], offMod = turn[`${offSide}OffMod`];
+      const defBreakdown = turn[`${defSide}DefBreakdown`], defMod = turn[`${defSide}DefMod`];
 
       return (
         <div className="t2-rollzone-dual">
@@ -411,8 +441,14 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
             <div className={'t2-die-stage' + (offInteractive ? ' t2-die-clickable' : '')} onClick={offInteractive ? () => startRoll('off') : undefined}>
               <Die sides={offSides} value={offSettled ? offDie : offSides} size={140} rolling={offRolling} />
             </div>
-            <div className="t2-rollzone-caption">{offSettled ? `${offTeam.name} Rolls ${offDie}` : `${offTeam.name} On Offense`}</div>
+            <div className="t2-rollzone-caption">
+              {offSettled ? `${offTeam.name} Rolls ${offDie}` : `${offTeam.name} On Offense`}
+              {offSettled && (
+                <button className="t2-mod-info" aria-label="Show offense mod breakdown" onClick={() => setBreakdownOpen((v) => (v === 'off' ? null : 'off'))}>+{offMod}</button>
+              )}
+            </div>
             {rollPhase === 'idle-off' && offInteractive && <button className="t2-roll-btn" onClick={() => startRoll('off')}>Roll</button>}
+            {breakdownOpen === 'off' && renderModBreakdown(offTeam, 'offense', offBreakdown)}
           </div>
 
           <div className="t2-possession">
@@ -424,8 +460,14 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
             <div className={'t2-die-stage' + (defInteractive ? ' t2-die-clickable' : '')} onClick={defInteractive ? () => startRoll('def') : undefined}>
               <Die sides={defSides} value={defSettled ? defDie : defSides} size={140} rolling={defRolling} />
             </div>
-            <div className="t2-rollzone-caption">{defSettled ? `${defTeam.name} Rolls ${defDie}` : `${defTeam.name} On Defense`}</div>
+            <div className="t2-rollzone-caption">
+              {defSettled ? `${defTeam.name} Rolls ${defDie}` : `${defTeam.name} On Defense`}
+              {defSettled && (
+                <button className="t2-mod-info" aria-label="Show defense mod breakdown" onClick={() => setBreakdownOpen((v) => (v === 'def' ? null : 'def'))}>+{defMod}</button>
+              )}
+            </div>
             {rollPhase === 'idle-def' && defInteractive && <button className="t2-roll-btn" onClick={() => startRoll('def')}>Roll</button>}
+            {breakdownOpen === 'def' && renderModBreakdown(defTeam, 'defense', defBreakdown)}
           </div>
         </div>
       );
@@ -476,11 +518,17 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
     </div>
   );
 
+  // While a side's die is actively tumbling (and for a beat after, while its number is still
+  // fresh on screen), that side's five active players glow on their team board — a visual line
+  // from "these five stat lines" to "this roll," not just a number appearing out of nowhere.
+  const rollingSide = ['rolling-off', 'revealed-off'].includes(rollPhase) ? offenseTeam
+    : ['rolling-def', 'revealed-def'].includes(rollPhase) ? defenseTeam : null;
+
   return (
     <div className="t2-shell">
       <div className={'t2-body' + (logCollapsed ? ' log-collapsed' : '')}>
         <div className="t2-board">
-          <TeamBoard team={teamA} ids={turn.idsA} hca={turn.hcaA} statusLabel={statusFor('a')} isActive={offenseTeam === teamA || defenseTeam === teamA} />
+          <TeamBoard team={teamA} ids={turn.idsA} hca={turn.hcaA} statusLabel={statusFor('a')} isActive={offenseTeam === teamA || defenseTeam === teamA} contributing={rollingSide === teamA} />
 
           <div className="t2-rollzone">
             {teamACardPlays.length > 0 && renderPlayedCards(teamACardPlays)}
@@ -526,7 +574,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
 
           </div>
 
-          <TeamBoard team={teamB} ids={turn.idsB} hca={turn.hcaB} statusLabel={statusFor('b')} isActive={offenseTeam === teamB || defenseTeam === teamB} flip />
+          <TeamBoard team={teamB} ids={turn.idsB} hca={turn.hcaB} statusLabel={statusFor('b')} isActive={offenseTeam === teamB || defenseTeam === teamB} contributing={rollingSide === teamB} flip />
         </div>
 
         <div className={'t2-log' + (logCollapsed ? ' collapsed' : '')}>

@@ -147,9 +147,10 @@ function resolveExchange(state, m) {
 
   turn[`${offSide}OffDie`] = offRolled.die; turn[`${offSide}OffDieOther`] = offRolled.dieOther; turn[`${offSide}OffMode`] = offRolled.mode;
   turn[`${offSide}OffMod`] = offRolled.mod; turn[`${offSide}OffTotal`] = offenseOutput; turn[`${offSide}OffSides`] = offSides;
-  turn[`${offSide}OffWon`] = offenseWon;
+  turn[`${offSide}OffWon`] = offenseWon; turn[`${offSide}OffBreakdown`] = offRolled.breakdown;
   turn[`${defSide}DefDie`] = defRolled.die; turn[`${defSide}DefDieOther`] = defRolled.dieOther; turn[`${defSide}DefMode`] = defRolled.mode;
   turn[`${defSide}DefMod`] = defRolled.mod; turn[`${defSide}DefTotal`] = defenseOutput; turn[`${defSide}DefSides`] = defSidesN;
+  turn[`${defSide}DefBreakdown`] = defRolled.breakdown;
 
   // Keep each die and the possession outcome as separate log events. The values are resolved
   // atomically here, while TurnPanel reveals these entries one at a time as each on-screen die
