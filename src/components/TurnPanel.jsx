@@ -21,8 +21,8 @@ const COIN_RESULT_MS = 1400;
 // The engine resolves both of an exchange's dice in one atomic step, but the roll zone plays
 // them back as a little sequence a click at a time — offense's die sits at rest until Roll is
 // clicked, spins for ROLL_DURATION_MS and reveals, then after a read pause defense's die does
-// the same, then both sit together before auto-advancing. All purely presentational timing
-// around numbers that are already final the moment turn.stage becomes 'resolved'.
+// the same. The first exchange pauses for a Start Next Possession click; the second continues
+// to the bench. All timing is presentational around already-final resolved numbers.
 const ROLL_REVEAL_MS = 700;
 const ROLL_BOTH_READ_MS = 1600;
 
@@ -117,7 +117,7 @@ function TeamBoard({ team, ids, hca, statusLabel, isActive, flip }) {
 // board: a center board with both teams' full rosters/front offices/matchup cards persisting
 // above and below one shared roll circle, and a game log — collapsing to one column below the
 // desktop breakpoint.
-export default function TurnPanel({ state, actions, m, myTeamId }) {
+export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
   const turn = m.turn;
   const teamA = m.a, teamB = m.b;
   const myTeam = state.teams[myTeamId];
@@ -211,12 +211,12 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
       rollTimerRef.current = setTimeout(() => setRollPhase('revealed-def'), ROLL_DURATION_MS);
     } else if (rollPhase === 'revealed-def') {
       rollTimerRef.current = setTimeout(() => setRollPhase('both'), ROLL_REVEAL_MS);
-    } else if (rollPhase === 'both') {
+    } else if (rollPhase === 'both' && turn.exchangeIndex > 0) {
       rollTimerRef.current = setTimeout(() => advance(), ROLL_BOTH_READ_MS);
     }
     return () => clearTimeout(rollTimerRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rollPhase]);
+  }, [rollPhase, turn.exchangeIndex]);
 
   // Only the side's own controlling human ever clicks its die — an AI-controlled side (or the
   // other real player's side, in online play) never waits on this client's click. AI sides
@@ -263,6 +263,15 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [benchPhase, turn.stage]);
 
+  // Once the winner announcement has had a moment to read, finalize the turn automatically.
+  // The completed result screen owns the only remaining action: Back to Playoff Bracket.
+  useEffect(() => {
+    if (benchPhase !== 'result' || turn.stage !== 'bench') return undefined;
+    const t = setTimeout(() => advance(), BENCH_RESULT_MS);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [benchPhase, turn.stage]);
+
   useEffect(() => {
     setTargetPickerCardId(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -291,22 +300,24 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
   // Blind by convention: a card play is logged the instant it's chosen, but withheld from
   // display until its own exchange resolves — otherwise the second team to act (or a
   // spectator watching both) would read the first team's pick before committing their own.
-  // A roll's numbers are likewise final in game state well before the click-to-roll animation
-  // plays them out — an exchange's "resolution" line waits for rollPhase to actually reach
-  // 'both', and the two "bench" lines wait for the bench reveal's own 'result' phase, so the
-  // log never spoils a result the roll-zone hasn't shown yet.
+  // Roll values are final in game state before their animations play, so each roll log entry
+  // waits for its corresponding die to land. The possession result waits until both are shown.
+  // Bench entries follow the same rule and wait for the bench reveal to finish.
   const visibleLog = turn.log.filter((e) => {
-    if (e.tag === 'action') return e.stepIndex < turn.exchangeIndex || turn.stage === 'resolved' || turn.stage === 'bench';
+    if (e.tag === 'action') return e.stepIndex < turn.exchangeIndex || turn.stage === 'resolved' || turn.stage === 'bench' || turn.stage === 'complete';
+    if (e.tag === 'roll-offense' && turn.stage === 'resolved' && e.stepIndex === turn.exchangeIndex) {
+      return !['idle-off', 'rolling-off'].includes(rollPhase);
+    }
+    if (e.tag === 'roll-defense' && turn.stage === 'resolved' && e.stepIndex === turn.exchangeIndex) {
+      return ['revealed-def', 'both'].includes(rollPhase);
+    }
     if (e.tag === 'resolution') return !(turn.stage === 'resolved' && e.stepIndex === turn.exchangeIndex) || rollPhase === 'both';
     if (e.tag === 'bench') return turn.stage !== 'bench' || benchPhase === 'result';
     return true;
   });
-
-  const advanceLabel = 'Finish Turn';
-  // Only the bench stage still needs a manual footer button — the coin flip, a card decision
-  // (human's own picker, a wait message for a live opponent, or the auto-advance above for an
-  // AI), and a resolving roll all move themselves along without one.
-  const showGenericAdvance = turn.stage === 'bench' && benchPhase === 'result';
+  const visibleBoardActions = (turn.boardActions || []).filter((entry) => (
+    entry.stepIndex === turn.exchangeIndex && (turn.stage === 'resolved' || turn.stage === 'bench')
+  ));
 
   const statusFor = (side) => {
     const team = side === 'a' ? teamA : teamB;
@@ -442,11 +453,14 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
     }
     const aSum = Math.round((turn.aOffTotal + turn.aDefTotal + turn.aBench + turn.extraA.leagueMod) * 100) / 100;
     const bSum = Math.round((turn.bOffTotal + turn.bDefTotal + turn.bBench + turn.extraB.leagueMod) * 100) / 100;
-    const winnerTeam = aSum >= bSum ? teamA : teamB;
+    const winnerTeam = m.result?.winner || (aSum >= bSum ? teamA : teamB);
     return (
       <div className="t2-rollzone-coin t2-fade-in">
         <div className="t2-coin"><div className="t2-coin-face">🏆</div><div className="t2-coin-brand">Final</div></div>
         <div className="t2-rollzone-caption">{winnerTeam.name} Wins<br /><span>{resultBlurb}</span></div>
+        {m.result && onBack && (
+          <button className="t2-back-to-bracket" onClick={onBack}>Back to Playoff Bracket</button>
+        )}
       </div>
     );
   };
@@ -459,6 +473,17 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
 
           <div className="t2-rollzone">
             {renderRollCircle()}
+
+            {visibleBoardActions.length > 0 && (
+              <div className="t2-played-cards">
+                {visibleBoardActions.map((entry, i) => (
+                  <div className="t2-played-card" key={`${entry.stepIndex}-${entry.teamName}-${entry.cardName}-${i}`}>
+                    <div className="t2-played-card-title">{entry.teamName} played {entry.cardName}</div>
+                    {entry.description && <div className="t2-played-card-description">{entry.description}</div>}
+                  </div>
+                ))}
+              </div>
+            )}
 
             {turn.stage === 'card' && myTurnToAct && (
               <div className="t2-carddecision">
@@ -525,8 +550,11 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
               return (
                 <div className="t2-report t2-fade-in">
                   <div className="t2-report-row"><span className="t2-report-label">Possession</span><span>{offWon ? `${offTeam.name} wins` : `${defTeam.name} wins`}</span></div>
-                  <div className="t2-report-row"><span className="t2-report-label">{offTeam.name} Offense</span><span>+{offTotal}{!offWon ? ' (reduced)' : ''}</span></div>
+                  <div className="t2-report-row"><span className="t2-report-label">{offTeam.name} Offense</span><span>+{offTotal}{!offWon ? ` (${defTeam.name} applied a ${Math.round(((defTeam.coach && defTeam.coach.defBonus) || 0) * 100)}% reduction)` : ''}</span></div>
                   <div className="t2-report-row"><span className="t2-report-label">{defTeam.name} Defense</span><span>+{defTotal}</span></div>
+                  {turn.exchangeIndex === 0 && (
+                    <button className="t2-next-possession" onClick={() => advance()}>Start Next Possession</button>
+                  )}
                 </div>
               );
             })()}
@@ -540,9 +568,6 @@ export default function TurnPanel({ state, actions, m, myTeamId }) {
             <div className="t2-board-actions">
               <button className="t2-restart-btn" onClick={() => actions.beginTurn()}>Restart Turn</button>
               <span className="t2-stage-counter">Stage {stageNumber(turn)} / {STAGE_ORDER.length - 1}</span>
-              {showGenericAdvance && (
-                <button className="t2-advance-btn" onClick={() => advance()}>{advanceLabel}</button>
-              )}
             </div>
           </div>
         </div>

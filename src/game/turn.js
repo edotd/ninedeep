@@ -60,6 +60,7 @@ export function beginTurn(state) {
     offenseSide: null,
     defenseSide: null,
     advA, advB, injA, injB, idsA, idsB, extraA, extraB, cardNotes, hcaA, hcaB,
+    boardActions: [],
     log: [],
   };
 }
@@ -94,6 +95,13 @@ function applyCard(state, m, side, role, card, targetId, stat) {
   const turn = m.turn;
   const actingTeam = side === 'a' ? m.a : m.b;
   if (!card) { pushLog(turn, 'action', `${actingTeam.name} passes.`); return; }
+  turn.boardActions ||= [];
+  turn.boardActions.push({
+    teamName: actingTeam.name,
+    cardName: card.name,
+    description: card.description || '',
+    stepIndex: turn.exchangeIndex,
+  });
   const otherSide = side === 'a' ? 'b' : 'a';
   const otherTeam = otherSide === 'a' ? m.a : m.b;
   const actingExtra = side === 'a' ? turn.extraA : turn.extraB;
@@ -143,11 +151,15 @@ function resolveExchange(state, m) {
   turn[`${defSide}DefDie`] = defRolled.die; turn[`${defSide}DefDieOther`] = defRolled.dieOther; turn[`${defSide}DefMode`] = defRolled.mode;
   turn[`${defSide}DefMod`] = defRolled.mod; turn[`${defSide}DefTotal`] = defenseOutput; turn[`${defSide}DefSides`] = defSidesN;
 
+  // Keep each die and the possession outcome as separate log events. The values are resolved
+  // atomically here, while TurnPanel reveals these entries one at a time as each on-screen die
+  // lands. This also gives completed and serialized matches a faithful roll-by-roll history.
+  pushLog(turn, 'roll-offense', `${offenseTeam.name} rolls ${offRolled.die} (1d${offSides}) on Offense.`);
+  pushLog(turn, 'roll-defense', `${defenseTeam.name} rolls ${defRolled.die} (1d${defSidesN}) on Defense.`);
   pushLog(turn, 'resolution',
-    `${offenseTeam.name} rolls ${offRolled.die} (1d${offSides}) on Offense vs ${defenseTeam.name}'s ${defRolled.die} (1d${defSidesN}) on Defense — ` +
     (offenseWon
-      ? `offense wins the possession, ${offenseTeam.name} banks the full ${offenseOutput}.`
-      : `defense wins the possession — ${offenseTeam.name}'s offense is cut to ${offenseOutput} (${Math.round(haircut * 100)}% haircut from ${defenseTeam.name}'s coaching).`) +
+      ? `Offense wins the possession — ${offenseTeam.name} banks the full ${offenseOutput}.`
+      : `Defense wins the possession — ${offenseTeam.name}'s offense is cut to ${offenseOutput} (${Math.round(haircut * 100)}% haircut from ${defenseTeam.name}'s coaching).`) +
     ` ${defenseTeam.name}'s defense banks ${defenseOutput} regardless.`);
 
   turn.current = null;

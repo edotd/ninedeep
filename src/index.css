@@ -768,7 +768,8 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 
 .t2-rollzone{padding:44px 24px;border-bottom:1px solid var(--ink-rule);border-top:1px solid var(--ink-rule);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;min-height:300px;box-sizing:border-box;}
 .t2-rollzone-coin,.t2-rollzone-die{display:flex;flex-direction:column;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;width:100%;}
-.t2-rollzone-dual{display:flex;gap:48px;flex-wrap:wrap;justify-content:center;align-items:center;width:100%;}
+.t2-rollzone-dual{display:flex;gap:clamp(8px,3vw,48px);flex-wrap:nowrap;justify-content:center;align-items:flex-start;width:100%;}
+.t2-rollzone-dual > .t2-rollzone-die{width:auto;flex:1 1 0;min-width:0;}
 .t2-die-stage{display:flex;align-items:center;justify-content:center;}
 .t2-coin{width:130px;height:130px;border-radius:50%;background:var(--file);box-shadow:inset 0 0 0 3px var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex-shrink:0;}
 .t2-coin-face{font-family:var(--font-display);font-size:26px;line-height:.9;color:var(--ink);text-transform:uppercase;}
@@ -785,6 +786,13 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 @media(prefers-reduced-motion:reduce){.t2-fade-in{animation:none;}}
 .t2-rollzone-caption{font-family:var(--font-label);font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--file);text-align:center;line-height:1.5;}
 .t2-rollzone-caption span{display:block;font-family:var(--font-mono);font-size:12px;letter-spacing:.02em;color:var(--ink-muted);text-transform:none;margin-top:2px;}
+.t2-played-cards{width:100%;max-width:640px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+.t2-played-card{border:1px solid var(--ink-rule);background:var(--ink);padding:10px 12px;}
+.t2-played-card-title{font-family:var(--font-label);font-size:11px;line-height:1.35;letter-spacing:.06em;text-transform:uppercase;color:var(--franchise);}
+.t2-played-card-description{font-family:var(--font-mono);font-size:10px;line-height:1.45;color:var(--ink-muted);margin-top:4px;}
+.t2-next-possession{width:100%;margin-top:12px;padding:11px 14px;border:1px solid var(--franchise);background:var(--franchise);color:var(--ink);font-family:var(--font-label);font-size:12px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;}
+.t2-back-to-bracket{margin-top:4px;padding:12px 22px;border:1px solid var(--franchise);background:var(--franchise);color:var(--ink);font-family:var(--font-label);font-size:12px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;}
+@media(max-width:520px){.t2-played-cards{grid-template-columns:1fr;}}
 
 .t2-carddecision{width:100%;max-width:640px;border:1px solid var(--franchise);background:var(--ink);padding:20px;}
 .t2-carddecision-head{display:flex;align-items:center;justify-content:space-between;font-family:var(--font-label);font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--franchise);margin-bottom:8px;}
@@ -793,7 +801,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 
 .t2-report{background:var(--form);padding:20px;width:100%;max-width:640px;}
 .t2-report-row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-family:var(--font-mono);font-size:14px;color:var(--file-body);padding:8px 0;border-bottom:1px solid var(--form-rule);}
-.t2-report-row:last-child{border-bottom:none;}
+.t2-report-row:last-of-type{border-bottom:none;}
 .t2-report-label{color:var(--file-muted);}
 
 .t2-cards{display:flex;flex-direction:column;gap:10px;}

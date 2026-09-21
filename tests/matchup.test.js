@@ -103,6 +103,11 @@ test('a card played during defense\'s blind window still cuts that same exchange
   const offSide = m.turn.offenseSide;
   assert(m.turn[`${offSide}OffMod`] < baselineMod);
   assert(m.turn.cardNotes.some(n=>n.cardName==='Scouted Tendencies'));
+  assert.equal(m.turn.log.filter((entry)=>entry.tag==='roll-offense').length,1);
+  assert.equal(m.turn.log.filter((entry)=>entry.tag==='roll-defense').length,1);
+  assert.equal(m.turn.log.filter((entry)=>entry.tag==='resolution').length,1);
+  assert.equal(m.turn.boardActions.length,1);
+  assert.equal(m.turn.boardActions[0].cardName,'Scouted Tendencies');
 });
 
 test('instant simulation executes new effects and finishes', () => {

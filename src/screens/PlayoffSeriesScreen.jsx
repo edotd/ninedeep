@@ -9,6 +9,9 @@ export default function PlayoffSeriesScreen({ state, actions, myTeamId }) {
   const idx = p.activeMatchIndex;
   const m = p.matches[idx];
   const [revealIndex, setRevealIndex] = useState(m.result ? Infinity : 0);
+  // A completed match opened from the bracket is a review. A match completed while this
+  // screen is already open stays on the live board and shows its winner there instead.
+  const [reviewMode, setReviewMode] = useState(Boolean(m.result));
   const timersRef = useRef([]);
   // In online play, actions.* writes through a Firestore transaction and only resolves in
   // state once the onSnapshot listener delivers the update — it does NOT mutate this m in
@@ -20,6 +23,7 @@ export default function PlayoffSeriesScreen({ state, actions, myTeamId }) {
   useEffect(() => {
     timersRef.current.forEach(clearTimeout);
     hadResultRef.current = Boolean(m.result);
+    setReviewMode(Boolean(m.result));
     setRevealIndex(m.result ? Infinity : 0);
     return () => { timersRef.current.forEach(clearTimeout); };
   }, [idx]);
@@ -59,11 +63,12 @@ export default function PlayoffSeriesScreen({ state, actions, myTeamId }) {
   };
 
   const rolling = m.result && revealIndex < buildMatchEvents(m.result).length;
+  const showLiveBoard = Boolean(m.turn && !reviewMode);
 
   return (
     <div className="screen">
-      <button className="reset-link" style={{ marginBottom: 12 }} onClick={actions.closeSeries}>← Back to Playoff Bracket</button>
-      {!(m.turn && !m.result) && (
+      {!showLiveBoard && <button className="reset-link" style={{ marginBottom: 12 }} onClick={actions.closeSeries}>← Back to Playoff Bracket</button>}
+      {!showLiveBoard && (
         <>
           <h1>{m.label}</h1>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10, margin: '4px 0 16px' }}>
@@ -73,20 +78,21 @@ export default function PlayoffSeriesScreen({ state, actions, myTeamId }) {
           </div>
         </>
       )}
-      {m.result ? (
+      {m.result && reviewMode ? (
         <>
           <MatchupBox title={m.label} m={m.result} revealIndex={revealIndex} onSkip={rolling ? handleSkip : undefined} />
-          <button
-            className="primary"
-            disabled={rolling}
-            style={{ width: '100%', padding: 16, margin: '16px 0' }}
-            onClick={actions.closeSeries}
-          >
-            {rolling ? 'Rolling…' : 'Back to Playoff Bracket'}
-          </button>
+          {!rolling && (
+            <button
+              className="primary"
+              style={{ width: '100%', padding: 16, margin: '16px 0' }}
+              onClick={actions.closeSeries}
+            >
+              Back to Playoff Bracket
+            </button>
+          )}
         </>
       ) : m.turn ? (
-        <TurnPanel state={state} actions={actions} m={m} myTeamId={myTeamId} />
+        <TurnPanel state={state} actions={actions} m={m} myTeamId={myTeamId} onBack={actions.closeSeries} />
       ) : null}
     </div>
   );
