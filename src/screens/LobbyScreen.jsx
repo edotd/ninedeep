@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import EraSettingsFields from '../components/EraSettingsFields';
 
-export default function LobbyScreen({ state, actions, roomCode, myUid, onExit }) {
+export default function LobbyScreen({ state, actions, roomCode, myUid, onExit, actionError }) {
   const [name, setName] = useState('');
   const isHost = state.hostUid === myUid;
   const mySeat = state.seats.find((s) => s.ownerUid === myUid);
@@ -11,6 +11,7 @@ export default function LobbyScreen({ state, actions, roomCode, myUid, onExit })
   return (
     <div className="screen">
       {onExit && <button className="reset-link" style={{ marginBottom: 12 }} onClick={onExit}>← Leave</button>}
+      {actionError && <div className="statusline bad" style={{ marginBottom: 12 }}>{actionError}</div>}
       <h1>Lobby</h1>
       <div className="pull-slot">
         <div className="pull-label">Room Code — share this link with friends</div>

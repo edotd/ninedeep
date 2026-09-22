@@ -3,7 +3,7 @@ import LobbyScreen from './screens/LobbyScreen';
 import GameShell from './components/GameShell';
 
 export default function OnlineGame({ roomCode, myUid, onExit }) {
-  const { state, actions, myTeamId } = useRoomGame(roomCode, myUid);
+  const { state, actions, myTeamId, actionError } = useRoomGame(roomCode, myUid);
 
   if (!state) {
     return (
@@ -15,7 +15,7 @@ export default function OnlineGame({ roomCode, myUid, onExit }) {
   }
 
   if (state.phase === 'lobby') {
-    return <LobbyScreen state={state} actions={actions} roomCode={roomCode} myUid={myUid} onExit={onExit} />;
+    return <LobbyScreen state={state} actions={actions} roomCode={roomCode} myUid={myUid} onExit={onExit} actionError={actionError} />;
   }
 
   // The era already started without you (joined late, or your seat was reassigned) —

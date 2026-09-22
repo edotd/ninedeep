@@ -15,6 +15,11 @@ const lobbyActionMap = { claimSeat, leaveSeat, startEraOnline, resetRoomToLobby 
 export function useRoomGame(roomCode, myUid) {
   const [state, setState] = useState(null);
   const stateRef = useRef(null);
+  // Surfaced so the UI can actually tell a player their click didn't land — the optimistic
+  // apply below makes every action look instantly successful even when the real Firestore
+  // transaction behind it later fails (a stale/racing auth token, a dropped connection on a
+  // phone's network), so without this the failure is invisible outside the console.
+  const [actionError, setActionError] = useState(null);
 
   useEffect(() => {
     if (!roomCode) return;
@@ -26,6 +31,7 @@ export function useRoomGame(roomCode, myUid) {
 
   const actions = useMemo(() => {
     const wrap = (fn) => (...args) => {
+      setActionError(null);
       if (stateRef.current) {
         try {
           const optimistic = structuredClone(stateRef.current);
@@ -38,7 +44,13 @@ export function useRoomGame(roomCode, myUid) {
           // still the source of truth and will correct the view once it resolves.
         }
       }
-      return applyGameAction(roomCode, fn, ...args).catch((err) => console.error('[nine-deep] action failed:', err));
+      return applyGameAction(roomCode, fn, ...args).catch((err) => {
+        console.error('[nine-deep] action failed:', err);
+        // The next real snapshot (or the retry this prompts) replaces this optimistic guess,
+        // but until then the local view still shows the action as having worked — flag it so
+        // the screen can tell the player to retry instead of silently doing nothing.
+        setActionError('That didn\'t save — check your connection and try again.');
+      });
     };
     return {
       ...Object.fromEntries(Object.entries(actionMap).map(([name, fn]) => [name, wrap(fn)])),
@@ -48,5 +60,5 @@ export function useRoomGame(roomCode, myUid) {
 
   const myTeamId = state && state.teams ? (state.teams.find((t) => t.ownerUid === myUid)?.id ?? null) : null;
 
-  return { state, actions, myTeamId };
+  return { state, actions, myTeamId, actionError };
 }
