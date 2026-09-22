@@ -74,7 +74,7 @@ export function applyGameplanToTurn(turn, side, card) {
   const target = card.target === 'opponent' ? opponent : own;
   addEffects(target, card.effects);
   turn.gameplanNotes ||= [];
-  turn.gameplanNotes.push({ teamSide: side, cardName: card.name, description: card.description });
+  turn.gameplanNotes.push({ teamSide: side, cardName: card.name, description: card.description, card: { ...card } });
 }
 
 export function playGameplanCard(state, teamIdx, cardId, context, targetTeamId) {

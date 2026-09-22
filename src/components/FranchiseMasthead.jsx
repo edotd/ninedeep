@@ -34,10 +34,10 @@ export default function FranchiseMasthead({ state, teamId }) {
       </div>
       <div className="ts-masthead-right persistent">
         <div className="ts-hero-metric chemistry"><div className="ts-proj-label">Chemistry</div><div className="ts-hero-value">{synergy.grade}</div><div className="ts-proj-rank">{synergy.score}</div></div>
-        <div className="ts-hero-metric"><div className="ts-proj-label">Bench</div><div className="ts-hero-value">{bench ?? '—'}</div><div className="ts-proj-rank">Output</div></div>
         <div className="ts-hero-metric"><div className="ts-proj-label">Output</div><div className="ts-hero-value accent">{output ? output.total : '—'}</div><div className="ts-proj-rank">{output ? `${ordinal(rankFor('total'))} of ${rankedCount}` : '—'}</div></div>
         <div className="ts-hero-metric"><div className="ts-proj-label">Offense</div><div className="ts-hero-value">{output ? output.off : '—'}</div><div className="ts-proj-rank">{output ? ordinal(rankFor('off')) : '—'}</div></div>
         <div className="ts-hero-metric"><div className="ts-proj-label">Defense</div><div className="ts-hero-value">{output ? output.def : '—'}</div><div className="ts-proj-rank">{output ? ordinal(rankFor('def')) : '—'}</div></div>
+        <div className="ts-hero-metric"><div className="ts-proj-label">Bench</div><div className="ts-hero-value">{bench ?? '—'}</div><div className="ts-proj-rank">Output</div></div>
       </div>
     </div>
   );

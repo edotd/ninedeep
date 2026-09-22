@@ -816,8 +816,8 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .t2-teamboard.active{background:rgba(240,160,61,.05);}
 .t2-teamboard.flip{flex-direction:column-reverse;}
 .t2-teamboard-meta{display:grid;grid-template-columns:160px minmax(0,1fr) 160px;align-items:center;gap:14px;min-width:0;}
-.t2-teamboard-meta>.nd2-coach-slot{grid-column:1;grid-row:1;}
-.t2-teamboard.flip .t2-teamboard-meta>.nd2-coach-slot{grid-column:3;}
+.t2-teamboard-meta>.t2-coach-dock{grid-column:1;grid-row:1;}
+.t2-teamboard.flip .t2-teamboard-meta>.t2-coach-dock{grid-column:3;}
 .t2-teamboard-name{grid-column:2;grid-row:1;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-width:0;}
 .t2-teamboard-name-line{display:flex;align-items:center;justify-content:center;gap:12px;min-width:0;width:100%;}
 .t2-hca-tag{display:inline-block;font-family:var(--font-label);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--franchise);border:1px solid var(--franchise);padding:3px 8px;}
@@ -828,9 +828,20 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .t2-teamboard.active .t2-teamboard-status{color:var(--franchise);}
 .t2-adjustment-dock{display:flex;align-items:flex-start;justify-content:center;gap:5px;height:34px;max-width:100%;overflow:visible;animation:t2-dock-arrive 180ms ease-out both;}
 .t2-teamboard.flip .t2-adjustment-dock{order:-1;}
-.t2-adjustment-mini{position:relative;width:96px;height:34px;overflow:hidden;border:1px solid var(--franchise);background:var(--ink-deep);box-shadow:0 4px 10px rgba(0,0,0,.35);flex:0 0 96px;}
+.t2-adjustment-mini{position:relative;width:96px;height:34px;overflow:hidden;border:1px solid var(--franchise);background:var(--ink-deep);box-shadow:0 4px 10px rgba(0,0,0,.35);flex:0 0 96px;z-index:4;}
 .t2-adjustment-mini>.mu2-wrap{position:absolute;left:0;top:0;width:280px;max-width:none;transform:scale(.343);transform-origin:top left;}
 .t2-adjustment-mini>span{display:block;padding:9px 5px;font-family:var(--font-label);font-size:9px;letter-spacing:.04em;color:var(--franchise);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.t2-adjustment-mini:hover{overflow:visible;z-index:30;}
+.t2-adjustment-mini:hover>.mu2-wrap{left:50%;top:calc(100% + 7px);transform:translateX(-50%) scale(1);transform-origin:top center;filter:drop-shadow(0 16px 28px rgba(0,0,0,.55));}
+.t2-teamboard.flip .t2-adjustment-mini:hover>.mu2-wrap{top:auto;bottom:calc(100% + 7px);transform-origin:bottom center;}
+.t2-coach-dock{display:flex;align-items:center;gap:5px;min-width:0;position:relative;z-index:5;}
+.t2-teamboard.flip .t2-coach-dock{flex-direction:row-reverse;}
+.t2-gameplan-mini{position:relative;width:42px;height:58px;overflow:hidden;flex:0 0 42px;border:1px solid var(--franchise);background:var(--ink);z-index:4;}
+.t2-gameplan-mini>.strategy-card{position:absolute;left:0;top:0;width:240px;min-height:150px;transform:scale(.175);transform-origin:top left;}
+.t2-gameplan-mini>span{display:block;padding:6px 3px;font:8px var(--font-label);color:var(--franchise);text-transform:uppercase;}
+.t2-gameplan-mini:hover{overflow:visible;z-index:31;}
+.t2-gameplan-mini:hover>.strategy-card{left:0;top:calc(100% + 7px);transform:scale(1);transform-origin:top left;box-shadow:0 16px 30px rgba(0,0,0,.55);}
+.t2-teamboard.flip .t2-gameplan-mini:hover>.strategy-card{top:auto;bottom:calc(100% + 7px);transform-origin:bottom left;}
 @keyframes t2-dock-arrive{from{opacity:0;transform:scale(1.35);}to{opacity:1;transform:scale(1);}}
 
 /* Played Adjustment cards reveal above the entire match board, so they never alter the dice
@@ -979,6 +990,14 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .t2-auto-progress input{accent-color:var(--franchise);width:14px;height:14px;cursor:pointer;}
 
 .t2-carddecision-compact{max-width:420px;padding:16px 20px;}
+.t2-adjustment-picker-window{position:fixed;inset:0;z-index:105;background:rgba(11,17,30,.76);display:flex;align-items:center;justify-content:center;padding:18px;}
+.t2-adjustment-picker{width:min(920px,100%);max-height:88vh;overflow:auto;background:var(--ink);border:2px solid var(--franchise);padding:18px;box-shadow:0 22px 70px rgba(0,0,0,.55);}
+.t2-adjustment-picker-cards{display:flex;gap:12px;overflow-x:auto;padding:4px 3px 14px;}
+.t2-adjustment-picker-card{width:260px;flex:0 0 260px;border:2px solid transparent;background:none;padding:0;cursor:pointer;text-align:left;}
+.t2-adjustment-picker-card:hover,.t2-adjustment-picker-card.selected{border-color:var(--franchise);}
+.t2-adjustment-picker-card .mu2-wrap{width:100%;}.t2-adjustment-picker-card .mu2-card{margin-bottom:0;}
+.t2-adjustment-targets{border:1px solid var(--ink-rule);padding:10px;margin-bottom:10px;max-height:180px;overflow:auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:5px;}
+.t2-adjustment-targets .db-target-picker-head,.t2-adjustment-targets .db-target-picker-empty{grid-column:1/-1;}
 .t2-pass-btn{width:100%;background:none;border:1px solid var(--ink-rule);color:var(--ink-muted);padding:14px;font-family:var(--font-label);font-size:12px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;}
 .t2-timer{font-family:var(--font-mono);font-size:13px;letter-spacing:.06em;color:var(--franchise);}
 .t2-timer.urgent{color:var(--bad);}

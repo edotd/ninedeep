@@ -358,8 +358,8 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             <div className="ts-section">
               <div className="ts-heading">Gameplan Cards</div>
               <div className="strategy-deal-row">
-                {(team.gameplanCards || []).map((card) => <div className="strategy-card-wrap" key={card.id}><StrategyCard card={card} /><StrategyAction card={card} team={team} state={state} actions={actions} myTeamId={myTeamId} readOnly={readOnly} /></div>)}
-                {(team.gameplanCards || []).length === 0 && <div className="strategy-empty">New cards are dealt at the start of each season.</div>}
+                {(team.gameplanCards || []).filter((card) => !card.used).map((card) => <div className="strategy-card-wrap" key={card.id}><StrategyCard card={card} /><StrategyAction card={card} team={team} state={state} actions={actions} myTeamId={myTeamId} readOnly={readOnly} /></div>)}
+                {(team.gameplanCards || []).every((card) => card.used) && <div className="strategy-empty">No Gameplan cards are available.</div>}
               </div>
             </div>
           )}

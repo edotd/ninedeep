@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { useIsDesktop } from '../hooks/useIsDesktop';
 import { offenseDieSize, defenseDieSize } from '../game/roster';
+import { playableCards } from '../game/matchup';
+import { eligibleStatTargets, PLAYER_STATS } from '../game/supplementalEffects';
 import Die, { ROLL_DURATION_MS } from './Die';
 import BallMark from './BallMark';
 import CompactPlayerTile from './CompactPlayerTile';
 import CompactCoachCard from './CompactCoachCard';
 import MatchupCard from './MatchupCard';
+import StrategyCard from './StrategyCard';
 
 // Decision clock for a blind matchup-card choice — long enough to read your hand, short
 // enough to put real pressure on the pick. Auto-passes on timeout so a stalled player can't
@@ -77,7 +80,7 @@ function readAutoProgress() {
 
 // All nine rotation tiles remain visible. The coach gets a dedicated dock beside the team
 // name: below the home roster on the left, and above the away roster on the right.
-function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, isActive, flip, contributing }) {
+function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, gameplanPlays, isActive, flip, contributing }) {
   const hand = team.hand || [];
   const activeIds = ids || team.activeIds || [];
   const starters = activeIds.map((id) => hand.find((c) => c.id === id)).filter(Boolean);
@@ -90,7 +93,14 @@ function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, isActive
         {chipSlots(bench, 4).map((c, i) => (c ? <CompactPlayerTile key={`b${i}`} card={c} edge={edge} /> : <div key={`b${i}`} className="nd2-tile empty" />))}
       </div>
       <div className="t2-teamboard-meta">
-        {team.coach && <div className="nd2-coach-slot"><CompactCoachCard team={team} edge={edge} /></div>}
+        {team.coach && <div className="t2-coach-dock">
+          <div className="nd2-coach-slot"><CompactCoachCard team={team} edge={edge} /></div>
+          {gameplanPlays?.map((entry, i) => (
+            <div className="t2-gameplan-mini" key={`${entry.teamName}-${entry.cardName}-${i}`} title={entry.description}>
+              {entry.card ? <StrategyCard card={entry.card} /> : <span>{entry.cardName}</span>}
+            </div>
+          ))}
+        </div>}
         <div className="t2-teamboard-name">
           {hca && !flip && <span className="t2-hca-tag">Home Court</span>}
           <div className="t2-teamboard-name-line">
@@ -138,6 +148,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
   const [benchPhase, setBenchPhase] = useState('first');
   const benchTimerRef = useRef(null);
   const [resultBlurb, setResultBlurb] = useState('');
+  const [selectedAdjustment, setSelectedAdjustment] = useState(null);
   // Which side's mod-breakdown popover is open, if any — 'off' | 'def' | null. Reset whenever
   // the exchange or stage moves on, so it never lingers open over stale numbers.
   const [breakdownOpen, setBreakdownOpen] = useState(null);
@@ -188,6 +199,24 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
   const revealingAdjustments = Boolean(boardActionSignature && settledActionSignature !== boardActionSignature);
 
   const advance = (payload) => actions.advanceTurn(payload);
+  const availableAdjustments = myTurnToAct ? playableCards(myTeam) : [];
+  const adjustmentTargetTeam = selectedAdjustment
+    ? (selectedAdjustment.target === 'self' ? myTeam : (myTeam === teamA ? teamB : teamA))
+    : null;
+  const adjustmentTargetIds = adjustmentTargetTeam
+    ? (adjustmentTargetTeam === teamA ? turn.idsA : turn.idsB)
+    : [];
+  const adjustmentTargets = selectedAdjustment
+    ? eligibleStatTargets(adjustmentTargetTeam, adjustmentTargetIds, selectedAdjustment)
+    : [];
+  const chooseAdjustment = (card) => {
+    if (card.targetsPlayer) {
+      setSelectedAdjustment(card);
+      return;
+    }
+    setSelectedAdjustment(null);
+    advance({ cardId: card.id });
+  };
 
   // An AI-controlled team's card decision needs this client to call advanceTurn() to actually
   // process it, but it should never wait on a click — it submits on its own, same as the coin
@@ -329,6 +358,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
     return () => clearInterval(iv);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myTurnToAct, turn.exchangeIndex, cur?.team, cur?.role]);
+  useEffect(() => { if (!myTurnToAct) setSelectedAdjustment(null); }, [myTurnToAct]);
 
   // Blind by convention: a card play is logged the instant it's chosen, but withheld from
   // display until its own exchange resolves — otherwise the second team to act (or a
@@ -352,6 +382,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
     teamName: entry.teamSide === 'a' ? teamA.name : teamB.name,
     cardName: entry.cardName,
     description: entry.description,
+    card: entry.card,
     stepIndex: -1,
   }));
   // Each played-card notice draws on the side of the board the team that played it sits on,
@@ -359,6 +390,8 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
   // (next to teamA's board), teamB's below (next to teamB's).
   const teamACardPlays = visibleBoardActions.filter((entry) => entry.teamName === teamA.name);
   const teamBCardPlays = visibleBoardActions.filter((entry) => entry.teamName === teamB.name);
+  const teamAGameplans = gameplanActions.filter((entry) => entry.teamName === teamA.name);
+  const teamBGameplans = gameplanActions.filter((entry) => entry.teamName === teamB.name);
   const settledTeamACards = revealingAdjustments ? [] : teamACardPlays;
   const settledTeamBCards = revealingAdjustments ? [] : teamBCardPlays;
 
@@ -602,22 +635,32 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
       )}
       <div className={'t2-body' + (logCollapsed ? ' log-collapsed' : '')}>
         <div className="t2-board">
-          <TeamBoard team={teamA} ids={turn.idsA} hca={turn.hcaA} statusLabel={statusFor('a')} roleLabel={roleFor(teamA)} cardPlays={settledTeamACards} isActive={offenseTeam === teamA || defenseTeam === teamA} contributing={rollingSide === teamA} />
+          <TeamBoard team={teamA} ids={turn.idsA} hca={turn.hcaA} statusLabel={statusFor('a')} roleLabel={roleFor(teamA)} cardPlays={settledTeamACards} gameplanPlays={teamAGameplans} isActive={offenseTeam === teamA || defenseTeam === teamA} contributing={rollingSide === teamA} />
 
           <div className="t2-rollzone">
-            {gameplanActions.length > 0 && renderPlayedCards(gameplanActions)}
-
             {renderRollCircle()}
 
             {turn.stage === 'card' && myTurnToAct && (
-              <div className="t2-carddecision t2-carddecision-compact">
-                <div className="t2-carddecision-head">
-                  <span>Play A Adjustment Card</span>
-                  <span className={'t2-timer' + (timeLeft <= 3 ? ' urgent' : '')}>{Math.ceil(timeLeft)}s</span>
-                </div>
-                <div className="t2-carddecision-desc">Click a card in your bar below, or pass — blind, before either die is rolled.</div>
-                <div className="t2-carddecision-actions">
-                  <button className="t2-pass-btn" onClick={() => advance({ pass: true })}>Pass</button>
+              <div className="t2-adjustment-picker-window">
+                <div className="t2-adjustment-picker" role="dialog" aria-modal="true" aria-label="Play an Adjustment card">
+                  <div className="t2-carddecision-head"><span>Play An Adjustment Card</span><span className={'t2-timer' + (timeLeft <= 3 ? ' urgent' : '')}>{Math.ceil(timeLeft)}s</span></div>
+                  <div className="t2-carddecision-desc">Choose one available card or pass. Your selection stays hidden until both teams lock in.</div>
+                  <div className="t2-adjustment-picker-cards">
+                    {availableAdjustments.map((card) => <button key={card.id} className={'t2-adjustment-picker-card' + (selectedAdjustment?.id === card.id ? ' selected' : '')} onClick={() => chooseAdjustment(card)}><MatchupCard card={card} playoff /></button>)}
+                    {!availableAdjustments.length && <div className="t2-waiting">No Adjustment cards are available.</div>}
+                  </div>
+                  {selectedAdjustment && (
+                    <div className="t2-adjustment-targets">
+                      <div className="db-target-picker-head">Choose a target — {selectedAdjustment.name}</div>
+                      {!adjustmentTargets.length && <div className="db-target-picker-empty">No eligible starter.</div>}
+                      {adjustmentTargets.flatMap((player) => (selectedAdjustment.effectType ? PLAYER_STATS : [null]).map((stat) => (
+                        <button key={`${player.id}-${stat}`} className="db-target-btn" onClick={() => { advance({ cardId: selectedAdjustment.id, targetId: player.id, stat }); setSelectedAdjustment(null); }}>
+                          {player.position} · {player.archetype}{stat ? ` · ${stat} (${player.stats[stat]})` : ''}
+                        </button>
+                      )))}
+                    </div>
+                  )}
+                  <button className="t2-pass-btn" onClick={() => { setSelectedAdjustment(null); advance({ pass: true }); }}>Pass</button>
                 </div>
               </div>
             )}
@@ -660,7 +703,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
 
           </div>
 
-          <TeamBoard team={teamB} ids={turn.idsB} hca={turn.hcaB} statusLabel={statusFor('b')} roleLabel={roleFor(teamB)} cardPlays={settledTeamBCards} isActive={offenseTeam === teamB || defenseTeam === teamB} contributing={rollingSide === teamB} flip />
+          <TeamBoard team={teamB} ids={turn.idsB} hca={turn.hcaB} statusLabel={statusFor('b')} roleLabel={roleFor(teamB)} cardPlays={settledTeamBCards} gameplanPlays={teamBGameplans} isActive={offenseTeam === teamB || defenseTeam === teamB} contributing={rollingSide === teamB} flip />
         </div>
 
         <div className={'t2-log' + (logCollapsed ? ' collapsed' : '')}>

@@ -135,7 +135,7 @@ export default function DesktopBar({ state, myTeamId, actions, dealProgress }) {
   const market = foCount >= 3 ? team.market : null;
   const frontOfficeTeam = foCount >= 1 ? team : null;
   const fullyDealt = !inDeal || (dealProgress ?? 0) >= rawStarters.length + rawBench.length + 3 + rawMatchup.length;
-  const gameplanCards = fullyDealt ? (team.gameplanCards || []) : [];
+  const gameplanCards = fullyDealt ? (team.gameplanCards || []).filter((card) => !card.used) : [];
 
   const [preview, setPreview] = useState(null); // { rect, type, content }
   const handleHover = (el, type, content) => setPreview({ rect: el.getBoundingClientRect(), type, content });
