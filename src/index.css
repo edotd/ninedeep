@@ -83,7 +83,7 @@
 @media(max-width:680px){.offseason-file{margin:0 0 110px;min-height:0;border-inline:0;box-shadow:none}.of-title{font-size:25px}.of-title span{display:none}.of-index>div{padding:9px 5px;font-size:8px;text-align:center}.of-index small,.of-index em{font-size:7px}.of-content{padding:14px 16px;max-height:none;overflow:visible}.of-content h1{font-size:38px}.of-table-head,.of-table-row{grid-template-columns:1fr 78px 42px;gap:6px;padding:9px 6px}.of-ledger{font-size:8px;padding:10px;flex-wrap:wrap}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body,#root{margin:0;padding:0;background:var(--file);color:var(--ink);font-family:var(--font-mono);}
-body{min-height:100vh;padding-bottom:176px;}
+body{min-height:100vh;padding-bottom:138px;}
 h1{font-family:var(--font-display);font-size:38px;line-height:0.86;margin:6px 0 14px;font-weight:400;color:var(--ink);letter-spacing:.01em;}
 h2{font-family:var(--font-label);font-size:13px;line-height:1.3;margin:22px 0 10px;color:var(--file-muted);font-weight:400;text-transform:uppercase;letter-spacing:.12em;}
 p.lede{color:var(--file-body);font-size:14px;line-height:1.5;margin:0 0 14px;}
@@ -232,13 +232,13 @@ input.text-input.lobby-name-input{min-width:0;margin:0;padding:10px 12px;}
 .banner.good{background:var(--form);border-color:var(--approved);color:var(--approved);}
 .banner.bad{background:var(--form);border-color:var(--stamp);color:var(--stamp);}
 
-.bottombar{position:fixed;right:16px;bottom:calc(72px + 38px + 16px);z-index:12;background:var(--ink);border:1px solid var(--ink-rule);padding:10px;display:flex;gap:10px;width:auto;max-width:min(420px,calc(100vw - 32px));box-shadow:6px 6px 0 rgba(30,43,71,.16);}
+.bottombar{position:fixed;right:16px;bottom:calc(72px + 16px);z-index:12;background:var(--ink);border:1px solid var(--ink-rule);padding:10px;display:flex;gap:10px;width:auto;max-width:min(420px,calc(100vw - 32px));box-shadow:6px 6px 0 rgba(30,43,71,.16);}
 .bottombar button{flex:none;min-width:190px;}
 
 /* A corner-docked action button, used in place of the full-width .bottombar where the
    screen has no persistent bar underneath it (e.g. Front Office) and a floating button
    reads better than a bar spanning the whole width. */
-.corner-dock{position:fixed;right:16px;bottom:calc(72px + 38px + 16px + env(safe-area-inset-bottom));z-index:12;}
+.corner-dock{position:fixed;right:16px;bottom:calc(72px + 16px + env(safe-area-inset-bottom));z-index:12;}
 .corner-dock button.primary{flex:none;padding:16px 32px;}
 
 /* ---------- Persistent Bar (see brand handoff, "Component: Persistent Bar" — mobile) ---------- */
@@ -250,7 +250,7 @@ input.text-input.lobby-name-input{min-width:0;margin:0;padding:10px 12px;}
 .persistent-bar-section:active{background:rgba(240,160,61,.12);border-color:var(--franchise);}
 .persistent-bar-rotation{display:flex;flex-direction:column;gap:5px;flex-shrink:0;}
 .persistent-bar-rotation-label{font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;color:var(--ink-muted);text-transform:uppercase;white-space:nowrap;}
-.persistent-bar-rotation-grid{display:grid;grid-template-columns:repeat(9,1fr);gap:3px;width:96px;}
+.persistent-bar-rotation-grid{display:grid;grid-template-columns:repeat(5,9px);gap:3px;width:57px;}
 .persistent-bar-dot{width:9px;height:9px;background:var(--ink-rule);}
 .persistent-bar-dot.starter{background:var(--franchise);}
 .persistent-bar-dot.bench{background:var(--depth);}
@@ -396,21 +396,21 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .sidebar-standings-row.viewing{background:var(--file);color:var(--ink);}
 .sidebar-standings-row.viewing .sidebar-standings-tri,.sidebar-standings-row.viewing .sidebar-standings-val,.sidebar-standings-row.viewing .sidebar-standings-rank{color:var(--ink);}
 .sidebar-nav-secondary{border-top:1px solid var(--ink-rule);margin-top:8px;padding-top:6px;}
-.sidebar-footer{border-top:1px solid var(--ink-rule);padding-top:14px;margin-top:14px;padding-bottom:calc(var(--desktop-bar-height) + 38px);}
+.sidebar-footer{border-top:1px solid var(--ink-rule);padding-top:14px;margin-top:14px;padding-bottom:var(--desktop-bar-height);}
 .sidebar-era-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--ink-muted);text-transform:uppercase;margin-bottom:6px;}
 .sidebar-titles{display:flex;align-items:baseline;gap:7px;margin-top:12px;}
 .sidebar-titles-value{font-family:var(--font-display);font-size:30px;line-height:.8;color:var(--franchise);}
 .sidebar-titles-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;color:var(--franchise);text-transform:uppercase;}
 
-.desktop-content{flex:1;min-width:0;padding-bottom:calc(var(--desktop-bar-height) + 38px + 34px);}
+.desktop-content{flex:1;min-width:0;padding-bottom:calc(var(--desktop-bar-height) + 34px);}
 /* .screen/.bottombar's base rule (mobile-first) caps width at --content-width and centers
    with margin:0 auto — those two properties have to be explicitly cancelled here, not just
    have their padding overridden, or they keep applying on top of this rule since CSS merges
    declarations per-property rather than per-rule. That gap is what left visible margins down
    both sides of the desktop content pane even after this rule's padding was already in place. */
 .desktop-content .screen{max-width:none;margin:0;padding:28px;}
-.desktop-content .bottombar{left:auto;right:20px;bottom:calc(var(--desktop-bar-height) + 38px + 20px);padding:10px;}
-.desktop-content .corner-dock{bottom:calc(var(--desktop-bar-height) + 38px + 20px);}
+.desktop-content .bottombar{left:auto;right:20px;bottom:calc(var(--desktop-bar-height) + 20px);padding:10px;}
+.desktop-content .corner-dock{bottom:calc(var(--desktop-bar-height) + 20px);}
 
 /* Sized to comfortably fit a ~1440px viewport without horizontal scroll (a 1280px window
    still fits with the bar's overflow-x:auto as a safety net) — bigger and more legible than
@@ -1024,7 +1024,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
    The board and log own their internal overflow, so the page itself never scrolls mid-match. */
 @media (min-width:1000px){
   body:has(.t2-shell){overflow:hidden;}
-  .desktop-content:has(.t2-shell){height:calc(100vh - var(--desktop-bar-height) - 38px);padding-bottom:0;display:flex;flex-direction:column;overflow:hidden;}
+  .desktop-content:has(.t2-shell){height:calc(100vh - var(--desktop-bar-height));padding-bottom:0;display:flex;flex-direction:column;overflow:hidden;}
   .desktop-content:has(.t2-shell) .persistent-franchise-masthead{flex:0 0 auto;padding:8px 18px;}
   .desktop-content:has(.t2-shell) .persistent-franchise-masthead .ts-franchise-history{display:none;}
   .desktop-content:has(.t2-shell) .persistent-franchise-masthead .ts-masthead-name{font-size:28px;}

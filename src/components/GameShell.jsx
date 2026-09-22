@@ -23,7 +23,6 @@ import SimulatingSeasonScreen from '../screens/SimulatingSeasonScreen';
 import SeasonTransitionScreen from '../screens/SeasonTransitionScreen';
 import ContractsScreen from '../screens/ContractsScreen';
 import FreeAgencyScreen from '../screens/FreeAgencyScreen';
-import FreeAgencyTicker from './FreeAgencyTicker';
 import FranchiseMasthead from './FranchiseMasthead';
 
 const SCREENS = {
@@ -154,7 +153,6 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
           <FranchiseMasthead state={state} teamId={mastheadTeamId} />
           {mainBody}
         </div>
-        <FreeAgencyTicker activity={state.freeAgencyActivity} withBar={showBar} />
         {showBar && <DesktopBar state={state} myTeamId={myTeamId} actions={actions} dealProgress={dealProgress} />}
       </div>
     );
@@ -164,7 +162,6 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
     <>
       {showChrome && <div className="mobile-persistent-top"><Header {...headerProps} /><FranchiseMasthead state={state} teamId={mastheadTeamId} /></div>}
       {mainBody}
-      {showChrome && <FreeAgencyTicker activity={state.freeAgencyActivity} withBar={showBar} />}
       {showBar && <PersistentBar state={state} myTeamId={myTeamId} onNavigate={openTeamSection} dealProgress={dealProgress} />}
     </>
   );
