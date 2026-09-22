@@ -381,12 +381,20 @@ export function renewExpiredContract(state, teamIdx, cardId) {
   return { ok: true };
 }
 
+export function wasReleasedByTeamThisSeason(card, team, season) {
+  return card?.releasedByTeamId === team?.id && card?.releasedSeason === season;
+}
+
 export function signFreeAgent(state, cardId, teamIdx) {
   const idx = state.freeAgents.findIndex((c) => c.id === cardId);
   if (idx < 0) return { ok: false, msg: 'Card not available.' };
   const team = state.teams[teamIdx];
+  const card = state.freeAgents[idx];
+  if (wasReleasedByTeamThisSeason(card, team, state.season)) {
+    return { ok: false, msg: 'You cannot re-sign a player you released this season.' };
+  }
   if (team.hand.length >= 9) return { ok: false, msg: 'Your roster is full.' };
-  const [card] = state.freeAgents.splice(idx, 1);
+  state.freeAgents.splice(idx, 1);
   const signed = acquireOffseasonPlayer(team, card);
   recordFreeAgencyActivity(state, 'signed', signed, team);
   return { ok: true };

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { newEraState, renewExpiredContract } from '../src/game/season.js';
+import { newEraState, renewExpiredContract, signFreeAgent } from '../src/game/season.js';
 import { startDraft, draftPick } from '../src/game/draft.js';
 import { startEra, confirmLineup } from '../src/game/engine.js';
 import { releasePlayer } from '../src/game/finances.js';
@@ -51,6 +51,25 @@ test('an expired player can only be renewed by the former team while contracts a
   assert.equal(renewExpiredContract(state, 0, 'expired').ok, true);
   assert.equal(state.teams[0].hand.length, 1);
   assert.equal(state.freeAgents.length, 0);
+});
+
+test('a team cannot re-sign a player it released until the following season', () => {
+  const state = newEraState();
+  startEra(state, 'Test');
+  const team = state.teams[0];
+  const otherTeam = state.teams[1];
+  const player = team.hand[0];
+  assert.equal(releasePlayer(state, team.id, player.id).ok, true);
+  assert.equal(signFreeAgent(state, player.id, team.id).ok, false);
+  assert(state.freeAgents.some((card) => card.id === player.id));
+
+  otherTeam.hand.pop();
+  assert.equal(signFreeAgent(state, player.id, otherTeam.id).ok, true);
+
+  const secondPlayer = team.hand[0];
+  assert.equal(releasePlayer(state, team.id, secondPlayer.id).ok, true);
+  state.season += 1;
+  assert.equal(signFreeAgent(state, secondPlayer.id, team.id).ok, true);
 });
 
 test('season start rejects partial and over-budget human rosters', () => {

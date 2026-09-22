@@ -1,6 +1,7 @@
 import PlayerCard from '../components/PlayerCard';
 import { formatCoins } from '../game/economy';
 import { offseasonPrice } from '../game/gm';
+import { wasReleasedByTeamThisSeason } from '../game/season';
 
 export default function FreeAgencyScreen({ state, actions, myTeamId, onBack }) {
   const team = state.teams[myTeamId];
@@ -15,6 +16,7 @@ export default function FreeAgencyScreen({ state, actions, myTeamId, onBack }) {
         <div className="fa-grid">
           {state.freeAgents.map((card) => {
             const price = offseasonPrice(team, card.salary);
+            const releasedHere = wasReleasedByTeamThisSeason(card, team, state.season);
             const sign = () => {
               const result = actions.signFreeAgent(card.id, myTeamId);
               if (result && result.ok === false) alert(result.msg);
@@ -22,7 +24,9 @@ export default function FreeAgencyScreen({ state, actions, myTeamId, onBack }) {
             return (
               <div key={card.id}>
                 <PlayerCard card={{ ...card, salary: price }} />
-                <button className="pcard-renew" disabled={!openSlots} onClick={sign}>Sign — {formatCoins(price)}</button>
+                <button className="pcard-renew" disabled={!openSlots || releasedHere} onClick={sign}>
+                  {releasedHere ? 'Released This Season' : `Sign — ${formatCoins(price)}`}
+                </button>
               </div>
             );
           })}

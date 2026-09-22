@@ -68,7 +68,12 @@ export function releasePlayer(state, teamIdx, cardId) {
   team.hand.splice(idx, 1);
   if (team.activeIds) team.activeIds = team.activeIds.filter((id) => id !== cardId);
   addDeadCap(team, card.salary / 2, card.contract);
-  const released = Object.assign({}, card, { contract: card.maxContract, lastTeamId: team.id });
+  const released = Object.assign({}, card, {
+    contract: card.maxContract,
+    lastTeamId: team.id,
+    releasedByTeamId: team.id,
+    releasedSeason: state.season,
+  });
   state.freeAgents.push(released);
   recordFreeAgencyActivity(state, 'released', released, team);
   return { ok: true };
