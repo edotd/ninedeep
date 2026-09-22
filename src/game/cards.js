@@ -132,11 +132,12 @@ export function neededPosition(team) {
   return missing.length ? missing[Math.floor(Math.random() * missing.length)] : null;
 }
 
-export function drawCoachCard() {
+export function drawCoachCard({ excludeHallOfFame = false } = {}) {
   const archNames = Object.keys(COACH_ARCHETYPES);
   const archName = archNames[Math.floor(Math.random() * archNames.length)];
   const arch = COACH_ARCHETYPES[archName];
-  const mod = weightedPick(COACH_MODIFIERS);
+  const modifierPool = excludeHallOfFame ? COACH_MODIFIERS.filter((modifier) => modifier.name !== 'Hall of Fame') : COACH_MODIFIERS;
+  const mod = weightedPick(modifierPool);
   const offRolled = rollWithVariance(arch.offBase, 1);
   const defRolled = rollWithVariance(arch.defBase, 1);
   const offBonus = Math.round(offRolled * mod.mult) / 100;

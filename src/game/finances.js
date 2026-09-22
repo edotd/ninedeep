@@ -37,6 +37,24 @@ export function fireCoach(state, teamIdx) {
   return { ok: true };
 }
 
+export function hireFreeAgentCoach(state, teamIdx, coachId) {
+  const team = state.teams[teamIdx];
+  const index = (state.freeAgentCoaches || []).findIndex((coach) => coach.id === coachId);
+  if (!team?.coach || index < 0) return { ok: false, msg: 'Coach is not available.' };
+  const coach = state.freeAgentCoaches[index];
+  const deadCap = Math.round((team.coach.salary / 2) * 100) / 100;
+  const projectedCost = rosterSalary(team) - team.coach.salary + coach.salary + deadCap;
+  if (projectedCost > team.seasonCap) {
+    return { ok: false, msg: `Not enough budget room to hire this coach. You need ${Math.round((projectedCost - team.seasonCap) * 100) / 100} more.` };
+  }
+  addDeadCap(team, team.coach.salary / 2, 1);
+  state.freeAgentCoaches.splice(index, 1);
+  team.coach = coach;
+  team.retainedStreak = 0;
+  team.lastCoachName = coach.name;
+  return { ok: true };
+}
+
 export function fireGM(state, teamIdx) {
   const team = state.teams[teamIdx];
   if (!team?.market) return { ok: false, msg: 'No GM to fire.' };

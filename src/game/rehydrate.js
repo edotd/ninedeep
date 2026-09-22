@@ -7,6 +7,8 @@
 export function rehydrateState(state) {
   if (!state || !state.teams) return state;
   state.strategyCardCounter ||= 0;
+  state.freeAgentCoachCounter ||= 0;
+  state.freeAgentCoaches ||= [];
   state.teams.forEach((team) => {
     team.developmentCards ||= [];
     team.gameplanCards ||= [];

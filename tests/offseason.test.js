@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { newEraState, renewExpiredContract, signFreeAgent } from '../src/game/season.js';
 import { startDraft, draftPick } from '../src/game/draft.js';
 import { startEra, confirmLineup } from '../src/game/engine.js';
-import { releasePlayer } from '../src/game/finances.js';
+import { hireFreeAgentCoach, releasePlayer } from '../src/game/finances.js';
 import { LEAGUE_ACCOLADES, TIERS } from '../src/game/constants.js';
 
 test('Generational Talent is a modifier while All-Star and Most Valuable Player are accolades', () => {
@@ -11,6 +11,28 @@ test('Generational Talent is a modifier while All-Star and Most Valuable Player 
   assert(!TIERS.some((tier) => tier.name === 'All-Star'));
   assert(LEAGUE_ACCOLADES.some((tier) => tier.name === 'All-Star'));
   assert(LEAGUE_ACCOLADES.some((tier) => tier.name === 'Most Valuable Player'));
+});
+
+test('free agency begins with two to four coaches and excludes Hall of Fame', () => {
+  for (let run = 0; run < 30; run++) {
+    const state = newEraState();
+    startEra(state, 'Test');
+    assert(state.freeAgentCoaches.length >= 2 && state.freeAgentCoaches.length <= 4);
+    assert(state.freeAgentCoaches.every((coach) => coach.modifier !== 'Hall of Fame'));
+  }
+});
+
+test('a free agent coach can be hired and leaves the pool', () => {
+  const state = newEraState();
+  startEra(state, 'Test');
+  const team = state.teams[0];
+  const coach = state.freeAgentCoaches[0];
+  const priorCoach = team.coach;
+  team.seasonCap = 100;
+  assert.equal(hireFreeAgentCoach(state, team.id, coach.id).ok, true);
+  assert.equal(team.coach.id, coach.id);
+  assert.notEqual(team.coach, priorCoach);
+  assert.equal(state.freeAgentCoaches.some((candidate) => candidate.id === coach.id), false);
 });
 
 test('every team drafts a Young non-accolade player and resolves an oversized roster on Team', () => {

@@ -1,4 +1,5 @@
 import PlayerCard from '../components/PlayerCard';
+import FrontOfficeCard from '../components/FrontOfficeCard';
 import { formatCoins } from '../game/economy';
 import { offseasonPrice } from '../game/gm';
 import { wasReleasedByTeamThisSeason } from '../game/season';
@@ -10,7 +11,25 @@ export default function FreeAgencyScreen({ state, actions, myTeamId, onBack }) {
     <div className="screen">
       <div className="screen-kicker">League Personnel Wire</div>
       <h1>Free Agency</h1>
-      <p className="lede">Browse available players at any time. Signing is optional and available whenever your roster has an open spot.</p>
+      <p className="lede">Browse available players and coaches at any time. Signing is optional.</p>
+      <h2>Coaches</h2>
+      {(state.freeAgentCoaches || []).length ? (
+        <div className="fa-coach-grid">
+          {state.freeAgentCoaches.map((coach) => {
+            const hire = () => {
+              const result = actions.hireFreeAgentCoach(myTeamId, coach.id);
+              if (result && result.ok === false) alert(result.msg);
+            };
+            return (
+              <div key={coach.id}>
+                <FrontOfficeCard kind="coach" team={{ ...team, coach, retainedStreak: 0 }} />
+                <button className="pcard-renew" onClick={hire}>Hire — {formatCoins(coach.salary)}</button>
+              </div>
+            );
+          })}
+        </div>
+      ) : <p className="lede">No coaches are currently available.</p>}
+      <h2>Players</h2>
       <div className="statusline">Roster {team.hand.length}/9 · {openSlots ? `${openSlots} open spot${openSlots === 1 ? '' : 's'}` : 'No open roster spots'}</div>
       {state.freeAgents.length ? (
         <div className="fa-grid">

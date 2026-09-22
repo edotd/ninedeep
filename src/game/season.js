@@ -20,6 +20,7 @@ export function newEraState() {
   return {
     season: 1,
     freeAgents: [],
+    freeAgentCoaches: [],
     teams: [],
     phase: 'setup',
     starPool: [],
@@ -28,6 +29,7 @@ export function newEraState() {
     freeAgencyActivity: [],
     cardCounter: 0,
     strategyCardCounter: 0,
+    freeAgentCoachCounter: 0,
     settings: {
       injuryChance: INJURY_CHANCE,
       championshipBarMult: CHAMPIONSHIP_BAR_MULT,
@@ -40,6 +42,7 @@ export function newEraState() {
 
 export function buildStarPool(state) {
   state.starPool = [];
+  state.freeAgentCoaches = [];
   [...TIERS, ...LEAGUE_ACCOLADES].forEach((tier) => {
     for (let i = 0; i < tier.count; i++) {
       const posPool = tier.allowedPositions || POSITIONS;
@@ -49,6 +52,16 @@ export function buildStarPool(state) {
   });
   shuffle(state.starPool);
   seedFreeAgentPool(state);
+  seedFreeAgentCoachPool(state);
+}
+
+export function seedFreeAgentCoachPool(state) {
+  const count = 2 + Math.floor(Math.random() * 3);
+  for (let i = 0; i < count; i++) {
+    const coach = drawCoachCard({ excludeHallOfFame: true });
+    state.freeAgentCoachCounter = (state.freeAgentCoachCounter || 0) + 1;
+    state.freeAgentCoaches.push({ ...coach, id: `free-agent-coach-${state.freeAgentCoachCounter}` });
+  }
 }
 
 // dealHands doesn't check budget, so some teams start over cap with no way to fix it until
