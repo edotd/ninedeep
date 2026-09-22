@@ -12,10 +12,21 @@ function teamProfile(team, chemistry, experience, coachOffense, coachDefense) {
   const output = team.coach && team.activeIds?.length ? teamOutput(team) : null;
   const strengths = [];
   const weaknesses = [];
-  if (output) {
+  // Coaching is part of a team's identity, so choose one coherent identity statement. A
+  // small projected-output edge should not label a team defensive when its defining lift
+  // comes from a strong offensive coach (or vice versa).
+  if (coachOffense >= 8 && coachDefense >= 8) {
+    strengths.push(`Two-way coaching — the staff adds ${coachOffense}% offense and ${coachDefense}% defense before Skillset chemistry.`);
+  } else if (coachOffense >= 8) {
+    strengths.push(`Coach-driven offense — the staff adds ${coachOffense}% before Skillset chemistry.`);
+  } else if (coachDefense >= 8) {
+    strengths.push(`Coach-driven defense — the staff adds ${coachDefense}% before Skillset chemistry.`);
+  } else if (output) {
     if (output.off >= output.def + 1) strengths.push(`Offensive identity — projected offense leads defense ${output.off} to ${output.def}.`);
     else if (output.def >= output.off + 1) strengths.push(`Defensive identity — projected defense leads offense ${output.def} to ${output.off}.`);
-    else strengths.push(`Balanced starting unit — offense and defense project within one point of each other.`);
+    else strengths.push('Balanced starting unit — offense and defense project within one point of each other.');
+  }
+  if (output) {
     if (output.bench >= 7) strengths.push(`Productive bench — the second unit contributes ${output.bench} projected output.`);
     if (output.bench <= 4) weaknesses.push(`Thin bench — only ${output.bench} projected output comes from reserves.`);
   }
@@ -24,8 +35,6 @@ function teamProfile(team, chemistry, experience, coachOffense, coachDefense) {
   if (chemistry.pairs.length === 0) weaknesses.push('No active Skillset pairings in the starting five.');
   if (experience != null && experience >= 7) strengths.push(`Experienced group — ${experience}/10 experience should provide consistency.`);
   else if (experience != null && experience <= 3) weaknesses.push(`Limited experience — the roster rates ${experience}/10.`);
-  if (coachOffense >= 8) strengths.push(`Coach-driven offense — the staff adds ${coachOffense}% before Skillset chemistry.`);
-  if (coachDefense >= 8) strengths.push(`Coach-driven defense — the staff adds ${coachDefense}% before Skillset chemistry.`);
   if (coachOffense <= 2 && coachDefense <= 2) weaknesses.push('Limited coaching lift on both sides of the ball.');
   if (!strengths.length) strengths.push('Balanced roster without a single dominant identity yet.');
   if (!weaknesses.length) weaknesses.push('No pronounced weakness in the current rotation.');
