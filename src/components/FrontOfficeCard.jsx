@@ -114,10 +114,6 @@ export default function FrontOfficeCard({ kind, team }) {
           ))}
         </div>
         {content.detail && <div className="fo2-mod-detail">{content.detail}</div>}
-        <div className="fo2-footer">
-          <span className="fo2-duration">{content.duration}</span>
-          <span>Nine Deep</span>
-        </div>
       </div>
     </div>
   );

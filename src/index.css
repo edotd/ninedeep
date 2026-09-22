@@ -618,7 +618,9 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .fa-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:840px;}
 .fa-grid .pcard{width:100%;max-width:none;margin:0;}
 .fa-coach-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:24px;max-width:900px;}
-.fa-coach-grid .fo2-wrap{height:100%;}
+.fa-coach-grid>div{display:flex;flex-direction:column;}
+.fa-coach-grid .fo2-wrap{height:auto;flex:1;display:flex;}
+.fa-coach-grid .fo2-card{flex:1;}
 @media (max-width:700px){.fa-grid{grid-template-columns:repeat(2,1fr);}}
 @media (max-width:700px){.fa-coach-grid{grid-template-columns:1fr;}}
 @media (max-width:440px){.fa-grid{grid-template-columns:1fr;}}
