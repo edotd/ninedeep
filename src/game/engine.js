@@ -32,8 +32,11 @@ function allHumansReady(state, predicate) {
 
 // The Deal (design ref 4A): hand, Front Office, and the first season's Matchup Cards are all
 // dealt together here, synchronously, instead of across three separate pull screens — see
-// DealScreen.jsx, the one screen that shows all of it and holds until Continue (finishDeal,
-// below) sends the player straight to Team Summary. initFrontOffice and
+// DealScreen.jsx, the one screen that shows all of it. Moving on from there (past DealScreen,
+// to Team Summary) is a purely local per-client decision now (see GameShell's pastDeal) —
+// state.phase just stays 'pullhand' the whole time every player is reviewing their own roster,
+// so nobody's Continue click yanks anyone else's screen; confirmLineup is what actually
+// advances the shared game once every human is ready. initFrontOffice and
 // initSeasonModifierCards still do the real per-team dealing work exactly as before (and
 // still run this same way every season after the first, via startNewSeasonRoster — only
 // Matchup Cards refresh season to season, so that's the only one with a recurring pull
@@ -58,13 +61,6 @@ export function proceedFromCardOverview(state) {
   dealHands(state);
   state.teams.forEach((t) => { t.activeIds = autoSelectFive(t.hand); });
   state.phase = 'pullhand';
-}
-
-// The one-time Deal screen's Continue button — everything (hand, Front Office, this season's
-// Matchup Cards) is already dealt in state by startEra, so this just moves on.
-export function finishDeal(state) {
-  if (state.phase !== 'pullhand') return;
-  state.phase = 'teamsummary';
 }
 
 // Only moves on to Matchup Cards once every human-controlled team has pulled its Front

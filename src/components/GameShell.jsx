@@ -82,6 +82,16 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
   const [dealProgress, setDealProgress] = useState(0);
   useEffect(() => { if (state.phase === 'pullhand') setDealProgress(0); }, [state.phase]);
 
+  // Whether THIS client has clicked (or auto-advanced, on mobile) past its own DealScreen —
+  // purely local, never written to the shared doc. state.phase stays 'pullhand' for every
+  // player until every human has confirmed their lineup (see TeamSummaryScreen/confirmLineup);
+  // a single player finishing their own deal animation used to flip the shared phase and yank
+  // everyone else's screen to Team Summary too. Now each player moves on at their own pace,
+  // and TeamSummaryScreen treats 'pullhand' the same as 'teamsummary' once reached this way.
+  const [pastDeal, setPastDeal] = useState(false);
+  useEffect(() => { if (state.phase !== 'pullhand') setPastDeal(false); }, [state.phase]);
+  const effectivePhase = state.phase === 'pullhand' && pastDeal ? 'teamsummary' : state.phase;
+
   const openTeamView = (teamId, fromOverlay) => {
     setReturnOverlay(fromOverlay);
     setViewTeamId(teamId);
@@ -116,9 +126,9 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
   else if (overlay === 'freeagency') overlayBody = <FreeAgencyScreen state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
   else if (overlay === 'cardtypes') overlayBody = <CardOverviewScreen state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
 
-  const Screen = SCREENS[state.phase];
+  const Screen = SCREENS[effectivePhase];
   const mainBody = overlayBody || (Screen
-    ? <Screen state={state} actions={actions} myTeamId={myTeamId} onViewTeam={(id) => openTeamView(id, null)} onEndGame={onNewEra} dealProgress={dealProgress} onDealProgress={setDealProgress} />
+    ? <Screen state={state} actions={actions} myTeamId={myTeamId} onViewTeam={(id) => openTeamView(id, null)} onEndGame={onNewEra} dealProgress={dealProgress} onDealProgress={setDealProgress} onDealDone={() => setPastDeal(true)} />
     : (
       <div className="screen">
         <h1>Something broke</h1>

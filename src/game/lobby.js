@@ -55,8 +55,9 @@ export function startEraOnline(state, hostUid) {
   // Office, and this season's Matchup Cards all dealt together into the consolidated Deal
   // screen (phase 'pullhand'), not the old three-separate-screens flow. initFrontOffice and
   // initSeasonModifierCards each set their own intermediate phase; 'pullhand' overrides both
-  // so every player (host and joined) lands on the same Deal screen once DealScreen's
-  // dealProgress-driven bar fill finishes and Continue is clicked.
+  // so every player (host and joined) lands on the same Deal screen. From here each player
+  // moves on at their own pace (see GameShell's local pastDeal) — 'pullhand' just stays put
+  // until every human has confirmed their lineup on Team Summary.
   initFrontOffice(state);
   initSeasonModifierCards(state);
   state.phase = 'pullhand';

@@ -3,7 +3,6 @@ import { useIsDesktop } from '../hooks/useIsDesktop';
 import PlayerCard from '../components/PlayerCard';
 import FrontOfficeCard from '../components/FrontOfficeCard';
 import MatchupCard from '../components/MatchupCard';
-import CompactPlayerTile from '../components/CompactPlayerTile';
 
 const FO_KINDS = ['coach', 'fanbase', 'market'];
 
@@ -27,7 +26,15 @@ function reducedMotion() {
 // first (only they refresh season to season — Hand and Front Office are dealt once for the
 // whole era), so that screen stays untouched; this one only ever runs once, at the very start
 // of an era.
-export default function DealScreen({ state, actions, myTeamId, onDealProgress }) {
+//
+// Moving on from here (onDealDone) is purely a LOCAL, per-client decision — it does not touch
+// shared game state at all. Every player's hand/Front Office/Matchup Cards are already dealt
+// in the shared doc the instant the era starts, so there is nothing left to synchronize:
+// each player watches their own deal animation and continues to their own Team File on their
+// own schedule, same as GameShell's overlay screens never yank other players around. On
+// mobile, once the deal finishes there's nothing further to review here (the Team File is
+// that review), so it goes straight there — no extra tap-through screen.
+export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone }) {
   const team = state.teams[myTeamId];
   const activeSet = new Set(team.activeIds || []);
   const starters = team.hand.filter((c) => activeSet.has(c.id));
@@ -46,8 +53,13 @@ export default function DealScreen({ state, actions, myTeamId, onDealProgress })
 
   const clearTimers = () => { timersRef.current.forEach(clearTimeout); timersRef.current = []; };
 
+  // Desktop settles into 'review' (the detailed grid below, held until Continue); mobile has
+  // nothing further to review here, so it calls onDealDone and moves straight to the Team
+  // File instead of ever setting a local 'review' phase.
+  const finishDealing = () => (isDesktop ? setPhase('review') : onDealDone());
+
   useEffect(() => {
-    if (instant) { onDealProgress(total); return undefined; }
+    if (instant) { onDealProgress(total); finishDealing(); return undefined; }
     if (phase === 'deck') {
       timersRef.current.push(setTimeout(() => setPhase('dealing'), DECK_MS));
     } else if (phase === 'dealing') {
@@ -60,7 +72,7 @@ export default function DealScreen({ state, actions, myTeamId, onDealProgress })
           setTimeout(() => setTokens((t) => t.filter((tok) => tok.id !== id)), TOKEN_MS);
         }, i * DEAL_STAGGER_MS));
       }
-      timersRef.current.push(setTimeout(() => setPhase('review'), (total - 1) * DEAL_STAGGER_MS + TOKEN_MS));
+      timersRef.current.push(setTimeout(finishDealing, (total - 1) * DEAL_STAGGER_MS + TOKEN_MS));
     }
     return clearTimers;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -71,16 +83,13 @@ export default function DealScreen({ state, actions, myTeamId, onDealProgress })
     setDealt(total);
     onDealProgress(total);
     setTokens([]);
-    setPhase('review');
+    finishDealing();
   };
 
-  const handleReplay = () => {
-    clearTimers();
-    setDealt(0);
-    onDealProgress(0);
-    setTokens([]);
-    setPhase('deck');
-  };
+  // Mobile never actually settles into 'review' (finishDealing calls onDealDone instead) —
+  // this only guards the one-frame window on an 'instant' mount, before that effect above has
+  // run, so nothing flashes the desktop grid first.
+  if (!isDesktop && phase === 'review') return null;
 
   if (phase !== 'review') {
     return (
@@ -96,30 +105,6 @@ export default function DealScreen({ state, actions, myTeamId, onDealProgress })
         </div>
         <button className="reset-link deal-skip" onClick={handleSkip}>Skip ▸▸</button>
       </div>
-    );
-  }
-
-  // Mobile — per the brand handoff's mobile Deal: a small preview of the dealt hand rather
-  // than the full desktop grid, with a hint that the rest of the file (front office, matchup
-  // cards, budget) is a Continue tap away on the Team File screen — the same screen the
-  // desktop grid lets you review right here inline.
-  if (!isDesktop) {
-    return (
-      <>
-        <div className="screen deal-screen">
-          <h1>Your Deal — Season {state.season}</h1>
-          <p className="lede" style={{ marginBottom: 14 }}>Your 9-card hand, Front Office, and this season's Matchup Cards — dealt together.</p>
-          <div className="deal-mobile-heading">Your Nine · Dealt</div>
-          <div className="deal-mobile-preview">
-            {starters.slice(0, 3).map((c) => <CompactPlayerTile key={c.id} card={c} isStarter />)}
-          </div>
-          <div className="deal-mobile-hint">Tap Continue for the full file — rotation, chemistry, front office, and budget.</div>
-          <button className="reset-link deal-skip" onClick={handleReplay}>Replay ▸▸</button>
-        </div>
-        <div className="bottombar">
-          <button className="primary" onClick={actions.finishDeal}>Continue</button>
-        </div>
-      </>
     );
   }
 
@@ -148,7 +133,7 @@ export default function DealScreen({ state, actions, myTeamId, onDealProgress })
         </div>
       </div>
       <div className="bottombar">
-        <button className="primary" onClick={actions.finishDeal}>Continue</button>
+        <button className="primary" onClick={onDealDone}>Continue</button>
       </div>
     </>
   );

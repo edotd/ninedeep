@@ -71,7 +71,13 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
     return better + 1;
   };
 
-  const canEdit = !readOnly && state.phase === 'teamsummary' && !team.lineupConfirmed;
+  // Reached either as the 'teamsummary' phase screen proper, or — for the era-opening deal —
+  // locally, the instant this client moves past its own DealScreen while state.phase is still
+  // 'pullhand' (every other human may still be on their own deal animation; see GameShell's
+  // pastDeal). Both are "the roster review before the season locks," so every phase check
+  // below treats them the same.
+  const preSeason = state.phase === 'teamsummary' || state.phase === 'pullhand';
+  const canEdit = !readOnly && preSeason && !team.lineupConfirmed;
 
   // Mobile-only tab bar (per the brand handoff's mobile Team File — Rotation/Chemistry/
   // Office/Ledger) — on desktop every section still shows stacked in one scroll, same as
@@ -316,15 +322,12 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           )}
         </div>
 
-        {team.lineupConfirmed && waitingOn.length > 0 && (
-          <div className="statusline" style={{ marginTop: 16 }}>Season locked — waiting on {waitingOn.map((t) => t.name).join(', ')}…</div>
-        )}
-        {state.phase === 'teamsummary' && team.hand.length !== 9 && (
+        {preSeason && team.hand.length !== 9 && (
           <div className="statusline" style={{ marginTop: 16 }}>
             Resolve your roster before the season begins: {team.hand.length > 9 ? `release ${team.hand.length - 9} player${team.hand.length - 9 === 1 ? '' : 's'}` : `sign ${9 - team.hand.length} player${9 - team.hand.length === 1 ? '' : 's'} from Free Agency`}.
           </div>
         )}
-        {state.phase === 'teamsummary' && team.hand.length === 9 && committed > cap && (
+        {preSeason && team.hand.length === 9 && committed > cap && (
           <div className="statusline" style={{ marginTop: 16 }}>Get under budget before the season begins. Reduce committed costs by {formatCoins(committed - cap)}.</div>
         )}
       </div>
@@ -340,7 +343,11 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
               if (res && res.valid === false) alert(res.msg);
             }}
           >
-            {team.lineupConfirmed ? 'Waiting…' : team.hand.length !== 9 ? `Resolve Roster · ${team.hand.length}/9` : committed > cap ? 'Resolve Budget' : 'Begin Season'}
+            {team.lineupConfirmed
+              ? (waitingOn.length > 0 ? `Waiting For ${waitingOn.length} User${waitingOn.length === 1 ? '' : 's'} To Continue` : 'Waiting…')
+              : team.hand.length !== 9 ? `Resolve Roster · ${team.hand.length}/9`
+              : committed > cap ? 'Resolve Budget'
+              : 'Begin Season'}
           </button>
         )}
       </div>
