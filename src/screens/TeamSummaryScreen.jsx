@@ -10,7 +10,7 @@ import { FANBASE_BOOST_COST } from '../game/constants';
 import MatchupCard from '../components/MatchupCard';
 import StrategyCard from '../components/StrategyCard';
 
-const tabForSection = (section) => ['gameplan', 'adjustment'].includes(section) ? 'cards' : section || 'rotation';
+const tabForSection = (section) => ['gameplan', 'adjustment'].includes(section) ? 'office' : section || 'rotation';
 
 function PlayerLedgerIdentity({ card, role }) {
   const skillset = skillsetFor(card);
@@ -123,6 +123,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   const isDesktop = useIsDesktop();
   const [tab, setTab] = useState(() => tabForSection(focusSection?.section));
   const showSection = (key) => isDesktop || tab === key;
+  const showStaffCards = isDesktop || tab === 'office';
   useEffect(() => {
     if (!focusSection) return;
     setTab(tabForSection(focusSection.section));
@@ -178,10 +179,9 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           <button className={'ts-tab' + (tab === 'rotation' ? ' active' : '')} onClick={() => setTab('rotation')}>Rotation</button>
           <button className={'ts-tab' + (tab === 'chemistry' ? ' active' : '')} onClick={() => setTab('chemistry')}>Chemistry</button>
           {team.market && (
-            <button className={'ts-tab' + (tab === 'office' ? ' active' : '')} onClick={() => setTab('office')}>Office</button>
+            <button className={'ts-tab' + (tab === 'office' ? ' active' : '')} onClick={() => setTab('office')}>Staff / Gameplan</button>
           )}
           <button className={'ts-tab' + (tab === 'ledger' ? ' active' : '')} onClick={() => setTab('ledger')}>Ledger</button>
-          <button className={'ts-tab' + (tab === 'cards' ? ' active' : '')} onClick={() => setTab('cards')}>Cards</button>
         </div>
 
         <div className="ts-body">
@@ -348,7 +348,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             </div>
           )}
 
-          {showSection('cards') && (
+          {showStaffCards && (
             <div className="ts-section" id="team-gameplan-cards">
               <div className="ts-heading">Development Cards</div>
               <div className="strategy-deal-row">
@@ -358,7 +358,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             </div>
           )}
 
-          {showSection('cards') && (
+          {showStaffCards && (
             <div className="ts-section">
               <div className="ts-heading">Gameplan Cards</div>
               <div className="strategy-deal-row">
@@ -368,7 +368,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             </div>
           )}
 
-          {(team.matchupCards || []).length > 0 && showSection('cards') && (
+          {(team.matchupCards || []).length > 0 && showStaffCards && (
             <div className="ts-section" id="team-adjustment-cards">
               <div className="ts-heading">Adjustment Cards</div>
               <div className="mu-deal-row" style={{ margin: 0 }}>
