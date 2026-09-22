@@ -167,6 +167,13 @@ p.lede{color:var(--file-body);font-size:14px;line-height:1.5;margin:0 0 14px;}
 .standing-row{display:flex;justify-content:space-between;padding:9px 10px;border-bottom:1px solid var(--form-rule);font-size:14px;font-family:var(--font-mono);}
 .standing-row.you{color:var(--stamp);font-weight:500;}
 .standing-row:hover{background:var(--form-rule);}
+.lobby-seat-row{align-items:center;gap:12px;}
+.lobby-claim-controls{display:flex;align-items:stretch;justify-content:flex-end;gap:8px;flex:1;max-width:430px;}
+input.text-input.lobby-name-input{min-width:0;margin:0;padding:10px 12px;}
+.lobby-randomize-name{flex:0 0 42px;border:1px solid var(--form-rule);background:var(--form);color:var(--ink);font-size:17px;cursor:pointer;}
+.lobby-randomize-name:hover{background:var(--franchise);}
+.lobby-claim-controls .secondary{padding:10px 14px;}
+@media (max-width:600px){.lobby-seat-row{align-items:flex-start;flex-direction:column;}.lobby-claim-controls{width:100%;max-width:none;}.lobby-name-input{flex:1;}}
 
 .matchup-box{background:var(--form);border:1px solid var(--form-rule);padding:10px 12px;margin-bottom:12px;}
 .matchup-title{font-family:var(--font-label);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--file-muted);margin-bottom:8px;}
@@ -1336,8 +1343,7 @@ body:has(.entry-screen){padding-bottom:0;}
 .entry-name-box{background:var(--file);box-shadow:inset 0 0 0 2px var(--ink);padding:20px 20px 18px;display:flex;flex-direction:column;gap:14px;}
 .entry-name-input{font-family:var(--font-display);font-size:38px;line-height:.85;color:var(--ink);background:none;border:none;outline:none;width:100%;padding:0;}
 .entry-name-input::placeholder{color:var(--depth-nontext);}
-.entry-name-footer{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--form-rule);padding-top:12px;gap:12px;flex-wrap:wrap;}
-.entry-name-footer > span{font-size:11px;color:var(--file-muted);}
+.entry-name-footer{display:flex;justify-content:flex-end;align-items:center;border-top:1px solid var(--form-rule);padding-top:12px;gap:12px;flex-wrap:wrap;}
 .entry-generate{display:flex;align-items:center;gap:9px;background:var(--stamp);border:none;padding:9px 14px;font-family:var(--font-label);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--form);cursor:pointer;flex-shrink:0;}
 
 .entry-radio-list{display:flex;flex-direction:column;gap:8px;}

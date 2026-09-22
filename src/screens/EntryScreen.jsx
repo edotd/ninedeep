@@ -31,6 +31,7 @@ export default function EntryScreen({ pendingJoinCode, soloState, soloActions, o
 
 
   const handleStartSolo = () => {
+    if (!teamName.trim()) return;
     soloActions.startEra(teamName);
     onStartSolo();
   };
@@ -100,7 +101,6 @@ export default function EntryScreen({ pendingJoinCode, soloState, soloActions, o
                     onChange={(e) => setTeamName(e.target.value)}
                   />
                   <div className="entry-name-footer">
-                    <span>Locked in for all eight seasons.</span>
                     <button className="entry-generate" onClick={() => setTeamName(randomFranchiseName())}>
                       <BallMark size={16} variant="onInk" /> Generate One
                     </button>
@@ -109,7 +109,7 @@ export default function EntryScreen({ pendingJoinCode, soloState, soloActions, o
               </div>
 
               <div className="entry-start-block compact">
-                <button className="entry-start-btn" onClick={handleStartSolo}>
+                <button className="entry-start-btn" disabled={!teamName.trim()} onClick={handleStartSolo}>
                   Start <span>→</span>
                 </button>
                 <button className="entry-more-settings" onClick={() => setOverlay('settings')}>

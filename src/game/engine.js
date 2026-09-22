@@ -46,7 +46,8 @@ function allHumansReady(state, predicate) {
 // the next line rather than shown.
 export function startEra(state, teamNameRaw) {
   const val = (teamNameRaw || '').trim();
-  state.teamName = val.length ? val.slice(0, 32) : 'Your Franchise';
+  if (!val.length) return false;
+  state.teamName = val.slice(0, 32);
   buildStarPool(state);
   buildTeams(state, defaultSoloSeats(state.teamName));
   dealHands(state);
@@ -54,6 +55,7 @@ export function startEra(state, teamNameRaw) {
   initFrontOffice(state);
   initSeasonModifierCards(state);
   state.phase = 'pullhand';
+  return true;
 }
 
 // Legacy fallback from an earlier deal sequence — nothing sets state.phase to 'cardoverview'

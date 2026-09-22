@@ -10,13 +10,15 @@ import { autoSelectFive } from './roster';
 // two browser tabs on the same device silently sharing one anonymous auth session).
 export function claimSeat(state, seatIndex, uid, name) {
   const seat = state.seats[seatIndex];
+  const franchiseName = (name || '').trim().slice(0, 32);
   if (!seat) return;
+  if (!franchiseName) return;
   if (seat.ownerUid && seat.ownerUid !== uid) return; // already taken by someone else
   state.seats.forEach((s) => {
     if (s.seatIndex !== seatIndex && s.ownerUid === uid) { s.ownerUid = null; s.name = ''; }
   });
   seat.ownerUid = uid;
-  seat.name = (name || '').trim().slice(0, 32) || `Player ${seatIndex + 1}`;
+  seat.name = franchiseName;
 }
 
 export function leaveSeat(state, seatIndex, uid) {
@@ -36,6 +38,7 @@ function teamSeatsFromLobby(seats) {
 export function startEraOnline(state, hostUid) {
   if (state.hostUid !== hostUid) return; // only the host can start the era
   if (!state.seats.some((s) => s.ownerUid)) return; // need at least one claimed seat
+  if (state.seats.some((s) => s.ownerUid && !(s.name || '').trim())) return;
   const seats = teamSeatsFromLobby(state.seats);
   // The lobby doc only ever had {phase, hostUid, seatCount, seats, settings} — fill in the
   // rest of the base fields newEraState() normally provides (season, freeAgents, log,
