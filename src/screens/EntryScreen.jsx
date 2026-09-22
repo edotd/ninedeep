@@ -17,8 +17,6 @@ export default function EntryScreen({ pendingJoinCode, soloState, soloActions, o
   const [overlay, setOverlay] = useState(null); // null | 'glossary' | 'settings'
 
   const [teamName, setTeamName] = useState('');
-  const [hostName, setHostName] = useState('');
-  const [seatCount, setSeatCount] = useState(4);
   const [joinCode, setJoinCode] = useState(pendingJoinCode || '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -47,7 +45,7 @@ export default function EntryScreen({ pendingJoinCode, soloState, soloActions, o
     setError('');
     setBusy(true);
     try {
-      const { code, uid } = await createRoom({ hostName: hostName.trim(), seatCount });
+      const { code, uid } = await createRoom();
       onEnterRoom(code, uid);
     } catch (e) {
       setError(e.message || 'Could not create room.');
@@ -146,19 +144,6 @@ export default function EntryScreen({ pendingJoinCode, soloState, soloActions, o
 
           {tab === 'host' && firebaseReady && (
             <div className="entry-start-block" style={{ marginTop: 0 }}>
-              <div className="entry-field-group">
-                <div className="entry-field-heading"><span>Your Name</span></div>
-                <input className="text-input" style={{ marginBottom: 10 }} value={hostName} onChange={(e) => setHostName(e.target.value)} maxLength={32} placeholder="e.g. Sam" />
-                <div className="entry-field-heading"><span>Human Seats (2–10, rest fill with AI)</span></div>
-                <input
-                  className="text-input"
-                  type="number"
-                  min="2"
-                  max="10"
-                  value={seatCount}
-                  onChange={(e) => setSeatCount(Math.max(2, Math.min(10, Number(e.target.value) || 2)))}
-                />
-              </div>
               <button className="entry-start-btn" disabled={busy} onClick={handleCreate}>
                 {busy ? 'Creating…' : 'Create Room'} <span>→</span>
               </button>

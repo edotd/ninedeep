@@ -33,7 +33,7 @@ export default function LobbyScreen({ state, actions, roomCode, myUid, onExit, a
         </div>
       )}
 
-      <h2>Seats ({claimedCount}/{state.seatCount})</h2>
+      <h2>Seats ({claimedCount}/{state.seatCount} claimed)</h2>
       {state.seats.map((seat) => (
         <div key={seat.seatIndex} className={'standing-row' + (seat.ownerUid === myUid ? ' you' : '')}>
           <span>{seat.ownerUid ? seat.name : 'Open seat'}{seat.ownerUid === myUid ? ' (you)' : ''}</span>

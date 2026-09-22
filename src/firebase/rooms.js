@@ -21,7 +21,9 @@ function randomRoomCode() {
   return code;
 }
 
-export async function createRoom({ hostName, seatCount }) {
+const ROOM_SEAT_COUNT = 10;
+
+export async function createRoom() {
   const user = await ensureAuth();
   let code = randomRoomCode();
   for (let attempt = 0; attempt < 5; attempt++) {
@@ -33,15 +35,17 @@ export async function createRoom({ hostName, seatCount }) {
     hostUid: user.uid,
     createdAt: serverTimestamp(),
   });
-  const seats = Array.from({ length: seatCount }, (_, i) => ({
+  // Every room starts with the full league open. The host claims a seat in the lobby just
+  // like every other player; any seats left open when the era begins become AI teams.
+  const seats = Array.from({ length: ROOM_SEAT_COUNT }, (_, i) => ({
     seatIndex: i,
-    name: i === 0 ? (hostName || 'Host') : '',
-    ownerUid: i === 0 ? user.uid : null,
+    name: '',
+    ownerUid: null,
   }));
   await setDoc(doc(db, 'rooms', code, 'game', 'state'), {
     phase: 'lobby',
     hostUid: user.uid,
-    seatCount,
+    seatCount: ROOM_SEAT_COUNT,
     seats,
     settings: {
       injuryChance: INJURY_CHANCE,
