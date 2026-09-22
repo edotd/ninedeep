@@ -69,10 +69,16 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
   // StandingsScreen) was showing so Back returns there rather than dumping out to the base game.
   const [viewTeamId, setViewTeamId] = useState(null);
   const [returnOverlay, setReturnOverlay] = useState(null);
+  const [teamFocus, setTeamFocus] = useState(null);
   const toggleOverlay = (name) => setOverlay((o) => (o === name ? null : name));
   // Navigating to 'team' via the sidebar/header (as opposed to jumping in from Standings)
   // always means "show my own file" — reset any leftover viewTeamId from a prior jump.
-  const handleNav = (name) => { if (name === 'team') setViewTeamId(null); toggleOverlay(name); };
+  const handleNav = (name) => { if (name === 'team') { setViewTeamId(null); setTeamFocus(null); } toggleOverlay(name); };
+  const openTeamSection = (section) => {
+    setViewTeamId(null);
+    setTeamFocus({ section, request: Date.now() });
+    setOverlay('team');
+  };
   const isDesktop = useIsDesktop();
 
   // How many cards of the opening deal (hand, then Front Office, then Matchup Cards, in that
@@ -96,6 +102,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
   const openTeamView = (teamId, fromOverlay) => {
     setReturnOverlay(fromOverlay);
     setViewTeamId(teamId);
+    setTeamFocus(null);
     setOverlay('team');
   };
   const closeTeamView = () => {
@@ -124,7 +131,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
   if (overlay === 'glossary') overlayBody = <GlossaryScreen state={state} onBack={close} />;
   else if (overlay === 'settings') overlayBody = <SettingsScreen state={state} actions={actions} onBack={close} onNewEra={onNewEra} />;
   else if (overlay === 'standings') overlayBody = <LeagueScreen state={state} myTeamId={myTeamId} onBack={close} onViewTeam={(id) => openTeamView(id, 'standings')} />;
-  else if (overlay === 'team') overlayBody = <TeamSummaryScreen state={state} actions={actions} myTeamId={myTeamId} viewTeamId={viewTeamId} onBack={closeTeamView} />;
+  else if (overlay === 'team') overlayBody = <TeamSummaryScreen key={teamFocus?.request || 'team'} state={state} actions={actions} myTeamId={myTeamId} viewTeamId={viewTeamId} onBack={closeTeamView} focusSection={teamFocus} />;
   else if (overlay === 'freeagency') overlayBody = <FreeAgencyScreen state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
   else if (overlay === 'cardtypes') overlayBody = <CardOverviewScreen state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
 
@@ -155,11 +162,10 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
 
   return (
     <>
-      {showChrome && <Header {...headerProps} />}
-      {showChrome && <FranchiseMasthead state={state} teamId={mastheadTeamId} />}
+      {showChrome && <div className="mobile-persistent-top"><Header {...headerProps} /><FranchiseMasthead state={state} teamId={mastheadTeamId} /></div>}
       {mainBody}
       {showChrome && <FreeAgencyTicker activity={state.freeAgencyActivity} withBar={showBar} />}
-      {showBar && <PersistentBar state={state} myTeamId={myTeamId} onExpand={() => handleNav('team')} dealProgress={dealProgress} />}
+      {showBar && <PersistentBar state={state} myTeamId={myTeamId} onNavigate={openTeamSection} dealProgress={dealProgress} />}
     </>
   );
 }

@@ -135,7 +135,6 @@ export default function DesktopBar({ state, myTeamId, actions, dealProgress }) {
   const market = foCount >= 3 ? team.market : null;
   const frontOfficeTeam = foCount >= 1 ? team : null;
   const fullyDealt = !inDeal || (dealProgress ?? 0) >= rawStarters.length + rawBench.length + 3 + rawMatchup.length;
-  const developmentCards = fullyDealt ? (team.developmentCards || []) : [];
   const gameplanCards = fullyDealt ? (team.gameplanCards || []) : [];
 
   const [preview, setPreview] = useState(null); // { rect, type, content }
@@ -174,10 +173,6 @@ export default function DesktopBar({ state, myTeamId, actions, dealProgress }) {
 
   const [strategyPicker, setStrategyPicker] = useState(null);
   const handleStrategyClick = (el, card) => {
-    if (card.kind === 'development') {
-      setStrategyPicker({ card, rect: el.getBoundingClientRect(), mode: 'development' });
-      return;
-    }
     const playoffReady = liveTurn && ['coinflip', 'coinflipped'].includes(liveTurn.stage);
     const seasonOpen = ['pullhand', 'pullmodifier', 'constructing', 'teamsummary'].includes(state.phase);
     const context = playoffReady ? 'playoff' : seasonOpen ? 'season' : null;
@@ -266,12 +261,6 @@ export default function DesktopBar({ state, myTeamId, actions, dealProgress }) {
         </div>
       </div>
       <div className="db-section db-slots-fixed">
-        <div className="db-heading development">Development</div>
-        <div className="db-slots">
-          {Array.from({ length: 4 }, (_, i) => <StrategySlot key={i} card={developmentCards[i]} onHover={handleHover} onLeave={handleLeave} onSelect={handleStrategyClick} picking={strategyPicker?.card.id === developmentCards[i]?.id} />)}
-        </div>
-      </div>
-      <div className="db-section db-slots-fixed">
         <div className="db-heading gameplan">Gameplan</div>
         <div className="db-slots">
           {Array.from({ length: 2 }, (_, i) => <StrategySlot key={i} card={gameplanCards[i]} onHover={handleHover} onLeave={handleLeave} onSelect={handleStrategyClick} picking={strategyPicker?.card.id === gameplanCards[i]?.id} />)}
@@ -345,18 +334,17 @@ export default function DesktopBar({ state, myTeamId, actions, dealProgress }) {
         const desiredLeft = strategyPicker.rect.left + strategyPicker.rect.width / 2;
         const left = Math.min(Math.max(desiredLeft, halfWidth + 8), window.innerWidth - halfWidth - 8);
         const bottom = window.innerHeight - strategyPicker.rect.top + 12;
-        const eligible = strategyPicker.mode === 'development' ? rawHand.filter((player) => !player.development) : state.teams.filter((candidate) => candidate.id !== team.id);
+        const eligible = state.teams.filter((candidate) => candidate.id !== team.id);
         return (
           <div className="db-target-picker" style={{ left, bottom, width }}>
-            <div className="db-target-picker-head">{strategyPicker.mode === 'development' ? 'Choose a player' : 'Choose an opponent'} — {strategyPicker.card.name}</div>
+            <div className="db-target-picker-head">Choose an opponent — {strategyPicker.card.name}</div>
             {eligible.length === 0 && <div className="db-target-picker-empty">No eligible target.</div>}
             {eligible.map((target) => (
               <button key={target.id} className="db-target-btn" onClick={() => {
-                if (strategyPicker.mode === 'development') actions.applyDevelopmentCard(myTeamId, strategyPicker.card.id, target.id);
-                else actions.playGameplanCard(myTeamId, strategyPicker.card.id, strategyPicker.context, target.id);
+                actions.playGameplanCard(myTeamId, strategyPicker.card.id, strategyPicker.context, target.id);
                 setStrategyPicker(null);
               }}>
-                {strategyPicker.mode === 'development' ? `${target.position} · ${target.archetype} · #${target.id}` : target.name}
+                {target.name}
               </button>
             ))}
           </div>

@@ -100,6 +100,7 @@ test('a card played during defense\'s blind window still cuts that same exchange
   state=rehydrateState(JSON.parse(JSON.stringify(state))); m=state.playoff.matches[0];
   assert.equal(m.turn.stage,'resolved');
   const offSide = m.turn.offenseSide;
+  assert.equal(m.turn[`${offSide}OffRaw`], Math.round((m.turn[`${offSide}OffDie`] + m.turn[`${offSide}OffMod`]) * 100) / 100);
   assert(m.turn[`${offSide}OffMod`] < baselineMod);
   assert(m.turn.cardNotes.some(n=>n.cardName==='Scouted Tendencies'));
   assert.equal(m.turn.log.filter((entry)=>entry.tag==='roll-offense').length,1);

@@ -52,7 +52,7 @@ function StrategyAction({ card, team, state, actions, myTeamId, readOnly }) {
 // regardless of whose file is on screen.
 // Read-only otherwise, organised by category: rotation, budget ledger, front office. No
 // nine-slot navigation here (that's the persistent bar's job on every other screen).
-export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId, onBack }) {
+export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId, onBack, focusSection }) {
   // viewTeamId lets this screen show a DIFFERENT team's file — reached by clicking a team in
   // Standings — read-only: no substitutions, releases, or front-office moves, since those
   // actions always take myTeamId regardless of which file is on screen.
@@ -92,8 +92,13 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   // Office/Ledger) — on desktop every section still shows stacked in one scroll, same as
   // before; `isDesktop` just decides whether `tab` actually filters anything.
   const isDesktop = useIsDesktop();
-  const [tab, setTab] = useState('rotation');
+  const [tab, setTab] = useState(() => focusSection && focusSection.section !== 'rotation' ? 'cards' : 'rotation');
   const showSection = (key) => isDesktop || tab === key;
+  useEffect(() => {
+    if (!focusSection) return;
+    const targetId = focusSection.section === 'rotation' ? 'team-rotation' : `team-${focusSection.section}-cards`;
+    requestAnimationFrame(() => document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  }, [focusSection]);
 
   // Substitutions: click a starter then a bench player (either order) to swap them, click the
   // same card again to deselect, or a different card in the same group to move the selection
@@ -153,7 +158,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           {showSection('chemistry') && <TeamChemistry team={team} />}
 
           {showSection('rotation') && (
-            <div className="ts-section">
+            <div className="ts-section" id="team-rotation">
               <div className="ts-heading">Rotation</div>
               <div className="ts-roto-scroll">
                 <div className="ts-roto-grid">
@@ -281,7 +286,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           )}
 
           {showSection('cards') && (
-            <div className="ts-section">
+            <div className="ts-section" id="team-gameplan-cards">
               <div className="ts-heading">Development Cards</div>
               <div className="strategy-deal-row">
                 {(team.developmentCards || []).map((card) => <div className="strategy-card-wrap" key={card.id}><StrategyCard card={card} /><StrategyAction card={card} team={team} state={state} actions={actions} myTeamId={myTeamId} readOnly={readOnly} /></div>)}
@@ -301,7 +306,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           )}
 
           {(team.matchupCards || []).length > 0 && showSection('cards') && (
-            <div className="ts-section">
+            <div className="ts-section" id="team-adjustment-cards">
               <div className="ts-heading">Adjustment Cards</div>
               <div className="mu-deal-row" style={{ margin: 0 }}>
                 {team.matchupCards.map((c) => <MatchupCard key={c.id} card={c} />)}

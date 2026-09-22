@@ -245,7 +245,9 @@ input.text-input.lobby-name-input{min-width:0;margin:0;padding:10px 12px;}
 /* The team, permanently in view, fixed to the very bottom of the viewport on every screen —
    including behind a per-screen .bottombar action and the overlay screens. Tapping it raises
    the Team overlay rather than navigating away, so it never loses its place. */
-.persistent-bar{position:fixed;bottom:0;left:0;right:0;z-index:6;min-height:72px;box-sizing:border-box;background:var(--ink);border-top:2px solid var(--franchise);padding:10px 16px calc(10px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:14px;max-width:var(--content-width);margin:0 auto;cursor:pointer;}
+.persistent-bar{position:fixed;bottom:0;left:0;right:0;z-index:6;min-height:72px;box-sizing:border-box;background:var(--ink);border-top:2px solid var(--franchise);padding:9px 12px calc(9px + env(safe-area-inset-bottom));display:flex;align-items:stretch;gap:7px;max-width:var(--content-width);margin:0 auto;}
+.persistent-bar-section{min-width:0;border:1px solid rgba(230,220,196,.2);background:rgba(255,255,255,.025);color:inherit;padding:7px 9px;cursor:pointer;}
+.persistent-bar-section:active{background:rgba(240,160,61,.12);border-color:var(--franchise);}
 .persistent-bar-rotation{display:flex;flex-direction:column;gap:5px;flex-shrink:0;}
 .persistent-bar-rotation-label{font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;color:var(--ink-muted);text-transform:uppercase;white-space:nowrap;}
 .persistent-bar-rotation-grid{display:grid;grid-template-columns:repeat(9,1fr);gap:3px;width:96px;}
@@ -259,11 +261,10 @@ input.text-input.lobby-name-input{min-width:0;margin:0;padding:10px 12px;}
 .persistent-bar-metric-value.accent{color:var(--franchise);}
 .persistent-bar-metric-value.over-budget{color:var(--stamp);}
 .persistent-budget-owed{font:8px var(--font-mono);letter-spacing:.05em;color:var(--stamp-ink);white-space:nowrap;text-transform:uppercase;}
-.persistent-bar-chevron{flex-shrink:0;width:30px;height:30px;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 0 1.5px var(--ink-rule);color:var(--ink-muted);font-family:var(--font-mono);font-size:12px;}
-.persistent-card-count{flex:1;min-width:0;text-align:center;border-left:1px solid var(--ink-rule);font-family:var(--font-mono);text-transform:uppercase;}
+.persistent-card-count{flex:1;min-width:0;text-align:center;font-family:var(--font-mono);text-transform:uppercase;}
 .persistent-card-count span{display:block;color:var(--ink-muted);font-size:8px;letter-spacing:.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .persistent-card-count b{display:block;color:var(--file);font-family:var(--font-display);font-size:22px;font-weight:400;line-height:1;}
-.persistent-card-count.development b{color:var(--approved-file);}.persistent-card-count.gameplan b{color:var(--franchise);}.persistent-card-count.adjustment b{color:var(--stamp);}
+.persistent-card-count.gameplan b{color:var(--franchise);}.persistent-card-count.adjustment b{color:var(--stamp);}
 button{font-family:var(--font-label);letter-spacing:.05em;}
 button.primary{flex:1;background:var(--franchise);color:var(--ink);border:none;padding:14px;font-size:13px;font-weight:400;text-transform:uppercase;letter-spacing:.1em;transition:background 120ms ease-out;}
 button.primary:hover:not(:disabled){background:#ffb455;}
@@ -649,6 +650,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 @media (min-width:1000px){.ts-tabbar{display:none;}}
 
 .ts-body{background:var(--file);padding:22px 24px;display:flex;flex-direction:column;gap:20px;}
+.ts-section[id]{scroll-margin-top:150px;}
 .ts-heading{font-family:var(--font-label);font-size:11px;letter-spacing:.14em;color:var(--ink);text-transform:uppercase;margin-bottom:9px;}
 /* Starters render as real, full-size PlayerCards now — see TeamSummaryScreen.jsx — matching
    the synced design's gallery of full cards rather than a bespoke roster tile. Five full cards
@@ -711,7 +713,16 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .development-picker{width:min(820px,100%);max-height:85vh;overflow:auto;background:var(--form);border:2px solid var(--ink);padding:20px;box-shadow:0 24px 70px rgba(0,0,0,.42);}
 .development-picker-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:16px;}.development-picker-head .ts-heading{margin-bottom:4px;}.development-picker-player{font-family:var(--font-mono);font-size:12px;color:var(--file-body);}.development-picker-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;}.development-picker-card{border:0;background:none;padding:0;text-align:left;cursor:pointer;}.development-picker-card:hover .strategy-card,.development-picker-card:focus .strategy-card{box-shadow:0 0 0 3px var(--approved-file);}.development-picker-card .strategy-card{height:100%;}
 .pcard-level{font-family:var(--font-label);font-size:14px!important;letter-spacing:.08em;}.pcard-development{margin-top:5px;font-family:var(--font-mono);font-size:8px;letter-spacing:.04em;color:var(--approved-file);text-transform:uppercase;}.pcard-stat b{font-size:27px;}
-@media(max-width:999px){.persistent-franchise-masthead{position:relative;top:auto;padding:14px 16px;}.persistent-franchise-masthead .ts-masthead-right{grid-template-columns:repeat(5,minmax(58px,1fr));min-width:100%;}.persistent-franchise-masthead .ts-hero-metric{padding:3px 8px;}.persistent-franchise-masthead .ts-hero-value{font-size:28px;}.persistent-franchise-masthead .ts-hero-value.budget{font-size:17px;}}
+@media(max-width:999px){
+  .mobile-persistent-top{position:sticky;top:0;z-index:5;}
+  .mobile-persistent-top .topbar,.mobile-persistent-top .persistent-franchise-masthead{position:relative;top:auto;}
+  .persistent-franchise-masthead{padding:8px 12px;}
+  .persistent-franchise-masthead .ts-masthead-left{display:none;}
+  .persistent-franchise-masthead .ts-masthead-right{grid-template-columns:repeat(5,minmax(52px,1fr));min-width:100%;}
+  .persistent-franchise-masthead .ts-hero-metric{padding:3px 7px;}
+  .persistent-franchise-masthead .ts-hero-value{font-size:25px;}
+  .persistent-franchise-masthead .ts-hero-value.budget{font-size:15px;}
+}
 
 /* ================= Season Recap (1b, "the era ledger") — brand handoff Screen: Season
    Recap. Filed once per season, between Results and the Draft. Ink ground throughout. ===== */
@@ -781,18 +792,16 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 
 .t2-board{background:var(--ink-deep);border:1px solid var(--ink-rule);display:flex;flex-direction:column;min-width:0;}
 
-/* "Coach in front", per the Match Flow design doc's 8A board: each team renders [roster, name]
-   in that DOM order — the nine-tile rotation at the outer edge, the team name closest to the
-   shared roll zone. The bottom team's board mirrors this via column-reverse rather than a
-   different child order, so both teams read roster-outer/name-inner around the same roll zone.
-   The Head Coach card isn't a sibling block at all — it's absolutely positioned inside the
-   roster row itself, overlapping that row's near-center edge (see .nd2-coach-slot below). */
+/* Each team keeps all nine player cards unobstructed. The coach occupies a dedicated dock
+   beside the name below the home roster and above the away roster. */
 .t2-teamboard{padding:20px 24px;display:flex;flex-direction:column;gap:14px;}
 .t2-teamboard:first-child{border-bottom:1px solid var(--ink-rule);}
 .t2-teamboard:nth-of-type(2){border-top:1px solid var(--ink-rule);}
 .t2-teamboard.active{background:rgba(240,160,61,.05);}
 .t2-teamboard.flip{flex-direction:column-reverse;}
-.t2-teamboard-name{text-align:center;display:flex;align-items:baseline;justify-content:center;gap:12px;flex-wrap:wrap;}
+.t2-teamboard-meta{display:flex;align-items:center;gap:14px;min-width:0;}
+.t2-teamboard.flip .t2-teamboard-meta{flex-direction:row-reverse;}
+.t2-teamboard-name{text-align:center;display:flex;align-items:baseline;justify-content:center;gap:12px;flex:1;min-width:0;flex-wrap:wrap;}
 .t2-hca-tag{display:inline-block;font-family:var(--font-label);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--franchise);border:1px solid var(--franchise);padding:3px 8px;}
 .t2-teamboard-name-text{font-family:var(--font-display);font-size:26px;color:var(--file);line-height:1;}
 .t2-teamboard-status{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--ink-muted);text-transform:uppercase;}
@@ -832,13 +841,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .nd2-tile-stat b{font-family:var(--font-display);font-size:15px;line-height:.82;color:var(--ink);font-weight:400;}
 .nd2-tile-stat span{font-size:6px;letter-spacing:.08em;color:var(--file-muted);}
 
-/* The coach card floats "in front of" the rotation, per the design doc: it sits flush with the
-   roster row's near-center edge and overlaps UP INTO the tiles behind it (never down into the
-   team-name gap below), literally occluding whichever tile sits behind it — that occlusion is
-   the point, not a layout bug. */
-.nd2-coach-slot{position:absolute;left:50%;transform:translateX(-50%);width:160px;z-index:2;}
-.nd2-coach-slot.edge-bottom{bottom:-4px;}
-.nd2-coach-slot.edge-top{top:-4px;}
+.nd2-coach-slot{position:relative;width:160px;flex:0 0 160px;z-index:2;}
 .nd2-coach{box-sizing:border-box;background:var(--ink-deep);border:2px solid var(--franchise);box-shadow:0 10px 24px rgba(11,17,30,.5);display:flex;flex-direction:column;}
 .nd2-coach-head{padding:6px 9px;background:var(--franchise);display:flex;align-items:center;justify-content:space-between;gap:6px;}
 .nd2-coach-head span:first-child{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);}
@@ -985,6 +988,33 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .t2-log-body{flex:1;overflow-y:auto;max-height:640px;}
 .t2-log-entry{font-family:var(--font-mono);font-size:13px;line-height:1.6;color:#fff;padding:10px 0;border-top:1px dashed var(--ink-rule);}
 .t2-log-entry:first-child{border-top:none;}
+
+/* Keep live desktop matches inside the usable viewport above the ticker and persistent tray.
+   The board and log own their internal overflow, so the page itself never scrolls mid-match. */
+@media (min-width:1000px){
+  body:has(.t2-shell){overflow:hidden;}
+  .desktop-content:has(.t2-shell){height:calc(100vh - var(--desktop-bar-height) - 38px);padding-bottom:0;display:flex;flex-direction:column;overflow:hidden;}
+  .desktop-content:has(.t2-shell) .persistent-franchise-masthead{flex:0 0 auto;padding:8px 18px;}
+  .desktop-content:has(.t2-shell) .persistent-franchise-masthead .ts-franchise-history{display:none;}
+  .desktop-content:has(.t2-shell) .persistent-franchise-masthead .ts-masthead-name{font-size:28px;}
+  .desktop-content:has(.t2-shell) > .screen{flex:1;min-height:0;padding:10px 18px;display:flex;}
+  .desktop-content:has(.t2-shell) .t2-shell{flex:1;min-height:0;width:100%;max-width:none;margin:0;padding:10px;box-sizing:border-box;overflow:hidden;}
+  .desktop-content:has(.t2-shell) .t2-body{height:100%;min-height:0;align-items:stretch;gap:10px;}
+  .desktop-content:has(.t2-shell) .t2-board{height:100%;min-height:0;overflow:hidden;}
+  .desktop-content:has(.t2-shell) .t2-teamboard{flex:0 0 auto;padding:7px 10px;gap:5px;}
+  .desktop-content:has(.t2-shell) .nd2-roster{flex-wrap:nowrap;}
+  .desktop-content:has(.t2-shell) .nd2-tile{min-width:0;flex-basis:0;}
+  .desktop-content:has(.t2-shell) .nd2-tile-tags{display:none;}
+  .desktop-content:has(.t2-shell) .t2-teamboard-meta{gap:8px;}
+  .desktop-content:has(.t2-shell) .nd2-coach-slot{width:150px;flex-basis:150px;}
+  .desktop-content:has(.t2-shell) .nd2-coach-body{padding:5px 8px;}
+  .desktop-content:has(.t2-shell) .nd2-coach-desc{display:none;}
+  .desktop-content:has(.t2-shell) .nd2-coach-foot{padding:4px 8px;}
+  .desktop-content:has(.t2-shell) .t2-rollzone{flex:1;min-height:0;padding:8px 16px;gap:8px;overflow:hidden;}
+  .desktop-content:has(.t2-shell) .t2-coin,.desktop-content:has(.t2-shell) .t2-coin-start{width:100px;height:100px;}
+  .desktop-content:has(.t2-shell) .t2-log{height:100%;box-sizing:border-box;padding:12px;overflow:hidden;}
+  .desktop-content:has(.t2-shell) .t2-log-body{max-height:none;overflow-y:auto;}
+}
 
 /* ================= Playoff Bracket (2A, "the field") — brand handoff Screens: Playoffs &
    Match Play. Ink ground throughout; round-grouped columns of the actual QF/SF/Final matches

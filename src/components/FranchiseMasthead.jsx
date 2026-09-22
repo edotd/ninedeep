@@ -36,7 +36,7 @@ export default function FranchiseMasthead({ state, teamId }) {
         </div>
       </div>
       <div className="ts-masthead-right persistent">
-        <div className="ts-hero-metric chemistry"><div className="ts-proj-label">Chemistry</div><div className="ts-hero-value">{synergy.grade}</div><div className="ts-proj-rank">Score {synergy.score}</div></div>
+        <div className="ts-hero-metric chemistry"><div className="ts-proj-label">Chemistry</div><div className="ts-hero-value">{synergy.grade}</div><div className="ts-proj-rank">{synergy.score}</div></div>
         <div className="ts-hero-metric"><div className="ts-proj-label">Budget</div><div className={'ts-hero-value budget' + (over ? ' over' : '')}>{cap == null ? '—' : `${formatCoins(committed).replace('🪙', '')}/${formatCoins(cap).replace('🪙', '')}`}</div><div className="ts-proj-rank">{over ? 'Over budget' : 'Committed'}</div></div>
         <div className="ts-hero-metric"><div className="ts-proj-label">Output</div><div className="ts-hero-value accent">{output ? output.total : '—'}</div><div className="ts-proj-rank">{output ? `${ordinal(rankFor('total'))} of ${rankedCount}` : '—'}</div></div>
         <div className="ts-hero-metric"><div className="ts-proj-label">Offense</div><div className="ts-hero-value">{output ? output.off : '—'}</div><div className="ts-proj-rank">{output ? ordinal(rankFor('off')) : '—'}</div></div>

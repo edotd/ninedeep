@@ -73,14 +73,8 @@ function readAutoProgress() {
   try { return sessionStorage.getItem(AUTO_PROGRESS_KEY) === '1'; } catch { return false; }
 }
 
-// "Coach in front" layout, per the Match Flow design doc's 8A board: all nine rotation tiles
-// (starters then bench, no separate grouping) line up in one row at the board's outer edge,
-// with the Head Coach card overlapping the row's near-center edge and the team name sitting
-// closer still to the shared roll zone in between. `flip` mirrors the bottom team's board (via
-// a CSS column-reverse over this [roster, name] pair) so the roster stays at the outer edge
-// and the name stays innermost for both teams; `edge` tells each tile/coach card which of its
-// own sides faces the roll zone, so the accent border and the coach card's overlap land on the
-// right side for either team.
+// All nine rotation tiles remain visible. The coach gets a dedicated dock beside the team
+// name: below the home roster on the left, and above the away roster on the right.
 function TeamBoard({ team, ids, hca, statusLabel, isActive, flip, contributing }) {
   const hand = team.hand || [];
   const activeIds = ids || team.activeIds || [];
@@ -92,16 +86,14 @@ function TeamBoard({ team, ids, hca, statusLabel, isActive, flip, contributing }
       <div className="nd2-roster">
         {chipSlots(starters, 5).map((c, i) => (c ? <CompactPlayerTile key={`s${i}`} card={c} isStarter edge={edge} contributing={contributing} /> : <div key={`s${i}`} className="nd2-tile empty" />))}
         {chipSlots(bench, 4).map((c, i) => (c ? <CompactPlayerTile key={`b${i}`} card={c} edge={edge} /> : <div key={`b${i}`} className="nd2-tile empty" />))}
-        {team.coach && (
-          <div className={'nd2-coach-slot' + (edge === 'top' ? ' edge-top' : ' edge-bottom')}>
-            <CompactCoachCard team={team} edge={edge} />
-          </div>
-        )}
       </div>
-      <div className="t2-teamboard-name">
-        {hca && <span className="t2-hca-tag">Home Court</span>}
-        <div className="t2-teamboard-name-text">{team.name}</div>
-        {statusLabel && <div className="t2-teamboard-status">{statusLabel}</div>}
+      <div className="t2-teamboard-meta">
+        {team.coach && <div className="nd2-coach-slot"><CompactCoachCard team={team} edge={edge} /></div>}
+        <div className="t2-teamboard-name">
+          {hca && <span className="t2-hca-tag">Home Court</span>}
+          <div className="t2-teamboard-name-text">{team.name}</div>
+          {statusLabel && <div className="t2-teamboard-status">{statusLabel}</div>}
+        </div>
       </div>
     </div>
   );
@@ -118,8 +110,8 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
   const turn = m.turn;
   const teamA = m.a, teamB = m.b;
   const isDesktop = useIsDesktop();
-  const dieSize = isDesktop ? 140 : 92;
-  const coinSize = isDesktop ? 130 : 84;
+  const dieSize = isDesktop ? 110 : 92;
+  const coinSize = isDesktop ? 100 : 84;
   const myTeam = state.teams[myTeamId];
   const humanInMatch = teamA === myTeam || teamB === myTeam;
   const [timeLeft, setTimeLeft] = useState(CARD_TIMER_SECONDS);
@@ -459,7 +451,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
       const defRolling = rollPhase === 'rolling-def';
       const defSettled = ['revealed-def', 'both'].includes(rollPhase);
       const defInteractive = rollPhase === 'idle-def' && defTeam === myTeam;
-      const offBreakdown = turn[`${offSide}OffBreakdown`], offMod = turn[`${offSide}OffMod`];
+      const offBreakdown = turn[`${offSide}OffBreakdown`];
       const defBreakdown = turn[`${defSide}DefBreakdown`], defMod = turn[`${defSide}DefMod`];
       const offWon = turn[`${offSide}OffWon`], offRaw = turn[`${offSide}OffRaw`], offTotal = turn[`${offSide}OffTotal`];
       const haircutPct = Math.round((turn[`${offSide}Haircut`] || 0) * 100);
@@ -476,7 +468,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
             <div className="t2-rollzone-caption">
               {offSettled ? `${offTeam.name} Rolls ${offDie}` : `${offTeam.name} On Offense`}
               {offSettled && (
-                <button className="t2-mod-info" aria-label="Show offense mod breakdown" onClick={() => setBreakdownOpen((v) => (v === 'off' ? null : 'off'))}>+{offMod}</button>
+                <button className="t2-mod-info" aria-label="Show offense output breakdown" onClick={() => setBreakdownOpen((v) => (v === 'off' ? null : 'off'))}>+{offRaw}</button>
               )}
             </div>
             {rollPhase === 'idle-off' && offInteractive && <button className="t2-roll-btn" onClick={() => startRoll('off')}>Roll</button>}

@@ -1,7 +1,7 @@
 import { cardTier } from '../game/cards';
 
 // Compact mobile card tray. Team metrics live in the persistent franchise masthead.
-export default function PersistentBar({ state, myTeamId, onExpand, dealProgress }) {
+export default function PersistentBar({ state, myTeamId, onNavigate, dealProgress }) {
   const team = state.teams[myTeamId];
   const inDeal = state.phase === 'pullhand';
   const rawHand = team.hand || [];
@@ -20,15 +20,13 @@ export default function PersistentBar({ state, myTeamId, onExpand, dealProgress 
   const available = (cards) => (fullyDealt ? (cards || []).filter((card) => !card.used).length : 0);
 
   return (
-    <div className="persistent-bar" onClick={onExpand}>
-      <div className="persistent-bar-rotation">
+    <div className="persistent-bar">
+      <button className="persistent-bar-section persistent-bar-rotation" onClick={() => onNavigate('rotation')}>
         <span className="persistent-bar-rotation-label">Rotation {hand.length}/9</span>
         <div className="persistent-bar-rotation-grid">{slots.map((slot, i) => <div key={i} className={'persistent-bar-dot' + (slot !== 'empty' ? ' ' + slot : '')} />)}</div>
-      </div>
-      <div className="persistent-card-count development"><span>Development</span><b>{available(team.developmentCards)}</b></div>
-      <div className="persistent-card-count gameplan"><span>Gameplan</span><b>{available(team.gameplanCards)}</b></div>
-      <div className="persistent-card-count adjustment"><span>Adjustment</span><b>{available(team.matchupCards)}</b></div>
-      <div className="persistent-bar-chevron">▴</div>
+      </button>
+      <button className="persistent-bar-section persistent-card-count gameplan" onClick={() => onNavigate('gameplan')}><span>Gameplan</span><b>{available(team.gameplanCards)}</b></button>
+      <button className="persistent-bar-section persistent-card-count adjustment" onClick={() => onNavigate('adjustment')}><span>Adjustment</span><b>{available(team.matchupCards)}</b></button>
     </div>
   );
 }
