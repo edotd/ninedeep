@@ -112,6 +112,9 @@ function applyCard(state, m, side, role, card, targetId, stat) {
     teamName: actingTeam.name,
     cardName: card.name,
     description: card.description || '',
+    // Keep a snapshot for the shared match-board reveal. The action log fields above remain
+    // for backwards compatibility with matches saved before cards were drawn on the board.
+    card: { ...card },
     stepIndex: turn.exchangeIndex,
   });
   const otherSide = side === 'a' ? 'b' : 'a';

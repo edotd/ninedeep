@@ -5,6 +5,7 @@ import Die, { ROLL_DURATION_MS } from './Die';
 import BallMark from './BallMark';
 import CompactPlayerTile from './CompactPlayerTile';
 import CompactCoachCard from './CompactCoachCard';
+import MatchupCard from './MatchupCard';
 
 // Decision clock for a blind matchup-card choice — long enough to read your hand, short
 // enough to put real pressure on the pick. Auto-passes on timeout so a stalled player can't
@@ -24,6 +25,7 @@ const COIN_RESULT_MS = 1400;
 // to the bench. All timing is presentational around already-final resolved numbers.
 const ROLL_REVEAL_MS = 700;
 const ROLL_BOTH_READ_MS = 1600;
+const ADJUSTMENT_REVEAL_MS = 2200;
 
 // The bench stage reveals the same way: the coin-toss winner's bench figure first, a read
 // pause, then the other team's, then a final read pause before the result card appears.
@@ -75,7 +77,7 @@ function readAutoProgress() {
 
 // All nine rotation tiles remain visible. The coach gets a dedicated dock beside the team
 // name: below the home roster on the left, and above the away roster on the right.
-function TeamBoard({ team, ids, hca, statusLabel, isActive, flip, contributing }) {
+function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, isActive, flip, contributing }) {
   const hand = team.hand || [];
   const activeIds = ids || team.activeIds || [];
   const starters = activeIds.map((id) => hand.find((c) => c.id === id)).filter(Boolean);
@@ -90,9 +92,21 @@ function TeamBoard({ team, ids, hca, statusLabel, isActive, flip, contributing }
       <div className="t2-teamboard-meta">
         {team.coach && <div className="nd2-coach-slot"><CompactCoachCard team={team} edge={edge} /></div>}
         <div className="t2-teamboard-name">
-          {hca && <span className="t2-hca-tag">Home Court</span>}
-          <div className="t2-teamboard-name-text">{team.name}</div>
+          {hca && !flip && <span className="t2-hca-tag">Home Court</span>}
+          <div className="t2-teamboard-name-line">
+            {roleLabel && <span className={'t2-team-role ' + roleLabel.toLowerCase()}>{roleLabel}</span>}
+            <div className="t2-teamboard-name-text">{team.name}</div>
+          </div>
           {statusLabel && <div className="t2-teamboard-status">{statusLabel}</div>}
+          {cardPlays?.length > 0 && (
+            <div className="t2-adjustment-dock">
+              {cardPlays.map((entry, i) => (
+                <div className="t2-adjustment-mini" key={`${entry.stepIndex}-${entry.teamName}-${entry.cardName}-${i}`} title={entry.description}>
+                  {entry.card ? <MatchupCard card={entry.card} playoff /> : <span>{entry.cardName}</span>}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -332,6 +346,21 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
   // (next to teamA's board), teamB's below (next to teamB's).
   const teamACardPlays = visibleBoardActions.filter((entry) => entry.teamName === teamA.name);
   const teamBCardPlays = visibleBoardActions.filter((entry) => entry.teamName === teamB.name);
+  const boardActionSignature = visibleBoardActions.map((entry, i) => (
+    `${entry.stepIndex}-${entry.teamName}-${entry.cardName}-${i}`
+  )).join('|');
+  const [settledActionSignature, setSettledActionSignature] = useState('');
+  useEffect(() => {
+    if (!boardActionSignature) {
+      setSettledActionSignature('');
+      return undefined;
+    }
+    const timer = setTimeout(() => setSettledActionSignature(boardActionSignature), ADJUSTMENT_REVEAL_MS);
+    return () => clearTimeout(timer);
+  }, [boardActionSignature]);
+  const revealingAdjustments = Boolean(boardActionSignature && settledActionSignature !== boardActionSignature);
+  const settledTeamACards = revealingAdjustments ? [] : teamACardPlays;
+  const settledTeamBCards = revealingAdjustments ? [] : teamBCardPlays;
 
   const statusFor = (side) => {
     const team = side === 'a' ? teamA : teamB;
@@ -349,6 +378,11 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
     if (offenseTeam === team) return 'On Offense · Cards Face Down Until Played';
     if (defenseTeam === team) return 'On Defense · Cards Face Down Until Played';
     return possessionTeam === team ? 'Won The Tip' : '';
+  };
+  const roleFor = (team) => {
+    if (offenseTeam === team) return 'OFFENSE';
+    if (defenseTeam === team) return 'DEFENSE';
+    return '';
   };
 
   // The "why" behind a settled die's mod — stat sum through coach bonus, roster chemistry,
@@ -556,17 +590,24 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
 
   return (
     <div className="t2-shell">
+      {revealingAdjustments && (
+        <div className="t2-adjustment-reveal" aria-live="polite">
+          {visibleBoardActions.map((entry, i) => (
+            <div className="t2-adjustment-reveal-card" key={`${entry.stepIndex}-${entry.teamName}-${entry.cardName}-${i}`}>
+              <div className="t2-adjustment-reveal-team">{entry.teamName} played</div>
+              {entry.card ? <MatchupCard card={entry.card} playoff /> : renderPlayedCards([entry])}
+            </div>
+          ))}
+        </div>
+      )}
       <div className={'t2-body' + (logCollapsed ? ' log-collapsed' : '')}>
         <div className="t2-board">
-          <TeamBoard team={teamA} ids={turn.idsA} hca={turn.hcaA} statusLabel={statusFor('a')} isActive={offenseTeam === teamA || defenseTeam === teamA} contributing={rollingSide === teamA} />
+          <TeamBoard team={teamA} ids={turn.idsA} hca={turn.hcaA} statusLabel={statusFor('a')} roleLabel={roleFor(teamA)} cardPlays={settledTeamACards} isActive={offenseTeam === teamA || defenseTeam === teamA} contributing={rollingSide === teamA} />
 
           <div className="t2-rollzone">
             {gameplanActions.length > 0 && renderPlayedCards(gameplanActions)}
-            {teamACardPlays.length > 0 && renderPlayedCards(teamACardPlays)}
 
             {renderRollCircle()}
-
-            {teamBCardPlays.length > 0 && renderPlayedCards(teamBCardPlays)}
 
             {turn.stage === 'card' && myTurnToAct && (
               <div className="t2-carddecision t2-carddecision-compact">
@@ -617,7 +658,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
 
           </div>
 
-          <TeamBoard team={teamB} ids={turn.idsB} hca={turn.hcaB} statusLabel={statusFor('b')} isActive={offenseTeam === teamB || defenseTeam === teamB} contributing={rollingSide === teamB} flip />
+          <TeamBoard team={teamB} ids={turn.idsB} hca={turn.hcaB} statusLabel={statusFor('b')} roleLabel={roleFor(teamB)} cardPlays={settledTeamBCards} isActive={offenseTeam === teamB || defenseTeam === teamB} contributing={rollingSide === teamB} flip />
         </div>
 
         <div className={'t2-log' + (logCollapsed ? ' collapsed' : '')}>

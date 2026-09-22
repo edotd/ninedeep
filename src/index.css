@@ -802,13 +802,36 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .t2-teamboard:nth-of-type(2){border-top:1px solid var(--ink-rule);}
 .t2-teamboard.active{background:rgba(240,160,61,.05);}
 .t2-teamboard.flip{flex-direction:column-reverse;}
-.t2-teamboard-meta{display:flex;align-items:center;gap:14px;min-width:0;}
-.t2-teamboard.flip .t2-teamboard-meta{flex-direction:row-reverse;}
-.t2-teamboard-name{text-align:center;display:flex;align-items:baseline;justify-content:center;gap:12px;flex:1;min-width:0;flex-wrap:wrap;}
+.t2-teamboard-meta{display:grid;grid-template-columns:160px minmax(0,1fr) 160px;align-items:center;gap:14px;min-width:0;}
+.t2-teamboard-meta>.nd2-coach-slot{grid-column:1;grid-row:1;}
+.t2-teamboard.flip .t2-teamboard-meta>.nd2-coach-slot{grid-column:3;}
+.t2-teamboard-name{grid-column:2;grid-row:1;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-width:0;}
+.t2-teamboard-name-line{display:flex;align-items:center;justify-content:center;gap:12px;min-width:0;width:100%;}
 .t2-hca-tag{display:inline-block;font-family:var(--font-label);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--franchise);border:1px solid var(--franchise);padding:3px 8px;}
 .t2-teamboard-name-text{font-family:var(--font-display);font-size:26px;color:var(--file);line-height:1;}
+.t2-team-role{font-family:var(--font-display);font-size:20px;line-height:1;letter-spacing:.08em;color:var(--ink);background:var(--franchise);padding:5px 9px;white-space:nowrap;}
+.t2-team-role.defense{color:var(--file);background:transparent;border:2px solid var(--franchise);padding:3px 7px;}
 .t2-teamboard-status{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--ink-muted);text-transform:uppercase;}
 .t2-teamboard.active .t2-teamboard-status{color:var(--franchise);}
+.t2-adjustment-dock{display:flex;align-items:flex-start;justify-content:center;gap:5px;height:34px;max-width:100%;overflow:visible;animation:t2-dock-arrive 180ms ease-out both;}
+.t2-teamboard.flip .t2-adjustment-dock{order:-1;}
+.t2-adjustment-mini{position:relative;width:96px;height:34px;overflow:hidden;border:1px solid var(--franchise);background:var(--ink-deep);box-shadow:0 4px 10px rgba(0,0,0,.35);flex:0 0 96px;}
+.t2-adjustment-mini>.mu2-wrap{position:absolute;left:0;top:0;width:280px;max-width:none;transform:scale(.343);transform-origin:top left;}
+.t2-adjustment-mini>span{display:block;padding:9px 5px;font-family:var(--font-label);font-size:9px;letter-spacing:.04em;color:var(--franchise);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+@keyframes t2-dock-arrive{from{opacity:0;transform:scale(1.35);}to{opacity:1;transform:scale(1);}}
+
+/* Played Adjustment cards reveal above the entire match board, so they never alter the dice
+   layout. After the shared display interval they disappear into the compact team-name dock. */
+.t2-adjustment-reveal{position:fixed;inset:0;z-index:120;display:flex;align-items:center;justify-content:center;gap:24px;padding:24px;background:rgba(11,17,30,.72);pointer-events:none;}
+.t2-adjustment-reveal-card{width:min(280px,40vw);display:flex;flex-direction:column;align-items:center;gap:10px;animation:t2-adjustment-reveal 2.2s ease-in-out both;}
+.t2-adjustment-reveal-card>.mu2-wrap{width:100%;}
+.t2-adjustment-reveal-team{font-family:var(--font-label);font-size:13px;letter-spacing:.12em;color:var(--franchise);text-transform:uppercase;text-align:center;}
+@keyframes t2-adjustment-reveal{
+  0%{opacity:0;transform:scale(.82) translateY(18px);}
+  10%,76%{opacity:1;transform:scale(1) translateY(0);}
+  100%{opacity:0;transform:scale(.34) translateY(50vh);}
+}
+@media(prefers-reduced-motion:reduce){.t2-adjustment-reveal-card{animation:t2-adjustment-fade 2.2s linear both;}@keyframes t2-adjustment-fade{0%,85%{opacity:1;}100%{opacity:0;}}}
 
 /* Rotation row: all nine tiles (starters, then bench) in one line — real content sizes each
    tile via flex:1, so the row holds at any board width down to wrapping on narrow screens. */
@@ -849,7 +872,6 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .nd2-coach-head{padding:6px 9px;background:var(--franchise);display:flex;align-items:center;justify-content:space-between;gap:6px;}
 .nd2-coach-head span:first-child{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);}
 .nd2-coach-head span:last-child{font-family:var(--font-label);font-size:9px;letter-spacing:.04em;color:var(--ink);text-transform:uppercase;}
-.nd2-coach-dice{font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;color:#F5D033;text-transform:uppercase;white-space:nowrap;}
 .nd2-coach-body{padding:9px;display:flex;flex-direction:column;gap:3px;}
 .nd2-coach-name{font-family:var(--font-display);font-size:19px;line-height:.9;color:var(--file);text-transform:uppercase;}
 .nd2-coach-desc{font-size:9px;letter-spacing:.03em;color:var(--ink-muted);}
@@ -963,6 +985,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 @media (max-width:480px){
   .t2-shell{padding:14px 10px;}
   .t2-teamboard{padding:12px 10px;gap:8px;}
+  .t2-teamboard-meta{grid-template-columns:112px minmax(0,1fr) 112px;gap:5px;}
   .nd2-tile{flex-basis:58px;min-width:58px;}
   .nd2-tile.empty{min-height:88px;}
   .nd2-tile-jersey{font-size:16px;}
@@ -971,6 +994,11 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
   .nd2-coach-name{font-size:14px;}
   .nd2-coach-desc{font-size:8px;}
   .t2-teamboard-name-text{font-size:19px;}
+  .t2-team-role{font-size:14px;padding:4px 6px;}
+  .t2-team-role.defense{padding:2px 4px;}
+  .t2-adjustment-mini{width:72px;flex-basis:72px;height:26px;}
+  .t2-adjustment-mini>.mu2-wrap{transform:scale(.257);}
+  .t2-adjustment-dock{height:26px;}
   .t2-rollzone{padding:20px 10px;min-height:0;gap:14px;}
   .t2-coin,.t2-coin-start{width:84px;height:84px;}
   .t2-coin-face{font-size:18px;}
@@ -1009,6 +1037,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
   .desktop-content:has(.t2-shell) .nd2-tile{min-width:0;flex-basis:0;}
   .desktop-content:has(.t2-shell) .nd2-tile-tags{display:none;}
   .desktop-content:has(.t2-shell) .t2-teamboard-meta{gap:8px;}
+  .desktop-content:has(.t2-shell) .t2-teamboard-meta{grid-template-columns:150px minmax(0,1fr) 150px;}
   .desktop-content:has(.t2-shell) .nd2-coach-slot{width:150px;flex-basis:150px;}
   .desktop-content:has(.t2-shell) .nd2-coach-body{padding:5px 8px;}
   .desktop-content:has(.t2-shell) .nd2-coach-desc{display:none;}

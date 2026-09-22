@@ -108,6 +108,7 @@ test('a card played during defense\'s blind window still cuts that same exchange
   assert.equal(m.turn.log.filter((entry)=>entry.tag==='resolution').length,1);
   assert.equal(m.turn.boardActions.length,1);
   assert.equal(m.turn.boardActions[0].cardName,'Scouted Tendencies');
+  assert.equal(m.turn.boardActions[0].card.name,'Scouted Tendencies');
 });
 
 test('instant simulation executes new effects and finishes', () => {
