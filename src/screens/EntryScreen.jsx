@@ -2,19 +2,14 @@ import { useEffect, useState } from 'react';
 import { createRoom, joinRoom } from '../firebase/rooms';
 import { firebaseReady } from '../firebase/config';
 import BallMark from '../components/BallMark';
-import GlossaryScreen from './GlossaryScreen';
 import SettingsScreen from './SettingsScreen';
 import { randomFranchiseName } from '../game/names';
 
-// The Entry screen — "1B · The Marquee" from the design brand handoff's Nine Deep Entry
-// file. Replaces the old two-step flow (a mode-picker LandingScreen, then a separate
-// SetupScreen for naming the solo franchise) with one screen: an ink hero half that carries
-// the pitch and a browsable glossary preview, and a cream setup half on the right whose
-// content swaps with the Solo/Host/Join tab. Solo keeps only the franchise name and Start
-// action here; all configuration lives on the linked Settings screen.
+// A compact branded setup screen. Solo keeps only the franchise name and Start action here;
+// all configuration lives on the linked Settings screen.
 export default function EntryScreen({ pendingJoinCode, soloState, soloActions, onStartSolo, onEnterRoom }) {
   const [tab, setTab] = useState(pendingJoinCode ? 'join' : 'solo');
-  const [overlay, setOverlay] = useState(null); // null | 'glossary' | 'settings'
+  const [overlay, setOverlay] = useState(null); // null | 'settings'
 
   const [teamName, setTeamName] = useState('');
   const [joinCode, setJoinCode] = useState(pendingJoinCode || '');
@@ -32,7 +27,6 @@ export default function EntryScreen({ pendingJoinCode, soloState, soloActions, o
     }
   }, [pendingJoinCode]);
 
-  if (overlay === 'glossary') return <GlossaryScreen state={soloState} onBack={() => setOverlay(null)} />;
   if (overlay === 'settings') return <SettingsScreen state={soloState} actions={soloActions} onBack={() => setOverlay(null)} />;
 
 
@@ -71,27 +65,10 @@ export default function EntryScreen({ pendingJoinCode, soloState, soloActions, o
   return (
     <div className="entry-screen">
       <div className="entry-shell">
-        <div className="entry-marquee">
-          <div className="entry-marquee-dots" aria-hidden="true">
-            {Array.from({ length: 9 }, (_, i) => <div key={i} className="entry-marquee-dot" />)}
-          </div>
-
+        <div className="entry-brand">
           <div className="entry-lockup">
             <BallMark size={40} variant="onInk" />
             <span className="entry-wordmark"><b>NINE</b> <i>DEEP</i></span>
-          </div>
-
-          <h1 className="entry-headline">Eight seasons.<br />Nine cards<br />a season.</h1>
-          <div className="entry-glossary">
-            <div className="entry-glossary-tabs"><div className="entry-glossary-tab active">How To Play</div></div>
-            <div className="entry-glossary-rows">
-              <div className="entry-glossary-row">
-                <div className="entry-glossary-row-text">Each turn is a full season: regular season, playoffs, and the draft. Player, Front Office, and Matchup cards are dealt to each player at random. Assemble a cohesive unit and end the era with the most titles to claim victory.</div>
-              </div>
-            </div>
-            <button className="entry-glossary-link" onClick={() => setOverlay('glossary')}>
-              Open The Full Glossary <span>→</span>
-            </button>
           </div>
         </div>
 
