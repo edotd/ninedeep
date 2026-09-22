@@ -127,8 +127,14 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   useEffect(() => {
     if (!focusSection) return;
     setTab(tabForSection(focusSection.section));
-    const targetId = ['gameplan', 'adjustment'].includes(focusSection.section) ? `team-${focusSection.section}-cards` : `team-${focusSection.section}`;
-    requestAnimationFrame(() => document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    const targetId = focusSection.section === 'office'
+      ? 'team-coach-card'
+      : ['gameplan', 'adjustment'].includes(focusSection.section) ? `team-${focusSection.section}-cards` : `team-${focusSection.section}`;
+    requestAnimationFrame(() => document.getElementById(targetId)?.scrollIntoView({
+      behavior: 'smooth',
+      block: focusSection.section === 'office' ? 'center' : 'start',
+      inline: 'center',
+    }));
   }, [focusSection]);
 
   // Substitutions: click a starter then a bench player (either order) to swap them, click the
@@ -297,7 +303,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             <div className="ts-section" id="team-office">
               <div className="ts-heading">Front Office</div>
               <div className="fo-deal-row" style={{ margin: 0 }}>
-                <div className="ts-fo-col">
+                <div className="ts-fo-col" id="team-coach-card">
                   {team.coach ? <FrontOfficeCard kind="coach" team={team} /> : <div className="ts-empty-coach"><span>Coach</span><strong>Open Slot</strong><small>Choose a replacement in Free Agency.</small></div>}
                   {!readOnly && team.coach && (
                     <button
