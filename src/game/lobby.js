@@ -2,7 +2,8 @@
 // (phase: 'lobby', seats: [...]) rather than the full in-era game state, so they live
 // outside game/actionMap.js (which is shared with solo mode, which has no lobby at all).
 import { AI_NAMES } from './constants';
-import { newEraState, buildStarPool, buildTeams, initFrontOffice } from './season';
+import { newEraState, buildStarPool, buildTeams, dealHands, initFrontOffice } from './season';
+import { autoSelectFive } from './roster';
 
 // One identity can only ever hold one seat — release any other seat this uid already
 // claimed first (a real player never has a reason to hold two; this mostly guards against
@@ -48,6 +49,8 @@ export function startEraOnline(state, hostUid) {
   state.cardCounter = base.cardCounter;
   buildStarPool(state);
   buildTeams(state, seats);
+  dealHands(state);
+  state.teams.forEach((t) => { t.activeIds = autoSelectFive(t.hand); });
   initFrontOffice(state);
 }
 
