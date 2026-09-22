@@ -1164,6 +1164,20 @@ html[data-theme="dark"] .wordmark-ink{color:var(--file);}
 .deal-block{width:100%;max-width:840px;}
 @media (min-width:1000px){.deal-screen{min-height:calc(100vh - 90px - var(--desktop-bar-height));}}
 
+/* The Deal's stage (design ref 4A) — a dark full-width panel the deck sits on for one brief
+   beat before every card lands in the review grid below. Kept visually separate from that grid
+   (ink ground vs. the screen's own file ground) so the "table" reads as its own moment. */
+.deal-stage{flex:1;min-height:340px;background:var(--ink);display:flex;align-items:center;justify-content:center;box-sizing:border-box;padding:20px;}
+.deal-skip{display:block;margin:14px auto 0;}
+
+.deal-deck{position:relative;width:110px;height:154px;animation:deal-deck-in 260ms ease-out both;}
+.deal-deck-card{position:absolute;inset:0;border-radius:6px;background:var(--ink-deep);box-shadow:inset 0 0 0 2px var(--franchise);}
+.deal-deck-card:nth-child(1){transform:translate(-6px,-6px) rotate(-4deg);}
+.deal-deck-card:nth-child(2){transform:translate(3px,-2px) rotate(2deg);}
+.deal-deck-card:nth-child(3){transform:none;}
+@keyframes deal-deck-in{from{opacity:0;transform:scale(.8);}to{opacity:1;transform:scale(1);}}
+@media(prefers-reduced-motion:reduce){.deal-deck{animation:none;}}
+
 /* Hand screen — now that the window isn't capped at 900px, starters (5) and bench (4) each
    deal into a single row instead of the 3-column fa-grid wrapping to a second line. */
 .deal-row-5{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;max-width:1200px;margin:0 auto;}
