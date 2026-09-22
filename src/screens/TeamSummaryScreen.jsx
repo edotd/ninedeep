@@ -270,8 +270,8 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                 </div>
                 <div className="ts-ledger-subtitle">Team</div>
                 <div className="ts-team-costs">
-                  <div><span>{team.coach?.archetype || 'Open Coach Slot'}</span><strong>{team.coach ? formatCoins(team.coach.salary) : '—'}</strong></div>
-                  <div><span>{team.gmType || 'Neutral'} GM</span><strong>{formatCoins(managerCost)}</strong></div>
+                  <div><span>Coach</span><strong>{team.coach ? formatCoins(team.coach.salary) : '—'}</strong></div>
+                  <div><span>GM</span><strong>{formatCoins(managerCost)}</strong></div>
                 </div>
               </div>
 
