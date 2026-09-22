@@ -43,7 +43,8 @@ export function effectiveRating(team) {
   const bonus = retentionBonus(team) + relationshipBonus(team) + handsOffBonus(team);
   const synergy = teamSynergy(team);
   const synergyAvg = (synergy.offense + synergy.defense) / 200;
-  return activeStatSum(team) * (1 + (team.coach.offBonus + bonus + team.coach.defBonus + bonus) / 2 + synergyAvg);
+  const planAvg = ((team.seasonGameplanEffects?.offPercent || 0) + (team.seasonGameplanEffects?.defPercent || 0)) / 200;
+  return activeStatSum(team) * (1 + (team.coach.offBonus + bonus + team.coach.defBonus + bonus) / 2 + synergyAvg + planAvg);
 }
 
 // SCO/PLM (offense) and DEF/REB (defense) contributions are scaled per-card by that
@@ -77,10 +78,11 @@ export function modifierBreakdown(team, idsOverride, kind) {
   const retention = retentionBonus(team);
   const relationship = relationshipBonus(team);
   const handsOff = handsOffBonus(team);
-  const preSynergyBase = Math.round((statSum * (1 + coachBonus + retention + relationship + handsOff)) / 20);
+  const gameplan = (team.seasonGameplanEffects?.[off ? 'offPercent' : 'defPercent'] || 0) / 100;
+  const preSynergyBase = Math.round((statSum * (1 + coachBonus + retention + relationship + handsOff + gameplan)) / 20);
   const synergyPct = teamSynergy(team, idsOverride)[kind];
   const base = applySynergy(preSynergyBase, team, idsOverride, kind);
-  return { statSum, coachBonus, retention, relationship, handsOff, preSynergyBase, synergyPct, base };
+  return { statSum, coachBonus, retention, relationship, handsOff, gameplan, preSynergyBase, synergyPct, base };
 }
 export function offenseModifier(team, idsOverride) {
   return modifierBreakdown(team, idsOverride, 'offense').base;

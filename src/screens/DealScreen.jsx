@@ -21,14 +21,14 @@ function reducedMotion() {
 }
 
 // The Deal (design ref 4A): nine player cards, three Front Office cards, and this era's
-// Matchup Cards all dealt together in one animated beat, rather than across three separate
-// pull screens. Matchup Cards still get their own PullModifierScreen every season after the
+// Adjustment Cards all dealt together in one animated beat, rather than across three separate
+// pull screens. Adjustment Cards still get their own PullModifierScreen every season after the
 // first (only they refresh season to season — Hand and Front Office are dealt once for the
 // whole era), so that screen stays untouched; this one only ever runs once, at the very start
 // of an era.
 //
 // Moving on from here (onDealDone) is purely a LOCAL, per-client decision — it does not touch
-// shared game state at all. Every player's hand/Front Office/Matchup Cards are already dealt
+// shared game state at all. Every player's hand/Front Office/Adjustment Cards are already dealt
 // in the shared doc the instant the era starts, so there is nothing left to synchronize:
 // each player watches their own deal animation and continues to their own Team File on their
 // own schedule, same as GameShell's overlay screens never yank other players around. On
@@ -95,7 +95,7 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
     return (
       <div className="screen deal-screen">
         <h1>Your Deal — Season {state.season}</h1>
-        <p className="lede" style={{ marginBottom: 14 }}>Your 9-card hand, Front Office, and this season's Matchup Cards — dealt together.</p>
+        <p className="lede" style={{ marginBottom: 14 }}>Your 9-card hand, Front Office, and this season's Adjustment Cards — dealt together.</p>
         <div className="deal-stage">
           <div className="deal-deck">
             <div className="deal-deck-card" /><div className="deal-deck-card" /><div className="deal-deck-card" />
@@ -112,7 +112,7 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
     <>
       <div className="screen deal-screen">
         <h1>Your Deal — Season {state.season}</h1>
-        <p className="lede" style={{ marginBottom: 14 }}>Your 9-card hand, Front Office, and this season's Matchup Cards — all dealt together. Review everything here before heading to your Franchise file.</p>
+        <p className="lede" style={{ marginBottom: 14 }}>Your 9-card hand, Front Office, and this season's Adjustment Cards — all dealt together. Review everything here before heading to your Franchise file.</p>
         <div className="deal-centered">
           <div className="deal-heading">Starters ({starters.length}/5)</div>
           <div className="deal-row-5">
@@ -126,7 +126,7 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
           <div className="fo-deal-row">
             {FO_KINDS.map((kind) => <div key={kind} className="card-deal-in"><FrontOfficeCard kind={kind} team={team} /></div>)}
           </div>
-          <div className="deal-heading">Matchup Cards</div>
+          <div className="deal-heading">Adjustment Cards</div>
           <div className="mu-deal-row">
             {matchupCards.map((c) => <div key={c.id} className="card-deal-in"><MatchupCard card={c} /></div>)}
           </div>

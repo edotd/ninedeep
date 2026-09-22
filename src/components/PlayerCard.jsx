@@ -4,13 +4,22 @@ import { careerLevel, careerBonus } from '../game/aging';
 import { cardTier, jerseyNumber, playerGrade } from '../game/cards';
 import CardTypeMark from './CardTypeMark';
 
-export default function PlayerCard({ card, onClick, selected, rosterLabel, compact, onRelease }) {
+const LEGACY_DEVELOPMENT_CHANGES = {
+  'Shooting Lab': { SCO: 2 },
+  'Lead Guard Reps': { PLM: 2 },
+  'Glass Work': { REB: 2 },
+  'Defensive Camp': { DEF: 2 },
+  'Complete Program': { SCO: 1, PLM: 1, REB: 1, DEF: 1 },
+};
+
+export default function PlayerCard({ card, onClick, selected, rosterLabel, compact, onRelease, onDevelop }) {
   const pillLabel = rosterLabel || (selected ? 'Selected' : null);
   const tier = cardTier(card);
   const skillset = skillsetFor(card);
   const level = careerLevel(card);
   const bonus = careerBonus(card, card.careerRoll);
   const positionClass = ` position-${card.position.toLowerCase()}`;
+  const developmentChanges = card.development?.statChanges || LEGACY_DEVELOPMENT_CHANGES[card.development?.cardName] || {};
   // The EXP card inverts to a dark ground, so the level indicator needs a light-on-dark
   // palette instead of the light-ground colors used everywhere else — otherwise Prime/
   // Declining/Young all read as illegibly dim navy-on-navy.
@@ -40,7 +49,7 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
       </div>
       {!compact && (
         <div className="pcard-contract pcard-years-row">
-          <span className="pcard-microlabel">Years Left</span>
+          <span className="pcard-microlabel">Turns Remaining</span>
           <div className="pcard-dots">
             {Array.from({ length: card.contract }, (_, i) => <div key={i} className="pcard-dot" />)}
           </div>
@@ -48,10 +57,7 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
       )}
       {!compact && (
         <div className="pcard-stats">
-          <div className="pcard-stat"><b>{card.stats.SCO}</b><span>SCO</span></div>
-          <div className="pcard-stat"><b>{card.stats.PLM}</b><span>PLM</span></div>
-          <div className="pcard-stat"><b>{card.stats.REB}</b><span>REB</span></div>
-          <div className="pcard-stat"><b>{card.stats.DEF}</b><span>DEF</span></div>
+          {['SCO', 'PLM', 'REB', 'DEF'].map((stat) => <div className="pcard-stat" key={stat}><div className="pcard-stat-value"><b>{card.stats[stat]}</b>{developmentChanges[stat] > 0 && <em>+{developmentChanges[stat]}</em>}</div><span>{stat}</span></div>)}
         </div>
       )}
       {/* Skillset module (brand handoff, Player Card §5) — a permanent trait rolled once at
@@ -73,6 +79,7 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
             <div className="pcard-microlabel pcard-level" style={{ color: levelColor }}>
               {level} ({bonus >= 0 ? '+' : ''}{bonus.toFixed(2)})
             </div>
+            {card.development && <div className="pcard-development">Developed · {card.development.cardName}</div>}
           </div>
           {pillLabel && <span className="pcard-stamp">{pillLabel}</span>}
         </div>
@@ -86,6 +93,11 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
       {!compact && onRelease && (
         <button className="pcard-release" onClick={(e) => { e.stopPropagation(); onRelease(card); }}>
           Release <span className="pcard-release-cost">{card.contract > 0 ? `${formatCoins(Math.round((card.salary / 2) * 100) / 100)} Dead × ${card.contract}yr` : 'No Dead Cap'}</span>
+        </button>
+      )}
+      {!compact && onDevelop && (
+        <button className="pcard-develop" onClick={(e) => { e.stopPropagation(); onDevelop(card); }}>
+          Develop
         </button>
       )}
     </div>

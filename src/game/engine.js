@@ -22,6 +22,7 @@ import {
 } from './matchup';
 import { rosterSalary } from './economy';
 import { applyPlayoffWinMilestone } from './fanbase';
+import { applyGameplanToTurn } from './strategyCards';
 
 function humanTeams(state) {
   return state.teams.filter((t) => t.human);
@@ -182,6 +183,17 @@ export function rollCurrentMatchup(state) {
 
   idsB = applyLiveFanbaseMod(m.a, m.b, extraA, idsB, cardNotes);
   idsA = applyLiveFanbaseMod(m.b, m.a, extraB, idsA, cardNotes);
+
+  const planTurn = { extraA, extraB, gameplanNotes: [] };
+  for (const [side, team] of [['a', m.a], ['b', m.b]]) {
+    if (team.human) continue;
+    const plan = (team.gameplanCards || []).find((card) => !card.used && card.contexts?.includes('playoff'));
+    if (!plan) continue;
+    applyGameplanToTurn(planTurn, side, plan);
+    plan.used = true;
+    plan.playedContext = 'playoff';
+    plan.targetTeamId = plan.target === 'opponent' ? (side === 'a' ? m.b.id : m.a.id) : team.id;
+  }
 
   const choicesA = cardChoicesFor(state.playoff, m.a);
   const choicesB = cardChoicesFor(state.playoff, m.b);

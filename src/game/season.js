@@ -14,6 +14,7 @@ import { tricodeFor } from './names';
 import { simulateSeasonOutput, teamOutput } from './matchup';
 import { teamSynergy } from './skillsets';
 import { recordFreeAgencyActivity } from './freeAgencyActivity';
+import { autoPlaySeasonGameplans, dealStrategyCards } from './strategyCards';
 
 export function newEraState() {
   return {
@@ -26,6 +27,7 @@ export function newEraState() {
     log: [],
     freeAgencyActivity: [],
     cardCounter: 0,
+    strategyCardCounter: 0,
     settings: {
       injuryChance: INJURY_CHANCE,
       championshipBarMult: CHAMPIONSHIP_BAR_MULT,
@@ -78,6 +80,9 @@ export function buildTeams(state, teamSeats) {
     retainedStreak: 0,
     lastCoachName: null,
     matchupCards: [],
+    developmentCards: [],
+    gameplanCards: [],
+    seasonGameplanEffects: { offPercent: 0, defPercent: 0, benchBonus: 0, seedingPercent: 0 },
     fanbaseBaseline: 0,
     financeBoostUsedThisSeason: false,
     // One entry pushed per season in proceedFromResults, feeding the Season Recap screen's
@@ -141,7 +146,10 @@ export function initSeasonModifierCards(state) {
   state.leagueAvg = undefined;
   // Fanbase mods are re-rolled every season for every team, independent of the Matchup
   // Cards setting — they're a fanbase mechanic, not a matchup one.
-  state.teams.forEach((team) => { if (state.season > 1 || !team.fanbaseMod) rollFanbaseMod(team); });
+  state.teams.forEach((team) => {
+    if (state.season > 1 || !team.fanbaseMod) rollFanbaseMod(team);
+    dealStrategyCards(state, team);
+  });
   if (state.settings && state.settings.matchupCardsEnabled === false) {
     state.teams.forEach((team) => { team.matchupCards = []; });
     state.phase = 'constructing';
@@ -175,6 +183,7 @@ export function seedTeam(state, n) {
 // The seeding/cap-lock portion of the original confirmLineup(), run after every team's
 // active five is finalized for the season.
 export function lockSeasonAndSeed(state) {
+  state.teams.filter((team) => !team.human).forEach((team) => autoPlaySeasonGameplans(state, team));
   state.teams.forEach((team) => {
     const total9 = rosterSalary(team);
     let overage = Math.max(0, total9 - team.seasonCap);
@@ -201,6 +210,7 @@ export function lockSeasonAndSeed(state) {
       const base = effectiveRating(t);
       const randomMult = 0.9 + Math.random() * 0.2;
       let val = base * randomMult;
+      val *= 1 + ((t.seasonGameplanEffects?.seedingPercent || 0) / 100);
       const seedingCards = (t.matchupCards || []).filter((c) => c.effectType === 'SEEDING_PERCENT' && !c.used);
       const seedingCardPct = seedingCards.reduce((sum, c) => sum + c.value, 0);
       val *= 1 + seedingCardPct / 100;

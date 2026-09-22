@@ -467,7 +467,7 @@ const DEFINITIONS = [
     "definitionId": "matchup-077",
     "name": "Advance Scout",
     "category": "Matchup",
-    "description": "+1 Matchup Card",
+    "description": "+1 Adjustment Card",
     "rarity": "Prime",
     "effectType": "MATCHUP_CARD_MOD",
     "value": 1
@@ -476,7 +476,7 @@ const DEFINITIONS = [
     "definitionId": "matchup-078",
     "name": "Extra Preparation",
     "category": "Matchup",
-    "description": "+1 Matchup Card",
+    "description": "+1 Adjustment Card",
     "rarity": "Prime",
     "effectType": "MATCHUP_CARD_MOD",
     "value": 1
@@ -485,7 +485,7 @@ const DEFINITIONS = [
     "definitionId": "matchup-079",
     "name": "Familiar Opponent",
     "category": "Matchup",
-    "description": "+1 Matchup Card",
+    "description": "+1 Adjustment Card",
     "rarity": "Prime",
     "effectType": "MATCHUP_CARD_MOD",
     "value": 1
@@ -494,7 +494,7 @@ const DEFINITIONS = [
     "definitionId": "matchup-080",
     "name": "Assistant Coach Intel",
     "category": "Matchup",
-    "description": "+1 Matchup Card",
+    "description": "+1 Adjustment Card",
     "rarity": "Prime",
     "effectType": "MATCHUP_CARD_MOD",
     "value": 1
@@ -503,7 +503,7 @@ const DEFINITIONS = [
     "definitionId": "matchup-081",
     "name": "Short Turnaround",
     "category": "Matchup",
-    "description": "−1 Matchup Card",
+    "description": "−1 Adjustment Card",
     "rarity": "Prime",
     "effectType": "MATCHUP_CARD_MOD",
     "value": -1
@@ -512,7 +512,7 @@ const DEFINITIONS = [
     "definitionId": "matchup-082",
     "name": "Limited Film",
     "category": "Matchup",
-    "description": "−1 Matchup Card",
+    "description": "−1 Adjustment Card",
     "rarity": "Prime",
     "effectType": "MATCHUP_CARD_MOD",
     "value": -1
@@ -664,11 +664,18 @@ const DEFINITIONS = [
   }
 ];
 
-export const MATCHUP_MODIFIER_TYPES = DEFINITIONS.map((card) => ({
-  ...card, weight: 1, flavor: card.description,
-  target: card.value < 0 || card.effectType === 'DISADVANTAGE' ? 'opponent' : 'self',
-  playable: card.effectType !== 'SEEDING_PERCENT',
-  passive: card.effectType === 'SEEDING_PERCENT' ? 'seeding' : null,
-  targetsPlayer: ['PLAYER_STAT_MOD', 'CAP_HIT_STAT'].includes(card.effectType),
+export const SEEDING_GAMEPLAN_TYPES = DEFINITIONS.filter((card) => card.effectType === 'SEEDING_PERCENT').map((card) => ({
+  name: card.name,
+  description: card.description,
+  target: 'self',
+  contexts: ['season'],
+  effects: { seedingPercent: card.value },
 }));
 
+export const MATCHUP_MODIFIER_TYPES = DEFINITIONS.filter((card) => card.effectType !== 'SEEDING_PERCENT').map((card) => ({
+  ...card, weight: 1, flavor: card.description,
+  target: card.value < 0 || card.effectType === 'DISADVANTAGE' ? 'opponent' : 'self',
+  playable: true,
+  passive: null,
+  targetsPlayer: ['PLAYER_STAT_MOD', 'CAP_HIT_STAT'].includes(card.effectType),
+}));

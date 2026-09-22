@@ -6,22 +6,43 @@ import FrontOfficeCard from '../components/FrontOfficeCard';
 import { formatCoins, rosterSalary, gmCost } from '../game/economy';
 import { teamOutput } from '../game/matchup';
 import { teamExperience } from '../game/aging';
-import { teamSynergy } from '../game/skillsets';
 import { cardTier } from '../game/cards';
 import { FANBASE_BOOST_COST } from '../game/constants';
 import MatchupCard from '../components/MatchupCard';
+import StrategyCard from '../components/StrategyCard';
 
-const ERA_LENGTH = 8;
-
-function ordinal(n) {
-  const s = ['th', 'st', 'nd', 'rd'];
-  const v = n % 100;
-  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+function StrategyAction({ card, team, state, actions, myTeamId, readOnly }) {
+  const [targetId, setTargetId] = useState('');
+  if (readOnly || card.used) return null;
+  if (card.kind === 'development') {
+    const eligible = team.hand.filter((player) => !player.development);
+    return (
+      <div className="strategy-card-action">
+        <select value={targetId} onChange={(event) => setTargetId(event.target.value)}>
+          <option value="">Choose player</option>
+          {eligible.map((player) => <option key={player.id} value={player.id}>{player.position} · {player.archetype} · #{player.id}</option>)}
+        </select>
+        <button className="secondary" disabled={!targetId} onClick={() => actions.applyDevelopmentCard(myTeamId, card.id, targetId)}>Apply</button>
+      </div>
+    );
+  }
+  const liveMatch = (state.playoff?.matches || []).find((match) => match.turn && !match.result && (match.a === team || match.b === team));
+  const playoffReady = liveMatch?.turn && ['coinflip', 'coinflipped'].includes(liveMatch.turn.stage);
+  const seasonOpen = ['pullhand', 'pullmodifier', 'constructing', 'teamsummary'].includes(state.phase);
+  const context = playoffReady ? 'playoff' : seasonOpen ? 'season' : null;
+  const opponents = state.teams.filter((candidate) => candidate.id !== team.id);
+  const needsTarget = card.target === 'opponent' && context === 'season';
+  return (
+    <div className="strategy-card-action">
+      {needsTarget && <select value={targetId} onChange={(event) => setTargetId(event.target.value)}><option value="">Choose opponent</option>{opponents.map((opponent) => <option key={opponent.id} value={opponent.id}>{opponent.name}</option>)}</select>}
+      <button className="secondary" disabled={!context || (needsTarget && !targetId)} onClick={() => actions.playGameplanCard(myTeamId, card.id, context, needsTarget ? targetId : null)}>{context === 'playoff' ? 'Use In Matchup' : context === 'season' ? 'Use This Season' : 'Unavailable'}</button>
+    </div>
+  );
 }
 
 // The Team Summary screen — "the file the league keeps on you" (design brand handoff, 1a).
 // Serves two roles from the same markup: as the 'teamsummary' phase (shown once per season,
-// after the Matchup Cards pull and the Constructing loading beat — its own button confirms
+// after the Adjustment Cards pull and the Constructing loading beat — its own button confirms
 // the season on the auto-selected five, the last stop before the season locks), and — when
 // passed `onBack` — as the "Team" overlay reachable from the sidebar/top bar on any phase,
 // where the button instead just closes the overlay and the front-office moves (fire/hire
@@ -37,7 +58,6 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   // actions always take myTeamId regardless of which file is on screen.
   const readOnly = viewTeamId != null && viewTeamId !== myTeamId;
   const team = state.teams[readOnly ? viewTeamId : myTeamId];
-  const seasonNum = Math.min(state.season, ERA_LENGTH);
   // The outgoing coach's dead cap is exact; the incoming hire's salary (also charged this
   // season, on top of it) is drawn fresh when the button is clicked, so it isn't part of
   // this figure.
@@ -58,18 +78,6 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
 
   const output = team.coach && team.activeIds && team.activeIds.length > 0 ? teamOutput(team) : null;
   const chemistry = team.coach ? teamExperience(team) : null;
-  const synergy = teamSynergy(team);
-
-  // Ranked against every other team that also has a lineup set — same "Nth of the league"
-  // framing as Standings, but scoped to whatever this game's actual team count is rather than
-  // a fixed number.
-  const leagueOutputs = state.teams.map((t) => (t.coach && t.activeIds && t.activeIds.length > 0 ? teamOutput(t) : null));
-  const rankedCount = leagueOutputs.filter(Boolean).length;
-  const rankFor = (key) => {
-    if (!output) return null;
-    const better = leagueOutputs.filter((o) => o && o[key] > output[key]).length;
-    return better + 1;
-  };
 
   // Reached either as the 'teamsummary' phase screen proper, or — for the era-opening deal —
   // locally, the instant this client moves past its own DealScreen while state.phase is still
@@ -92,6 +100,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   // after releasing an active starter), there's no outgoing player to pick, so a bare click on
   // any bench card fills it directly via promoteToStarter instead of requiring a selection.
   const [selectedId, setSelectedId] = useState(null);
+  const [developPlayer, setDevelopPlayer] = useState(null);
   useEffect(() => { setSelectedId(null); }, [team.id, canEdit]);
   const handleCardClick = (card) => {
     if (!canEdit) return;
@@ -129,49 +138,6 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   return (
     <>
       <div className="screen ts-screen">
-        <div className="ts-masthead">
-          <div className="ts-masthead-left">
-            <div className="ts-masthead-label">TEAM FILE{team.market ? ` · ${team.market.name.toUpperCase()}` : ''}</div>
-            <div className="ts-masthead-name">{team.name}</div>
-            <div className="ts-franchise-history">
-              <div className="ts-era">
-                <div className="ts-era-label">ERA 01 · YR {seasonNum} OF {ERA_LENGTH}</div>
-                <div className="ts-era-bar">
-                  {Array.from({ length: ERA_LENGTH }, (_, i) => (
-                    <div key={i} className={'ts-era-seg' + (i < seasonNum ? ' done' : '')} />
-                  ))}
-                </div>
-              </div>
-              <div className="ts-titles">
-                <div className="ts-titles-value">{team.titles}</div>
-                <div className="ts-titles-label">CHAMPIONSHIP{team.titles === 1 ? '' : 'S'}</div>
-              </div>
-            </div>
-          </div>
-          <div className="ts-masthead-right">
-            <div className="ts-hero-metric chemistry">
-              <div className="ts-proj-label">Chemistry</div>
-              <div className="ts-hero-value">{synergy.grade}</div>
-              <div className="ts-proj-rank">Score {synergy.score}</div>
-            </div>
-            <div className="ts-hero-metric">
-              <div className="ts-proj-label">Proj Offense</div>
-              <div className="ts-hero-value accent">{output ? output.off : '—'}</div>
-              {output && <div className="ts-proj-rank">{ordinal(rankFor('off'))} of {rankedCount}</div>}
-            </div>
-            <div className="ts-hero-metric">
-              <div className="ts-proj-label">Proj Defense</div>
-              <div className="ts-hero-value">{output ? output.def : '—'}</div>
-              {output && <div className="ts-proj-rank">{ordinal(rankFor('def'))} of {rankedCount}</div>}
-            </div>
-            <div className="ts-hero-metric">
-              <div className="ts-proj-label">Bench Output</div>
-              <div className="ts-hero-value">{output ? output.bench : '—'}</div>
-              {output && <div className="ts-proj-rank">{ordinal(rankFor('bench'))} of {rankedCount}</div>}
-            </div>
-          </div>
-        </div>
-
         <div className="ts-tabbar">
           <button className={'ts-tab' + (tab === 'rotation' ? ' active' : '')} onClick={() => setTab('rotation')}>Rotation</button>
           <button className={'ts-tab' + (tab === 'chemistry' ? ' active' : '')} onClick={() => setTab('chemistry')}>Chemistry</button>
@@ -179,6 +145,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             <button className={'ts-tab' + (tab === 'office' ? ' active' : '')} onClick={() => setTab('office')}>Office</button>
           )}
           <button className={'ts-tab' + (tab === 'ledger' ? ' active' : '')} onClick={() => setTab('ledger')}>Ledger</button>
+          <button className={'ts-tab' + (tab === 'cards' ? ' active' : '')} onClick={() => setTab('cards')}>Cards</button>
         </div>
 
         <div className="ts-body">
@@ -196,6 +163,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                       selected={selectedId === c.id}
                       onClick={canEdit ? () => handleCardClick(c) : undefined}
                       onRelease={canEdit ? handleRelease : undefined}
+                      onDevelop={!readOnly && !c.development ? setDevelopPlayer : undefined}
                     />
                   ))}
                 </div>
@@ -215,6 +183,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                       selected={selectedId === c.id}
                       onClick={canEdit ? () => handleCardClick(c) : undefined}
                       onRelease={canEdit ? handleRelease : undefined}
+                      onDevelop={!readOnly && !c.development ? setDevelopPlayer : undefined}
                     />
                   ))}
                   {Array.from({ length: Math.max(0, openSlots) }, (_, i) => (
@@ -312,9 +281,29 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             </div>
           )}
 
-          {(team.matchupCards || []).length > 0 && showSection('rotation') && (
+          {showSection('cards') && (
             <div className="ts-section">
-              <div className="ts-heading">Matchup Cards</div>
+              <div className="ts-heading">Development Cards</div>
+              <div className="strategy-deal-row">
+                {(team.developmentCards || []).map((card) => <div className="strategy-card-wrap" key={card.id}><StrategyCard card={card} /><StrategyAction card={card} team={team} state={state} actions={actions} myTeamId={myTeamId} readOnly={readOnly} /></div>)}
+                {(team.developmentCards || []).length === 0 && <div className="strategy-empty">New cards are dealt at the start of each season.</div>}
+              </div>
+            </div>
+          )}
+
+          {showSection('cards') && (
+            <div className="ts-section">
+              <div className="ts-heading">Gameplan Cards</div>
+              <div className="strategy-deal-row">
+                {(team.gameplanCards || []).map((card) => <div className="strategy-card-wrap" key={card.id}><StrategyCard card={card} /><StrategyAction card={card} team={team} state={state} actions={actions} myTeamId={myTeamId} readOnly={readOnly} /></div>)}
+                {(team.gameplanCards || []).length === 0 && <div className="strategy-empty">New cards are dealt at the start of each season.</div>}
+              </div>
+            </div>
+          )}
+
+          {(team.matchupCards || []).length > 0 && showSection('cards') && (
+            <div className="ts-section">
+              <div className="ts-heading">Adjustment Cards</div>
               <div className="mu-deal-row" style={{ margin: 0 }}>
                 {team.matchupCards.map((c) => <MatchupCard key={c.id} card={c} />)}
               </div>
@@ -329,6 +318,21 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
         )}
         {preSeason && team.hand.length === 9 && committed > cap && (
           <div className="statusline" style={{ marginTop: 16 }}>Get under budget before the season begins. Reduce committed costs by {formatCoins(committed - cap)}.</div>
+        )}
+        {developPlayer && (
+          <div className="development-picker-backdrop" onClick={() => setDevelopPlayer(null)}>
+            <div className="development-picker" role="dialog" aria-modal="true" aria-label={`Develop ${developPlayer.archetype}`} onClick={(event) => event.stopPropagation()}>
+              <div className="development-picker-head"><div><div className="ts-heading">Develop Player</div><div className="development-picker-player">#{developPlayer.id} · {developPlayer.position} · {developPlayer.archetype}</div></div><button className="secondary" onClick={() => setDevelopPlayer(null)}>Close</button></div>
+              <div className="development-picker-cards">
+                {(team.developmentCards || []).filter((card) => !card.used).map((card) => (
+                  <button key={card.id} className="development-picker-card" onClick={() => { const result = actions.applyDevelopmentCard(myTeamId, card.id, developPlayer.id); if (result?.ok === false) alert(result.msg); else setDevelopPlayer(null); }}>
+                    <StrategyCard card={card} />
+                  </button>
+                ))}
+                {(team.developmentCards || []).every((card) => card.used) && <div className="strategy-empty">No Development cards are available.</div>}
+              </div>
+            </div>
+          </div>
         )}
       </div>
       <div className="bottombar">

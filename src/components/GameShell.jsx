@@ -24,6 +24,7 @@ import SeasonTransitionScreen from '../screens/SeasonTransitionScreen';
 import ContractsScreen from '../screens/ContractsScreen';
 import FreeAgencyScreen from '../screens/FreeAgencyScreen';
 import FreeAgencyTicker from './FreeAgencyTicker';
+import FranchiseMasthead from './FranchiseMasthead';
 
 const SCREENS = {
   cardoverview: CardOverviewScreen,
@@ -116,6 +117,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
 
   const showChrome = state.teams && state.teams.length > 0;
   const showBar = showChrome && !HIDE_BAR_PHASES.has(state.phase);
+  const mastheadTeamId = overlay === 'team' && viewTeamId != null ? viewTeamId : myTeamId;
 
   const close = () => setOverlay(null);
   let overlayBody = null;
@@ -142,6 +144,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
       <div className="desktop-shell">
         <Sidebar state={state} myTeamId={myTeamId} overlay={overlay} viewTeamId={viewTeamId} onNav={handleNav} onViewTeam={(id) => openTeamView(id, overlay)} />
         <div className="desktop-content">
+          <FranchiseMasthead state={state} teamId={mastheadTeamId} />
           {mainBody}
         </div>
         <FreeAgencyTicker activity={state.freeAgencyActivity} withBar={showBar} />
@@ -153,6 +156,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
   return (
     <>
       {showChrome && <Header {...headerProps} />}
+      {showChrome && <FranchiseMasthead state={state} teamId={mastheadTeamId} />}
       {mainBody}
       {showChrome && <FreeAgencyTicker activity={state.freeAgencyActivity} withBar={showBar} />}
       {showBar && <PersistentBar state={state} myTeamId={myTeamId} onExpand={() => handleNav('team')} dealProgress={dealProgress} />}

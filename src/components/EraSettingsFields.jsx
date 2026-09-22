@@ -1,4 +1,4 @@
-// Win Condition + Matchup Cards controls — used by the Settings screen (mid-era, via
+// Win Condition + Adjustment Cards controls — used by the Settings screen (mid-era, via
 // actions.updateSettings) and the online host's Era Setup step in the Lobby. The solo entry
 // screen links to Settings rather than duplicating these controls.
 export default function EraSettingsFields({ settings, actions }) {
@@ -31,7 +31,7 @@ export default function EraSettingsFields({ settings, actions }) {
         </div>
       </div>
       <div className="pull-slot">
-        <div className="pull-label">Matchup Cards</div>
+        <div className="pull-label">Adjustment Cards</div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button
             className={matchupCardsEnabled ? 'primary' : 'secondary'}
@@ -48,7 +48,7 @@ export default function EraSettingsFields({ settings, actions }) {
             Off
           </button>
         </div>
-        <div className="pull-extra">When on, every team pulls Matchup Modifier cards each season and can play them during playoff matchups. Turning this off skips the Matchup Cards step entirely.</div>
+        <div className="pull-extra">When on, every team pulls Adjustment cards each season and can play them during playoff matchups. Turning this off skips the Adjustment Cards step entirely.</div>
       </div>
     </>
   );

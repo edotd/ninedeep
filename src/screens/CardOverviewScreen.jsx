@@ -4,7 +4,7 @@ import FrontOfficeCard from '../components/FrontOfficeCard';
 import MatchupCard from '../components/MatchupCard';
 import CardTypeMark from '../components/CardTypeMark';
 import CardAnnotation from '../components/CardAnnotation';
-import { useIsDesktop } from '../hooks/useIsDesktop';
+import StrategyCard from '../components/StrategyCard';
 import { drawCoachCard, applyCoachRetention } from '../game/cards';
 import { weightedPick } from '../game/rng';
 import { FANBASE_ARCHETYPES, MATCHUP_MODIFIER_TYPES } from '../game/constants';
@@ -47,8 +47,8 @@ const PLAYER_NOTES = [
     text: 'The tier name and a stable card number — collectible information only, no effect in play.' },
   { key: 'budgethit', selector: '.pcard-budgethit-row', circleSelector: '.pcard-budgethit', circle: true, label: 'Cost', side: 'right',
     text: 'The largest figure on the card, and the one this player gets traded on. It charges the budget every season the contract runs.' },
-  { key: 'years', selector: '.pcard-years-row', circleSelector: '.pcard-dots', circle: true, label: 'Years left', side: 'right',
-    text: 'Filled dots are years already served against the contract. Reaches zero and the player expires.' },
+  { key: 'years', selector: '.pcard-years-row', label: 'Turns remaining',
+    text: 'Each filled dot is one turn left on the contract. At zero, the player enters free agency.' },
   { key: 'level', selector: '.pcard-age-row', circleSelector: '.pcard-level', circle: true, label: 'Career stage', side: 'right',
     text: 'The career stage and a fixed career roll set the bonus or penalty on every stat.' },
 ];
@@ -81,8 +81,16 @@ const MATCHUP_NOTES = [
     text: 'The tell that this card is temporary. No other card type has it — it leaves the table after one game.' },
 ];
 
+const STRATEGY_NOTES = [
+  { key: 'type', selector: '.strategy-card-kicker', label: 'Card type', text: 'Identifies whether this is a permanent Development card or a one-use seasonal Gameplan.' },
+  { key: 'name', selector: '.strategy-card-name', label: 'Card name', text: 'The program or plan you are choosing to use.' },
+  { key: 'effect', selector: '.strategy-card-description', label: 'Effect', text: 'The exact stat, output, opponent, or seeding change this card applies.' },
+  { key: 'rule', selector: '.strategy-card-rule', label: 'Career limit', text: 'A player can receive only one Development card during their career.' },
+];
+
+const GAMEPLAN_NOTES = STRATEGY_NOTES.filter((note) => note.key !== 'rule');
+
 function CardOverviewSection({ accent, markType, eyebrow, title, body, howLabel, howText, costLabel, costText, notes, children }) {
-  const isDesktop = useIsDesktop();
   return (
     <div className="co2-section">
       <div className="co2-left">
@@ -102,16 +110,7 @@ function CardOverviewSection({ accent, markType, eyebrow, title, body, howLabel,
         </div>
       </div>
       <div className="co2-stage-wrap">
-        {isDesktop ? (
-          <CardAnnotation accent={accent} notes={notes}>{children}</CardAnnotation>
-        ) : (
-          <div className="co2-mobile">
-            {children}
-            <ul className="co2-mobile-notes">
-              {notes.map((n) => <li key={n.key}><b>{n.label}.</b> {n.text}</li>)}
-            </ul>
-          </div>
-        )}
+        <CardAnnotation accent={accent} notes={notes}>{children}</CardAnnotation>
       </div>
     </div>
   );
@@ -123,6 +122,8 @@ export default function CardOverviewScreen({ state, actions, myTeamId = 0, onBac
   const playerExample = state.teams?.[myTeamId]?.hand?.[0] || state.starPool?.[0];
   const sampleTeam = useMemo(() => buildSampleTeam(), []);
   const matchupExample = useMemo(() => sampleMatchupCard(), []);
+  const developmentExample = { id: 'dev-preview', kind: 'development', name: 'Shooting Lab', description: '+2 SCO permanently.', statChanges: { SCO: 2 }, used: false };
+  const gameplanExample = { id: 'gp-preview', kind: 'gameplan', name: 'Run And Gun', description: '+8% team Offense.', target: 'self', contexts: ['season', 'playoff'], used: false };
 
   return (
     <>
@@ -140,7 +141,7 @@ export default function CardOverviewScreen({ state, actions, myTeamId = 0, onBac
               </div>
               <div>
                 <div className="co-meta-label">Card Types</div>
-                <div className="co-meta-value accent">Three</div>
+                <div className="co-meta-value accent">Five</div>
               </div>
             </div>
           </div>
@@ -166,13 +167,33 @@ export default function CardOverviewScreen({ state, actions, myTeamId = 0, onBac
           </CardOverviewSection>
 
           <CardOverviewSection
-            accent="var(--depth)" markType="matchup" eyebrow="Three Of Your Nine" title="Matchup Cards"
+            accent="var(--depth)" markType="matchup" eyebrow="Three Of Your Nine" title="Adjustment Cards"
             body="A condition you bring into a single playoff matchup, then it's discarded. It is the only card type that leaves the table. Square stock, heavy stamp border, torn bottom edge — you can tell one at any size."
             howLabel="How It Plays" howText="Played during your own offense or defense roll, one card per roll."
             costLabel="How It Ends" costText="Discarded once played. Unplayed cards are replaced next season."
             notes={MATCHUP_NOTES}
           >
             <MatchupCard card={matchupExample} />
+          </CardOverviewSection>
+
+          <CardOverviewSection
+            accent="var(--approved-file)" markType="frontoffice" eyebrow="Coach Development" title="Development Cards"
+            body="A permanent training program applied to one player. Each coach rolls two to four every season, and each player can receive only one Development card during their career."
+            howLabel="How It Plays" howText="Choose an eligible player and apply the card directly to their stats."
+            costLabel="How It Ends" costText="Consumed when applied. The player keeps the improvement for their career."
+            notes={STRATEGY_NOTES}
+          >
+            <StrategyCard card={developmentExample} />
+          </CardOverviewSection>
+
+          <CardOverviewSection
+            accent="var(--franchise)" markType="matchup" eyebrow="Two Per Season" title="Gameplan Cards"
+            body="A coach's plan for the season or a playoff matchup. It can strengthen your team, disrupt an opponent, or improve your regular-season seeding roll."
+            howLabel="How It Plays" howText="Play before summing the regular season or before a playoff matchup begins."
+            costLabel="How It Ends" costText="Consumed after one use. Unused cards expire when the next season is dealt."
+            notes={GAMEPLAN_NOTES}
+          >
+            <StrategyCard card={gameplanExample} />
           </CardOverviewSection>
 
           <div className="co2-footer">

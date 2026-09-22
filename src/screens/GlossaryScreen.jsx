@@ -24,7 +24,7 @@ const SECTIONS = [
   ['market', 'GM & Market Size'],
   ['front-office-moves', 'Front Office Moves'],
   ['skillsets-chemistry', 'Player Skillsets and Team Chemistry'],
-  ['matchup-modifier-cards', 'Matchup Modifier Cards'],
+  ['matchup-modifier-cards', 'Adjustment Cards'],
 ];
 
 function GlossaryStat({ label, val }) {
@@ -95,7 +95,7 @@ export default function GlossaryScreen({ state, onBack }) {
           <div className="matchup-title">Total Score</div>
           <p className="lede" style={{ margin: 0 }}>Offense Total + Defense Total + Bench Score + League Modifier (from a played Divine Intervention card, if any).</p>
         </div>
-        <p className="lede">Die size (d6 by default) and the Off/Def bonus percentages all come from your Coach card — a bigger die and higher bonus mean a stronger, swingier team. The Die Hard fanbase ability, if used, rolls each die twice and keeps the higher result. Matchup Modifier cards (see below) can shift these numbers up or down before the roll, and a {injuryPct}% independent injury chance per team can pull a random active player out beforehand.</p>
+        <p className="lede">Die size (d6 by default) and the Off/Def bonus percentages all come from your Coach card — a bigger die and higher bonus mean a stronger, swingier team. The Die Hard fanbase ability, if used, rolls each die twice and keeps the higher result. Adjustment cards (see below) can shift these numbers up or down before the roll, and a {injuryPct}% independent injury chance per team can pull a random active player out beforehand.</p>
         <div className="matchup-box">
           <div className="matchup-title">🏟️ Home Court Advantage</div>
           <p className="lede" style={{ margin: 0 }}>The top 4 seeds get +1% Offense / +1% Defense in every playoff matchup they play — except against another top-4 seed, where only the higher seed gets it.</p>
@@ -227,7 +227,7 @@ export default function GlossaryScreen({ state, onBack }) {
         <p className="lede">Fire and replace your coach, fire your GM, release a player, or invest in your fanbase. Releasing or firing leaves dead cap behind: half of the outgoing party's cost, charged against your budget starting this season — for as many seasons as a released player had left on their contract, or for exactly one season for a coach or GM. Dead cap shrinks the longer you wait to cut someone, since it's based on years remaining, not the original contract length; a player already in an expired contract leaves none. Hiring a replacement coach still costs their salary this season, on top of the outgoing coach's dead cap; firing a GM draws a random GM and market size and is limited to once per season.</p>
 
         <h2 id="skillsets-chemistry">Player Skillsets and Team Chemistry</h2>
-        <p className="lede">Each new player rolls one permanent Skillset. Certain skillset pairings — each one a retired Matchup card, named and valued exactly as it was when playable — grant a passive Offense or Defense bonus whenever both starting, capped at +30% on each side. Only the active five count; each distinct pairing counts once. Wise Veteran can only roll on Veteran players and adds +1% Offense and Defense from anywhere on the roster, without stacking. Team Chemistry uses a 0–100 score: 50 base points, up to 30 for Skillset fit (2.5 per percentage point across both sides, capped), up to 15 for starter tenure (1 per completed player-year), and 5 for Wise Veteran. Grades: A+ 97, A 93, A− 90, B+ 87, B 83, B− 80, C+ 77, C 73, C− 70, D+ 67, D 63, D− 60, F below 60. Each completed starter-year also adds +0.5% Offense and Defense beyond the Skillset cap. Bench players earn tenure but contribute only while starting. Joining a different team resets tenure. The experience rating stays separate. Legacy players without a Skillset remain unchanged.</p>
+        <p className="lede">Each new player rolls one permanent Skillset. Certain skillset pairings — each one a retired Adjustment card, named and valued exactly as it was when playable — grant a passive Offense or Defense bonus whenever both starting, capped at +30% on each side. Only the active five count; each distinct pairing counts once. Wise Veteran can only roll on Veteran players and adds +1% Offense and Defense from anywhere on the roster, without stacking. Team Chemistry uses a 0–100 score: 50 base points, up to 30 for Skillset fit (2.5 per percentage point across both sides, capped), up to 15 for starter tenure (1 per completed player-year), and 5 for Wise Veteran. Grades: A+ 97, A 93, A− 90, B+ 87, B 83, B− 80, C+ 77, C 73, C− 70, D+ 67, D 63, D− 60, F below 60. Each completed starter-year also adds +0.5% Offense and Defense beyond the Skillset cap. Bench players earn tenure but contribute only while starting. Joining a different team resets tenure. The experience rating stays separate. Legacy players without a Skillset remain unchanged.</p>
         {SKILLSETS.map((skill) => <div key={skill.id} className="matchup-box">
           <div className="matchup-title">{skill.name}</div><p>{skill.description}</p>
           <p>Favored positions: {skill.positions.join(', ')} (3× draw weight; all positions eligible).</p>
@@ -235,7 +235,7 @@ export default function GlossaryScreen({ state, onBack }) {
             {SKILLSETS.find((s) => s.id === p.skills.find((id) => id !== skill.id)).name} — {p.name} · +{p.percent}% {p.side}
           </li>)}</ul>
         </div>)}
-        <h2 id="matchup-modifier-cards">Matchup Modifier Cards</h2>
+        <h2 id="matchup-modifier-cards">Adjustment Cards</h2>
         <p className="lede">Every team receives three cards from a shared 72-card deck each season. Each name has a fixed effect and rarity: Core, Prime, Signature, or Legendary. Cards are single-use; seeding bonuses apply automatically. Positive cards help your team and negative cards target the opponent. Player-stat changes last one matchup, with stats floored at 1. Ability percentages retain fractional points. Dice cards change the selected offense or defense die (minimum 1). Advantage keeps the higher of two rolls; Disadvantage keeps the lower, and the two cancel. These affect both rolls for the matchup, including rolls already resolved. Extra-card effects draw one remaining playable card; negative card effects discard one random unused playable opponent card. Cost bonuses add the selected starter’s exact salary to one stat without changing salary. Position bonuses count the active matchup lineup when played, excluding the bench. Bargain Production requires a starter with a cost of 1 or less. Most flat Offense/Defense-percent cards were retired into passive Skillset pairings (see above) — only the negative variants and the Legendary "Offensive Avalanche" remain in this deck. A fresh deck is shuffled next season.</p>
         {MATCHUP_MODIFIER_TYPES.map((t) => {
           const catColor = t.target === 'opponent' ? 'var(--bad)' : 'var(--good)';

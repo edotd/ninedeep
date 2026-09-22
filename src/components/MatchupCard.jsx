@@ -1,6 +1,6 @@
 import CardTypeMark from './CardTypeMark';
 
-// Matchup card, per the brand handoff's "Components: Front Office & Matchup Cards" — square,
+// Adjustment card, per the brand handoff's "Components: Front Office & Adjustment Cards" — square,
 // stamp-bordered, torn bottom edge. The spec's two fixed bottom rows ("IF UNANSWERED" /
 // "COUNTER") are written for a card imposed on you by an opponent; in this game every
 // matchup card sits in your own hand and you choose whether to play it, so the copy below

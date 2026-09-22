@@ -68,7 +68,7 @@ export function applySupplementalCard(state, user, opponent, card, ownExtra, opp
 // roster's real stats, without mutating it — same adjusted view supplementalRoll's own modifier
 // lookup uses, exposed so the breakdown popover can reconcile against the exact roll.
 export function statAdjustedTeam(team, extra) {
-  return { ...team, hand: team.hand.map((player) => {
+  return { ...team, seasonGameplanEffects: { offPercent: 0, defPercent: 0, benchBonus: 0, seedingPercent: 0 }, hand: team.hand.map((player) => {
     const stats = { ...player.stats };
     for (const change of extra.statChanges || []) {
       if (change.playerId === player.id) stats[change.stat] = Math.max(1, stats[change.stat] + change.value);

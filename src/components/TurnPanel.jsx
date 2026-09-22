@@ -329,6 +329,12 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
   const visibleBoardActions = (turn.boardActions || []).filter((entry) => (
     entry.stepIndex === turn.exchangeIndex && (turn.stage === 'resolved' || turn.stage === 'bench')
   ));
+  const gameplanActions = (turn.gameplanNotes || []).map((entry) => ({
+    teamName: entry.teamSide === 'a' ? teamA.name : teamB.name,
+    cardName: entry.cardName,
+    description: entry.description,
+    stepIndex: -1,
+  }));
   // Each played-card notice draws on the side of the board the team that played it sits on,
   // rather than lumped together in the middle — teamA's play appears above the roll circle
   // (next to teamA's board), teamB's below (next to teamB's).
@@ -367,6 +373,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
         {b.retention !== 0 && <div className="t2-mod-row"><span>Retention</span><span>{pct(b.retention)}</span></div>}
         {b.relationship !== 0 && <div className="t2-mod-row"><span>Relationships</span><span>{pct(b.relationship)}</span></div>}
         {b.handsOff !== 0 && <div className="t2-mod-row"><span>GM Approach</span><span>{pct(b.handsOff)}</span></div>}
+        {b.gameplan !== 0 && <div className="t2-mod-row"><span>Gameplan</span><span>{pct(b.gameplan)}</span></div>}
         <div className="t2-mod-row"><span>Roster Base</span><span>{b.preSynergyBase}</span></div>
         {b.synergyPct !== 0 && <div className="t2-mod-row"><span>Skillset Synergy</span><span>{b.synergyPct >= 0 ? '+' : ''}{b.synergyPct}%</span></div>}
         <div className="t2-mod-row t2-mod-subtotal"><span>Roster Mod</span><span>{b.base}</span></div>
@@ -562,6 +569,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
           <TeamBoard team={teamA} ids={turn.idsA} hca={turn.hcaA} statusLabel={statusFor('a')} isActive={offenseTeam === teamA || defenseTeam === teamA} contributing={rollingSide === teamA} />
 
           <div className="t2-rollzone">
+            {gameplanActions.length > 0 && renderPlayedCards(gameplanActions)}
             {teamACardPlays.length > 0 && renderPlayedCards(teamACardPlays)}
 
             {renderRollCircle()}
@@ -571,7 +579,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
             {turn.stage === 'card' && myTurnToAct && (
               <div className="t2-carddecision t2-carddecision-compact">
                 <div className="t2-carddecision-head">
-                  <span>Play A Matchup Card</span>
+                  <span>Play A Adjustment Card</span>
                   <span className={'t2-timer' + (timeLeft <= 3 ? ' urgent' : '')}>{Math.ceil(timeLeft)}s</span>
                 </div>
                 <div className="t2-carddecision-desc">Click a card in your bar below, or pass — blind, before either die is rolled.</div>

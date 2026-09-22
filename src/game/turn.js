@@ -18,6 +18,7 @@ import {
   benchScore, hasHomeCourt, applyLiveFanbaseMod, wantsAdvantage,
 } from './matchup';
 import { applyPlayoffWinMilestone } from './fanbase';
+import { applyGameplanToTurn } from './strategyCards';
 
 export const EXCHANGE_PLAN = [
   { offenseWho: 'first', defenseWho: 'second' },
@@ -63,6 +64,16 @@ export function beginTurn(state) {
     boardActions: [],
     log: [],
   };
+  for (const [side, team] of [['a', m.a], ['b', m.b]]) {
+    if (team.human) continue;
+    for (const card of team.gameplanCards || []) {
+      if (card.used || !card.contexts?.includes('playoff')) continue;
+      applyGameplanToTurn(m.turn, side, card);
+      card.used = true;
+      card.playedContext = 'playoff';
+      card.targetTeamId = card.target === 'opponent' ? (side === 'a' ? m.b.id : m.a.id) : team.id;
+    }
+  }
 }
 
 function flipCoin(m) {
@@ -174,8 +185,8 @@ function resolveExchange(state, m) {
 
 function computeBench(m) {
   const turn = m.turn;
-  const aBench = benchScore(m.a, turn.idsA);
-  const bBench = benchScore(m.b, turn.idsB);
+  const aBench = benchScore(m.a, turn.idsA, false) + (turn.extraA.benchBonus || 0);
+  const bBench = benchScore(m.b, turn.idsB, false) + (turn.extraB.benchBonus || 0);
   turn.aBench = aBench; turn.bBench = bBench;
   pushLog(turn, 'bench', `${m.a.name}'s bench contributes +${aBench}.`);
   pushLog(turn, 'bench', `${m.b.name}'s bench contributes +${bBench}.`);

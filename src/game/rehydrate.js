@@ -6,6 +6,12 @@
 // assuming object identity — keeps working unmodified.
 export function rehydrateState(state) {
   if (!state || !state.teams) return state;
+  state.strategyCardCounter ||= 0;
+  state.teams.forEach((team) => {
+    team.developmentCards ||= [];
+    team.gameplanCards ||= [];
+    team.seasonGameplanEffects ||= { offPercent: 0, defPercent: 0, benchBonus: 0, seedingPercent: 0 };
+  });
   const byId = new Map(state.teams.map((t) => [t.id, t]));
   const relink = (ref) => (ref && ref.id != null ? byId.get(ref.id) ?? ref : ref);
 

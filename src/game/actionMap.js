@@ -6,6 +6,7 @@ import { draftPick, tradeDown } from './draft';
 import { fireCoach, fireGM, investInFanbase, releasePlayer } from './finances';
 import * as engine from './engine';
 import { beginTurn, advanceTurn } from './turn';
+import { applyDevelopmentCard, playGameplanCard } from './strategyCards';
 
 export const actionMap = {
   newEra: (state) => { Object.assign(state, newEraState()); },
@@ -43,4 +44,6 @@ export const actionMap = {
   fireGM,
   investInFanbase,
   releasePlayer,
+  applyDevelopmentCard,
+  playGameplanCard,
 };

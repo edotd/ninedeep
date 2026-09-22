@@ -62,12 +62,12 @@ export function checkInjury(team, chance = INJURY_CHANCE) {
   return forceRemovePlayer(team, team.activeIds);
 }
 
-export function benchScore(team, idsOverride) {
+export function benchScore(team, idsOverride, includeSeasonGameplan = true) {
   const activeIds = idsOverride || team.activeIds;
   const benchCards = team.hand.filter((c) => !activeIds.includes(c.id));
   let sum = benchCards.reduce((s, c) => s + cardTotal(c), 0);
   if ((team.matchupCards || []).some((c) => c.name === 'Team Chemistry')) { sum *= 1.5; }
-  return Math.round(sum / 20);
+  return Math.round(sum / 20) + (includeSeasonGameplan ? (team.seasonGameplanEffects?.benchBonus || 0) : 0);
 }
 
 // A team's expected matchup score — shown everywhere as "Projected Output" (persistent bar,
@@ -158,8 +158,8 @@ export function playMatchup(a, b, advA, advB, idsA, idsB, extraA, extraB) {
   extraB = extraB || { offDelta: 0, defDelta: 0, leagueMod: 0 };
   const exA = resolveExchange(a, b, idsA, idsB, extraA, extraB, advA, advB);
   const exB = resolveExchange(b, a, idsB, idsA, extraB, extraA, advB, advA);
-  const aBench = benchScore(a, idsA);
-  const bBench = benchScore(b, idsB);
+  const aBench = benchScore(a, idsA, false) + (extraA.benchBonus || 0);
+  const bBench = benchScore(b, idsB, false) + (extraB.benchBonus || 0);
   const aLeagueMod = extraA.leagueMod || 0;
   const bLeagueMod = extraB.leagueMod || 0;
   // Round the sum too, not just its inputs — several already-rounded floats (e.g. 11.06 +

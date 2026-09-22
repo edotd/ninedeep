@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { MATCHUP_MODIFIER_TYPES as deck } from '../src/game/supplementalCards.js';
+import { MATCHUP_MODIFIER_TYPES as deck, SEEDING_GAMEPLAN_TYPES } from '../src/game/supplementalCards.js';
 import { drawMatchupModifierCard, resetMatchupDeck } from '../src/game/cards.js';
 import { applySupplementalCard, supplementalRoll } from '../src/game/supplementalEffects.js';
 import { newEraState, lockSeasonAndSeed, initSeasonModifierCards, startPlayoffs } from '../src/game/season.js';
@@ -17,17 +17,17 @@ function game() {
 }
 const extra = () => ({ offDelta: 0, defDelta: 0, leagueMod: 0 });
 
-test('72 unique fixed definitions, three Legendaries, no replacement across serialized draws', () => {
-  assert.equal(deck.length, 72); assert.equal(new Set(deck.map(c => c.name)).size, 72);
-  assert.equal(deck.filter(c => c.rarity === 'Legendary').length, 3);
-  assert(deck.filter(c => c.passive === 'seeding').every(c => c.value > 0));
+test('Adjustment definitions exclude seeding cards and draw without replacement', () => {
+  assert.equal(deck.length, 62); assert.equal(new Set(deck.map(c => c.name)).size, 62);
+  assert.equal(SEEDING_GAMEPLAN_TYPES.length, 10);
+  assert.equal(deck.some(c => c.effectType === 'SEEDING_PERCENT'), false);
   let state = {}; const drawn = [];
-  for (let i = 0; i < 72; i++) { drawn.push(drawMatchupModifierCard(state)); state = JSON.parse(JSON.stringify(state)); }
-  assert.equal(new Set(drawn.map(c => c.definitionId)).size, 72);
+  for (let i = 0; i < deck.length; i++) { drawn.push(drawMatchupModifierCard(state)); state = JSON.parse(JSON.stringify(state)); }
+  assert.equal(new Set(drawn.map(c => c.definitionId)).size, deck.length);
   assert.equal(drawMatchupModifierCard(state), null);
   assert.equal(drawn.find(c => c.name === 'Biased Officiating').value, 3);
   assert.equal(drawn.find(c => c.name === 'Scouted Tendencies').value, -10);
-  resetMatchupDeck(state); assert.equal(state.matchupDeck.length, 72);
+  resetMatchupDeck(state); assert.equal(state.matchupDeck.length, deck.length);
 });
 
 test('every playable definition resolves and consumes once without mutating roster stats', () => {
@@ -66,17 +66,16 @@ test('player targets validated; stat changes remain temporary and cover all four
   }
 });
 
-test('three cards per team; seeding cards consumed; disabling cards clears hands', () => {
+test('three Adjustment cards per team contain no seeding effects; disabling cards clears hands', () => {
   const state=game(); assert(state.teams.every(t=>t.matchupCards.length===3));
-  state.teams[0].matchupCards=[card('Strong Finish'),card('Historic Regular Season')];
-  lockSeasonAndSeed(state); assert(state.teams[0].matchupCards.every(c=>c.used));
+  assert(state.teams.every(t=>t.matchupCards.every(c=>c.effectType!=='SEEDING_PERCENT')));
   state.settings.matchupCardsEnabled=false; initSeasonModifierCards(state);
   assert(state.teams.every(t=>t.matchupCards.length===0)); assert.equal(state.phase,'constructing');
 });
 
-test('extra draw excludes expired seeding cards; discard consumes opponent card; exhausted deck safe', () => {
+test('extra draw and discard work when the Adjustment deck is exhausted', () => {
   const state=game(), [a,b]=state.teams;
-  state.matchupDeck=[card('Strong Finish').definitionId,card('Biased Officiating').definitionId];
+  state.matchupDeck=[card('Biased Officiating').definitionId];
   a.matchupCards=[]; b.matchupCards=[card('Home Court')];
   applySupplementalCard(state,a,b,card('Advance Scout'),extra(),extra(),a.activeIds,b.activeIds);
   assert.equal(a.matchupCards[0].name,'Biased Officiating');

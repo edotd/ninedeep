@@ -1,15 +1,13 @@
-import { teamSynergy } from '../game/skillsets';
 import { useRef, useState } from 'react';
-import { formatCoins, rosterSalary } from '../game/economy';
-import { teamOutput, playableCards } from '../game/matchup';
+import { playableCards } from '../game/matchup';
 import { PLAYER_STATS, eligibleStatTargets } from '../game/supplementalEffects';
-import { teamExperience } from '../game/aging';
 import { cardTier, jerseyNumber } from '../game/cards';
 import { validateLineup } from '../game/roster';
 import { MATCHUP_CARD_DRAW_COUNT } from '../game/constants';
 import PlayerCard from './PlayerCard';
 import FrontOfficeCard from './FrontOfficeCard';
 import MatchupCard from './MatchupCard';
+import StrategyCard from './StrategyCard';
 
 // Full-width desktop persistent bar, per the brand handoff's "Component: Persistent Bar" —
 // web variant. Seven sections: starters, bench, front office, matchup, then the three
@@ -23,7 +21,7 @@ import MatchupCard from './MatchupCard';
 // `position: fixed` for the preview sidesteps that: a fixed element's containing block is the
 // viewport unless an ancestor sets transform/perspective/filter, and `.desktop-bar` sets
 // none of those, so the preview escapes the bar's clipping entirely.
-const PREVIEW_WIDTH = { player: 264, frontoffice: 340, matchup: 280 };
+const PREVIEW_WIDTH = { player: 264, frontoffice: 340, matchup: 280, strategy: 260 };
 
 // Substitution ("stamped in place", per the persistent bar's Bar behaviour spec): click one
 // starter then one bench player (either order) to swap them. Nothing translates — each slot
@@ -88,6 +86,21 @@ function MatchupSlot({ card, onHover, onLeave, onSelect, playable, picking }) {
   );
 }
 
+function StrategySlot({ card, onHover, onLeave, onSelect, picking }) {
+  if (!card) return <div className="db-slot db-strategy-slot empty"><span className="db-slot-empty-plus">+</span></div>;
+  return (
+    <div
+      className={`db-slot db-strategy-slot ${card.kind}${card.used ? ' used' : ''}${picking ? ' picking' : ''}`}
+      onMouseEnter={(e) => onHover(e.currentTarget, 'strategy', <StrategyCard card={card} />)}
+      onMouseLeave={onLeave}
+      onClick={!card.used ? (e) => onSelect(e.currentTarget, card) : undefined}
+    >
+      <div className="db-strategy-label">{card.used ? 'Used' : card.kind === 'development' ? 'Apply' : 'Play'}</div>
+      <div className="db-strategy-value">{card.name}</div>
+    </div>
+  );
+}
+
 export default function DesktopBar({ state, myTeamId, actions, dealProgress }) {
   const team = state.teams[myTeamId];
   // Each card type is written to state the instant its own dealing screen mounts, before
@@ -116,23 +129,14 @@ export default function DesktopBar({ state, myTeamId, actions, dealProgress }) {
   const foCount = (() => { const n = Math.max(0, Math.min(3, remaining === Infinity ? 3 : remaining)); if (remaining !== Infinity) remaining -= n; return n; })();
   const matchupCards = take(rawMatchup);
 
-  const hand = starters.concat(bench);
   const activeIds = rawActiveIds;
   const coach = foCount >= 1 ? team.coach : null;
   const fanbaseArchetype = foCount >= 2 ? team.fanbaseArchetype : null;
   const market = foCount >= 3 ? team.market : null;
   const frontOfficeTeam = foCount >= 1 ? team : null;
   const fullyDealt = !inDeal || (dealProgress ?? 0) >= rawStarters.length + rawBench.length + 3 + rawMatchup.length;
-
-  const canShowOutput = fullyDealt && team.coach && rawHand.length > 0 && rawActiveIds.length > 0;
-  const output = canShowOutput ? teamOutput(team) : null;
-  const synergy = teamSynergy(team);
-  const chemistry = fullyDealt && team.coach ? teamExperience(team) : null;
-  const cap = fullyDealt ? team.seasonCap : undefined;
-  const salary = hand.length ? rosterSalary(team) : 0;
-  const overBudget = cap !== undefined && salary > cap;
-  const room = cap !== undefined ? cap - salary : undefined;
-  const deadCap = (team.deadCap || []).reduce((s, c) => s + c.amount, 0);
+  const developmentCards = fullyDealt ? (team.developmentCards || []) : [];
+  const gameplanCards = fullyDealt ? (team.gameplanCards || []) : [];
 
   const [preview, setPreview] = useState(null); // { rect, type, content }
   const handleHover = (el, type, content) => setPreview({ rect: el.getBoundingClientRect(), type, content });
@@ -166,6 +170,24 @@ export default function DesktopBar({ state, myTeamId, actions, dealProgress }) {
     }
     setTargetPicker(null);
     actions.advanceTurn({ cardId: card.id });
+  };
+
+  const [strategyPicker, setStrategyPicker] = useState(null);
+  const handleStrategyClick = (el, card) => {
+    if (card.kind === 'development') {
+      setStrategyPicker({ card, rect: el.getBoundingClientRect(), mode: 'development' });
+      return;
+    }
+    const playoffReady = liveTurn && ['coinflip', 'coinflipped'].includes(liveTurn.stage);
+    const seasonOpen = ['pullhand', 'pullmodifier', 'constructing', 'teamsummary'].includes(state.phase);
+    const context = playoffReady ? 'playoff' : seasonOpen ? 'season' : null;
+    if (!context) return;
+    if (card.target === 'opponent' && context === 'season') {
+      setStrategyPicker({ card, rect: el.getBoundingClientRect(), mode: 'opponent', context });
+      return;
+    }
+    actions.playGameplanCard(myTeamId, card.id, context, null);
+    setStrategyPicker(null);
   };
 
   // swap: null | { selectedId, phase: 'selecting' } | { outgoingId, incomingId, phase, stampRect }
@@ -244,7 +266,19 @@ export default function DesktopBar({ state, myTeamId, actions, dealProgress }) {
         </div>
       </div>
       <div className="db-section db-slots-fixed">
-        <div className="db-heading matchup">Matchup</div>
+        <div className="db-heading development">Development</div>
+        <div className="db-slots">
+          {Array.from({ length: 4 }, (_, i) => <StrategySlot key={i} card={developmentCards[i]} onHover={handleHover} onLeave={handleLeave} onSelect={handleStrategyClick} picking={strategyPicker?.card.id === developmentCards[i]?.id} />)}
+        </div>
+      </div>
+      <div className="db-section db-slots-fixed">
+        <div className="db-heading gameplan">Gameplan</div>
+        <div className="db-slots">
+          {Array.from({ length: 2 }, (_, i) => <StrategySlot key={i} card={gameplanCards[i]} onHover={handleHover} onLeave={handleLeave} onSelect={handleStrategyClick} picking={strategyPicker?.card.id === gameplanCards[i]?.id} />)}
+        </div>
+      </div>
+      <div className="db-section db-slots-fixed">
+        <div className="db-heading matchup">Adjustment</div>
         <div className="db-slots">
           {Array.from({ length: MATCHUP_CARD_DRAW_COUNT }, (_, i) => {
             const card = matchupCards[i];
@@ -262,30 +296,6 @@ export default function DesktopBar({ state, myTeamId, actions, dealProgress }) {
           })}
         </div>
       </div>
-      <div className="db-section db-metric chemistry">
-        <div className="db-heading">Chemistry</div>
-        <div className="db-chem-grade">{chemistry !== null ? synergy.grade : '—'}</div>
-        <div className="chemistry-bar-detail">{chemistry !== null ? `${synergy.score}/100` : '—'}</div>
-      </div>
-      <div className="db-section db-metric budget">
-        <div className="db-heading">Budget</div>
-        <div className={'db-budget-figures' + (overBudget ? ' over' : '')}>
-          <span className="committed">{formatCoins(salary).replace('🪙', '🪙 ')}</span>
-          <span className="slash"> / </span>
-          <span className="limit">{cap !== undefined ? formatCoins(cap).replace('🪙', '') : '—'}</span>
-        </div>
-        {room !== undefined && <div className={'db-budget-room' + (room < 0 ? ' over' : '')}>{room >= 0 ? '+' : ''}{Math.round(room * 10) / 10} Room</div>}
-        {deadCap > 0 && <div className="db-budget-owed">(+{deadCap} Dead Cap)</div>}
-      </div>
-      <div className="db-section db-metric output">
-        <div className="db-heading">Projected Output</div>
-        <div className="db-metric-value accent">{output ? output.total : '—'}</div>
-        <div className="db-output-breakdown">
-          <span>Offense {output ? output.off : '—'}</span>
-          <span>Defense {output ? output.def : '—'}</span>
-        </div>
-      </div>
-
       {swap && (swap.phase === 'flip1' || swap.phase === 'flip2') && swap.stampRect && (() => {
         const r = swap.stampRect;
         const left = (r.left + r.right) / 2;
@@ -326,6 +336,29 @@ export default function DesktopBar({ state, myTeamId, actions, dealProgress }) {
                 {oc.position} · {oc.archetype}{stat ? ` · ${stat} (${oc.stats[stat]})` : ''}{card.effectType === 'CAP_HIT_STAT' ? ` · +${oc.salary}` : ''}
               </button>
             )))}
+          </div>
+        );
+      })()}
+      {strategyPicker && (() => {
+        const width = 300;
+        const halfWidth = width / 2;
+        const desiredLeft = strategyPicker.rect.left + strategyPicker.rect.width / 2;
+        const left = Math.min(Math.max(desiredLeft, halfWidth + 8), window.innerWidth - halfWidth - 8);
+        const bottom = window.innerHeight - strategyPicker.rect.top + 12;
+        const eligible = strategyPicker.mode === 'development' ? rawHand.filter((player) => !player.development) : state.teams.filter((candidate) => candidate.id !== team.id);
+        return (
+          <div className="db-target-picker" style={{ left, bottom, width }}>
+            <div className="db-target-picker-head">{strategyPicker.mode === 'development' ? 'Choose a player' : 'Choose an opponent'} — {strategyPicker.card.name}</div>
+            {eligible.length === 0 && <div className="db-target-picker-empty">No eligible target.</div>}
+            {eligible.map((target) => (
+              <button key={target.id} className="db-target-btn" onClick={() => {
+                if (strategyPicker.mode === 'development') actions.applyDevelopmentCard(myTeamId, strategyPicker.card.id, target.id);
+                else actions.playGameplanCard(myTeamId, strategyPicker.card.id, strategyPicker.context, target.id);
+                setStrategyPicker(null);
+              }}>
+                {strategyPicker.mode === 'development' ? `${target.position} · ${target.archetype} · #${target.id}` : target.name}
+              </button>
+            ))}
           </div>
         );
       })()}
