@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useIsDesktop } from '../hooks/useIsDesktop';
 import { offenseDieSize, defenseDieSize } from '../game/roster';
 import Die, { ROLL_DURATION_MS } from './Die';
 import BallMark from './BallMark';
@@ -116,6 +117,9 @@ function TeamBoard({ team, ids, hca, statusLabel, isActive, flip, contributing }
 export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
   const turn = m.turn;
   const teamA = m.a, teamB = m.b;
+  const isDesktop = useIsDesktop();
+  const dieSize = isDesktop ? 140 : 92;
+  const coinSize = isDesktop ? 130 : 84;
   const myTeam = state.teams[myTeamId];
   const humanInMatch = teamA === myTeam || teamB === myTeam;
   const [timeLeft, setTimeLeft] = useState(CARD_TIMER_SECONDS);
@@ -387,7 +391,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
               disabled={coinSpinning}
               aria-label="Start — flip the coin"
             >
-              <BallMark size={130} variant="onInk" />
+              <BallMark size={coinSize} variant="onInk" />
             </button>
             <div className="t2-rollzone-caption">Coin Flip<br /><span>Winner opens on offense</span></div>
           </div>
@@ -414,7 +418,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
       return (
         <div className="t2-rollzone-dual">
           <div className="t2-rollzone-die">
-            <div className="t2-die-stage"><Die sides={offSides} value={offSides} size={140} /></div>
+            <div className="t2-die-stage"><Die sides={offSides} value={offSides} size={dieSize} /></div>
             <div className="t2-rollzone-caption">{offenseTeam.name} On Offense</div>
           </div>
           <div className="t2-possession">
@@ -422,7 +426,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
             <div className="t2-possession-arrow" />
           </div>
           <div className="t2-rollzone-die">
-            <div className="t2-die-stage"><Die sides={defSides} value={defSides} size={140} /></div>
+            <div className="t2-die-stage"><Die sides={defSides} value={defSides} size={dieSize} /></div>
             <div className="t2-rollzone-caption">{defenseTeam.name} On Defense</div>
           </div>
         </div>
@@ -460,7 +464,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
         <div className="t2-rollzone-dual">
           <div className="t2-rollzone-die">
             <div className={'t2-die-stage' + (offInteractive ? ' t2-die-clickable' : '') + (showCut ? ' t2-die-cut' : '')} onClick={offInteractive ? () => startRoll('off') : undefined}>
-              <Die sides={offSides} value={offSettled ? offDie : offSides} size={140} rolling={offRolling} />
+              <Die sides={offSides} value={offSettled ? offDie : offSides} size={dieSize} rolling={offRolling} />
             </div>
             <div className="t2-rollzone-caption">
               {offSettled ? `${offTeam.name} Rolls ${offDie}` : `${offTeam.name} On Offense`}
@@ -485,7 +489,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
 
           <div className="t2-rollzone-die">
             <div className={'t2-die-stage' + (defInteractive ? ' t2-die-clickable' : '')} onClick={defInteractive ? () => startRoll('def') : undefined}>
-              <Die sides={defSides} value={defSettled ? defDie : defSides} size={140} rolling={defRolling} />
+              <Die sides={defSides} value={defSettled ? defDie : defSides} size={dieSize} rolling={defRolling} />
             </div>
             <div className="t2-rollzone-caption">
               {defSettled ? `${defTeam.name} Rolls ${defDie}` : `${defTeam.name} On Defense`}

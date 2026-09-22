@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
+import { useIsDesktop } from '../hooks/useIsDesktop';
 import PlayerCard from '../components/PlayerCard';
 import FrontOfficeCard from '../components/FrontOfficeCard';
 import MatchupCard from '../components/MatchupCard';
+import CompactPlayerTile from '../components/CompactPlayerTile';
 
 const FO_KINDS = ['coach', 'fanbase', 'market'];
 
@@ -33,6 +35,7 @@ export default function DealScreen({ state, actions, myTeamId, onDealProgress })
   const matchupCards = team.matchupCards || [];
   const total = starters.length + bench.length + FO_KINDS.length + matchupCards.length;
   const instant = state.settings.actionLogSpeed === 'instant' || reducedMotion();
+  const isDesktop = useIsDesktop();
 
   // 'deck' -> 'dealing' -> 'review'
   const [phase, setPhase] = useState(instant ? 'review' : 'deck');
@@ -71,6 +74,14 @@ export default function DealScreen({ state, actions, myTeamId, onDealProgress })
     setPhase('review');
   };
 
+  const handleReplay = () => {
+    clearTimers();
+    setDealt(0);
+    onDealProgress(0);
+    setTokens([]);
+    setPhase('deck');
+  };
+
   if (phase !== 'review') {
     return (
       <div className="screen deal-screen">
@@ -85,6 +96,30 @@ export default function DealScreen({ state, actions, myTeamId, onDealProgress })
         </div>
         <button className="reset-link deal-skip" onClick={handleSkip}>Skip ▸▸</button>
       </div>
+    );
+  }
+
+  // Mobile — per the brand handoff's mobile Deal: a small preview of the dealt hand rather
+  // than the full desktop grid, with a hint that the rest of the file (front office, matchup
+  // cards, budget) is a Continue tap away on the Team File screen — the same screen the
+  // desktop grid lets you review right here inline.
+  if (!isDesktop) {
+    return (
+      <>
+        <div className="screen deal-screen">
+          <h1>Your Deal — Season {state.season}</h1>
+          <p className="lede" style={{ marginBottom: 14 }}>Your 9-card hand, Front Office, and this season's Matchup Cards — dealt together.</p>
+          <div className="deal-mobile-heading">Your Nine · Dealt</div>
+          <div className="deal-mobile-preview">
+            {starters.slice(0, 3).map((c) => <CompactPlayerTile key={c.id} card={c} isStarter />)}
+          </div>
+          <div className="deal-mobile-hint">Tap Continue for the full file — rotation, chemistry, front office, and budget.</div>
+          <button className="reset-link deal-skip" onClick={handleReplay}>Replay ▸▸</button>
+        </div>
+        <div className="bottombar">
+          <button className="primary" onClick={actions.finishDeal}>Continue</button>
+        </div>
+      </>
     );
   }
 

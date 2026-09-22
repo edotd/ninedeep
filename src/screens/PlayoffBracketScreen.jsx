@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useIsDesktop } from '../hooks/useIsDesktop';
 import { matchTeams, isMatchUnlocked, teamOutput } from '../game/matchup';
 
 const ERA_LENGTH = 8;
@@ -176,11 +177,72 @@ function ZoomedBracket({ matches, myTeamId, actions, segment, onSegmentChange, o
   );
 }
 
+// Mobile round tabs (per the brand handoff's mobile Bracket) — one round at a time, series
+// stacked full-width instead of the desktop tree, each still the same BracketNode so Begin/
+// Sim/Review keep working exactly as they do on desktop. Reached instead of the desktop
+// tree+zoom flow, not on top of it — a phone screen has no room for the tree at all.
+const ROUNDS = [
+  { key: 'first', label: 'First Round', indices: [0, 1, 2, 3] },
+  { key: 'semis', label: 'Semis', indices: [4, 5] },
+  { key: 'final', label: 'Final', indices: [6] },
+];
+const LABELS = { 0: 'Quarterfinal 1', 1: 'Quarterfinal 2', 2: 'Quarterfinal 3', 3: 'Quarterfinal 4', 4: 'Semifinal 1', 5: 'Semifinal 2', 6: 'The Final' };
+
+function MobileBracket({ state, actions, myTeamId, matches, allDone, seasonNum }) {
+  const [round, setRound] = useState('first');
+  const active = ROUNDS.find((r) => r.key === round);
+  const roundDone = (r) => r.indices.every((i) => matches[i].result);
+  return (
+    <div className="screen bracket-screen">
+      <div className="bracket-masthead">
+        <div>
+          <div className="bracket-eyebrow">Era 01 · Season {seasonNum} · Postseason Field</div>
+          <h1 className="bracket-title">The Bracket</h1>
+        </div>
+        <div className="bracket-meta">
+          <div>
+            <div className="bracket-meta-label">Rounds</div>
+            <div className="bracket-meta-value">Three</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bracket-round-tabbar">
+        {ROUNDS.map((r) => (
+          <button key={r.key} className={'bracket-round-tab' + (r.key === round ? ' active' : '')} onClick={() => setRound(r.key)}>
+            {r.label}{roundDone(r) && <span className="bracket-round-tab-done">✓</span>}
+          </button>
+        ))}
+      </div>
+
+      <div className="bracket-round-list">
+        {active.indices.map((i) => (
+          <BracketNode key={i} label={LABELS[i]} m={matches[i]} matches={matches} index={i} myTeamId={myTeamId} actions={actions} narrow />
+        ))}
+      </div>
+
+      <div className="bracket-footer">
+        {!allDone && (
+          <button className="reset-link" onClick={actions.simulateAllPlayoffs}>Simulate All ▸▸</button>
+        )}
+        {allDone && (
+          <button className="primary" style={{ width: '100%', padding: 16 }} onClick={actions.finishPlayoffs}>See Results</button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function PlayoffBracketScreen({ state, actions, myTeamId }) {
   const matches = state.playoff.matches;
   const allDone = matches.every((m) => m.result);
   const seasonNum = Math.min(state.season, ERA_LENGTH);
   const [zoom, setZoom] = useState(null); // null = full-bracket overview, else 'left'|'middle'|'right'
+  const isDesktop = useIsDesktop();
+
+  if (!isDesktop) {
+    return <MobileBracket state={state} actions={actions} myTeamId={myTeamId} matches={matches} allDone={allDone} seasonNum={seasonNum} />;
+  }
 
   if (zoom) {
     return (

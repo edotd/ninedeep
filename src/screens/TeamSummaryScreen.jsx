@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useIsDesktop } from '../hooks/useIsDesktop';
 import TeamChemistry from '../components/TeamChemistry';
 import PlayerCard from '../components/PlayerCard';
 import FrontOfficeCard from '../components/FrontOfficeCard';
@@ -71,6 +72,13 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   };
 
   const canEdit = !readOnly && state.phase === 'teamsummary' && !team.lineupConfirmed;
+
+  // Mobile-only tab bar (per the brand handoff's mobile Team File — Rotation/Chemistry/
+  // Office/Ledger) — on desktop every section still shows stacked in one scroll, same as
+  // before; `isDesktop` just decides whether `tab` actually filters anything.
+  const isDesktop = useIsDesktop();
+  const [tab, setTab] = useState('rotation');
+  const showSection = (key) => isDesktop || tab === key;
 
   // Substitutions: click a starter then a bench player (either order) to swap them, click the
   // same card again to deselect, or a different card in the same group to move the selection
@@ -158,77 +166,92 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           </div>
         </div>
 
-        <div className="ts-body">
-          <TeamChemistry team={team} />
-
-          <div className="ts-section">
-            <div className="ts-heading">Rotation</div>
-            <div className="ts-roto-scroll">
-              <div className="ts-roto-grid">
-                {starters.map((c) => (
-                  <PlayerCard
-                    key={c.id}
-                    card={c}
-                    selected={selectedId === c.id}
-                    onClick={canEdit ? () => handleCardClick(c) : undefined}
-                    onRelease={canEdit ? handleRelease : undefined}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="ts-section">
-            <div className="ts-heading">Bench</div>
-            <div className="ts-roto-scroll">
-              <div className="ts-roto-grid">
-                {bench.map((c) => (
-                  <PlayerCard
-                    key={c.id}
-                    card={c}
-                    selected={selectedId === c.id}
-                    onClick={canEdit ? () => handleCardClick(c) : undefined}
-                    onRelease={canEdit ? handleRelease : undefined}
-                  />
-                ))}
-                {Array.from({ length: Math.max(0, openSlots) }, (_, i) => (
-                  <div key={'open' + i} className="ts-bench-open">OPEN</div>
-                ))}
-                {openSlots <= 0 && bench.length < 4 && (
-                  <div className="ts-bench-open">ROSTER FULL</div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="ts-section">
-            <div className="ts-heading">Budget Ledger</div>
-            <div className="ts-budget-figures">
-              <span className="committed">{formatCoins(committed).replace('🪙', '')}</span>
-              <span className="slash"> / </span>
-              <span className="limit">{formatCoins(cap).replace('🪙', '')}</span>
-              <span className={'ts-budget-room' + (room < 0 ? ' bad' : '')}>{room >= 0 ? '+' : ''}{Math.round(room * 10) / 10} ROOM</span>
-            </div>
-            <div className="ts-budget-bar">
-              {team.hand.map((c) => (
-                <div
-                  key={c.id}
-                  className={'ts-budget-seg' + (cardTier(c) === 'EXP' ? ' exp' : activeSet.has(c.id) ? '' : ' bench')}
-                  style={{ width: `${cap ? Math.max(2, (c.salary / cap) * 100) : 100 / (team.hand.length || 1)}%` }}
-                />
-              ))}
-            </div>
-            <div className="ts-ledger-row"><span>Committed This Season</span><span>{formatCoins(committed)}</span></div>
-            <div className="ts-ledger-row"><span>GM Budget Hit</span><span>{formatCoins(gmCost(team.gmType))}</span></div>
-            {deadCapDue > 0 && <div className="ts-ledger-row"><span>Dead Cap</span><span className="bad">{formatCoins(deadCapDue)}</span></div>}
-            <div className="ts-ledger-row"><span>Expiring This Season</span><span className={expiring.length ? 'bad' : ''}>{expiring.length ? `${formatCoins(expiringTotal)} · ${expiring.map((c) => c.archetype).join(', ')}` : 'None'}</span></div>
-            <div className="ts-metrics">
-              <div><div className="ts-metric-label">Experience</div><div className="ts-metric-value">{chemistry !== null ? chemistry : '—'}</div></div>
-              <div><div className="ts-metric-label">Proj Off</div><div className="ts-metric-value accent">{output ? output.total : '—'}</div></div>
-            </div>
-          </div>
-
+        <div className="ts-tabbar">
+          <button className={'ts-tab' + (tab === 'rotation' ? ' active' : '')} onClick={() => setTab('rotation')}>Rotation</button>
+          <button className={'ts-tab' + (tab === 'chemistry' ? ' active' : '')} onClick={() => setTab('chemistry')}>Chemistry</button>
           {team.coach && team.market && (
+            <button className={'ts-tab' + (tab === 'office' ? ' active' : '')} onClick={() => setTab('office')}>Office</button>
+          )}
+          <button className={'ts-tab' + (tab === 'ledger' ? ' active' : '')} onClick={() => setTab('ledger')}>Ledger</button>
+        </div>
+
+        <div className="ts-body">
+          {showSection('chemistry') && <TeamChemistry team={team} />}
+
+          {showSection('rotation') && (
+            <div className="ts-section">
+              <div className="ts-heading">Rotation</div>
+              <div className="ts-roto-scroll">
+                <div className="ts-roto-grid">
+                  {starters.map((c) => (
+                    <PlayerCard
+                      key={c.id}
+                      card={c}
+                      selected={selectedId === c.id}
+                      onClick={canEdit ? () => handleCardClick(c) : undefined}
+                      onRelease={canEdit ? handleRelease : undefined}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showSection('rotation') && (
+            <div className="ts-section">
+              <div className="ts-heading">Bench</div>
+              <div className="ts-roto-scroll">
+                <div className="ts-roto-grid">
+                  {bench.map((c) => (
+                    <PlayerCard
+                      key={c.id}
+                      card={c}
+                      selected={selectedId === c.id}
+                      onClick={canEdit ? () => handleCardClick(c) : undefined}
+                      onRelease={canEdit ? handleRelease : undefined}
+                    />
+                  ))}
+                  {Array.from({ length: Math.max(0, openSlots) }, (_, i) => (
+                    <div key={'open' + i} className="ts-bench-open">OPEN</div>
+                  ))}
+                  {openSlots <= 0 && bench.length < 4 && (
+                    <div className="ts-bench-open">ROSTER FULL</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showSection('ledger') && (
+            <div className="ts-section">
+              <div className="ts-heading">Budget Ledger</div>
+              <div className="ts-budget-figures">
+                <span className="committed">{formatCoins(committed).replace('🪙', '')}</span>
+                <span className="slash"> / </span>
+                <span className="limit">{formatCoins(cap).replace('🪙', '')}</span>
+                <span className={'ts-budget-room' + (room < 0 ? ' bad' : '')}>{room >= 0 ? '+' : ''}{Math.round(room * 10) / 10} ROOM</span>
+              </div>
+              <div className="ts-budget-bar">
+                {team.hand.map((c) => (
+                  <div
+                    key={c.id}
+                    className={'ts-budget-seg' + (cardTier(c) === 'EXP' ? ' exp' : activeSet.has(c.id) ? '' : ' bench')}
+                    style={{ width: `${cap ? Math.max(2, (c.salary / cap) * 100) : 100 / (team.hand.length || 1)}%` }}
+                  />
+                ))}
+              </div>
+              <div className="ts-ledger-row"><span>Committed This Season</span><span>{formatCoins(committed)}</span></div>
+              <div className="ts-ledger-row"><span>GM Budget Hit</span><span>{formatCoins(gmCost(team.gmType))}</span></div>
+              {deadCapDue > 0 && <div className="ts-ledger-row"><span>Dead Cap</span><span className="bad">{formatCoins(deadCapDue)}</span></div>}
+              <div className="ts-ledger-row"><span>Expiring This Season</span><span className={expiring.length ? 'bad' : ''}>{expiring.length ? `${formatCoins(expiringTotal)} · ${expiring.map((c) => c.archetype).join(', ')}` : 'None'}</span></div>
+              <div className="ts-metrics">
+                <div><div className="ts-metric-label">Experience</div><div className="ts-metric-value">{chemistry !== null ? chemistry : '—'}</div></div>
+                <div><div className="ts-metric-label">Proj Off</div><div className="ts-metric-value accent">{output ? output.total : '—'}</div></div>
+              </div>
+            </div>
+          )}
+
+          {team.coach && team.market && showSection('office') && (
             <div className="ts-section">
               <div className="ts-heading">Front Office</div>
               <div className="fo-deal-row" style={{ margin: 0 }}>
@@ -283,7 +306,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             </div>
           )}
 
-          {(team.matchupCards || []).length > 0 && (
+          {(team.matchupCards || []).length > 0 && showSection('rotation') && (
             <div className="ts-section">
               <div className="ts-heading">Matchup Cards</div>
               <div className="mu-deal-row" style={{ margin: 0 }}>

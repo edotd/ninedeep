@@ -616,6 +616,14 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .ts-hero-metric.chemistry{padding-left:0;border-left:0;}
 .ts-hero-value{font-family:var(--font-display);font-size:46px;line-height:.86;color:var(--file);margin-top:5px;}
 .ts-hero-value.accent,.ts-hero-metric.chemistry .ts-hero-value{color:var(--franchise);}
+/* Mobile-only tab bar (per the brand handoff's mobile Team File) — desktop keeps every
+   section stacked in one scroll (TeamSummaryScreen's showSection() ignores `tab` there), so
+   this bar only needs to exist below the shell's own 1000px desktop breakpoint. */
+.ts-tabbar{display:flex;background:var(--ink);border-top:1px solid var(--ink-rule);}
+.ts-tab{flex:1;background:none;border:none;border-bottom:2px solid transparent;padding:12px 6px;font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-muted);cursor:pointer;}
+.ts-tab.active{color:var(--franchise);border-bottom-color:var(--franchise);}
+@media (min-width:1000px){.ts-tabbar{display:none;}}
+
 .ts-body{background:var(--file);padding:22px 24px;display:flex;flex-direction:column;gap:20px;}
 .ts-heading{font-family:var(--font-label);font-size:11px;letter-spacing:.14em;color:var(--ink);text-transform:uppercase;margin-bottom:9px;}
 /* Starters render as real, full-size PlayerCards now — see TeamSummaryScreen.jsx — matching
@@ -907,6 +915,31 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .t2-advance-btn{background:var(--stamp);border:none;color:var(--stamp-plate-text);font-family:var(--font-label);font-size:13px;letter-spacing:.12em;text-transform:uppercase;padding:16px 30px;cursor:pointer;flex-shrink:0;}
 .t2-advance-btn:hover{background:var(--stamp-text);}
 
+/* Phone-width tightening — the same JSX/state machine as desktop, just less padding and
+   smaller tiles/dice/coin so the board fits without horizontal scroll. Die/BallMark's own
+   pixel `size` prop is set responsively in TurnPanel (dieSize/coinSize); these rules match
+   the coin's CSS-sized wrapper divs to that same smaller size. */
+@media (max-width:480px){
+  .t2-shell{padding:14px 10px;}
+  .t2-teamboard{padding:12px 10px;gap:8px;}
+  .nd2-tile{flex-basis:58px;min-width:58px;}
+  .nd2-tile.empty{min-height:88px;}
+  .nd2-tile-jersey{font-size:16px;}
+  .nd2-tile-pos{font-size:10px;}
+  .nd2-coach-slot{width:112px;}
+  .nd2-coach-name{font-size:14px;}
+  .nd2-coach-desc{font-size:8px;}
+  .t2-teamboard-name-text{font-size:19px;}
+  .t2-rollzone{padding:20px 10px;min-height:0;gap:14px;}
+  .t2-coin,.t2-coin-start{width:84px;height:84px;}
+  .t2-coin-face{font-size:18px;}
+  .t2-possession-arrow{width:36px;height:18px;}
+  .t2-possession-arrow::before{width:20px;height:10px;}
+  .t2-possession-arrow::after{border-top-width:12px;border-bottom-width:12px;border-right-width:16px;}
+  .t2-possession-label{font-size:11px;}
+  .t2-rollzone-caption{font-size:12px;}
+}
+
 .t2-log{background:var(--ink-deep);border:1px solid var(--ink-rule);padding:20px;display:flex;flex-direction:column;min-height:0;}
 .t2-log.collapsed{padding:16px 8px;align-items:center;}
 .t2-log-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;}
@@ -956,6 +989,15 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .bracket-team-final.win{color:var(--approved);}
 .bracket-team-tbd{padding:22px 11px;text-align:center;font-family:var(--font-display);font-size:18px;color:var(--file-muted);}
 .bracket-footer{margin-top:16px;flex-shrink:0;}
+
+/* Mobile round tabs (per the brand handoff's mobile Bracket) — PlayoffBracketScreen renders
+   MobileBracket instead of the desktop tree below the shell's 1000px breakpoint, so this never
+   needs its own media query gate. */
+.bracket-round-tabbar{display:flex;background:var(--ink);border-top:1px solid var(--ink-rule);margin:0 -16px;}
+.bracket-round-tab{flex:1;background:none;border:none;border-bottom:2px solid transparent;padding:12px 6px;font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-muted);cursor:pointer;}
+.bracket-round-tab.active{color:var(--franchise);border-bottom-color:var(--franchise);}
+.bracket-round-tab-done{color:var(--approved);margin-left:5px;}
+.bracket-round-list{display:flex;flex-direction:column;gap:14px;margin-top:16px;}
 
 /* The bracket tree itself — two symmetric halves (each QF1+QF2 or QF3+QF4 converging on a
    Semifinal node) plus a centred Final. Each half is two flex columns — a "quarter" round
@@ -1184,6 +1226,14 @@ html[data-theme="dark"] .wordmark-ink{color:var(--file);}
 .deal-token{position:absolute;inset:0;margin:auto;width:64px;height:90px;border-radius:5px;background:var(--franchise);box-shadow:inset 0 0 0 2px var(--ink);animation:deal-token-drop 480ms cubic-bezier(.4,0,.7,.3) both;}
 @keyframes deal-token-drop{from{opacity:1;transform:translateY(0) scale(1) rotate(0deg);}to{opacity:0;transform:translateY(340px) scale(.5) rotate(14deg);}}
 .deal-count{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-muted);}
+
+/* Mobile Deal review (per the brand handoff's mobile Deal) — a small preview of the dealt hand
+   instead of the desktop's full multi-row grid; the rest of the file is one Continue tap away
+   on the Team File screen (see TeamSummaryScreen's own mobile tab bar). */
+.deal-mobile-heading{font-family:var(--font-label);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-muted);margin:18px 0 10px;}
+.deal-mobile-preview{display:flex;gap:8px;}
+.deal-mobile-preview .nd2-tile{flex:1 1 0;min-width:0;}
+.deal-mobile-hint{font-family:var(--font-mono);font-size:12px;line-height:1.5;color:var(--ink-muted);margin-top:14px;}
 @media(prefers-reduced-motion:reduce){.deal-deck,.deal-token{animation:none;}}
 
 /* Hand screen — now that the window isn't capped at 900px, starters (5) and bench (4) each
