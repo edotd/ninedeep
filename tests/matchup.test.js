@@ -4,7 +4,7 @@ import { MATCHUP_MODIFIER_TYPES as deck, SEEDING_GAMEPLAN_TYPES } from '../src/g
 import { drawMatchupModifierCard, resetMatchupDeck } from '../src/game/cards.js';
 import { applySupplementalCard, supplementalRoll } from '../src/game/supplementalEffects.js';
 import { newEraState, lockSeasonAndSeed, initSeasonModifierCards, startPlayoffs } from '../src/game/season.js';
-import { startEra, rollCurrentMatchup } from '../src/game/engine.js';
+import { startEra, rollCurrentMatchup, openSeries, simulateOneMatch } from '../src/game/engine.js';
 import { beginTurn, advanceTurn } from '../src/game/turn.js';
 import { rehydrateState } from '../src/game/rehydrate.js';
 const card = (name) => ({ ...deck.find((c) => c.name === name), id: name, used: false });
@@ -116,6 +116,24 @@ test('instant simulation executes new effects and finishes', () => {
   rollCurrentMatchup(state);
   assert(m.result.winner);assert.equal(m.result.aExtra.offDice,3);assert(m.result.aExtra.cardDisadvantage);
   assert.equal(m.result.cardNotes.length,2);
+});
+
+test('human playoff series require participant access and two-human ready up', () => {
+  const state=game();lockSeasonAndSeed(state);startPlayoffs(state);
+  const match=state.playoff.matches[0];match.a.human=true;match.b.human=true;
+  const spectator=state.teams.find((team)=>team!==match.a&&team!==match.b);spectator.human=true;
+  assert.equal(openSeries(state,0,spectator.id).ok,false);
+  const first=openSeries(state,0,match.a.id);assert.equal(first.waiting,true);assert.equal(state.playoff.activeMatchIndex,null);
+  const second=openSeries(state,0,match.b.id);assert.equal(second.ok,true);assert.equal(state.playoff.activeMatchIndex,0);assert(match.turn);
+});
+
+test('CPU playoff series can be started or simulated without a human participant', () => {
+  const state=game();lockSeasonAndSeed(state);startPlayoffs(state);
+  const match=state.playoff.matches.find((candidate)=>candidate.a&&candidate.b&&!candidate.a.human&&!candidate.b.human);
+  const index=state.playoff.matches.indexOf(match);
+  assert.equal(openSeries(state,index,0).ok,true);assert(match.turn);
+  state.playoff.activeMatchIndex=null;delete match.turn;
+  assert.equal(simulateOneMatch(state,index,0).ok,true);assert(match.result);
 });
 
 test('cap hit preserves fractions for every chosen stat without changing salary or permanent stats', () => {

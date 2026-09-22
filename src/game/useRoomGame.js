@@ -5,6 +5,13 @@ import { actionMap } from './actionMap';
 import { claimSeat, leaveSeat, startEraOnline, resetRoomToLobby } from './lobby';
 
 const lobbyActionMap = { claimSeat, leaveSeat, startEraOnline, resetRoomToLobby };
+// These actions change the shared screen or resolve shared results. Applying them optimistically
+// can let an older Firestore snapshot briefly restore the previous phase, remounting a loading
+// transition or series screen. Wait for the ordered server snapshot for these actions instead.
+const NON_OPTIMISTIC_ACTIONS = new Set([
+  'confirmLineup', 'finishConstruction', 'finishSeasonSimulation', 'openSeries', 'closeSeries',
+  'beginTurn', 'simulateOneMatch', 'simulateAllPlayoffs', 'beginPlayoffs', 'finishPlayoffs',
+]);
 
 // Firestore-backed counterpart to useLocalGame — same actions object shape (plus a few
 // lobby-only actions), so every screen written against useLocalGame works unmodified here.
@@ -30,9 +37,9 @@ export function useRoomGame(roomCode, myUid) {
   }, [roomCode]);
 
   const actions = useMemo(() => {
-    const wrap = (fn) => (...args) => {
+    const wrap = (name, fn) => (...args) => {
       setActionError(null);
-      if (stateRef.current) {
+      if (stateRef.current && !NON_OPTIMISTIC_ACTIONS.has(name)) {
         try {
           const optimistic = structuredClone(stateRef.current);
           rehydrateState(optimistic);
@@ -53,8 +60,8 @@ export function useRoomGame(roomCode, myUid) {
       });
     };
     return {
-      ...Object.fromEntries(Object.entries(actionMap).map(([name, fn]) => [name, wrap(fn)])),
-      ...Object.fromEntries(Object.entries(lobbyActionMap).map(([name, fn]) => [name, wrap(fn)])),
+      ...Object.fromEntries(Object.entries(actionMap).map(([name, fn]) => [name, wrap(name, fn)])),
+      ...Object.fromEntries(Object.entries(lobbyActionMap).map(([name, fn]) => [name, wrap(name, fn)])),
     };
   }, [roomCode]);
 

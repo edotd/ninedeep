@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { useIsDesktop } from '../hooks/useIsDesktop';
 import PlayerCard from '../components/PlayerCard';
 import FrontOfficeCard from '../components/FrontOfficeCard';
 import MatchupCard from '../components/MatchupCard';
@@ -42,7 +41,6 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
   const matchupCards = team.matchupCards || [];
   const total = starters.length + bench.length + FO_KINDS.length + matchupCards.length;
   const instant = state.settings.actionLogSpeed === 'instant' || reducedMotion();
-  const isDesktop = useIsDesktop();
 
   // 'deck' -> 'dealing' -> 'review'
   const [phase, setPhase] = useState(instant ? 'review' : 'deck');
@@ -53,10 +51,9 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
 
   const clearTimers = () => { timersRef.current.forEach(clearTimeout); timersRef.current = []; };
 
-  // Desktop settles into 'review' (the detailed grid below, held until Continue); mobile has
-  // nothing further to review here, so it calls onDealDone and moves straight to the Team
-  // File instead of ever setting a local 'review' phase.
-  const finishDealing = () => (isDesktop ? setPhase('review') : onDealDone());
+  // Once the deal lands, every client goes directly to its Franchise page. Card Types remains
+  // available from navigation, so a second post-deal review screen only adds an extra stop.
+  const finishDealing = () => onDealDone();
 
   useEffect(() => {
     if (instant) { onDealProgress(total); finishDealing(); return undefined; }
@@ -89,7 +86,7 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
   // Mobile never actually settles into 'review' (finishDealing calls onDealDone instead) —
   // this only guards the one-frame window on an 'instant' mount, before that effect above has
   // run, so nothing flashes the desktop grid first.
-  if (!isDesktop && phase === 'review') return null;
+  if (phase === 'review') return null;
 
   if (phase !== 'review') {
     return (

@@ -18,11 +18,12 @@ import {
 } from './season';
 import {
   checkInjury, playCardEffect, playMatchup, wantsAdvantage, cardChoicesFor, playableCards,
-  isMatchUnlocked, hasHomeCourt, applyLiveFanbaseMod,
+  isMatchUnlocked, hasHomeCourt, applyLiveFanbaseMod, matchTeams,
 } from './matchup';
 import { rosterSalary } from './economy';
 import { applyPlayoffWinMilestone } from './fanbase';
 import { applyGameplanToTurn } from './strategyCards';
+import { beginTurn as initializeTurn } from './turn';
 
 function humanTeams(state) {
   return state.teams.filter((t) => t.human);
@@ -106,6 +107,7 @@ export function proceedToLineupFromModifier(state) {
 // calls confirmLineup directly on the auto-selected five (see below); there's no separate
 // manual lineup-picking screen any more.
 export function finishConstruction(state) {
+  if (state.phase !== 'constructing') return;
   state.phase = 'teamsummary';
 }
 
@@ -113,6 +115,7 @@ export function finishConstruction(state) {
 // The actual seeding/cap-lock work already happened synchronously in lockSeasonAndSeed (see
 // confirmLineup) — this is just the final step of that themed pause before Standings appears.
 export function finishSeasonSimulation(state) {
+  if (state.phase !== 'simulating') return;
   state.phase = 'standings';
 }
 
@@ -137,8 +140,24 @@ export function beginPlayoffs(state) {
   startPlayoffs(state);
 }
 
-export function openSeries(state, matchIndex) {
+export function openSeries(state, matchIndex, teamIdx) {
+  const match = state.playoff?.matches?.[matchIndex];
+  if (!match || match.result || !isMatchUnlocked(state.playoff.matches, match)) {
+    if (match?.result) state.playoff.activeMatchIndex = matchIndex;
+    return match?.result ? { ok: true, review: true } : { ok: false, msg: 'This series is not ready.' };
+  }
+  const { a, b } = matchTeams(state.playoff.matches, match);
+  const humans = [a, b].filter((team) => team?.human);
+  const caller = state.teams[teamIdx];
+  if (humans.length && !humans.some((team) => team.id === caller?.id)) return { ok: false, msg: 'Only a player in this series can start it.' };
+  if (humans.length === 2) {
+    match.readyTeamIds ||= [];
+    if (!match.readyTeamIds.includes(caller.id)) match.readyTeamIds.push(caller.id);
+    if (!humans.every((team) => match.readyTeamIds.includes(team.id))) return { ok: true, waiting: true };
+  }
   state.playoff.activeMatchIndex = matchIndex;
+  initializeTurn(state);
+  return { ok: true };
 }
 export function closeSeries(state) {
   state.playoff.activeMatchIndex = null;
@@ -252,8 +271,12 @@ export function rollCurrentMatchup(state) {
 export function simulateAllPlayoffs(state) {
   const matches = state.playoff.matches;
   while (matches.some((m) => !m.result)) {
-    const idx = matches.findIndex((m) => !m.result && isMatchUnlocked(matches, m));
-    if (idx < 0) break; // shouldn't happen — every remaining match is eventually unlocked
+    const idx = matches.findIndex((m) => {
+      if (m.result || !isMatchUnlocked(matches, m)) return false;
+      const { a, b } = matchTeams(matches, m);
+      return !a.human && !b.human;
+    });
+    if (idx < 0) break;
     state.playoff.activeMatchIndex = idx;
     rollCurrentMatchup(state);
   }
@@ -266,6 +289,8 @@ export function simulateOneMatch(state, index) {
   const matches = state.playoff.matches;
   const m = matches[index];
   if (!m || m.result || !isMatchUnlocked(matches, m)) return { ok: false, msg: 'This match cannot be simulated right now.' };
+  const { a, b } = matchTeams(matches, m);
+  if (a.human || b.human) return { ok: false, msg: 'Human-controlled series must be played.' };
   const prevActive = state.playoff.activeMatchIndex;
   state.playoff.activeMatchIndex = index;
   rollCurrentMatchup(state);

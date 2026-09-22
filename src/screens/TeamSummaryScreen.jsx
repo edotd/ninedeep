@@ -66,7 +66,8 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   const activeSet = new Set(team.activeIds || []);
   const starters = team.hand.filter((c) => activeSet.has(c.id));
   const bench = team.hand.filter((c) => !activeSet.has(c.id));
-  const openSlots = 9 - team.hand.length;
+  const starterOpenSlots = Math.max(0, 5 - starters.length);
+  const benchOpenSlots = Math.max(0, 4 - bench.length);
   const otherHumans = state.teams.filter((t) => t.human && t.id !== team.id);
   const waitingOn = otherHumans.filter((t) => !t.lineupConfirmed);
 
@@ -111,7 +112,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
       if (res && res.ok === false) alert(res.msg);
       return;
     }
-    if (!selectedId) { setSelectedId(card.id); return; }
+    if (selectedId == null) { setSelectedId(card.id); return; }
     if (selectedId === card.id) { setSelectedId(null); return; }
     const selectedIsStarter = activeSet.has(selectedId);
     if (selectedIsStarter === isStarter) { setSelectedId(card.id); return; }
@@ -166,6 +167,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                       onDevelop={!readOnly && !c.development ? setDevelopPlayer : undefined}
                     />
                   ))}
+                  {Array.from({ length: starterOpenSlots }, (_, i) => <div key={'starter-open-' + i} className="ts-bench-open starter">OPEN STARTER</div>)}
                 </div>
               </div>
             </div>
@@ -186,12 +188,9 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                       onDevelop={!readOnly && !c.development ? setDevelopPlayer : undefined}
                     />
                   ))}
-                  {Array.from({ length: Math.max(0, openSlots) }, (_, i) => (
+                  {Array.from({ length: benchOpenSlots }, (_, i) => (
                     <div key={'open' + i} className="ts-bench-open">OPEN</div>
                   ))}
-                  {openSlots <= 0 && bench.length < 4 && (
-                    <div className="ts-bench-open">ROSTER FULL</div>
-                  )}
                 </div>
               </div>
             </div>

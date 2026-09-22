@@ -654,6 +654,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
    just needs to be a fixed-width dashed placeholder; flex's default align-items:stretch makes
    it match whatever height the real cards next to it end up being. */
 .ts-bench-open{width:230px;flex-shrink:0;border:1px dashed var(--depth-nontext);padding:7px 9px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--file-muted);}
+.ts-bench-open.starter{border-color:var(--franchise);color:var(--stamp-text);}
 
 .ts-proj-row{background:var(--ink);display:flex;padding:16px 24px;gap:24px;flex-wrap:wrap;}
 .ts-proj-tile{flex:1;min-width:120px;}
@@ -1063,6 +1064,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .bracket-node-btn-row{display:flex;gap:8px;margin:8px;}
 .bracket-node-btn-row .bracket-node-btn{width:auto !important;margin:0 !important;flex:1;}
 .bracket-node-btn-row .bracket-node-btn.secondary{flex:0 0 auto;}
+.bracket-node-status{margin:8px;padding:9px 10px;border:1px solid var(--ink-rule);font-family:var(--font-mono);font-size:9px;letter-spacing:.06em;text-align:center;text-transform:uppercase;color:var(--ink-muted);}
 @media (max-width:480px){.bracket-title{font-size:30px;}}
 /* The bracket screen fills the full window height on desktop now (no capped 900px pane) — the
    tree's own flex:1 (above) plus space-around already claims that room, so this block is just

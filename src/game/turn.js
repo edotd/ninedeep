@@ -31,6 +31,7 @@ function pushLog(turn, tag, text) {
 
 export function beginTurn(state) {
   const m = state.playoff.matches[state.playoff.activeMatchIndex];
+  if (!m || m.result || m.turn) return;
   if (m.from) {
     m.a = state.playoff.matches[m.from[0]].result.winner;
     m.b = state.playoff.matches[m.from[1]].result.winner;

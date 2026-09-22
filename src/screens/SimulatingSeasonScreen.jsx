@@ -13,13 +13,13 @@ const STEP_MS = 550;
 // pattern as ConstructingScreen. The actual seeding/cap-lock work already ran synchronously
 // in lockSeasonAndSeed (see confirmLineup in engine.js); this is just a themed pause before
 // the results appear.
-export default function SimulatingSeasonScreen({ actions }) {
+export default function SimulatingSeasonScreen({ actions, myTeamId }) {
   const { darkMode } = useDarkMode();
   const [step, setStep] = useState(0);
 
   useEffect(() => {
     if (step >= MESSAGES.length) {
-      actions.finishSeasonSimulation();
+      actions.finishSeasonSimulation(myTeamId);
       return;
     }
     const t = setTimeout(() => setStep((s) => s + 1), STEP_MS);

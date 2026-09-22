@@ -14,13 +14,13 @@ const STEP_MS = 550;
 // the time this phase is entered); this is purely a themed pause so the persistent bar,
 // which stays empty through the whole Front Office / Hand / Matchup Cards sequence, doesn't
 // just pop into existence — see GameShell.jsx's HIDE_BAR_PHASES.
-export default function ConstructingScreen({ actions }) {
+export default function ConstructingScreen({ actions, myTeamId }) {
   const { darkMode } = useDarkMode();
   const [step, setStep] = useState(0);
 
   useEffect(() => {
     if (step >= MESSAGES.length) {
-      actions.finishConstruction();
+      actions.finishConstruction(myTeamId);
       return;
     }
     const t = setTimeout(() => setStep((s) => s + 1), STEP_MS);

@@ -54,6 +54,9 @@ function BracketNode({ label, m, matches, index, myTeamId, actions, big, narrow,
   const { a, b } = matchTeams(matches, m);
   const unlocked = isMatchUnlocked(matches, m);
   const isFinal = m.label === 'Final';
+  const humanTeams = [a, b].filter((team) => team?.human);
+  const isParticipant = humanTeams.some((team) => team.id === myTeamId);
+  const isReady = (m.readyTeamIds || []).includes(myTeamId);
   const stop = (fn) => (e) => { e.stopPropagation(); fn(); };
   return (
     <div
@@ -74,11 +77,17 @@ function BracketNode({ label, m, matches, index, myTeamId, actions, big, narrow,
       )}
       {unlocked && (
         m.result ? (
-          <button className="secondary bracket-node-btn" onClick={stop(() => actions.openSeries(index))}>Review</button>
+          <button className="secondary bracket-node-btn" onClick={stop(() => actions.openSeries(index, myTeamId))}>Review</button>
+        ) : humanTeams.length === 2 ? (
+          isParticipant ? <button className="primary bracket-node-btn" disabled={isReady} onClick={stop(() => actions.openSeries(index, myTeamId))}>{isReady ? 'Waiting For Opponent' : 'Ready Up'}</button>
+            : <div className="bracket-node-status">Players Must Ready Up</div>
+        ) : humanTeams.length === 1 ? (
+          isParticipant ? <button className="primary bracket-node-btn" onClick={stop(() => actions.openSeries(index, myTeamId))}>{isFinal ? 'Begin The Final' : 'Begin'}</button>
+            : <div className="bracket-node-status">Waiting For Player</div>
         ) : (
           <div className="bracket-node-btn-row">
-            <button className="primary bracket-node-btn" onClick={stop(() => actions.openSeries(index))}>{isFinal ? 'Begin The Final' : 'Begin'}</button>
-            <button className="secondary bracket-node-btn" onClick={stop(() => actions.simulateOneMatch(index))}>Sim</button>
+            <button className="primary bracket-node-btn" onClick={stop(() => actions.openSeries(index, myTeamId))}>{isFinal ? 'Begin The Final' : 'Begin'}</button>
+            <button className="secondary bracket-node-btn" onClick={stop(() => actions.simulateOneMatch(index, myTeamId))}>Sim</button>
           </div>
         )
       )}
@@ -167,7 +176,7 @@ function ZoomedBracket({ matches, myTeamId, actions, segment, onSegmentChange, o
 
       <div className="bracket-footer">
         {!allDone && (
-          <button className="reset-link" onClick={actions.simulateAllPlayoffs}>Simulate All ▸▸</button>
+          <button className="reset-link" onClick={() => actions.simulateAllPlayoffs(myTeamId)}>Simulate CPU Series ▸▸</button>
         )}
         {allDone && (
           <button className="primary" style={{ width: '100%', padding: 16 }} onClick={actions.finishPlayoffs}>See Results</button>
@@ -223,7 +232,7 @@ function MobileBracket({ state, actions, myTeamId, matches, allDone, seasonNum }
 
       <div className="bracket-footer">
         {!allDone && (
-          <button className="reset-link" onClick={actions.simulateAllPlayoffs}>Simulate All ▸▸</button>
+          <button className="reset-link" onClick={() => actions.simulateAllPlayoffs(myTeamId)}>Simulate CPU Series ▸▸</button>
         )}
         {allDone && (
           <button className="primary" style={{ width: '100%', padding: 16 }} onClick={actions.finishPlayoffs}>See Results</button>
@@ -323,7 +332,7 @@ export default function PlayoffBracketScreen({ state, actions, myTeamId }) {
 
       <div className="bracket-footer">
         {!allDone && (
-          <button className="reset-link" onClick={actions.simulateAllPlayoffs}>Simulate All ▸▸</button>
+          <button className="reset-link" onClick={() => actions.simulateAllPlayoffs(myTeamId)}>Simulate CPU Series ▸▸</button>
         )}
         {allDone && (
           <button className="primary" style={{ width: '100%', padding: 16 }} onClick={actions.finishPlayoffs}>See Results</button>
