@@ -125,6 +125,7 @@ export function finishSeasonSimulation(state) {
 // season actually locks (seeding, etc.) only once every human has confirmed.
 export function confirmLineup(state, teamIdx) {
   const team = state.teams[teamIdx];
+  if (!team.coach) return { valid: false, msg: 'Hire a coach before the season begins.' };
   if (team.hand.length !== 9) return { valid: false, msg: `Resolve your roster before the season begins. You currently have ${team.hand.length} of 9 players.` };
   const committed = rosterSalary(team);
   if (committed > team.seasonCap) return { valid: false, msg: `Get under budget before the season begins. You are using ${committed} of ${team.seasonCap}.` };

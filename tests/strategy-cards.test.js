@@ -16,6 +16,7 @@ test('coaches receive two to four Development cards and two Gameplan cards each 
     dealStrategyCards(state, team);
     assert(team.developmentCards.length >= 2 && team.developmentCards.length <= 4);
     assert.equal(team.gameplanCards.length, 2);
+    assert.equal(new Set(team.gameplanCards.map((card) => card.name)).size, 2);
   }
 });
 

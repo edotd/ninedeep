@@ -26,13 +26,23 @@ function draw(definitions) {
   return definitions[Math.floor(Math.random() * definitions.length)];
 }
 
+function drawUnique(definitions, count) {
+  const pool = definitions.slice();
+  const cards = [];
+  while (cards.length < count && pool.length) {
+    const index = Math.floor(Math.random() * pool.length);
+    cards.push(pool.splice(index, 1)[0]);
+  }
+  return cards;
+}
+
 export function dealStrategyCards(state, team) {
   const developmentCount = 2 + Math.floor(Math.random() * 3);
   team.developmentCards = Array.from({ length: developmentCount }, () => ({
     ...draw(DEVELOPMENT_DEFINITIONS), id: nextId(state, 'dev'), kind: 'development', used: false,
   }));
-  team.gameplanCards = Array.from({ length: 2 }, () => ({
-    ...draw(GAMEPLAN_DEFINITIONS), id: nextId(state, 'gp'), kind: 'gameplan', used: false,
+  team.gameplanCards = drawUnique(GAMEPLAN_DEFINITIONS, 2).map((definition) => ({
+    ...definition, id: nextId(state, 'gp'), kind: 'gameplan', used: false,
   }));
   team.seasonGameplanEffects = { offPercent: 0, defPercent: 0, benchBonus: 0, seedingPercent: 0 };
 }

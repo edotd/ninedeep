@@ -16,6 +16,8 @@ export default function FreeAgencyScreen({ state, actions, myTeamId, onBack }) {
       {(state.freeAgentCoaches || []).length ? (
         <div className="fa-coach-grid">
           {state.freeAgentCoaches.map((coach) => {
+            const firedHere = coach.firedByTeamId === team.id && coach.firedSeason === state.season;
+            const hasCoach = Boolean(team.coach);
             const hire = () => {
               const result = actions.hireFreeAgentCoach(myTeamId, coach.id);
               if (result && result.ok === false) alert(result.msg);
@@ -23,7 +25,9 @@ export default function FreeAgencyScreen({ state, actions, myTeamId, onBack }) {
             return (
               <div key={coach.id}>
                 <FrontOfficeCard kind="coach" team={{ ...team, coach, retainedStreak: 0 }} />
-                <button className="pcard-renew" onClick={hire}>Hire — {formatCoins(coach.salary)}</button>
+                <button className="pcard-renew" disabled={hasCoach || firedHere} onClick={hire}>
+                  {firedHere ? 'Fired This Season' : hasCoach ? 'Fire Coach To Hire' : `Hire — ${formatCoins(coach.salary)}`}
+                </button>
               </div>
             );
           })}

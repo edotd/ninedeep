@@ -124,7 +124,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
   const turn = m.turn;
   const teamA = m.a, teamB = m.b;
   const isDesktop = useIsDesktop();
-  const dieSize = isDesktop ? 110 : 92;
+  const dieSize = isDesktop ? 96 : 80;
   const coinSize = isDesktop ? 100 : 84;
   const myTeam = state.teams[myTeamId];
   const humanInMatch = teamA === myTeam || teamB === myTeam;
@@ -170,6 +170,22 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
   // all that's shown, since only that person's own client can submit their pick.
   const waitingOnOpponent = turn.stage === 'card' && humanInMatch && actingTeam !== myTeam && actingTeam.human;
   const aiCardTurn = turn.stage === 'card' && actingTeam && !actingTeam.human;
+  const visibleBoardActions = (turn.boardActions || []).filter((entry) => (
+    entry.stepIndex === turn.exchangeIndex && (turn.stage === 'resolved' || turn.stage === 'bench')
+  ));
+  const boardActionSignature = visibleBoardActions.map((entry, i) => (
+    `${entry.stepIndex}-${entry.teamName}-${entry.cardName}-${i}`
+  )).join('|');
+  const [settledActionSignature, setSettledActionSignature] = useState('');
+  useEffect(() => {
+    if (!boardActionSignature) {
+      setSettledActionSignature('');
+      return undefined;
+    }
+    const timer = setTimeout(() => setSettledActionSignature(boardActionSignature), ADJUSTMENT_REVEAL_MS);
+    return () => clearTimeout(timer);
+  }, [boardActionSignature]);
+  const revealingAdjustments = Boolean(boardActionSignature && settledActionSignature !== boardActionSignature);
 
   const advance = (payload) => actions.advanceTurn(payload);
 
@@ -219,7 +235,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
   // is scheduled centrally below, all keyed off rollPhase itself so there's exactly one place
   // that ever sets rollTimerRef.
   const startRoll = (which) => {
-    if (rollPhase !== `idle-${which}`) return;
+    if (revealingAdjustments || rollPhase !== `idle-${which}`) return;
     setRollPhase(`rolling-${which}`);
   };
 
@@ -247,13 +263,13 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
   // start themselves after a short beat, same idea as the AI card auto-advance above; a human
   // opponent's side just sits idle here until their own client calls startRoll.
   useEffect(() => {
-    if (turn.stage !== 'resolved') return undefined;
+    if (turn.stage !== 'resolved' || revealingAdjustments) return undefined;
     let t;
     if (rollPhase === 'idle-off' && offenseTeam && !offenseTeam.human) t = setTimeout(() => startRoll('off'), 500);
     else if (rollPhase === 'idle-def' && defenseTeam && !defenseTeam.human) t = setTimeout(() => startRoll('def'), 500);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rollPhase, turn.stage]);
+  }, [rollPhase, turn.stage, revealingAdjustments]);
 
   // The bench stage reveals the coin-toss winner's contribution, then the other team's, then
   // the final result — both numbers are already final the instant turn.stage becomes 'bench',
@@ -332,9 +348,6 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
     if (e.tag === 'bench') return turn.stage !== 'bench' || benchPhase === 'result';
     return true;
   });
-  const visibleBoardActions = (turn.boardActions || []).filter((entry) => (
-    entry.stepIndex === turn.exchangeIndex && (turn.stage === 'resolved' || turn.stage === 'bench')
-  ));
   const gameplanActions = (turn.gameplanNotes || []).map((entry) => ({
     teamName: entry.teamSide === 'a' ? teamA.name : teamB.name,
     cardName: entry.cardName,
@@ -346,19 +359,6 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
   // (next to teamA's board), teamB's below (next to teamB's).
   const teamACardPlays = visibleBoardActions.filter((entry) => entry.teamName === teamA.name);
   const teamBCardPlays = visibleBoardActions.filter((entry) => entry.teamName === teamB.name);
-  const boardActionSignature = visibleBoardActions.map((entry, i) => (
-    `${entry.stepIndex}-${entry.teamName}-${entry.cardName}-${i}`
-  )).join('|');
-  const [settledActionSignature, setSettledActionSignature] = useState('');
-  useEffect(() => {
-    if (!boardActionSignature) {
-      setSettledActionSignature('');
-      return undefined;
-    }
-    const timer = setTimeout(() => setSettledActionSignature(boardActionSignature), ADJUSTMENT_REVEAL_MS);
-    return () => clearTimeout(timer);
-  }, [boardActionSignature]);
-  const revealingAdjustments = Boolean(boardActionSignature && settledActionSignature !== boardActionSignature);
   const settledTeamACards = revealingAdjustments ? [] : teamACardPlays;
   const settledTeamBCards = revealingAdjustments ? [] : teamBCardPlays;
 
@@ -481,10 +481,10 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
       // rolls it.
       const offRolling = rollPhase === 'rolling-off';
       const offSettled = !['idle-off', 'rolling-off'].includes(rollPhase);
-      const offInteractive = rollPhase === 'idle-off' && offTeam === myTeam;
+      const offInteractive = !revealingAdjustments && rollPhase === 'idle-off' && offTeam === myTeam;
       const defRolling = rollPhase === 'rolling-def';
       const defSettled = ['revealed-def', 'both'].includes(rollPhase);
-      const defInteractive = rollPhase === 'idle-def' && defTeam === myTeam;
+      const defInteractive = !revealingAdjustments && rollPhase === 'idle-def' && defTeam === myTeam;
       const offBreakdown = turn[`${offSide}OffBreakdown`];
       const defBreakdown = turn[`${defSide}DefBreakdown`], defMod = turn[`${defSide}DefMod`];
       const offWon = turn[`${offSide}OffWon`], offRaw = turn[`${offSide}OffRaw`], offTotal = turn[`${offSide}OffTotal`];
@@ -634,23 +634,25 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
               const offRaw = turn[`${offSide}OffRaw`], haircutPct = Math.round((turn[`${offSide}Haircut`] || 0) * 100);
               const defTotal = turn[`${defSide}DefTotal`];
               return (
-                <div className="t2-report t2-fade-in">
-                  <div className="t2-report-row"><span className="t2-report-label">Possession</span><span>{offWon ? `${offTeam.name} wins` : `${defTeam.name} wins`}</span></div>
-                  <div className="t2-report-row">
-                    <span className="t2-report-label">{offTeam.name} Offense</span>
-                    <span>{offWon ? `+${offTotal}` : <span className="t2-report-cut"><s>+{offRaw}</s> +{offTotal} <em>(−{haircutPct}% from {defTeam.name}'s defense)</em></span>}</span>
-                  </div>
-                  <div className="t2-report-row t2-report-row-last"><span className="t2-report-label">{defTeam.name} Defense</span><span>+{defTotal}</span></div>
-                  <div className="t2-report-footer">
-                    {!autoProgress && (
-                      <button className="t2-next-possession" onClick={() => advance()}>
-                        {turn.exchangeIndex === 0 ? 'Start Next Possession' : 'See Bench Contributions'}
-                      </button>
-                    )}
-                    <label className="t2-auto-progress">
-                      <input type="checkbox" checked={autoProgress} onChange={(e) => toggleAutoProgress(e.target.checked)} />
-                      Auto-progress
-                    </label>
+                <div className="t2-report-window t2-fade-in">
+                  <div className="t2-report" role="dialog" aria-modal="true" aria-label="Possession result">
+                    <div className="t2-report-row"><span className="t2-report-label">Possession</span><span>{offWon ? `${offTeam.name} wins` : `${defTeam.name} wins`}</span></div>
+                    <div className="t2-report-row">
+                      <span className="t2-report-label">{offTeam.name} Offense</span>
+                      <span>{offWon ? `+${offTotal}` : <span className="t2-report-cut"><s>+{offRaw}</s> +{offTotal} <em>(−{haircutPct}% from {defTeam.name}'s defense)</em></span>}</span>
+                    </div>
+                    <div className="t2-report-row t2-report-row-last"><span className="t2-report-label">{defTeam.name} Defense</span><span>+{defTotal}</span></div>
+                    <div className="t2-report-footer">
+                      {!autoProgress && (
+                        <button className="t2-next-possession" onClick={() => advance()}>
+                          {turn.exchangeIndex === 0 ? 'Start Next Possession' : 'See Bench Contributions'}
+                        </button>
+                      )}
+                      <label className="t2-auto-progress">
+                        <input type="checkbox" checked={autoProgress} onChange={(e) => toggleAutoProgress(e.target.checked)} />
+                        Auto-progress
+                      </label>
+                    </div>
                   </div>
                 </div>
               );

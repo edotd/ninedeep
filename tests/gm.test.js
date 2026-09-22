@@ -42,7 +42,13 @@ test('firing a GM draws type and market together, leaves one season of dead cap,
   assert.notEqual(team.gmType, 'Neutral');
   assert(MARKETS.some((m) => m.name === team.market.name));
   assert.equal(team.gmChangeSeason, 2);
-  assert.deepEqual(team.deadCap, [{ amount: Math.round((outgoingCost / 2) * 100) / 100, seasonsLeft: 1 }]);
+  assert.deepEqual(team.deadCap, [{
+    amount: Math.round((outgoingCost / 2) * 100) / 100,
+    seasonsLeft: 1,
+    kind: 'gm',
+    label: 'Neutral GM',
+    detail: 'Small',
+  }]);
   assert.equal(rosterSalary(team), gmCost(team.gmType) + Math.round((outgoingCost / 2) * 100) / 100);
   assert(team.seasonCap <= 20 + 3.5);
   assert.equal(fireGM(state, 0).ok, false);

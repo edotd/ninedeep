@@ -9,7 +9,6 @@
 // charges count down each season transition. Hiring the replacement coach still costs its
 // own salary this season on top of the outgoing coach's dead cap.
 import { FANBASE_BOOST_COST, FANBASE_BOOST_AMOUNT } from './constants';
-import { drawCoachCard } from './cards';
 import { rosterSalary, gmCost } from './economy';
 import { drawGM } from './gm';
 import { recordFreeAgencyActivity } from './freeAgencyActivity';
@@ -18,38 +17,51 @@ function budgetRoom(team) {
   return (team.seasonCap || 0) - rosterSalary(team);
 }
 
-function addDeadCap(team, amount, seasonsLeft) {
+function addDeadCap(team, amount, seasonsLeft, source = null) {
   if (seasonsLeft <= 0) return;
   team.deadCap = team.deadCap || [];
-  team.deadCap.push({ amount: Math.round(amount * 100) / 100, seasonsLeft });
+  team.deadCap.push({ amount: Math.round(amount * 100) / 100, seasonsLeft, ...(source || {}) });
 }
 
 export function fireCoach(state, teamIdx) {
   const team = state.teams[teamIdx];
   if (!team.coach) return { ok: false, msg: 'No coach to fire.' };
-  const newCoach = drawCoachCard();
-  const room = budgetRoom(team);
-  if (room < newCoach.salary) return { ok: false, msg: `Not enough budget room — hiring ${newCoach.archetype} costs ${newCoach.salary}, you have ${Math.round(room * 10) / 10}.` };
-  addDeadCap(team, team.coach.salary / 2, 1);
-  team.coach = newCoach;
+  const firedCoach = team.coach;
+  addDeadCap(team, firedCoach.salary / 2, 1, {
+    kind: 'coach', label: firedCoach.archetype, detail: firedCoach.modifier,
+  });
+  state.freeAgentCoachCounter = (state.freeAgentCoachCounter || 0) + 1;
+  state.freeAgentCoaches ||= [];
+  state.freeAgentCoaches.push({
+    ...firedCoach,
+    id: firedCoach.id || `free-agent-coach-${state.freeAgentCoachCounter}`,
+    firedByTeamId: team.id,
+    firedSeason: state.season,
+  });
+  team.coach = null;
+  team.coachFiredSeason = state.season;
   team.retainedStreak = 0;
-  team.lastCoachName = newCoach.name;
+  team.lastCoachName = null;
   return { ok: true };
 }
 
 export function hireFreeAgentCoach(state, teamIdx, coachId) {
   const team = state.teams[teamIdx];
   const index = (state.freeAgentCoaches || []).findIndex((coach) => coach.id === coachId);
-  if (!team?.coach || index < 0) return { ok: false, msg: 'Coach is not available.' };
+  if (!team || team.coach || index < 0) return { ok: false, msg: team?.coach ? 'Fire your current coach before hiring a replacement.' : 'Coach is not available.' };
   const coach = state.freeAgentCoaches[index];
-  const deadCap = Math.round((team.coach.salary / 2) * 100) / 100;
-  const projectedCost = rosterSalary(team) - team.coach.salary + coach.salary + deadCap;
+  if (coach.firedByTeamId === team.id && coach.firedSeason === state.season) {
+    return { ok: false, msg: 'You cannot rehire a coach you fired this season.' };
+  }
+  const projectedCost = rosterSalary(team) + coach.salary;
   if (projectedCost > team.seasonCap) {
     return { ok: false, msg: `Not enough budget room to hire this coach. You need ${Math.round((projectedCost - team.seasonCap) * 100) / 100} more.` };
   }
-  addDeadCap(team, team.coach.salary / 2, 1);
   state.freeAgentCoaches.splice(index, 1);
-  team.coach = coach;
+  const hiredCoach = { ...coach };
+  delete hiredCoach.firedByTeamId;
+  delete hiredCoach.firedSeason;
+  team.coach = hiredCoach;
   team.retainedStreak = 0;
   team.lastCoachName = coach.name;
   return { ok: true };
@@ -62,7 +74,9 @@ export function fireGM(state, teamIdx) {
   const next = drawGM(team.gmType || 'Neutral');
   const attendanceMult = 0.9 + (team.attendance ?? 0.5) * 0.2;
   const capChange = Math.round((next.market.capAdj - team.market.capAdj) * attendanceMult * 2) / 2;
-  addDeadCap(team, gmCost(team.gmType) / 2, 1);
+  addDeadCap(team, gmCost(team.gmType) / 2, 1, {
+    kind: 'gm', label: `${team.gmType || 'Neutral'} GM`, detail: team.market?.name || '',
+  });
   team.gmType = next.type;
   team.market = next.market;
   team.seasonCap += capChange;
@@ -83,9 +97,15 @@ export function releasePlayer(state, teamIdx, cardId) {
   const idx = team.hand.findIndex((c) => c.id === cardId);
   if (idx < 0) return { ok: false, msg: 'Player not found on this roster.' };
   const card = team.hand[idx];
+  const wasStarter = team.activeIds?.includes(cardId);
   team.hand.splice(idx, 1);
   if (team.activeIds) team.activeIds = team.activeIds.filter((id) => id !== cardId);
-  addDeadCap(team, card.salary / 2, card.contract);
+  addDeadCap(team, card.salary / 2, card.contract, {
+    kind: 'player',
+    label: card.archetype,
+    player: { ...card },
+    rosterRole: wasStarter ? 'Starter' : 'Bench',
+  });
   const released = Object.assign({}, card, {
     contract: card.maxContract,
     lastTeamId: team.id,

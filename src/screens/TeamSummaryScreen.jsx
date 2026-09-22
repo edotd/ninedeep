@@ -4,12 +4,33 @@ import TeamChemistry from '../components/TeamChemistry';
 import PlayerCard from '../components/PlayerCard';
 import FrontOfficeCard from '../components/FrontOfficeCard';
 import { formatCoins, rosterSalary, gmCost } from '../game/economy';
-import { teamOutput } from '../game/matchup';
-import { teamExperience } from '../game/aging';
-import { cardTier } from '../game/cards';
+import { jerseyNumber, playerGrade } from '../game/cards';
+import { skillsetFor } from '../game/skillsets';
 import { FANBASE_BOOST_COST } from '../game/constants';
 import MatchupCard from '../components/MatchupCard';
 import StrategyCard from '../components/StrategyCard';
+
+function PlayerLedgerIdentity({ card, role }) {
+  const skillset = skillsetFor(card);
+  return (
+    <div className="ts-ledger-identity">
+      <strong>#{jerseyNumber(card)}</strong>
+      <span className="ts-ledger-grade">{playerGrade(card)}</span>
+      <span>{skillset?.name || 'No Skillset'}</span>
+      <em>{role}</em>
+    </div>
+  );
+}
+
+function CostBlocks({ turns, amount }) {
+  return (
+    <div className="ts-cost-blocks" aria-label={`${turns} turns remaining at ${formatCoins(amount)} each`}>
+      {Array.from({ length: Math.max(0, turns || 0) }, (_, index) => (
+        <div className="ts-cost-block" key={index}><span>{formatCoins(amount)}</span><small>T{index + 1}</small></div>
+      ))}
+    </div>
+  );
+}
 
 function StrategyAction({ card, team, state, actions, myTeamId, readOnly }) {
   const [targetId, setTargetId] = useState('');
@@ -75,10 +96,15 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   const cap = team.seasonCap || 0;
   const room = cap - committed;
   const expiring = team.hand.filter((c) => c.contract <= 1);
-  const expiringTotal = expiring.reduce((s, c) => s + c.salary, 0);
-
-  const output = team.coach && team.activeIds && team.activeIds.length > 0 ? teamOutput(team) : null;
-  const chemistry = team.coach ? teamExperience(team) : null;
+  const playerCost = team.hand.reduce((sum, card) => sum + card.salary, 0);
+  const coachCost = team.coach?.salary || 0;
+  const managerCost = team.gmType ? gmCost(team.gmType) : 0;
+  const budgetSources = [
+    { key: 'players', label: 'Players', amount: playerCost },
+    { key: 'coach', label: 'Coach', amount: coachCost },
+    { key: 'gm', label: 'GM', amount: managerCost },
+    { key: 'dead', label: 'Dead Cap', amount: deadCapDue },
+  ].filter((source) => source.amount > 0);
 
   // Reached either as the 'teamsummary' phase screen proper, or — for the era-opening deal —
   // locally, the instant this client moves past its own DealScreen while state.phase is still
@@ -147,7 +173,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
         <div className="ts-tabbar">
           <button className={'ts-tab' + (tab === 'rotation' ? ' active' : '')} onClick={() => setTab('rotation')}>Rotation</button>
           <button className={'ts-tab' + (tab === 'chemistry' ? ' active' : '')} onClick={() => setTab('chemistry')}>Chemistry</button>
-          {team.coach && team.market && (
+          {team.market && (
             <button className={'ts-tab' + (tab === 'office' ? ' active' : '')} onClick={() => setTab('office')}>Office</button>
           )}
           <button className={'ts-tab' + (tab === 'ledger' ? ' active' : '')} onClick={() => setTab('ledger')}>Ledger</button>
@@ -202,41 +228,74 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           )}
 
           {showSection('ledger') && (
-            <div className="ts-section">
-              <div className="ts-heading">Budget Ledger</div>
-              <div className="ts-budget-figures">
-                <span className="committed">{formatCoins(committed).replace('🪙', '')}</span>
-                <span className="slash"> / </span>
-                <span className="limit">{formatCoins(cap).replace('🪙', '')}</span>
-                <span className={'ts-budget-room' + (room < 0 ? ' bad' : '')}>{room >= 0 ? '+' : ''}{Math.round(room * 10) / 10} ROOM</span>
+            <div className="ts-section ts-ledger">
+              <div className="ts-ledger-topline">
+                <div><div className="ts-heading">Budget Ledger</div><strong>{formatCoins(committed)} / {formatCoins(cap)}</strong></div>
+                <div className={'ts-ledger-room' + (room < 0 ? ' bad' : '')}><span>Room Available</span><strong>{formatCoins(room)}</strong></div>
               </div>
               <div className="ts-budget-bar">
-                {team.hand.map((c) => (
+                {budgetSources.map((source) => (
                   <div
-                    key={c.id}
-                    className={'ts-budget-seg' + (cardTier(c) === 'EXP' ? ' exp' : activeSet.has(c.id) ? '' : ' bench')}
-                    style={{ width: `${cap ? Math.max(2, (c.salary / cap) * 100) : 100 / (team.hand.length || 1)}%` }}
-                  />
+                    key={source.key}
+                    className={`ts-budget-seg ${source.key}`}
+                    style={{ width: `${cap ? (source.amount / cap) * 100 : 0}%` }}
+                    title={`${source.label}: ${formatCoins(source.amount)}`}
+                  ><span>{source.label}</span></div>
                 ))}
               </div>
-              <div className="ts-ledger-row"><span>Committed This Season</span><span>{formatCoins(committed)}</span></div>
-              <div className="ts-ledger-row"><span>GM Budget Hit</span><span>{formatCoins(gmCost(team.gmType))}</span></div>
-              {deadCapDue > 0 && <div className="ts-ledger-row"><span>Dead Cap</span><span className="bad">{formatCoins(deadCapDue)}</span></div>}
-              <div className="ts-ledger-row"><span>Expiring This Season</span><span className={expiring.length ? 'bad' : ''}>{expiring.length ? `${formatCoins(expiringTotal)} · ${expiring.map((c) => c.archetype).join(', ')}` : 'None'}</span></div>
-              <div className="ts-metrics">
-                <div><div className="ts-metric-label">Experience</div><div className="ts-metric-value">{chemistry !== null ? chemistry : '—'}</div></div>
-                <div><div className="ts-metric-label">Proj Off</div><div className="ts-metric-value accent">{output ? output.total : '—'}</div></div>
+              <div className="ts-budget-legend">
+                {budgetSources.map((source) => <span key={source.key} className={source.key}><i />{source.label} {formatCoins(source.amount)}</span>)}
+              </div>
+
+              <div className="ts-ledger-group">
+                <div className="ts-ledger-group-title">Committed</div>
+                <div className="ts-ledger-subtitle">Players</div>
+                <div className="ts-ledger-list">
+                  {team.hand.map((card) => (
+                    <div className="ts-ledger-person" key={card.id}>
+                      <PlayerLedgerIdentity card={card} role={activeSet.has(card.id) ? 'Starter' : 'Bench'} />
+                      <CostBlocks turns={card.contract} amount={card.salary} />
+                    </div>
+                  ))}
+                </div>
+                <div className="ts-ledger-subtitle">Team</div>
+                <div className="ts-team-costs">
+                  <div><span>{team.coach?.archetype || 'Open Coach Slot'}</span><strong>{team.coach ? formatCoins(team.coach.salary) : '—'}</strong></div>
+                  <div><span>{team.gmType || 'Neutral'} GM</span><strong>{formatCoins(managerCost)}</strong></div>
+                </div>
+              </div>
+
+              <div className="ts-ledger-group expiring">
+                <div className="ts-ledger-group-title">Expiring</div>
+                {expiring.length ? <div className="ts-ledger-list">{expiring.map((card) => (
+                  <div className="ts-ledger-person" key={card.id}>
+                    <PlayerLedgerIdentity card={card} role={activeSet.has(card.id) ? 'Starter' : 'Bench'} />
+                    <CostBlocks turns={1} amount={card.salary} />
+                  </div>
+                ))}</div> : <div className="ts-ledger-empty">No contracts expire after this season.</div>}
+              </div>
+
+              <div className="ts-ledger-group dead-cap">
+                <div className="ts-ledger-group-title">Dead Cap</div>
+                {(team.deadCap || []).length ? <div className="ts-ledger-list">{team.deadCap.map((entry, index) => (
+                  <div className="ts-ledger-person" key={`${entry.kind || 'legacy'}-${index}`}>
+                    {entry.kind === 'player' && entry.player
+                      ? <PlayerLedgerIdentity card={entry.player} role={entry.rosterRole || 'Released'} />
+                      : <div className="ts-ledger-identity"><strong>{entry.label || 'Prior Obligation'}</strong><span>{entry.kind === 'coach' ? 'Coach' : entry.kind === 'gm' ? 'GM' : 'Released'}</span>{entry.detail && <em>{entry.detail}</em>}</div>}
+                    <CostBlocks turns={entry.seasonsLeft} amount={entry.amount} />
+                  </div>
+                ))}</div> : <div className="ts-ledger-empty">No dead cap obligations.</div>}
               </div>
             </div>
           )}
 
-          {team.coach && team.market && showSection('office') && (
+          {team.market && showSection('office') && (
             <div className="ts-section">
               <div className="ts-heading">Front Office</div>
               <div className="fo-deal-row" style={{ margin: 0 }}>
                 <div className="ts-fo-col">
-                  <FrontOfficeCard kind="coach" team={team} />
-                  {!readOnly && (
+                  {team.coach ? <FrontOfficeCard kind="coach" team={team} /> : <div className="ts-empty-coach"><span>Coach</span><strong>Open Slot</strong><small>Choose a replacement in Free Agency.</small></div>}
+                  {!readOnly && team.coach && (
                     <button
                       className="secondary ts-fo-action"
                       style={{ width: '100%' }}
@@ -353,6 +412,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           >
             {team.lineupConfirmed
               ? (waitingOn.length > 0 ? `Waiting For ${waitingOn.length} User${waitingOn.length === 1 ? '' : 's'} To Continue` : 'Waiting…')
+              : !team.coach ? 'Hire A Coach'
               : team.hand.length !== 9 ? `Resolve Roster · ${team.hand.length}/9`
               : committed > cap ? 'Resolve Budget'
               : 'Begin Season'}

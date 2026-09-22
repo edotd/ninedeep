@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { newEraState, renewExpiredContract, signFreeAgent } from '../src/game/season.js';
 import { startDraft, draftPick } from '../src/game/draft.js';
 import { startEra, confirmLineup } from '../src/game/engine.js';
-import { hireFreeAgentCoach, releasePlayer } from '../src/game/finances.js';
+import { fireCoach, hireFreeAgentCoach, releasePlayer } from '../src/game/finances.js';
 import { LEAGUE_ACCOLADES, TIERS } from '../src/game/constants.js';
 
 test('Generational Talent is a modifier while All-Star and Most Valuable Player are accolades', () => {
@@ -29,10 +29,26 @@ test('a free agent coach can be hired and leaves the pool', () => {
   const coach = state.freeAgentCoaches[0];
   const priorCoach = team.coach;
   team.seasonCap = 100;
+  assert.equal(fireCoach(state, team.id).ok, true);
+  assert.equal(team.coach, null);
   assert.equal(hireFreeAgentCoach(state, team.id, coach.id).ok, true);
   assert.equal(team.coach.id, coach.id);
   assert.notEqual(team.coach, priorCoach);
   assert.equal(state.freeAgentCoaches.some((candidate) => candidate.id === coach.id), false);
+});
+
+test('a fired coach leaves a vacancy and cannot return to the same team that season', () => {
+  const state = newEraState();
+  startEra(state, 'Test');
+  const team = state.teams[0];
+  const fired = team.coach;
+  team.seasonCap = 100;
+  assert.equal(fireCoach(state, team.id).ok, true);
+  const listed = state.freeAgentCoaches.find((coach) => coach.id === fired.id || coach.archetype === fired.archetype && coach.firedByTeamId === team.id);
+  assert(listed);
+  assert.equal(hireFreeAgentCoach(state, team.id, listed.id).ok, false);
+  assert.equal(team.coach, null);
+  assert.equal(team.deadCap.at(-1).kind, 'coach');
 });
 
 test('every team drafts a Young non-accolade player and resolves an oversized roster on Team', () => {
@@ -103,4 +119,11 @@ test('season start rejects partial and over-budget human rosters', () => {
   team.hand = cards;
   assert.match(confirmLineup(state, 0).msg, /under budget/);
   assert.equal(team.lineupConfirmed, undefined);
+});
+
+test('season start rejects a franchise with an open coach slot', () => {
+  const state = newEraState();
+  const cards = Array.from({ length: 9 }, (_, i) => ({ id: `p${i}`, position: ['Guard', 'Forward', 'Big'][i % 3], salary: 1 }));
+  state.teams = [{ id: 0, human: true, hand: cards, activeIds: cards.slice(0, 5).map((card) => card.id), seasonCap: 20, coach: null }];
+  assert.match(confirmLineup(state, 0).msg, /Hire a coach/);
 });

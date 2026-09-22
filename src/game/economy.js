@@ -30,7 +30,7 @@ export function finalizeCap(team) {
   // turns over into a new season — a charge scheduled for `seasonsLeft` seasons (including
   // the one it was created in) falls off once every one of those seasons has been charged.
   team.deadCap = (team.deadCap || [])
-    .map((c) => ({ amount: c.amount, seasonsLeft: c.seasonsLeft - 1 }))
+    .map((c) => ({ ...c, seasonsLeft: c.seasonsLeft - 1 }))
     .filter((c) => c.seasonsLeft > 0);
 }
 
