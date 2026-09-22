@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import GameShell from './components/GameShell';
 import OnlineGame from './OnlineGame';
 import EntryScreen from './screens/EntryScreen';
@@ -7,18 +7,15 @@ import { DarkModeProvider } from './hooks/useDarkMode';
 
 function AppInner() {
   const [mode, setMode] = useState(null); // null | 'solo' | { roomCode, uid }
-  const [pendingJoinCode, setPendingJoinCode] = useState('');
+  const [pendingJoinCode] = useState(() => {
+    const room = new URLSearchParams(window.location.search).get('room');
+    return room ? room.toUpperCase() : '';
+  });
   // Instantiated unconditionally (cheap — newEraState() just seeds defaults, no star pool
   // built yet) so EntryScreen's Solo tab can drive the same state/actions straight through
   // actions.startEra — no separate SetupScreen step, and no second game-state object to
   // reconcile once `mode` flips to 'solo'.
   const localGame = useLocalGame();
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const room = params.get('room');
-    if (room) setPendingJoinCode(room.toUpperCase());
-  }, []);
 
   if (mode === 'solo') {
     // Resets the local game state AND returns to the entry/setup screen — GameShell has no
@@ -35,6 +32,7 @@ function AppInner() {
   return (
     <EntryScreen
       pendingJoinCode={pendingJoinCode}
+      joinOnly={Boolean(pendingJoinCode)}
       soloState={localGame.state}
       soloActions={localGame.actions}
       onStartSolo={() => setMode('solo')}

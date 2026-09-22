@@ -7,7 +7,7 @@ import { randomFranchiseName } from '../game/names';
 
 // A compact branded setup screen. Solo keeps only the franchise name and Start action here;
 // all configuration lives on the linked Settings screen.
-export default function EntryScreen({ pendingJoinCode, soloState, soloActions, onStartSolo, onEnterRoom }) {
+export default function EntryScreen({ pendingJoinCode, joinOnly = false, soloState, soloActions, onStartSolo, onEnterRoom }) {
   const [tab, setTab] = useState(pendingJoinCode ? 'join' : 'solo');
   const [overlay, setOverlay] = useState(null); // null | 'settings'
 
@@ -16,10 +16,7 @@ export default function EntryScreen({ pendingJoinCode, soloState, soloActions, o
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  // pendingJoinCode arrives from a URL query param, which App.jsx only reads after the
-  // initial render (inside an effect) — so it can still be empty on this component's first
-  // render. Sync tab/joinCode once it actually shows up, instead of only seeding useState's
-  // one-time initial value.
+  // Keep the join form aligned if a room invitation changes without remounting this screen.
   useEffect(() => {
     if (pendingJoinCode) {
       setTab('join');
@@ -74,17 +71,21 @@ export default function EntryScreen({ pendingJoinCode, soloState, soloActions, o
         </div>
 
         <div className="entry-panel">
-          <div className="entry-tabs">
-            <button className={'entry-tab' + (tab === 'solo' ? ' active' : '')} onClick={() => setTab('solo')}>Solo</button>
-            <button className={'entry-tab' + (tab === 'host' ? ' active' : '')} onClick={() => setTab('host')} disabled={!firebaseReady}>Host</button>
-            <button className={'entry-tab' + (tab === 'join' ? ' active' : '')} onClick={() => setTab('join')} disabled={!firebaseReady}>Join</button>
-          </div>
+          {joinOnly
+            ? <div className="entry-join-heading"><span>Invitation</span><strong>Join Room</strong></div>
+            : (
+              <div className="entry-tabs">
+                <button className={'entry-tab' + (tab === 'solo' ? ' active' : '')} onClick={() => setTab('solo')}>Solo</button>
+                <button className={'entry-tab' + (tab === 'host' ? ' active' : '')} onClick={() => setTab('host')} disabled={!firebaseReady}>Host</button>
+                <button className={'entry-tab' + (tab === 'join' ? ' active' : '')} onClick={() => setTab('join')} disabled={!firebaseReady}>Join</button>
+              </div>
+            )}
 
           {!firebaseReady && tab !== 'solo' && (
             <div className="statusline bad">Online play isn't configured yet for this deployment.</div>
           )}
 
-          {tab === 'solo' && (
+          {!joinOnly && tab === 'solo' && (
             <>
               <div className="entry-field-group">
                 <div className="entry-field-heading">
@@ -119,7 +120,7 @@ export default function EntryScreen({ pendingJoinCode, soloState, soloActions, o
             </>
           )}
 
-          {tab === 'host' && firebaseReady && (
+          {!joinOnly && tab === 'host' && firebaseReady && (
             <div className="entry-start-block" style={{ marginTop: 0 }}>
               <button className="entry-start-btn" disabled={busy} onClick={handleCreate}>
                 {busy ? 'Creating…' : 'Create Room'} <span>→</span>
