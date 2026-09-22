@@ -10,6 +10,8 @@ import { FANBASE_BOOST_COST } from '../game/constants';
 import MatchupCard from '../components/MatchupCard';
 import StrategyCard from '../components/StrategyCard';
 
+const tabForSection = (section) => ['gameplan', 'adjustment'].includes(section) ? 'cards' : section || 'rotation';
+
 function PlayerLedgerIdentity({ card, role }) {
   const skillset = skillsetFor(card);
   return (
@@ -119,11 +121,12 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   // Office/Ledger) — on desktop every section still shows stacked in one scroll, same as
   // before; `isDesktop` just decides whether `tab` actually filters anything.
   const isDesktop = useIsDesktop();
-  const [tab, setTab] = useState(() => focusSection && focusSection.section !== 'rotation' ? 'cards' : 'rotation');
+  const [tab, setTab] = useState(() => tabForSection(focusSection?.section));
   const showSection = (key) => isDesktop || tab === key;
   useEffect(() => {
     if (!focusSection) return;
-    const targetId = focusSection.section === 'rotation' ? 'team-rotation' : `team-${focusSection.section}-cards`;
+    setTab(tabForSection(focusSection.section));
+    const targetId = ['gameplan', 'adjustment'].includes(focusSection.section) ? `team-${focusSection.section}-cards` : `team-${focusSection.section}`;
     requestAnimationFrame(() => document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   }, [focusSection]);
 
@@ -291,7 +294,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           )}
 
           {team.market && showSection('office') && (
-            <div className="ts-section">
+            <div className="ts-section" id="team-office">
               <div className="ts-heading">Front Office</div>
               <div className="fo-deal-row" style={{ margin: 0 }}>
                 <div className="ts-fo-col">

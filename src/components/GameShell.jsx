@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Header from './Header';
 import PersistentBar from './PersistentBar';
 import Sidebar from './Sidebar';
@@ -62,6 +62,8 @@ const HIDE_BAR_PHASES = new Set(['simulating', 'seasonrecap', 'seasontransition'
 // brand handoff, instead of the phone-width top bar + collapsed bottom bar. Same
 // `overlay`/`Screen` resolution feeds both shells so the two never drift out of sync.
 export default function GameShell({ state, actions, myTeamId, onNewEra }) {
+  const mobileTopRef = useRef(null);
+  const [mobileTopHeight, setMobileTopHeight] = useState(0);
   const [overlay, setOverlay] = useState(null); // null | 'glossary' | 'settings' | 'standings' | 'team' | 'freeagency' | 'cardtypes'
   // Clicking another team in Standings opens the Team overlay on THEIR file instead of the
   // caller's own (viewTeamId), remembering whatever overlay (or none, for a phase screen like
@@ -79,6 +81,15 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
     setOverlay('team');
   };
   const isDesktop = useIsDesktop();
+  const showChrome = state.teams && state.teams.length > 0;
+  useEffect(() => {
+    if (isDesktop || !mobileTopRef.current) return undefined;
+    const updateHeight = () => setMobileTopHeight(mobileTopRef.current?.getBoundingClientRect().height || 0);
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(mobileTopRef.current);
+    return () => observer.disconnect();
+  }, [isDesktop, showChrome]);
 
   // How many cards of the opening deal (hand, then Front Office, then Matchup Cards, in that
   // fixed order) have visibly landed so far — DealScreen counts these up as it deals, and
@@ -121,7 +132,6 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
     onFreeAgency: () => toggleOverlay('freeagency'),
   };
 
-  const showChrome = state.teams && state.teams.length > 0;
   const showBar = showChrome && !HIDE_BAR_PHASES.has(state.phase);
   const mastheadTeamId = overlay === 'team' && viewTeamId != null ? viewTeamId : myTeamId;
 
@@ -159,10 +169,10 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
   }
 
   return (
-    <>
-      {showChrome && <div className="mobile-persistent-top"><Header {...headerProps} /><FranchiseMasthead state={state} teamId={mastheadTeamId} /></div>}
+    <div className="mobile-shell" style={{ '--mobile-persistent-top-height': `${mobileTopHeight}px` }}>
+      {showChrome && <div className="mobile-persistent-top" ref={mobileTopRef}><Header {...headerProps} /><FranchiseMasthead state={state} teamId={mastheadTeamId} /></div>}
       {mainBody}
       {showBar && <PersistentBar state={state} myTeamId={myTeamId} onNavigate={openTeamSection} dealProgress={dealProgress} />}
-    </>
+    </div>
   );
 }

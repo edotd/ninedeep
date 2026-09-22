@@ -265,6 +265,9 @@ input.text-input.lobby-name-input{min-width:0;margin:0;padding:10px 12px;}
 .persistent-card-count span{display:block;color:var(--ink-muted);font-size:8px;letter-spacing:.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .persistent-card-count b{display:block;color:var(--file);font-family:var(--font-display);font-size:22px;font-weight:400;line-height:1;}
 .persistent-card-count.gameplan b{color:var(--franchise);}.persistent-card-count.adjustment b{color:var(--stamp);}
+.persistent-bar-coach{flex:1.35;text-align:left;text-transform:uppercase;overflow:hidden;}
+.persistent-bar-coach span,.persistent-bar-coach small{display:block;font:8px var(--font-mono);letter-spacing:.08em;color:var(--ink-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.persistent-bar-coach b{display:block;margin:2px 0 1px;font:18px/1 var(--font-display);font-weight:400;color:var(--franchise);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 button{font-family:var(--font-label);letter-spacing:.05em;}
 button.primary{flex:1;background:var(--franchise);color:var(--ink);border:none;padding:14px;font-size:13px;font-weight:400;text-transform:uppercase;letter-spacing:.1em;transition:background 120ms ease-out;}
 button.primary:hover:not(:disabled){background:#ffb455;}
@@ -1669,7 +1672,7 @@ body:has(.entry-screen){padding-bottom:0;}
 
 @media(max-width:999px){
   .deal-intro{display:none;}
-  .ts-tabbar,.bracket-round-tabbar{position:sticky;top:0;z-index:8;box-shadow:0 3px 8px rgba(0,0,0,.22);}
+  .ts-tabbar,.bracket-round-tabbar{position:sticky;top:var(--mobile-persistent-top-height,0px);z-index:4;box-shadow:0 3px 8px rgba(0,0,0,.22);}
 }
 
 @media (max-width:820px){

@@ -1,29 +1,18 @@
-import { cardTier } from '../game/cards';
-
 // Compact mobile card tray. Team metrics live in the persistent franchise masthead.
 export default function PersistentBar({ state, myTeamId, onNavigate, dealProgress }) {
   const team = state.teams[myTeamId];
   const inDeal = state.phase === 'pullhand';
   const rawHand = team.hand || [];
-  const activeIds = team.activeIds || [];
-  const orderedHand = activeIds.map((id) => rawHand.find((card) => card.id === id)).filter(Boolean)
-    .concat(rawHand.filter((card) => !activeIds.includes(card.id)));
-  const revealCount = inDeal ? Math.max(0, Math.min(orderedHand.length, dealProgress ?? 0)) : orderedHand.length;
-  const hand = orderedHand.slice(0, revealCount);
   const fullyDealt = !inDeal || (dealProgress ?? 0) >= rawHand.length + 3 + (team.matchupCards || []).length;
-  const slots = Array.from({ length: 9 }, (_, i) => {
-    const card = hand[i];
-    if (!card) return 'empty';
-    if (cardTier(card) === 'EXP') return 'expiring';
-    return activeIds.includes(card.id) ? 'starter' : 'bench';
-  });
+  const coachDealt = !inDeal || (dealProgress ?? 0) > rawHand.length;
   const available = (cards) => (fullyDealt ? (cards || []).filter((card) => !card.used).length : 0);
 
   return (
     <div className="persistent-bar">
-      <button className="persistent-bar-section persistent-bar-rotation" onClick={() => onNavigate('rotation')}>
-        <span className="persistent-bar-rotation-label">Rotation {hand.length}/9</span>
-        <div className="persistent-bar-rotation-grid">{slots.map((slot, i) => <div key={i} className={'persistent-bar-dot' + (slot !== 'empty' ? ' ' + slot : '')} />)}</div>
+      <button className="persistent-bar-section persistent-bar-coach" onClick={() => onNavigate('office')}>
+        <span>Coach</span>
+        <b>{coachDealt ? team.coach?.archetype || 'Open Slot' : 'Pending'}</b>
+        {coachDealt && team.coach && <small>{team.coach.modifier}</small>}
       </button>
       <button className="persistent-bar-section persistent-card-count gameplan" onClick={() => onNavigate('gameplan')}><span>Gameplan</span><b>{available(team.gameplanCards)}</b></button>
       <button className="persistent-bar-section persistent-card-count adjustment" onClick={() => onNavigate('adjustment')}><span>Adjustment</span><b>{available(team.matchupCards)}</b></button>
