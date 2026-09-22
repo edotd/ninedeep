@@ -1205,9 +1205,9 @@ html[data-theme="dark"] .wordmark-ink{color:var(--file);}
 .co2-note-label{font-family:var(--font-hand);font-weight:600;font-size:25px;line-height:.95;}
 .co2-note-text{font-family:var(--font-mono);font-size:12px;line-height:1.55;color:var(--file-body);}
 .co2-svg{position:absolute;left:0;top:0;pointer-events:none;overflow:visible;}
-.co2-hotspot-stage{isolation:isolate;zoom:1.25;}
+.co2-hotspot-stage{isolation:isolate;zoom:1.3;}
 .co2-hotspot-stage .strategy-card{width:280px;}
-.co2-hotspot{position:absolute;z-index:2;box-sizing:border-box;border:1.5px solid var(--hotspot-accent);border-radius:0;background:color-mix(in srgb,var(--hotspot-accent) 4%,transparent);padding:0;cursor:help;transition:background 120ms ease,box-shadow 120ms ease;}
+.co2-hotspot{position:absolute;z-index:2;box-sizing:border-box;border:1.5px solid var(--hotspot-accent);border-radius:6px;background:color-mix(in srgb,var(--hotspot-accent) 4%,transparent);padding:0;cursor:help;transition:background 120ms ease,box-shadow 120ms ease;}
 .co2-hotspot:hover,.co2-hotspot:focus,.co2-hotspot.active{outline:none;background:color-mix(in srgb,var(--hotspot-accent) 14%,transparent);box-shadow:0 0 0 2px color-mix(in srgb,var(--hotspot-accent) 30%,transparent);}
 .co2-hotspot-tooltip{position:absolute;z-index:4;transform:translateX(-50%);width:220px;box-sizing:border-box;background:var(--ink-deep);border:1px solid var(--hotspot-accent);box-shadow:0 10px 24px rgba(0,0,0,.28);padding:10px 11px;pointer-events:none;display:flex;flex-direction:column;gap:4px;}
 .co2-hotspot-tooltip b{font-family:var(--font-label);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--hotspot-accent);}.co2-hotspot-tooltip span{font-family:var(--font-mono);font-size:10px;line-height:1.45;color:var(--file);}

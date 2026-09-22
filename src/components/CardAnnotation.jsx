@@ -14,12 +14,23 @@ export default function CardAnnotation({ accent, notes, children }) {
     if (!stage || !card) return undefined;
     const measure = () => {
       const stageRect = stage.getBoundingClientRect();
+      // Card Types scales the entire reference card with CSS zoom. DOM rectangles are
+      // reported in rendered pixels, while absolutely positioned hotspot coordinates use
+      // the stage's pre-zoom coordinate space, so convert them back before positioning.
+      const scaleX = stage.offsetWidth ? stageRect.width / stage.offsetWidth : 1;
+      const scaleY = stage.offsetHeight ? stageRect.height / stage.offsetHeight : scaleX;
       setBoxes(notes.flatMap((note) => {
         const target = card.querySelector(note.selector);
         if (!target) return [];
         const rect = target.getBoundingClientRect();
         if (rect.width < 2 || rect.height < 2) return [];
-        return [{ ...note, left: rect.left - stageRect.left, top: rect.top - stageRect.top, width: rect.width, height: rect.height }];
+        return [{
+          ...note,
+          left: (rect.left - stageRect.left) / scaleX,
+          top: (rect.top - stageRect.top) / scaleY,
+          width: rect.width / scaleX,
+          height: rect.height / scaleY,
+        }];
       }));
     };
     measure();
