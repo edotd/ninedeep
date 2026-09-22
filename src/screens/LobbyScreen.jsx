@@ -60,7 +60,7 @@ export default function LobbyScreen({ state, actions, roomCode, myUid, onExit, a
           </button>
         </>
       ) : (
-        <p className="lede" style={{ marginTop: 16 }}>Waiting for the host to start the era…</p>
+        <p className="lede" style={{ marginTop: 16 }}>Waiting for the host to start the game…</p>
       )}
     </div>
   );

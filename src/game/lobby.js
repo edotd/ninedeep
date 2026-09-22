@@ -2,7 +2,7 @@
 // (phase: 'lobby', seats: [...]) rather than the full in-era game state, so they live
 // outside game/actionMap.js (which is shared with solo mode, which has no lobby at all).
 import { AI_NAMES } from './constants';
-import { newEraState, buildStarPool, buildTeams, dealHands, initFrontOffice } from './season';
+import { newEraState, buildStarPool, buildTeams, dealHands, initFrontOffice, initSeasonModifierCards } from './season';
 import { autoSelectFive } from './roster';
 
 // One identity can only ever hold one seat — release any other seat this uid already
@@ -51,7 +51,15 @@ export function startEraOnline(state, hostUid) {
   buildTeams(state, seats);
   dealHands(state);
   state.teams.forEach((t) => { t.activeIds = autoSelectFive(t.hand); });
+  // Same one-time opening-era sequence engine.js's startEra runs for solo — hand, Front
+  // Office, and this season's Matchup Cards all dealt together into the consolidated Deal
+  // screen (phase 'pullhand'), not the old three-separate-screens flow. initFrontOffice and
+  // initSeasonModifierCards each set their own intermediate phase; 'pullhand' overrides both
+  // so every player (host and joined) lands on the same Deal screen once DealScreen's
+  // dealProgress-driven bar fill finishes and Continue is clicked.
   initFrontOffice(state);
+  initSeasonModifierCards(state);
+  state.phase = 'pullhand';
 }
 
 // "New Era" for an online room: back to the lobby, keeping whoever already claimed a seat
