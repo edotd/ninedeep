@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Header from './Header';
 import PersistentBar from './PersistentBar';
 import Sidebar from './Sidebar';
@@ -74,6 +74,14 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
   const handleNav = (name) => { if (name === 'team') setViewTeamId(null); toggleOverlay(name); };
   const isDesktop = useIsDesktop();
 
+  // How many cards of the opening deal (hand, then Front Office, then Matchup Cards, in that
+  // fixed order) have visibly landed so far — DealScreen counts these up as it deals, and
+  // DesktopBar/PersistentBar slice their real slots down to this count while state.phase is
+  // 'pullhand', so the persistent bar filling in slot by slot IS the deal animation's payoff
+  // (see DesktopBar's own comment) rather than something that only snaps to full on Continue.
+  const [dealProgress, setDealProgress] = useState(0);
+  useEffect(() => { if (state.phase === 'pullhand') setDealProgress(0); }, [state.phase]);
+
   const openTeamView = (teamId, fromOverlay) => {
     setReturnOverlay(fromOverlay);
     setViewTeamId(teamId);
@@ -110,7 +118,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
 
   const Screen = SCREENS[state.phase];
   const mainBody = overlayBody || (Screen
-    ? <Screen state={state} actions={actions} myTeamId={myTeamId} onViewTeam={(id) => openTeamView(id, null)} onEndGame={onNewEra} />
+    ? <Screen state={state} actions={actions} myTeamId={myTeamId} onViewTeam={(id) => openTeamView(id, null)} onEndGame={onNewEra} dealProgress={dealProgress} onDealProgress={setDealProgress} />
     : (
       <div className="screen">
         <h1>Something broke</h1>
@@ -127,7 +135,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
           {mainBody}
         </div>
         <FreeAgencyTicker activity={state.freeAgencyActivity} withBar={showBar} />
-        {showBar && <DesktopBar state={state} myTeamId={myTeamId} actions={actions} />}
+        {showBar && <DesktopBar state={state} myTeamId={myTeamId} actions={actions} dealProgress={dealProgress} />}
       </div>
     );
   }
@@ -137,7 +145,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
       {showChrome && <Header {...headerProps} />}
       {mainBody}
       {showChrome && <FreeAgencyTicker activity={state.freeAgencyActivity} withBar={showBar} />}
-      {showBar && <PersistentBar state={state} myTeamId={myTeamId} onExpand={() => handleNav('team')} />}
+      {showBar && <PersistentBar state={state} myTeamId={myTeamId} onExpand={() => handleNav('team')} dealProgress={dealProgress} />}
     </>
   );
 }

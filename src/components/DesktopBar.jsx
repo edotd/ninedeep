@@ -88,32 +88,47 @@ function MatchupSlot({ card, onHover, onLeave, onSelect, playable, picking }) {
   );
 }
 
-export default function DesktopBar({ state, myTeamId, actions }) {
+export default function DesktopBar({ state, myTeamId, actions, dealProgress }) {
   const team = state.teams[myTeamId];
-  // Each card type is written to state the instant its own dealing screen mounts, before that
-  // screen's one-by-one reveal animation actually finishes — the bar has to deliberately
-  // ignore a type while its own phase is still active, or slots would snap to full while the
-  // screen behind the bar is still dealing them out one at a time. Slots un-hide the moment
-  // the player moves on to the next phase, same beat as that screen's own Continue button.
-  const handRevealed = state.phase !== 'pullhand';
-  const frontOfficeRevealed = handRevealed && state.phase !== 'pullcards';
-  const matchupRevealed = frontOfficeRevealed && state.phase !== 'pullmodifier';
+  // Each card type is written to state the instant its own dealing screen mounts, before
+  // DealScreen's one-by-one reveal animation actually finishes — the bar has to deliberately
+  // ignore cards not yet dealt, or slots would snap to full while the screen behind the bar is
+  // still dealing them out one at a time. During 'pullhand', dealProgress (lifted in
+  // GameShell, counted up by DealScreen itself) says how many of the hand/Front
+  // Office/Matchup cards — in that fixed order — have actually landed so far; every other
+  // phase reveals everything, same as before.
+  const inDeal = state.phase === 'pullhand';
+  const rawHand = team.hand || [];
+  const rawActiveIds = team.activeIds || [];
+  const rawStarters = rawActiveIds.map((id) => rawHand.find((c) => c.id === id)).filter(Boolean);
+  const rawBench = rawHand.filter((c) => !rawActiveIds.includes(c.id));
+  const rawMatchup = team.matchupCards || [];
 
-  const hand = handRevealed ? (team.hand || []) : [];
-  const activeIds = handRevealed ? (team.activeIds || []) : [];
-  const starters = activeIds.map((id) => hand.find((c) => c.id === id)).filter(Boolean);
-  const bench = hand.filter((c) => !activeIds.includes(c.id));
-  const matchupCards = matchupRevealed ? (team.matchupCards || []) : [];
-  const coach = frontOfficeRevealed ? team.coach : null;
-  const fanbaseArchetype = frontOfficeRevealed ? team.fanbaseArchetype : null;
-  const market = frontOfficeRevealed ? team.market : null;
-  const frontOfficeTeam = frontOfficeRevealed ? team : null;
+  let remaining = inDeal ? (dealProgress ?? 0) : Infinity;
+  const take = (arr) => {
+    if (remaining === Infinity) return arr;
+    const n = Math.max(0, Math.min(arr.length, remaining));
+    remaining -= n;
+    return arr.slice(0, n);
+  };
+  const starters = take(rawStarters);
+  const bench = take(rawBench);
+  const foCount = (() => { const n = Math.max(0, Math.min(3, remaining === Infinity ? 3 : remaining)); if (remaining !== Infinity) remaining -= n; return n; })();
+  const matchupCards = take(rawMatchup);
 
-  const canShowOutput = coach && hand.length > 0 && activeIds.length > 0;
+  const hand = starters.concat(bench);
+  const activeIds = rawActiveIds;
+  const coach = foCount >= 1 ? team.coach : null;
+  const fanbaseArchetype = foCount >= 2 ? team.fanbaseArchetype : null;
+  const market = foCount >= 3 ? team.market : null;
+  const frontOfficeTeam = foCount >= 1 ? team : null;
+  const fullyDealt = !inDeal || (dealProgress ?? 0) >= rawStarters.length + rawBench.length + 3 + rawMatchup.length;
+
+  const canShowOutput = fullyDealt && team.coach && rawHand.length > 0 && rawActiveIds.length > 0;
   const output = canShowOutput ? teamOutput(team) : null;
   const synergy = teamSynergy(team);
-  const chemistry = coach ? teamExperience(team) : null;
-  const cap = frontOfficeRevealed ? team.seasonCap : undefined;
+  const chemistry = fullyDealt && team.coach ? teamExperience(team) : null;
+  const cap = fullyDealt ? team.seasonCap : undefined;
   const salary = hand.length ? rosterSalary(team) : 0;
   const overBudget = cap !== undefined && salary > cap;
   const room = cap !== undefined ? cap - salary : undefined;

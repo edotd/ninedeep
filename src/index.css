@@ -1167,7 +1167,7 @@ html[data-theme="dark"] .wordmark-ink{color:var(--file);}
 /* The Deal's stage (design ref 4A) — a dark full-width panel the deck sits on for one brief
    beat before every card lands in the review grid below. Kept visually separate from that grid
    (ink ground vs. the screen's own file ground) so the "table" reads as its own moment. */
-.deal-stage{flex:1;min-height:340px;background:var(--ink);display:flex;align-items:center;justify-content:center;box-sizing:border-box;padding:20px;}
+.deal-stage{flex:1;min-height:340px;background:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;box-sizing:border-box;padding:20px;}
 .deal-skip{display:block;margin:14px auto 0;}
 
 .deal-deck{position:relative;width:110px;height:154px;animation:deal-deck-in 260ms ease-out both;}
@@ -1176,7 +1176,15 @@ html[data-theme="dark"] .wordmark-ink{color:var(--file);}
 .deal-deck-card:nth-child(2){transform:translate(3px,-2px) rotate(2deg);}
 .deal-deck-card:nth-child(3){transform:none;}
 @keyframes deal-deck-in{from{opacity:0;transform:scale(.8);}to{opacity:1;transform:scale(1);}}
-@media(prefers-reduced-motion:reduce){.deal-deck{animation:none;}}
+
+/* One token per card dealt — comes off the deck and travels down toward the persistent bar
+   (fixed to the very bottom of the viewport in both shells), fading out just before it would
+   reach the screen edge, right as that card's real slot in the bar lands via bar-fill. Purely
+   decorative: the actual "card" is the bar slot itself. */
+.deal-token{position:absolute;inset:0;margin:auto;width:64px;height:90px;border-radius:5px;background:var(--franchise);box-shadow:inset 0 0 0 2px var(--ink);animation:deal-token-drop 480ms cubic-bezier(.4,0,.7,.3) both;}
+@keyframes deal-token-drop{from{opacity:1;transform:translateY(0) scale(1) rotate(0deg);}to{opacity:0;transform:translateY(340px) scale(.5) rotate(14deg);}}
+.deal-count{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-muted);}
+@media(prefers-reduced-motion:reduce){.deal-deck,.deal-token{animation:none;}}
 
 /* Hand screen — now that the window isn't capped at 900px, starters (5) and bench (4) each
    deal into a single row instead of the 3-column fa-grid wrapping to a second line. */

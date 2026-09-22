@@ -8,21 +8,31 @@ import { cardTier } from '../game/cards';
 // the team, permanently in view, fixed above whatever screen-specific action is showing.
 // Tapping it never navigates away; it raises the Team overlay (already wired to the header's
 // Team button) on top of the current screen, so the bar itself never loses its place.
-export default function PersistentBar({ state, myTeamId, onExpand }) {
+export default function PersistentBar({ state, myTeamId, onExpand, dealProgress }) {
   const team = state.teams[myTeamId];
-  // The hand is written to state the instant Hand's own screen mounts, before its one-by-one
-  // reveal animation finishes — the bar has to deliberately ignore it while that reveal is
-  // still the active phase, or the rotation strip would show 9/9 while the screen behind it
-  // is still dealing card by card. Same idea front office/matchup rely on in DesktopBar.
-  const handRevealed = state.phase !== 'pullhand';
-  const hand = handRevealed ? (team.hand || []) : [];
-  const activeIds = handRevealed ? (team.activeIds || []) : [];
+  // The hand is written to state the instant DealScreen mounts, before its one-by-one reveal
+  // animation finishes — the bar has to deliberately ignore cards not yet dealt, or the
+  // rotation strip would show 9/9 while the screen behind it is still dealing card by card.
+  // dealProgress (lifted in GameShell, counted up by DealScreen) says how many hand cards have
+  // actually landed so far while state.phase is 'pullhand'; every other phase shows the full
+  // hand, same as before. Same idea front office/matchup rely on in DesktopBar.
+  const inDeal = state.phase === 'pullhand';
+  const rawHand = team.hand || [];
+  const rawActiveIds = team.activeIds || [];
+  // Same starters-then-bench order DealScreen deals in, so the dot grid fills left to right in
+  // the order cards actually land, not team.hand's own (unrelated) storage order.
+  const orderedHand = rawActiveIds.map((id) => rawHand.find((c) => c.id === id)).filter(Boolean)
+    .concat(rawHand.filter((c) => !rawActiveIds.includes(c.id)));
+  const handRevealCount = inDeal ? Math.max(0, Math.min(orderedHand.length, dealProgress ?? 0)) : orderedHand.length;
+  const hand = orderedHand.slice(0, handRevealCount);
+  const activeIds = rawActiveIds;
+  const fullyDealt = !inDeal || (dealProgress ?? 0) >= rawHand.length + 3 + (team.matchupCards || []).length;
 
-  const canShowOutput = team.coach && hand.length > 0 && activeIds.length > 0;
+  const canShowOutput = fullyDealt && team.coach && rawHand.length > 0 && rawActiveIds.length > 0;
   const output = canShowOutput ? teamOutput(team) : null;
   const synergy = teamSynergy(team);
-  const chemistry = teamExperience(team);
-  const cap = team.seasonCap;
+  const chemistry = fullyDealt ? teamExperience(team) : null;
+  const cap = fullyDealt ? team.seasonCap : undefined;
   const salary = hand.length ? rosterSalary(team) : 0;
   const overBudget = cap !== undefined && salary > cap;
   const deadCap = (team.deadCap || []).reduce((s, c) => s + c.amount, 0);
