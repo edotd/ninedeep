@@ -91,8 +91,10 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
   if (phase !== 'review') {
     return (
       <div className="screen deal-screen">
-        <h1>Your Deal — Season {state.season}</h1>
-        <p className="lede" style={{ marginBottom: 14 }}>Your 9-card hand, Front Office, and this season's Adjustment Cards — dealt together.</p>
+        <div className="deal-intro">
+          <h1>Your Deal — Season {state.season}</h1>
+          <p className="lede" style={{ marginBottom: 14 }}>Your 9-card hand, Front Office, and this season's Adjustment Cards — dealt together.</p>
+        </div>
         <div className="deal-stage">
           <div className="deal-deck">
             <div className="deal-deck-card" /><div className="deal-deck-card" /><div className="deal-deck-card" />
@@ -108,8 +110,10 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
   return (
     <>
       <div className="screen deal-screen">
-        <h1>Your Deal — Season {state.season}</h1>
-        <p className="lede" style={{ marginBottom: 14 }}>Your 9-card hand, Front Office, and this season's Adjustment Cards — all dealt together. Review everything here before heading to your Franchise file.</p>
+        <div className="deal-intro">
+          <h1>Your Deal — Season {state.season}</h1>
+          <p className="lede" style={{ marginBottom: 14 }}>Your 9-card hand, Front Office, and this season's Adjustment Cards — all dealt together. Review everything here before heading to your Franchise file.</p>
+        </div>
         <div className="deal-centered">
           <div className="deal-heading">Starters ({starters.length}/5)</div>
           <div className="deal-row-5">

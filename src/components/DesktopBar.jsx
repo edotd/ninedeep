@@ -175,7 +175,7 @@ export default function DesktopBar({ state, myTeamId, actions, dealProgress }) {
   const handleStrategyClick = (el, card) => {
     const playoffReady = liveTurn && ['coinflip', 'coinflipped'].includes(liveTurn.stage);
     const seasonOpen = ['pullhand', 'pullmodifier', 'constructing', 'teamsummary'].includes(state.phase);
-    const context = playoffReady ? 'playoff' : seasonOpen ? 'season' : null;
+    const context = playoffReady ? 'playoff' : seasonOpen && card.effects?.seedingPercent ? 'season' : null;
     if (!context) return;
     if (card.target === 'opponent' && context === 'season') {
       setStrategyPicker({ card, rect: el.getBoundingClientRect(), mode: 'opponent', context });

@@ -50,13 +50,14 @@ function StrategyAction({ card, team, state, actions, myTeamId, readOnly }) {
   const liveMatch = (state.playoff?.matches || []).find((match) => match.turn && !match.result && (match.a === team || match.b === team));
   const playoffReady = liveMatch?.turn && ['coinflip', 'coinflipped'].includes(liveMatch.turn.stage);
   const seasonOpen = ['pullhand', 'pullmodifier', 'constructing', 'teamsummary'].includes(state.phase);
-  const context = playoffReady ? 'playoff' : seasonOpen ? 'season' : null;
+  const seasonEligible = !!card.effects?.seedingPercent;
+  const context = playoffReady ? 'playoff' : seasonOpen && seasonEligible ? 'season' : null;
   const opponents = state.teams.filter((candidate) => candidate.id !== team.id);
   const needsTarget = card.target === 'opponent' && context === 'season';
   return (
     <div className="strategy-card-action">
       {needsTarget && <select value={targetId} onChange={(event) => setTargetId(event.target.value)}><option value="">Choose opponent</option>{opponents.map((opponent) => <option key={opponent.id} value={opponent.id}>{opponent.name}</option>)}</select>}
-      <button className="secondary" disabled={!context || (needsTarget && !targetId)} onClick={() => actions.playGameplanCard(myTeamId, card.id, context, needsTarget ? targetId : null)}>{context === 'playoff' ? 'Use In Matchup' : context === 'season' ? 'Use This Season' : 'Unavailable'}</button>
+      <button className="secondary" disabled={!context || (needsTarget && !targetId)} onClick={() => actions.playGameplanCard(myTeamId, card.id, context, needsTarget ? targetId : null)}>{context === 'playoff' ? 'Use In Matchup' : context === 'season' ? 'Use This Season' : seasonOpen ? 'Playoff Only' : 'Unavailable'}</button>
     </div>
   );
 }
@@ -358,8 +359,8 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             <div className="ts-section">
               <div className="ts-heading">Gameplan Cards</div>
               <div className="strategy-deal-row">
-                {(team.gameplanCards || []).filter((card) => !card.used).map((card) => <div className="strategy-card-wrap" key={card.id}><StrategyCard card={card} /><StrategyAction card={card} team={team} state={state} actions={actions} myTeamId={myTeamId} readOnly={readOnly} /></div>)}
-                {(team.gameplanCards || []).every((card) => card.used) && <div className="strategy-empty">No Gameplan cards are available.</div>}
+                {(team.gameplanCards || []).map((card) => <div className="strategy-card-wrap" key={card.id}><StrategyCard card={card} /><StrategyAction card={card} team={team} state={state} actions={actions} myTeamId={myTeamId} readOnly={readOnly} /></div>)}
+                {(team.gameplanCards || []).length === 0 && <div className="strategy-empty">New cards are dealt at the start of each season.</div>}
               </div>
             </div>
           )}
