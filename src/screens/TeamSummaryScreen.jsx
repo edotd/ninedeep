@@ -164,6 +164,31 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
     // (that would fight the user's own in-progress swipe).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, isDesktop]);
+  // Each card's content can be taller than the space the locked screen has for it (a dev-card
+  // note, an all-league tag, a longer bio all add up) — rather than scroll inside the card or
+  // clip it, measure every card's own natural (untransformed) height against what's actually
+  // available and, only when it's taller, shrink just that one card's vertical axis to fit
+  // exactly (see .pcard-scale-inner in index.css). Each card gets its OWN scale rather than one
+  // shared worst-case value, so a short card stays at its natural size instead of shrinking to
+  // match its tallest neighbor. offsetHeight/clientHeight are layout measurements, unaffected
+  // by a transform already applied, so this is safe to re-run without resetting first.
+  useEffect(() => {
+    if (isDesktop || tab !== 'rotation' || !rotoScrollRef.current) return undefined;
+    const container = rotoScrollRef.current;
+    const applyScales = () => {
+      const available = container.clientHeight;
+      if (!available) return;
+      container.querySelectorAll('.pcard-scale-inner').forEach((el) => {
+        const natural = el.offsetHeight;
+        const scale = natural > available ? available / natural : 1;
+        el.style.transform = scale < 1 ? `scaleY(${scale})` : 'none';
+      });
+    };
+    applyScales();
+    const observer = new ResizeObserver(applyScales);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [isDesktop, tab, team.hand]);
   const handleRotationTouchStart = (event) => { rotationTouchStartX.current = event.touches[0].clientX; };
   // Swiping further forward while already on the carousel's last card reads as "done with the
   // rotation" — hand it off to the Chemistry tab (the next one in the bar) instead of just

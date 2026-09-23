@@ -29,6 +29,14 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
 
   return (
     <div className={`pcard tier-${tier}${positionClass}${compact ? ' pcard-compact' : ''}${selected ? ' selected' : ''}`} onClick={onClick}>
+      {/* Everything lives inside this inner wrapper (rather than directly in .pcard) so a
+          context that needs the whole card shorter than its natural content — the mobile
+          Rotation carousel, see .ts-screen-lock .pcard-scale-inner — can scale ONLY this
+          wrapper's vertical axis via transform:scaleY(), while .pcard itself keeps a real
+          height:100%+overflow:hidden frame. Layout ignores transforms, so a shrunk-down inner
+          wrapper still paints entirely inside that fixed-height frame instead of overflowing
+          or needing an internal scrollbar. */}
+      <div className="pcard-scale-inner">
       <CardTypeMark
         type="player"
         size={compact ? 90 : 170}
@@ -100,6 +108,7 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
           Develop
         </button>
       )}
+      </div>
     </div>
   );
 }

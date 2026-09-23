@@ -64,6 +64,8 @@ const HIDE_BAR_PHASES = new Set(['simulating', 'seasonrecap', 'seasontransition'
 export default function GameShell({ state, actions, myTeamId, onNewEra }) {
   const mobileTopRef = useRef(null);
   const [mobileTopHeight, setMobileTopHeight] = useState(0);
+  const persistentBarRef = useRef(null);
+  const [persistentBarHeight, setPersistentBarHeight] = useState(0);
   const [overlay, setOverlay] = useState(null); // null | 'glossary' | 'settings' | 'standings' | 'team' | 'freeagency' | 'cardtypes'
   // Clicking another team in Standings opens the Team overlay on THEIR file instead of the
   // caller's own (viewTeamId), remembering whatever overlay (or none, for a phase screen like
@@ -88,6 +90,18 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
     updateHeight();
     const observer = new ResizeObserver(updateHeight);
     observer.observe(mobileTopRef.current);
+    return () => observer.disconnect();
+  }, [isDesktop, showChrome]);
+
+  // The Rotation tab's locked carousel now keeps the persistent bar on screen (it used to hide
+  // it entirely), so it needs this bar's real height to reserve space for it, the same way it
+  // already reserves space for the header via --mobile-persistent-top-height.
+  useEffect(() => {
+    if (isDesktop || !persistentBarRef.current) return undefined;
+    const updateHeight = () => setPersistentBarHeight(persistentBarRef.current?.getBoundingClientRect().height || 0);
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(persistentBarRef.current);
     return () => observer.disconnect();
   }, [isDesktop, showChrome]);
 
@@ -204,6 +218,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
   return (
     <div className="mobile-shell" style={{
       '--mobile-persistent-top-height': `${mobileTopHeight}px`,
+      '--mobile-persistent-bar-height': `${persistentBarHeight}px`,
       ...(viewportPx ? {
         '--app-vh': `${viewportPx.vh}px`,
         '--app-safe-top': `${viewportPx.safeTop}px`,
@@ -212,7 +227,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
     }}>
       {showChrome && <div className="mobile-persistent-top" ref={mobileTopRef}><Header {...headerProps} /><FranchiseMasthead state={state} teamId={mastheadTeamId} /></div>}
       {mainBody}
-      {showBar && <PersistentBar state={state} myTeamId={myTeamId} onNavigate={openTeamSection} dealProgress={dealProgress} />}
+      {showBar && <PersistentBar ref={persistentBarRef} state={state} myTeamId={myTeamId} onNavigate={openTeamSection} dealProgress={dealProgress} />}
     </div>
   );
 }

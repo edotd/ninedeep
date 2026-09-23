@@ -752,6 +752,21 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
   .persistent-franchise-masthead .ts-hero-metric{padding:3px 7px;}
   .persistent-franchise-masthead .ts-hero-value{font-size:25px;}
   .persistent-franchise-masthead .ts-hero-value.budget{font-size:15px;}
+
+  /* Every phase screen's own floating .bottombar (Begin Season, Begin Playoffs, Resolve
+     Budget, Back, …) used to hover in its own box above the persistent bar. On a phone that's
+     two separate strips competing for the same corner of a small screen — dock it into the
+     persistent bar's own right edge instead, styled to read as one continuous bar rather than
+     a chip floating over it. The reserved width below (.persistent-bar's padding-right) and
+     this bar's own width must match, and the coach/gameplan/adjustment sections shrink to
+     leave it that room. */
+  .bottombar{position:fixed;left:auto;right:0;bottom:0;z-index:13;background:var(--ink);border:none;border-top:2px solid var(--franchise);border-left:1px solid rgba(230,220,196,.2);box-shadow:none;padding:9px 10px calc(9px + env(safe-area-inset-bottom,0px));min-height:72px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;width:118px;max-width:118px;gap:0;}
+  .bottombar button{min-width:0;width:100%;flex:none;font-size:10.5px;letter-spacing:.02em;padding:9px 6px;white-space:normal;line-height:1.2;text-align:center;}
+  .persistent-bar{padding-right:130px;}
+  .persistent-bar-coach{flex:1.1;}
+  .persistent-card-count{flex:0 0 52px;}
+  .persistent-card-count span{font-size:7px;}
+  .persistent-card-count b{font-size:17px;}
 }
 
 /* ================= Season Recap (1b, "the era ledger") — brand handoff Screen: Season
@@ -1767,15 +1782,13 @@ body:has(.entry-screen){padding-bottom:0;}
   .ts-hand-pager-seg.active{background:var(--franchise);}
 
   /* While the Rotation tab is showing, the card IS the screen — no page scroll competing with
-     the horizontal card-to-card swipe. The franchise header stays put (it's a real live-measured
-     height via --mobile-persistent-top-height, set in GameShell, not a guess), so the screen only
-     needs to subtract that one known quantity. The bottom persistent bar and Begin Season corner
-     button are still hidden outright (their heights aren't tracked anywhere), same as the live
-     match board's t2-shell treatment. Other tabs (Chemistry/Ledger/Staff) go back to the normal
-     scrolling page with all chrome visible. */
+     the horizontal card-to-card swipe. The franchise header AND the persistent bar (with its
+     now-docked action button) both stay on screen — both are real live-measured heights
+     (--mobile-persistent-top-height / --mobile-persistent-bar-height, set in GameShell), not
+     guesses, so the screen just subtracts both known quantities. Other tabs (Chemistry/Ledger/
+     Staff) go back to the normal scrolling page with all chrome visible the same way. */
   .mobile-shell:has(.ts-screen-lock){height:var(--app-vh,100dvh);overflow:hidden;}
-  .mobile-shell:has(.ts-screen-lock)>.persistent-bar,.mobile-shell:has(.ts-screen-lock)>.bottombar{display:none;}
-  .ts-screen.ts-screen-lock{height:calc(var(--app-vh,100dvh) - var(--mobile-persistent-top-height,0px));box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;padding-bottom:var(--app-safe-bottom,env(safe-area-inset-bottom,0px));}
+  .ts-screen.ts-screen-lock{height:calc(var(--app-vh,100dvh) - var(--mobile-persistent-top-height,0px) - var(--mobile-persistent-bar-height,0px));box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;}
   .ts-screen-lock .ts-tabbar{position:static;box-shadow:none;}
   .ts-screen-lock .ts-body{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;}
   .ts-screen-lock .ts-player-carousel{flex:1;min-height:0;display:flex;flex-direction:column;}
@@ -1783,27 +1796,16 @@ body:has(.entry-screen){padding-bottom:0;}
   .ts-screen-lock .ts-roto-scroll{height:100%;}
   .ts-screen-lock .ts-roto-grid{height:100%;}
   .ts-screen-lock .ts-roto-grid .pcard,.ts-screen-lock .ts-roto-grid .ts-bench-open{height:100%;}
-  /* A card's own content (header through Release/Develop) doesn't always reach the full height
-     the locked screen hands it — shorter bios leave blank space at the bottom. Rather than guess
-     at a filler height, let Release/Develop grow to soak up whatever's left: turning the card
-     into a flex column costs nothing for the fixed-height sections above them (they keep their
-     natural size) and means the two buttons divide whatever true leftover space exists.
-     flex-basis:auto (not the flex:1 shorthand's 0%) is load-bearing — it means "grow" only ever
-     ADDS genuinely free space on top of the button's own natural size, so on a fuller card
-     (bio + all-league note + footer already filling the box) these fall back to their normal
-     size instead of forcing a fixed floor that would push past pcard's own overflow:hidden and
-     clip the buttons off the bottom entirely. */
-  /* overflow-y:auto (not the base rule's hidden) is the other half of the fix above: a card
-     whose fixed-size sections alone already exceed the box (a long bio, an all-league note,
-     etc.) can't shrink them any further without guessing at smaller fonts per section, so
-     rather than let that spill silently clip Release/Develop off the bottom, that one card
-     scrolls internally to reach them. Shorter cards never show a scrollbar — the flex-grow
-     above already fills their leftover space instead. */
-  .ts-screen-lock .ts-roto-grid .pcard{display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;}
-  .ts-screen-lock .ts-roto-grid .pcard::-webkit-scrollbar{display:none;}
-  .ts-screen-lock .ts-roto-grid .pcard-release,.ts-screen-lock .ts-roto-grid .pcard-develop{flex:1 1 auto;display:flex;align-items:center;justify-content:center;font-size:15px;letter-spacing:.08em;}
-  .ts-screen-lock .ts-roto-grid .pcard-release{justify-content:space-between;padding:0 16px;}
-  .ts-screen-lock .ts-roto-grid .pcard-release-cost{font-size:13px;}
+  /* A card's natural content doesn't always fit the height the locked screen hands it (a
+     dev-card note, an all-league tag, a longer bio all add up) — rather than let it scroll
+     internally or clip, TeamSummaryScreen measures each card's own natural (unscaled) height
+     against the available space and, only when it's actually taller, scales ONLY this inner
+     wrapper's vertical axis down to fit exactly — see the ResizeObserver effect keyed on the
+     rotation tab. .pcard itself stays a real height:100%+overflow:hidden frame as a safety net
+     (transforms don't affect layout, so a mis-measured scale would clip here rather than push
+     the carousel row taller), and a card shorter than the available space is simply left at
+     its natural size (scale 1), un-stretched, rather than force-filled. */
+  .ts-screen-lock .ts-roto-grid .pcard-scale-inner{transform-origin:top;will-change:transform;}
   /* The "Developed · <card>" note is 8px everywhere else, sized for a compact roster grid —
      illegible at the size a full-screen locked card renders it. */
   .ts-screen-lock .ts-roto-grid .pcard-development{font-size:12px;letter-spacing:.06em;margin-top:8px;}

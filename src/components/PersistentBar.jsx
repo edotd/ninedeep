@@ -1,5 +1,7 @@
 // Compact mobile card tray. Team metrics live in the persistent franchise masthead.
-export default function PersistentBar({ state, myTeamId, onNavigate, dealProgress }) {
+import { forwardRef } from 'react';
+
+const PersistentBar = forwardRef(function PersistentBar({ state, myTeamId, onNavigate, dealProgress }, ref) {
   const team = state.teams[myTeamId];
   const inDeal = state.phase === 'pullhand';
   const rawHand = team.hand || [];
@@ -8,7 +10,7 @@ export default function PersistentBar({ state, myTeamId, onNavigate, dealProgres
   const available = (cards) => (fullyDealt ? (cards || []).filter((card) => !card.used).length : 0);
 
   return (
-    <div className="persistent-bar">
+    <div className="persistent-bar" ref={ref}>
       <button className="persistent-bar-section persistent-bar-coach" onClick={() => onNavigate('office')}>
         <span>Coach</span>
         <b>{coachDealt ? team.coach?.archetype || 'Open Slot' : 'Pending'}</b>
@@ -18,4 +20,6 @@ export default function PersistentBar({ state, myTeamId, onNavigate, dealProgres
       <button className="persistent-bar-section persistent-card-count adjustment" onClick={() => onNavigate('adjustment')}><span>Adjustment</span><b>{available(team.matchupCards)}</b></button>
     </div>
   );
-}
+});
+
+export default PersistentBar;
