@@ -743,6 +743,27 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .strategy-card.development{border-color:var(--approved-file);}.strategy-card.gameplan{border-color:var(--franchise);}.strategy-card.used{opacity:.5;}.strategy-card.gameplan.active{box-shadow:inset 0 0 0 1px var(--franchise);}
 .strategy-card-kicker{font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-muted);}.strategy-card-name{font-family:var(--font-display);font-size:25px;line-height:1;margin:12px 0 8px;}.strategy-card-description{font-family:var(--font-mono);font-size:11px;line-height:1.45;}.strategy-card-rule{margin-top:auto;padding-top:12px;font-family:var(--font-mono);font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--approved-file);}
 .strategy-card-wrap{width:240px;flex:0 0 240px;}.strategy-card-action{display:flex;gap:6px;margin-top:8px;}.strategy-card-action select{min-width:0;flex:1;font-family:var(--font-mono);}.strategy-card-action button{padding:8px;white-space:nowrap;}.strategy-empty{font-family:var(--font-mono);font-size:11px;color:var(--file-muted);}
+
+/* Front Office / Development / Gameplan / Adjustment each render as one same-kind-card row
+   (Team File, mobile). row-fit (<=2 cards) stretches them to share the screen evenly, no
+   scrolling; row-scroll (>2) makes the row a native horizontal scroller with a peek of the
+   next card, plus the chevron hint below (RowSwipeHint in TeamSummaryScreen.jsx) so a user
+   who hasn't scrolled yet knows there's more — desktop keeps its existing grid, untouched. */
+.row-swipe-wrap{position:relative;}
+.row-swipe-hint{position:absolute;top:0;bottom:6px;right:0;width:22px;display:flex;align-items:center;justify-content:center;background:var(--ink-deep);border:1px solid var(--franchise);border-right:none;pointer-events:none;z-index:3;}
+.row-swipe-hint-chevron{font-family:var(--font-display);font-size:16px;color:var(--franchise);}
+@media(max-width:999px){
+  .fo-deal-row.row-scroll,.mu-deal-row.row-scroll{display:flex;grid-template-columns:none;overflow-x:auto;gap:14px;scroll-snap-type:x proximity;scrollbar-width:none;}
+  .fo-deal-row.row-scroll::-webkit-scrollbar,.mu-deal-row.row-scroll::-webkit-scrollbar{display:none;}
+  .fo-deal-row.row-scroll>.ts-fo-col{flex:0 0 200px;scroll-snap-align:start;}
+  .mu-deal-row.row-scroll>.mu2-wrap{flex:0 0 200px;scroll-snap-align:start;}
+  .fo-deal-row.row-fit,.mu-deal-row.row-fit{display:flex;grid-template-columns:none;overflow-x:visible;gap:14px;}
+  .fo-deal-row.row-fit>.ts-fo-col,.mu-deal-row.row-fit>.mu2-wrap{flex:1 1 0;min-width:0;}
+  .strategy-deal-row.row-scroll{scroll-snap-type:x proximity;}
+  .strategy-deal-row.row-scroll .strategy-card-wrap{scroll-snap-align:start;}
+  .strategy-deal-row.row-fit{overflow-x:visible;}
+  .strategy-deal-row.row-fit .strategy-card-wrap{width:auto;flex:1 1 0;min-width:0;}
+}
 .nd-card-back{box-sizing:border-box;min-height:150px;width:100%;background:var(--ink);border:2px solid var(--franchise);color:var(--franchise);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;overflow:hidden;}
 .nd-card-back span{font:20px/1 var(--font-display);letter-spacing:.08em;text-transform:uppercase;color:var(--file);}
 .nd-card-back-rule{width:70%;height:2px;background:var(--ink-rule);}
