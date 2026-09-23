@@ -1006,7 +1006,13 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
    as the possession arrow it replaces, not a light "file" panel floating on a dark board. */
 .t2-possession-report{flex:1 1 240px;max-width:320px;background:none;padding:0;border:none;align-items:stretch;gap:0;}
 .t2-report-winner{font-family:var(--font-display);font-size:21px;line-height:1.05;color:var(--file);text-align:center;margin-bottom:8px;}
-.t2-report-row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-family:var(--font-mono);font-size:13px;color:var(--file);padding:7px 0;border-bottom:1px solid var(--ink-rule);}
+.t2-report-row{display:flex;justify-content:space-between;gap:10px;font-family:var(--font-mono);font-size:13px;color:var(--file);padding:7px 0;border-bottom:1px solid var(--ink-rule);}
+/* Flex items default to a min-width equal to their own content's natural (unwrapped) width, so
+   without this a long team name (the label) or the haircut explanation (.t2-report-cut, the
+   value on a defense-reduced offense row) pushed straight past the row's edge instead of
+   wrapping. min-width:0 on both sides lets either one shrink and actually wrap within its own
+   half of the row. */
+.t2-report-row>span{min-width:0;overflow-wrap:break-word;}
 .t2-report-row.t2-report-row-last{border-bottom:none;}
 .t2-report-footer{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;}
 .t2-report-footer .t2-next-possession{width:auto;flex:1 1 auto;margin-top:0;}
