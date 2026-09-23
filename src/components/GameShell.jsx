@@ -91,6 +91,39 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
     return () => observer.disconnect();
   }, [isDesktop, showChrome]);
 
+  // The live match board and the Rotation tab's locked carousel both need to know the TRUE
+  // visible viewport height and the real safe-area inset sizes, in px, to fit their content
+  // exactly between the screen's true edges. CSS `100dvh`/`env(safe-area-inset-*)` were the
+  // first attempt, but a phone screenshot showed them silently not being honored in at least
+  // one real mobile browser (WebKit-based but not Safari itself) — the board rendered under
+  // the status bar with a large dead gap at the bottom, even though every other check (DOM
+  // structure, selector specificity, cascade order) came back clean in this session's own
+  // testing. window.visualViewport + a live env() probe are what production apps reach for
+  // once the raw CSS units prove unreliable across the real range of mobile browsers, so
+  // that's the fallback here rather than a third guess at more CSS.
+  const [viewportPx, setViewportPx] = useState(null);
+  useEffect(() => {
+    if (isDesktop) return undefined;
+    const probe = document.createElement('div');
+    probe.style.cssText = 'position:fixed;top:0;left:0;height:0;width:0;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);pointer-events:none;visibility:hidden;';
+    document.body.appendChild(probe);
+    const measure = () => {
+      const cs = getComputedStyle(probe);
+      const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+      setViewportPx({ vh, safeTop: parseFloat(cs.paddingTop) || 0, safeBottom: parseFloat(cs.paddingBottom) || 0 });
+    };
+    measure();
+    window.visualViewport?.addEventListener('resize', measure);
+    window.addEventListener('orientationchange', measure);
+    window.addEventListener('resize', measure);
+    return () => {
+      probe.remove();
+      window.visualViewport?.removeEventListener('resize', measure);
+      window.removeEventListener('orientationchange', measure);
+      window.removeEventListener('resize', measure);
+    };
+  }, [isDesktop]);
+
   // How many cards of the opening deal (hand, then Front Office, then Matchup Cards, in that
   // fixed order) have visibly landed so far — DealScreen counts these up as it deals, and
   // DesktopBar/PersistentBar slice their real slots down to this count while state.phase is
@@ -169,7 +202,14 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
   }
 
   return (
-    <div className="mobile-shell" style={{ '--mobile-persistent-top-height': `${mobileTopHeight}px` }}>
+    <div className="mobile-shell" style={{
+      '--mobile-persistent-top-height': `${mobileTopHeight}px`,
+      ...(viewportPx ? {
+        '--app-vh': `${viewportPx.vh}px`,
+        '--app-safe-top': `${viewportPx.safeTop}px`,
+        '--app-safe-bottom': `${viewportPx.safeBottom}px`,
+      } : {}),
+    }}>
       {showChrome && <div className="mobile-persistent-top" ref={mobileTopRef}><Header {...headerProps} /><FranchiseMasthead state={state} teamId={mastheadTeamId} /></div>}
       {mainBody}
       {showBar && <PersistentBar state={state} myTeamId={myTeamId} onNavigate={openTeamSection} dealProgress={dealProgress} />}

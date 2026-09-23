@@ -1773,9 +1773,9 @@ body:has(.entry-screen){padding-bottom:0;}
      button are still hidden outright (their heights aren't tracked anywhere), same as the live
      match board's t2-shell treatment. Other tabs (Chemistry/Ledger/Staff) go back to the normal
      scrolling page with all chrome visible. */
-  .mobile-shell:has(.ts-screen-lock){height:100dvh;overflow:hidden;}
+  .mobile-shell:has(.ts-screen-lock){height:var(--app-vh,100dvh);overflow:hidden;}
   .mobile-shell:has(.ts-screen-lock)>.persistent-bar,.mobile-shell:has(.ts-screen-lock)>.bottombar{display:none;}
-  .ts-screen.ts-screen-lock{height:calc(100dvh - var(--mobile-persistent-top-height,0px));box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px);}
+  .ts-screen.ts-screen-lock{height:calc(var(--app-vh,100dvh) - var(--mobile-persistent-top-height,0px));box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;padding-bottom:var(--app-safe-bottom,env(safe-area-inset-bottom,0px));}
   .ts-screen-lock .ts-tabbar{position:static;box-shadow:none;}
   .ts-screen-lock .ts-body{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;}
   .ts-screen-lock .ts-player-carousel{flex:1;min-height:0;display:flex;flex-direction:column;}
@@ -1814,14 +1814,14 @@ body:has(.entry-screen){padding-bottom:0;}
    or roster tiles out of view. */
 @media(max-width:999px){
   body:has(.t2-shell){overflow:hidden;}
-  .mobile-shell:has(.t2-shell){height:100dvh;overflow:hidden;background:var(--ink);}
+  .mobile-shell:has(.t2-shell){height:var(--app-vh,100dvh);overflow:hidden;background:var(--ink);}
   .mobile-shell:has(.t2-shell)>.mobile-persistent-top,.mobile-shell:has(.t2-shell)>.persistent-bar{display:none;}
   /* The normal top masthead/header and bottom persistent bar are both hidden entirely during a
      live match (see above), so nothing else reserves room for the phone's own status bar/
      notch/dynamic island at the top, or the home-indicator gesture bar at the bottom — without
      this, the top team's coach card renders under the former and the bottom team's roster (or
      the browser's own address bar chrome) crowds out the latter. */
-  .mobile-shell:has(.t2-shell)>.screen{height:100dvh;box-sizing:border-box;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);overflow:hidden;}
+  .mobile-shell:has(.t2-shell)>.screen{height:var(--app-vh,100dvh);box-sizing:border-box;padding:var(--app-safe-top,env(safe-area-inset-top,0px)) 0 var(--app-safe-bottom,env(safe-area-inset-bottom,0px));overflow:hidden;}
   .mobile-shell:has(.t2-shell) .t2-shell{height:100%;box-sizing:border-box;margin:0;padding:4px;max-width:none;overflow:hidden;}
   .mobile-shell:has(.t2-shell) .t2-body{position:relative;height:100%;display:block;overflow:hidden;}
   /* Scrolls internally instead of clipping — the board's real content (two team boards plus
@@ -1890,7 +1890,7 @@ body:has(.entry-screen){padding-bottom:0;}
   .mobile-shell:has(.t2-shell) .t2-log{position:absolute;top:4px;right:4px;z-index:20;width:min(88vw,340px);max-height:calc(100% - 8px);box-sizing:border-box;padding:10px;overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,.5);}
   .mobile-shell:has(.t2-shell) .t2-log.collapsed{width:28px;height:28px;padding:1px;background:var(--ink);}
   .mobile-shell:has(.t2-shell) .t2-log-head{margin-bottom:6px;}
-  .mobile-shell:has(.t2-shell) .t2-log-body{max-height:calc(100dvh - 56px);}
+  .mobile-shell:has(.t2-shell) .t2-log-body{max-height:calc(var(--app-vh,100dvh) - 56px);}
   .mobile-shell:has(.t2-shell) .t2-log-entry{font-size:10px;padding:6px 0;}
 }
 
