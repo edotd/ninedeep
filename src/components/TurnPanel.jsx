@@ -8,7 +8,7 @@ import BallMark from './BallMark';
 import CompactPlayerTile from './CompactPlayerTile';
 import CompactCoachCard from './CompactCoachCard';
 import MatchupCard from './MatchupCard';
-import StrategyCard from './StrategyCard';
+import CardTypeMark from './CardTypeMark';
 
 // Decision clock for a blind matchup-card choice — long enough to read your hand, short
 // enough to put real pressure on the pick. Auto-passes on timeout so a stalled player can't
@@ -137,8 +137,8 @@ function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, gameplan
         <div className="t2-gameplan-dock">
           {gameplanPlays?.length > 0
             ? gameplanPlays.map((entry, i) => (
-              <div className="t2-gameplan-mini" key={`${entry.teamName}-${entry.cardName}-${i}`} title={entry.description}>
-                {entry.card ? <StrategyCard card={entry.card} /> : <span>{entry.cardName}</span>}
+              <div className="t2-gameplan-mini" key={`${entry.teamName}-${entry.cardName}-${i}`} title={entry.card ? `${entry.card.name} — ${entry.description}` : entry.cardName}>
+                <CardTypeMark type="gameplan" size={20} />
               </div>
             ))
             : <div className="t2-gameplan-mini empty" aria-hidden="true" />}
@@ -153,8 +153,8 @@ function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, gameplan
           {cardPlays?.length > 0 && (
             <div className="t2-adjustment-dock">
               {cardPlays.map((entry, i) => (
-                <div className="t2-adjustment-mini" key={`${entry.stepIndex}-${entry.teamName}-${entry.cardName}-${i}`} title={entry.description}>
-                  {entry.card ? <MatchupCard card={entry.card} playoff /> : <span>{entry.cardName}</span>}
+                <div className="t2-adjustment-mini" key={`${entry.stepIndex}-${entry.teamName}-${entry.cardName}-${i}`} title={entry.card ? `${entry.card.name} — ${entry.description}` : entry.cardName}>
+                  <CardTypeMark type="adjustment" size={16} />
                 </div>
               ))}
             </div>

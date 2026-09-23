@@ -82,8 +82,12 @@ function BracketNode({ label, m, matches, index, myTeamId, actions, big, narrow,
           isParticipant ? <button className="primary bracket-node-btn" disabled={isReady} onClick={stop(() => actions.openSeries(index, myTeamId))}>{isReady ? 'Waiting For Opponent' : 'Ready Up'}</button>
             : <div className="bracket-node-status">Players Must Ready Up</div>
         ) : humanTeams.length === 1 ? (
-          isParticipant ? <button className="primary bracket-node-btn" onClick={stop(() => actions.openSeries(index, myTeamId))}>{isFinal ? 'Begin The Final' : 'Begin'}</button>
-            : <div className="bracket-node-status">Waiting For Player</div>
+          isParticipant ? (
+            <div className="bracket-node-btn-row">
+              <button className="primary bracket-node-btn" onClick={stop(() => actions.openSeries(index, myTeamId))}>{isFinal ? 'Begin The Final' : 'Begin'}</button>
+              <button className="secondary bracket-node-btn" onClick={stop(() => actions.simulateOneMatch(index, myTeamId))}>Sim</button>
+            </div>
+          ) : <div className="bracket-node-status">Waiting For Player</div>
         ) : (
           <div className="bracket-node-btn-row">
             <button className="primary bracket-node-btn" onClick={stop(() => actions.openSeries(index, myTeamId))}>{isFinal ? 'Begin The Final' : 'Begin'}</button>

@@ -25,7 +25,20 @@ const PATHS = {
       <path d="M30 8v10M30 25v10M30 42v10" strokeWidth="2.5" />
     </>
   ),
+  // Gameplan cards get their own clipboard-with-checkmark mark (distinct from Front Office's
+  // plain-ruled clipboard) — used on the mobile persistent bar and the live match board's
+  // gameplan dock in place of a tiny, illegible scaled-down StrategyCard.
+  gameplan: (
+    <>
+      <rect x="14" y="10" width="32" height="42" strokeWidth="2.5" />
+      <path d="M24 10V6h12v4" strokeWidth="2.5" />
+      <rect x="22" y="3" width="16" height="8" fill="currentColor" stroke="none" />
+      <path d="M20 27l6 6 13-15" strokeWidth="2.5" />
+    </>
+  ),
 };
+// Adjustment cards are this game's matchup cards — same mark, clearer name at the call site.
+PATHS.adjustment = PATHS.matchup;
 
 export default function CardTypeMark({ type, size = 18, color, style, className }) {
   return (

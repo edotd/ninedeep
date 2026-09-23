@@ -294,7 +294,7 @@ export function simulateOneMatch(state, index) {
   const m = matches[index];
   if (!m || m.result || !isMatchUnlocked(matches, m)) return { ok: false, msg: 'This match cannot be simulated right now.' };
   const { a, b } = matchTeams(matches, m);
-  if (a.human || b.human) return { ok: false, msg: 'Human-controlled series must be played.' };
+  if (a.human && b.human) return { ok: false, msg: 'A series between two human players must be played.' };
   const prevActive = state.playoff.activeMatchIndex;
   state.playoff.activeMatchIndex = index;
   rollCurrentMatchup(state);

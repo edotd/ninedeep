@@ -189,24 +189,25 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
     // (that would fight the user's own in-progress swipe).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, isDesktop]);
-  // Each card's content can be taller than the space the locked screen has for it (a dev-card
-  // note, an all-league tag, a longer bio all add up) — rather than scroll inside the card or
-  // clip it, measure every card's own natural (untransformed) height against what's actually
-  // available and, only when it's taller, shrink just that one card's vertical axis to fit
-  // exactly (see .pcard-scale-inner in index.css). Each card gets its OWN scale rather than one
-  // shared worst-case value, so a short card stays at its natural size instead of shrinking to
-  // match its tallest neighbor. offsetHeight/clientHeight are layout measurements, unaffected
-  // by a transform already applied, so this is safe to re-run without resetting first.
+  // A card never stretches to fill its slot (see .ts-roto-slot in index.css) — it sits at its
+  // own natural, capped width/height. But that natural height can still be taller than the
+  // space the locked screen actually has for it (a dev-card note, an all-league tag, a longer
+  // bio all add up), so measure every card's own natural (untransformed) height against what's
+  // available and, only when it's taller, shrink the WHOLE card uniformly (never just one axis,
+  // which would distort it) to fit exactly. Each card gets its OWN scale rather than one shared
+  // worst-case value, so a short card stays at its natural size instead of shrinking to match
+  // its tallest neighbor. offsetHeight/clientHeight are layout measurements, unaffected by a
+  // transform already applied, so this is safe to re-run without resetting first.
   useEffect(() => {
     if (isDesktop || tab !== 'rotation' || !rotoScrollRef.current) return undefined;
     const container = rotoScrollRef.current;
     const applyScales = () => {
       const available = container.clientHeight;
       if (!available) return;
-      container.querySelectorAll('.pcard-scale-inner').forEach((el) => {
+      container.querySelectorAll('.ts-roto-grid .pcard').forEach((el) => {
         const natural = el.offsetHeight;
         const scale = natural > available ? available / natural : 1;
-        el.style.transform = scale < 1 ? `scaleY(${scale})` : 'none';
+        el.style.transform = scale < 1 ? `scale(${scale})` : 'none';
       });
     };
     applyScales();
@@ -366,27 +367,29 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                 >
                   <div className="ts-roto-grid">
                     {starters.map((c) => (
-                      <PlayerCard
-                        key={c.id}
-                        card={c}
-                        selected={selectedId === c.id}
-                        onClick={canEdit ? () => handleCardClick(c) : undefined}
-                        onRelease={canEdit ? handleRelease : undefined}
-                        onDevelop={!readOnly && !c.development ? setDevelopPlayer : undefined}
-                      />
+                      <div className="ts-roto-slot" key={c.id}>
+                        <PlayerCard
+                          card={c}
+                          selected={selectedId === c.id}
+                          onClick={canEdit ? () => handleCardClick(c) : undefined}
+                          onRelease={canEdit ? handleRelease : undefined}
+                          onDevelop={!readOnly && !c.development ? setDevelopPlayer : undefined}
+                        />
+                      </div>
                     ))}
-                    {Array.from({ length: starterOpenSlots }, (_, i) => <div key={'starter-open-' + i} className="ts-bench-open starter">OPEN STARTER</div>)}
+                    {Array.from({ length: starterOpenSlots }, (_, i) => <div className="ts-roto-slot" key={'starter-open-' + i}><div className="ts-bench-open starter">OPEN STARTER</div></div>)}
                     {!isDesktop && bench.map((c) => (
-                      <PlayerCard
-                        key={c.id}
-                        card={c}
-                        selected={selectedId === c.id}
-                        onClick={canEdit ? () => handleCardClick(c) : undefined}
-                        onRelease={canEdit ? handleRelease : undefined}
-                        onDevelop={!readOnly && !c.development ? setDevelopPlayer : undefined}
-                      />
+                      <div className="ts-roto-slot" key={c.id}>
+                        <PlayerCard
+                          card={c}
+                          selected={selectedId === c.id}
+                          onClick={canEdit ? () => handleCardClick(c) : undefined}
+                          onRelease={canEdit ? handleRelease : undefined}
+                          onDevelop={!readOnly && !c.development ? setDevelopPlayer : undefined}
+                        />
+                      </div>
                     ))}
-                    {!isDesktop && Array.from({ length: benchOpenSlots }, (_, i) => <div key={'open-' + i} className="ts-bench-open">OPEN</div>)}
+                    {!isDesktop && Array.from({ length: benchOpenSlots }, (_, i) => <div className="ts-roto-slot" key={'open-' + i}><div className="ts-bench-open">OPEN</div></div>)}
                   </div>
                 </div>
                 {!isDesktop && (() => {

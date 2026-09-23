@@ -1,5 +1,6 @@
 // Compact mobile card tray. Team metrics live in the persistent franchise masthead.
 import { forwardRef } from 'react';
+import CardTypeMark from './CardTypeMark';
 
 const PersistentBar = forwardRef(function PersistentBar({ state, myTeamId, onNavigate, dealProgress }, ref) {
   const team = state.teams[myTeamId];
@@ -16,8 +17,8 @@ const PersistentBar = forwardRef(function PersistentBar({ state, myTeamId, onNav
         <b>{coachDealt ? team.coach?.archetype || 'Open Slot' : 'Pending'}</b>
         {coachDealt && team.coach && <small>{team.coach.modifier}</small>}
       </button>
-      <button className="persistent-bar-section persistent-card-count gameplan" onClick={() => onNavigate('gameplan')}><span>Gameplan</span><b>{available(team.gameplanCards)}</b></button>
-      <button className="persistent-bar-section persistent-card-count adjustment" onClick={() => onNavigate('adjustment')}><span>Adjustment</span><b>{available(team.matchupCards)}</b></button>
+      <button className="persistent-bar-section persistent-card-count gameplan" onClick={() => onNavigate('gameplan')} aria-label="Gameplan"><CardTypeMark type="gameplan" size={16} /><b>{available(team.gameplanCards)}</b></button>
+      <button className="persistent-bar-section persistent-card-count adjustment" onClick={() => onNavigate('adjustment')} aria-label="Adjustment"><CardTypeMark type="adjustment" size={16} /><b>{available(team.matchupCards)}</b></button>
     </div>
   );
 });
