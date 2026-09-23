@@ -1732,19 +1732,28 @@ body:has(.entry-screen){padding-bottom:0;}
   .ts-player-carousel .ts-roto-scroll::-webkit-scrollbar{display:none;}
   .ts-player-carousel .ts-roto-grid{gap:0;width:100%;}
   .ts-player-carousel .ts-roto-grid .pcard,.ts-player-carousel .ts-bench-open{box-sizing:border-box;width:100vw;max-width:none;flex:0 0 100vw;margin:0;scroll-snap-align:start;scroll-snap-stop:always;}
-  /* One vertical line per remaining card (capped at 5) plus a chevron, flush against the very
-     right edge of the screen and spanning the full height of the card viewport (not the
-     heading above it — ts-roto-viewport wraps just the scroll area + hint, not the "Rotation
-     Starters/Bench" label) — the only cue on a full-bleed one-card-per-swipe carousel that
-     there's more to see. Rendered in JSX (TeamSummaryScreen's ts-swipe-hint), not CSS content,
-     since the count is dynamic. */
-  .ts-roto-viewport{position:relative;}
-  /* right:-24px, not 0 — ts-roto-viewport itself sits inside ts-body's 24px side padding (the
-     same padding ts-roto-scroll's own -24px margins cancel out to bleed edge-to-edge), so 0
-     would land 24px short of the actual screen edge. */
-  .ts-swipe-hint{position:absolute;top:0;right:-24px;bottom:0;display:flex;align-items:stretch;gap:3px;pointer-events:none;z-index:2;}
-  .ts-swipe-line{width:4px;background:var(--franchise);opacity:.45;}
-  .ts-swipe-chevron{align-self:center;font-family:var(--font-display);font-size:24px;line-height:1;color:var(--franchise);margin-left:3px;text-shadow:0 1px 2px rgba(0,0,0,.2);}
+  /* One thick line plus a chevron, pinned to the true viewport edge via position:fixed — an
+     ancestor's own padding (ts-body's 24px, or anything else between here and the screen edge)
+     can't push a fixed element in from that edge the way it can an absolutely-positioned one,
+     so this is flush regardless of what's nesting it. Only ever shown on the rotation carousel,
+     so a single instance on screen at a time. */
+  .ts-swipe-hint{position:fixed;top:50%;right:0;transform:translateY(-50%);display:flex;align-items:center;gap:2px;pointer-events:none;z-index:6;}
+  .ts-swipe-line{width:6px;height:68px;border-radius:3px 0 0 3px;background:var(--franchise);opacity:.55;}
+  .ts-swipe-chevron{font-family:var(--font-display);font-size:26px;line-height:1;color:var(--franchise);margin-left:2px;text-shadow:0 1px 2px rgba(0,0,0,.25);}
+
+  /* While the Rotation tab is showing, the card IS the screen — no page scroll competing with
+     the horizontal card-to-card swipe. ts-screen-lock (added in TeamSummaryScreen only for
+     this tab, mobile only) turns the screen into a fixed-height flex column so ts-body, the
+     carousel, and the scroller each hand their full share of that height down to the card
+     itself, the same "owns the viewport" pattern the live match board uses. Other tabs
+     (Chemistry/Ledger/Staff) go back to the normal scrolling page. */
+  .ts-screen.ts-screen-lock{height:100dvh;box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px);}
+  .ts-screen-lock .ts-body{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;}
+  .ts-screen-lock .ts-player-carousel{flex:1;min-height:0;display:flex;flex-direction:column;}
+  .ts-screen-lock .ts-roto-viewport{flex:1;min-height:0;position:relative;}
+  .ts-screen-lock .ts-roto-scroll{height:100%;}
+  .ts-screen-lock .ts-roto-grid{height:100%;}
+  .ts-screen-lock .ts-roto-grid .pcard,.ts-screen-lock .ts-roto-grid .ts-bench-open{height:100%;}
 }
 
 /* A live mobile match owns the viewport. The global chrome gives way to the board, while the

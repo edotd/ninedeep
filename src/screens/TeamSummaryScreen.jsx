@@ -166,6 +166,27 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
     const deltaX = startX - event.changedTouches[0].clientX;
     if (deltaX > 40) setTab('chemistry');
   };
+  // Swipe anywhere on the body to move between tabs, on any tab except Rotation — that one
+  // already owns left/right for its own card-to-card carousel (handleRotationTouchStart/End
+  // above), including its own hand-off into Chemistry once you're past the last card, so this
+  // bails out entirely for a touch that started inside .ts-roto-scroll rather than doubling up
+  // on the same gesture.
+  const TAB_ORDER = ['rotation', 'chemistry', team.market ? 'office' : null, 'ledger'].filter(Boolean);
+  const bodyTouchStartX = useRef(null);
+  const handleBodyTouchStart = (event) => {
+    bodyTouchStartX.current = event.target.closest('.ts-roto-scroll') ? null : event.touches[0].clientX;
+  };
+  const handleBodyTouchEnd = (event) => {
+    const startX = bodyTouchStartX.current;
+    bodyTouchStartX.current = null;
+    if (startX == null || event.target.closest('.ts-roto-scroll')) return;
+    const deltaX = startX - event.changedTouches[0].clientX;
+    if (Math.abs(deltaX) < 50) return;
+    const idx = TAB_ORDER.indexOf(tab);
+    if (deltaX > 0 && idx < TAB_ORDER.length - 1) setTab(TAB_ORDER[idx + 1]);
+    else if (deltaX < 0 && idx > 0) setTab(TAB_ORDER[idx - 1]);
+  };
+
   const handleCardClick = (card) => {
     if (!canEdit) return;
     const isStarter = activeSet.has(card.id);
@@ -199,9 +220,13 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
     if (res && res.ok === false) alert(res.msg);
   };
 
+  // The Rotation tab's card carousel takes over the whole screen on mobile — no page scroll
+  // competing with the horizontal card swipe (see ts-screen-lock in index.css).
+  const isRotationLocked = !isDesktop && tab === 'rotation';
+
   return (
     <>
-      <div className="screen ts-screen">
+      <div className={'screen ts-screen' + (isRotationLocked ? ' ts-screen-lock' : '')}>
         <div className="ts-viewing-franchise"><span>{readOnly ? 'Viewing Franchise' : 'Your Franchise'}</span><strong>{team.name}</strong></div>
         <div className="ts-tabbar">
           <button className={'ts-tab' + (tab === 'rotation' ? ' active' : '')} onClick={() => setTab('rotation')}>Rotation</button>
@@ -212,7 +237,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           <button className={'ts-tab' + (tab === 'ledger' ? ' active' : '')} onClick={() => setTab('ledger')}>Ledger</button>
         </div>
 
-        <div className="ts-body">
+        <div className="ts-body" onTouchStart={!isDesktop ? handleBodyTouchStart : undefined} onTouchEnd={!isDesktop ? handleBodyTouchEnd : undefined}>
           {showSection('chemistry') && <TeamChemistry team={team} />}
 
           {showSection('rotation') && (
@@ -255,7 +280,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                 </div>
                 {!isDesktop && rotationIndex < mobileCardCount - 1 && (
                   <div className="ts-swipe-hint" aria-hidden="true">
-                    {Array.from({ length: Math.min(mobileCardCount - 1 - rotationIndex, 5) }, (_, i) => <span key={i} className="ts-swipe-line" />)}
+                    <span className="ts-swipe-line" />
                     <span className="ts-swipe-chevron">›</span>
                   </div>
                 )}
