@@ -4,6 +4,7 @@
 export default function EraSettingsFields({ settings, actions }) {
   const winCondition = settings.winCondition || 'bar';
   const matchupCardsEnabled = settings.matchupCardsEnabled !== false;
+  const fanbaseCardsEnabled = settings.fanbaseCardsEnabled !== false;
   return (
     <>
       <div className="pull-slot">
@@ -49,6 +50,26 @@ export default function EraSettingsFields({ settings, actions }) {
           </button>
         </div>
         <div className="pull-extra">When on, every team pulls Adjustment cards each season and can play them during playoff matchups. Turning this off skips the Adjustment Cards step entirely.</div>
+      </div>
+      <div className="pull-slot">
+        <div className="pull-label">Fanbase Cards</div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            className={fanbaseCardsEnabled ? 'primary' : 'secondary'}
+            style={{ flex: 1, padding: '10px 6px', fontSize: 13 }}
+            onClick={() => actions.updateSettings({ fanbaseCardsEnabled: true })}
+          >
+            On
+          </button>
+          <button
+            className={!fanbaseCardsEnabled ? 'primary' : 'secondary'}
+            style={{ flex: 1, padding: '10px 6px', fontSize: 13 }}
+            onClick={() => actions.updateSettings({ fanbaseCardsEnabled: false })}
+          >
+            Off
+          </button>
+        </div>
+        <div className="pull-extra">When on, every team gets a Fanbase archetype and seasonal mod affecting attendance and budget. Turning this off skips dealing them entirely — no Fanbase card in Front Office, no attendance effects.</div>
       </div>
     </>
   );

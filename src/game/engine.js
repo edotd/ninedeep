@@ -21,7 +21,7 @@ import {
   isMatchUnlocked, hasHomeCourt, applyLiveFanbaseMod, matchTeams,
 } from './matchup';
 import { rosterSalary } from './economy';
-import { applyPlayoffWinMilestone } from './fanbase';
+import { applyPlayoffWinMilestone, fanbaseEnabled } from './fanbase';
 import { applyGameplanToTurn } from './strategyCards';
 import { beginTurn as initializeTurn } from './turn';
 
@@ -72,7 +72,8 @@ export function proceedFromCardOverview(state) {
 // deals Front Office on its own rather than through startEra above) — PullCardsScreen's
 // Continue button calls this directly.
 export function proceedToSeason1(state) {
-  if (!allHumansReady(state, (t) => t.coach && t.fanbaseArchetype && t.market)) return;
+  const needsFanbase = fanbaseEnabled(state);
+  if (!allHumansReady(state, (t) => t.coach && t.market && (!needsFanbase || t.fanbaseArchetype))) return;
   initSeasonModifierCards(state);
 }
 

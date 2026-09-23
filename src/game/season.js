@@ -9,7 +9,7 @@ import { autoSelectFive, effectiveRating, activeStatSum, validateLineup } from '
 import { retentionBonus, relationshipBonus } from './cards';
 import { handsOffBonus } from './gm';
 import { startDraft } from './draft';
-import { initAttendance, rollFanbaseMod, recomputeSeasonAttendance, applyPlayoffBerthMilestone, applyHomeCourtMilestone, applyChampionshipMilestone } from './fanbase';
+import { initAttendance, rollFanbaseMod, recomputeSeasonAttendance, applyPlayoffBerthMilestone, applyHomeCourtMilestone, applyChampionshipMilestone, fanbaseEnabled } from './fanbase';
 import { tricodeFor } from './names';
 import { simulateSeasonOutput, teamOutput } from './matchup';
 import { teamSynergy } from './skillsets';
@@ -36,6 +36,7 @@ export function newEraState() {
       actionLogSpeed: 'normal',
       winCondition: 'outright', // 'bar' = must clear the championship bar; 'outright' = winning the Finals is enough
       matchupCardsEnabled: true,
+      fanbaseCardsEnabled: true,
     },
   };
 }
@@ -140,15 +141,18 @@ export function initFrontOffice(state) {
   state.leagueAvg = undefined;
   // Auto-dealt for every team, human or AI — same "no manual pull button" treatment as the
   // hand and matchup cards. PullCardsScreen just reveals what's already in state.
+  const fbEnabled = fanbaseEnabled(state);
   state.teams.forEach((team) => {
     team.coach = drawCoachCard();
     applyCoachRetention(team, team.coach);
-    team.fanbaseArchetype = weightedPick(FANBASE_ARCHETYPES);
-    rollFanbaseMod(team);
+    if (fbEnabled) {
+      team.fanbaseArchetype = weightedPick(FANBASE_ARCHETYPES);
+      rollFanbaseMod(team);
+    }
     const gm = drawGM();
     team.market = gm.market;
     team.gmType = gm.type;
-    initAttendance(team);
+    if (fbEnabled) initAttendance(team);
     refreshAdvantage(team);
     finalizeCap(team);
   });
@@ -158,9 +162,11 @@ export function initSeasonModifierCards(state) {
   state.bar = undefined;
   state.leagueAvg = undefined;
   // Fanbase mods are re-rolled every season for every team, independent of the Matchup
-  // Cards setting — they're a fanbase mechanic, not a matchup one.
+  // Cards setting — they're a fanbase mechanic, not a matchup one. Skipped entirely when the
+  // Fanbase system itself is off for this era.
+  const fbEnabled = fanbaseEnabled(state);
   state.teams.forEach((team) => {
-    if (state.season > 1 || !team.fanbaseMod) rollFanbaseMod(team);
+    if (fbEnabled && (state.season > 1 || !team.fanbaseMod)) rollFanbaseMod(team);
     dealStrategyCards(state, team);
   });
   if (state.settings && state.settings.matchupCardsEnabled === false) {
@@ -331,7 +337,7 @@ function seasonResultForTeam(state, team) {
 export function proceedFromResults(state) {
   if (state.phase !== 'results') return;
   state.teams.forEach((team) => { team.lastSeasonAvgScore = seasonAvgScoreForTeam(state, team); });
-  recomputeSeasonAttendance(state);
+  if (fanbaseEnabled(state)) recomputeSeasonAttendance(state);
   // Filed once, before contracts move — captures the season exactly as it was played
   // (result reached, full committed cap, all nine still on the roster).
   state.teams.forEach((team) => {

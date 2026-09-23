@@ -3,7 +3,7 @@ import PlayerCard from '../components/PlayerCard';
 import FrontOfficeCard from '../components/FrontOfficeCard';
 import MatchupCard from '../components/MatchupCard';
 
-const FO_KINDS = ['coach', 'fanbase', 'market'];
+const ALL_FO_KINDS = ['coach', 'fanbase', 'market'];
 
 // Deck sits at rest just long enough to read as a real stack, then each card individually
 // comes off the deck and files into its own slot in the persistent bar below (per design ref
@@ -39,6 +39,7 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
   const starters = team.hand.filter((c) => activeSet.has(c.id));
   const bench = team.hand.filter((c) => !activeSet.has(c.id));
   const matchupCards = team.matchupCards || [];
+  const FO_KINDS = state.settings.fanbaseCardsEnabled === false ? ALL_FO_KINDS.filter((k) => k !== 'fanbase') : ALL_FO_KINDS;
   const total = starters.length + bench.length + FO_KINDS.length + matchupCards.length;
   const instant = state.settings.actionLogSpeed === 'instant' || reducedMotion();
 

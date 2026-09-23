@@ -10,6 +10,15 @@ import {
 } from './constants';
 import { weightedPick } from './rng';
 
+// The fanbase system is fully optional per era (see EraSettingsFields) — off by default means
+// nothing here should run: no archetype/mod dealt, no attendance computed, no milestone credit
+// that would ever surface anywhere. Every call site that touches the system checks this first
+// rather than this file quietly no-op'ing internally, so it's obvious at each call site why a
+// team ends up with no fanbaseArchetype at all (not just a "Steady" one).
+export function fanbaseEnabled(state) {
+  return !(state.settings && state.settings.fanbaseCardsEnabled === false);
+}
+
 function clamp01(x) { return Math.max(0, Math.min(1, x)); }
 
 function marketFloorFor(team) {

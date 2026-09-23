@@ -126,15 +126,20 @@ export default function DesktopBar({ state, myTeamId, actions, dealProgress }) {
   };
   const starters = take(rawStarters);
   const bench = take(rawBench);
-  const foCount = (() => { const n = Math.max(0, Math.min(3, remaining === Infinity ? 3 : remaining)); if (remaining !== Infinity) remaining -= n; return n; })();
+  // Front Office deals in a fixed [coach, fanbase, market] order — but fanbase is skipped
+  // entirely (see DealScreen's own FO_KINDS) when Fanbase Cards is off for this era, so there
+  // are only 2 Front Office cards to wait on, not always 3.
+  const fanbaseDealt = state.settings.fanbaseCardsEnabled !== false;
+  const foTotal = fanbaseDealt ? 3 : 2;
+  const foCount = (() => { const n = Math.max(0, Math.min(foTotal, remaining === Infinity ? foTotal : remaining)); if (remaining !== Infinity) remaining -= n; return n; })();
   const matchupCards = take(rawMatchup);
 
   const activeIds = rawActiveIds;
   const coach = foCount >= 1 ? team.coach : null;
-  const fanbaseArchetype = foCount >= 2 ? team.fanbaseArchetype : null;
-  const market = foCount >= 3 ? team.market : null;
+  const fanbaseArchetype = fanbaseDealt && foCount >= 2 ? team.fanbaseArchetype : null;
+  const market = foCount >= (fanbaseDealt ? 3 : 2) ? team.market : null;
   const frontOfficeTeam = foCount >= 1 ? team : null;
-  const fullyDealt = !inDeal || (dealProgress ?? 0) >= rawStarters.length + rawBench.length + 3 + rawMatchup.length;
+  const fullyDealt = !inDeal || (dealProgress ?? 0) >= rawStarters.length + rawBench.length + foTotal + rawMatchup.length;
   const gameplanCards = fullyDealt ? (team.gameplanCards || []).filter((card) => !card.used) : [];
 
   const [preview, setPreview] = useState(null); // { rect, type, content }
@@ -256,7 +261,7 @@ export default function DesktopBar({ state, myTeamId, actions, dealProgress }) {
         <div className="db-heading">Front Office</div>
         <div className="db-slots">
           <FrontOfficeSlot label="Coach" value={coach ? coach.modifier : null} kind="coach" team={frontOfficeTeam} onHover={handleHover} onLeave={handleLeave} />
-          <FrontOfficeSlot label="Fans" value={fanbaseArchetype ? fanbaseArchetype.name : null} tone={fanbaseArchetype && fanbaseArchetype.name === 'Die Hard' ? 'notable' : null} kind="fanbase" team={frontOfficeTeam} onHover={handleHover} onLeave={handleLeave} />
+          {fanbaseDealt && <FrontOfficeSlot label="Fans" value={fanbaseArchetype ? fanbaseArchetype.name : null} tone={fanbaseArchetype && fanbaseArchetype.name === 'Die Hard' ? 'notable' : null} kind="fanbase" team={frontOfficeTeam} onHover={handleHover} onLeave={handleLeave} />}
           <FrontOfficeSlot label="GM" value={market ? (team.gmType || 'Neutral') : null} kind="market" team={frontOfficeTeam} onHover={handleHover} onLeave={handleLeave} />
         </div>
       </div>

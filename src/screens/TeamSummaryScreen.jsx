@@ -491,22 +491,24 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                     </button>
                   )}
                 </div>
-                <div className="ts-fo-col">
-                  <FrontOfficeCard kind="fanbase" team={team} />
-                  {!readOnly && (
-                    <button
-                      className="secondary ts-fo-action"
-                      style={{ width: '100%' }}
-                      disabled={team.financeBoostUsedThisSeason}
-                      onClick={() => {
-                        const res = actions.investInFanbase(myTeamId);
-                        if (res && res.ok === false) alert(res.msg);
-                      }}
-                    >
-                      {team.financeBoostUsedThisSeason ? 'Already Invested This Season' : `Invest — ${formatCoins(FANBASE_BOOST_COST)}`}
-                    </button>
-                  )}
-                </div>
+                {state.settings.fanbaseCardsEnabled !== false && (
+                  <div className="ts-fo-col">
+                    <FrontOfficeCard kind="fanbase" team={team} />
+                    {!readOnly && (
+                      <button
+                        className="secondary ts-fo-action"
+                        style={{ width: '100%' }}
+                        disabled={team.financeBoostUsedThisSeason}
+                        onClick={() => {
+                          const res = actions.investInFanbase(myTeamId);
+                          if (res && res.ok === false) alert(res.msg);
+                        }}
+                      >
+                        {team.financeBoostUsedThisSeason ? 'Already Invested This Season' : `Invest — ${formatCoins(FANBASE_BOOST_COST)}`}
+                      </button>
+                    )}
+                  </div>
+                )}
                 <div className="ts-fo-col">
                   <FrontOfficeCard kind="market" team={team} />
                   {!readOnly && (
