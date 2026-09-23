@@ -1760,7 +1760,7 @@ body:has(.entry-screen){padding-bottom:0;}
      carousel, and the scroller each hand their full share of that height down to the card
      itself, the same "owns the viewport" pattern the live match board uses. Other tabs
      (Chemistry/Ledger/Staff) go back to the normal scrolling page. */
-  .ts-screen.ts-screen-lock{height:100dvh;box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px);}
+  .ts-screen.ts-screen-lock{height:calc(100dvh - var(--mobile-persistent-top-height,0px));box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;padding-bottom:calc(150px + env(safe-area-inset-bottom,0px));}
   .ts-screen-lock .ts-body{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;}
   .ts-screen-lock .ts-player-carousel{flex:1;min-height:0;display:flex;flex-direction:column;}
   .ts-screen-lock .ts-roto-viewport{flex:1;min-height:0;position:relative;}
