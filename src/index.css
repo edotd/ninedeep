@@ -117,6 +117,25 @@ p.lede{color:var(--file-body);font-size:14px;line-height:1.5;margin:0 0 14px;}
 .topbar-nav{display:flex;gap:2px;padding:8px 16px;overflow-x:auto;}
 .reset-link{background:none;border:none;color:var(--ink-muted);font-family:var(--font-label);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:8px 10px;white-space:nowrap;}
 .reset-link.active{color:var(--ink);background:var(--file);}
+.topbar-menu-btn{background:none;border:1px solid transparent;padding:2px;line-height:0;cursor:pointer;}
+
+/* On mobile the logo doubles as the Team/Free Agency/Standings/Glossary/Settings menu's
+   trigger instead of that row sitting permanently under the era bar — real vertical space
+   back for every screen under it (see --mobile-persistent-top-height, which just shrinks
+   automatically once the row leaves the document flow here). Desktop is untouched: .topbar-nav
+   has no `display:none` to override there, so `.open` never has anything to do. */
+@media(max-width:999px){
+  .topbar-menu-btn.open{border-color:var(--franchise);}
+  /* .topbar sits inside .mobile-persistent-top, which is what's actually stacked against the
+     persistent bar (z-index:6) at the .mobile-shell level — bumping .topbar alone wouldn't
+     escape that outer cap. Bumped while open so the backdrop actually dims the persistent bar
+     (and a tap there closes the menu) instead of it poking through undimmed on top. */
+  .mobile-persistent-top:has(.topbar-nav.open){z-index:50;}
+  .topbar-menu-backdrop{position:fixed;inset:0;z-index:19;background:rgba(8,18,38,.55);}
+  .topbar-nav{display:none;position:absolute;top:100%;left:16px;z-index:20;flex-direction:column;gap:0;overflow-x:visible;background:var(--ink);border:1px solid var(--ink-rule);box-shadow:0 14px 30px rgba(0,0,0,.45);padding:6px;min-width:190px;}
+  .topbar-nav.open{display:flex;}
+  .topbar-nav .reset-link{width:100%;text-align:left;padding:11px 12px;}
+}
 
 /* ---------- Front office summary row (used on Lineup/Team screens) ---------- */
 .frontoffice{display:flex;gap:8px;margin-bottom:14px;}
