@@ -856,6 +856,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .t2-coach-dock .nd2-coach-slot{min-width:0;flex:1 1 160px;}
 .t2-teamboard.flip .t2-coach-dock{flex-direction:row-reverse;}
 .t2-gameplan-mini{position:relative;width:42px;height:58px;overflow:hidden;flex:0 0 42px;border:1px solid var(--franchise);background:var(--ink);z-index:4;}
+.t2-gameplan-mini.empty{border-style:dashed;border-color:var(--ink-rule);background:none;}
 .t2-gameplan-mini>.strategy-card{position:absolute;left:0;top:0;width:240px;min-height:150px;transform:scale(.175);transform-origin:top left;}
 .t2-gameplan-mini>span{display:block;padding:6px 3px;font:8px var(--font-label);color:var(--franchise);text-transform:uppercase;}
 .t2-gameplan-mini:hover{overflow:visible;z-index:31;}
@@ -964,7 +965,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .t2-cut-badge-value{font-family:var(--font-mono);font-size:12px;color:var(--file);display:flex;align-items:baseline;gap:6px;}
 .t2-cut-badge-value s{color:var(--ink-muted);}
 .t2-cut-badge-value b{color:var(--stamp-ink);font-weight:500;}
-.t2-report-cut s{color:var(--file-muted);margin-right:4px;}
+.t2-report-cut s{color:var(--ink-muted);margin-right:4px;}
 .t2-report-cut em{color:var(--stamp-ink);font-style:normal;font-size:10px;margin-left:4px;}
 @media(prefers-reduced-motion:reduce){.t2-die-stage.t2-die-cut{animation:none;box-shadow:0 0 0 3px var(--stamp);}}
 .t2-coin{width:130px;height:130px;border-radius:50%;background:var(--file);box-shadow:inset 0 0 0 3px var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex-shrink:0;}
@@ -1000,13 +1001,15 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 /* The possession report takes over the arrow's own slot between the two dice the instant both
    land (see t2-possession-report in TurnPanel.jsx), instead of a separate full-screen dialog —
    reading the breakdown never means looking away from the dice that produced it. */
-.t2-possession-report{flex:1 1 240px;max-width:320px;background:var(--form);padding:14px 16px;border:1px solid var(--ink-rule);align-items:stretch;gap:0;}
-.t2-report-row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-family:var(--font-mono);font-size:13px;color:var(--file-body);padding:7px 0;border-bottom:1px solid var(--form-rule);}
+/* No card/box treatment here — this sits directly on the rollzone's own ink background, same
+   as the possession arrow it replaces, not a light "file" panel floating on a dark board. */
+.t2-possession-report{flex:1 1 240px;max-width:320px;background:none;padding:0;border:none;align-items:stretch;gap:0;}
+.t2-report-winner{font-family:var(--font-display);font-size:21px;line-height:1.05;color:var(--file);text-align:center;margin-bottom:8px;}
+.t2-report-row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-family:var(--font-mono);font-size:13px;color:var(--file);padding:7px 0;border-bottom:1px solid var(--ink-rule);}
 .t2-report-row.t2-report-row-last{border-bottom:none;}
-.t2-report-label{color:var(--file-muted);}
 .t2-report-footer{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;}
 .t2-report-footer .t2-next-possession{width:auto;flex:1 1 auto;margin-top:0;}
-.t2-auto-progress{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:11px;color:var(--file-muted);white-space:nowrap;cursor:pointer;flex:0 0 auto;}
+.t2-auto-progress{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:11px;color:var(--ink-muted);white-space:nowrap;cursor:pointer;flex:0 0 auto;}
 .t2-auto-progress input{accent-color:var(--franchise);width:14px;height:14px;cursor:pointer;}
 
 /* Spins and blurs the way the possession arrow itself would settle, so the report reads as
@@ -1812,7 +1815,8 @@ body:has(.entry-screen){padding-bottom:0;}
   /* The report only ever needs to be as wide as its own text on a phone — let the dice
      columns (already flex:1 1 0;min-width:0) give up their width to it instead of it trying
      to hold a desktop-sized 240px column. */
-  .mobile-shell:has(.t2-shell) .t2-possession-report{flex-basis:150px;max-width:100%;padding:8px 9px;}
+  .mobile-shell:has(.t2-shell) .t2-possession-report{flex-basis:150px;max-width:100%;padding:0 4px;}
+  .mobile-shell:has(.t2-shell) .t2-report-winner{font-size:13px;margin-bottom:4px;}
   .mobile-shell:has(.t2-shell) .t2-report-row{font-size:10px;padding:4px 0;gap:4px;}
   .mobile-shell:has(.t2-shell) .t2-report-cut em{display:block;margin-left:0;}
   .mobile-shell:has(.t2-shell) .t2-report-footer{gap:6px;margin-top:6px;}

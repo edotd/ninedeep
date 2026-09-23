@@ -96,15 +96,18 @@ function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, gameplan
         {team.coach && <div className="t2-coach-dock">
           <div className="nd2-coach-slot"><CompactCoachCard team={team} edge={edge} /></div>
         </div>}
-        {gameplanPlays?.length > 0 && (
-          <div className="t2-gameplan-dock">
-            {gameplanPlays.map((entry, i) => (
+        {/* Always present, even with nothing active yet — an empty slot here (rather than the
+            dock only appearing once a Gameplan card is in play) keeps the board's layout, and
+            where the eye looks for it, consistent turn to turn. */}
+        <div className="t2-gameplan-dock">
+          {gameplanPlays?.length > 0
+            ? gameplanPlays.map((entry, i) => (
               <div className="t2-gameplan-mini" key={`${entry.teamName}-${entry.cardName}-${i}`} title={entry.description}>
                 {entry.card ? <StrategyCard card={entry.card} /> : <span>{entry.cardName}</span>}
               </div>
-            ))}
-          </div>
-        )}
+            ))
+            : <div className="t2-gameplan-mini empty" aria-hidden="true" />}
+        </div>
         <div className="t2-teamboard-name">
           {hca && !flip && <span className="t2-hca-tag">Home Court</span>}
           <div className="t2-teamboard-name-line">
@@ -559,12 +562,12 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
             // looking away from the dice that produced it. t2-report-spin-in plays the arrow's
             // own spin-and-blur into the report appearing, rather than a plain fade.
             <div className="t2-possession t2-possession-report t2-report-spin-in">
-              <div className="t2-report-row"><span className="t2-report-label">Possession</span><span>{offWon ? `${offTeam.name} wins` : `${defTeam.name} wins`}</span></div>
+              <div className="t2-report-winner">{offWon ? offTeam.name : defTeam.name} Wins</div>
               <div className="t2-report-row">
-                <span className="t2-report-label">{offTeam.name} Offense</span>
+                <span>{offTeam.name} Offense</span>
                 <span>{offWon ? `+${offTotal}` : <span className="t2-report-cut"><s>+{offRaw}</s> +{offTotal} <em>(−{haircutPct}% from {defTeam.name}'s defense)</em></span>}</span>
               </div>
-              <div className="t2-report-row t2-report-row-last"><span className="t2-report-label">{defTeam.name} Defense</span><span>+{turn[`${defSide}DefTotal`]}</span></div>
+              <div className="t2-report-row t2-report-row-last"><span>{defTeam.name} Defense</span><span>+{turn[`${defSide}DefTotal`]}</span></div>
               <div className="t2-report-footer">
                 {!autoProgress && (
                   <button className="t2-next-possession" onClick={() => advance()}>
