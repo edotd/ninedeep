@@ -1,7 +1,9 @@
+import { useRef, useState } from 'react';
 import { skillsetFor } from '../game/skillsets';
 import { formatCoins } from '../game/economy';
-import { careerLevel, careerBonus } from '../game/aging';
+import { careerLevel } from '../game/aging';
 import { cardTier, jerseyNumber, playerGrade } from '../game/cards';
+import { LEAGUE_ACCOLADES } from '../game/constants';
 import CardTypeMark from './CardTypeMark';
 
 const LEGACY_DEVELOPMENT_CHANGES = {
@@ -12,12 +14,17 @@ const LEGACY_DEVELOPMENT_CHANGES = {
   'Complete Program': { SCO: 1, PLM: 1, REB: 1, DEF: 1 },
 };
 
+const ACCOLADE_NAMES = new Set(LEAGUE_ACCOLADES.map((a) => a.name));
+
+// How long a touch has to sit still before it counts as a hold rather than a tap — long enough
+// that a normal card-select tap never trips it, short enough that it doesn't feel unresponsive.
+const LONG_PRESS_MS = 500;
+
 export default function PlayerCard({ card, onClick, selected, rosterLabel, compact, onRelease, onDevelop }) {
   const pillLabel = rosterLabel || (selected ? 'Selected' : null);
   const tier = cardTier(card);
   const skillset = skillsetFor(card);
   const level = careerLevel(card);
-  const bonus = careerBonus(card, card.careerRoll);
   const positionClass = ` position-${card.position.toLowerCase()}`;
   const developmentChanges = card.development?.statChanges || LEGACY_DEVELOPMENT_CHANGES[card.development?.cardName] || {};
   // The EXP card inverts to a dark ground, so the level indicator needs a light-on-dark
@@ -26,9 +33,40 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
   const levelColor = tier === 'EXP'
     ? (level === 'Prime' ? '#8FD9B0' : level === 'Declining' ? 'var(--franchise)' : 'var(--ink-muted)')
     : (level === 'Prime' ? 'var(--approved)' : level === 'Declining' ? 'var(--stamp)' : 'var(--depth)');
+  const accolade = ACCOLADE_NAMES.has(card.tierName) ? card.tierName : null;
+
+  // Release/Develop are destructive/rare actions, not something every glance at the roster
+  // needs to see — they now live behind a hold (mobile) or the expand arrow (desktop, see
+  // .pcard-expand-arrow) instead of sitting on the card permanently. Only relevant at all when
+  // the caller actually wired up one of the two actions (a read-only or compact context never
+  // gets the arrow/hold treatment since there'd be nothing to reveal).
+  const hasOptions = !compact && (onRelease || onDevelop);
+  const [expanded, setExpanded] = useState(false);
+  const pressTimer = useRef(null);
+  const longPressFired = useRef(false);
+
+  const clearPressTimer = () => { clearTimeout(pressTimer.current); pressTimer.current = null; };
+  const handleTouchStart = () => {
+    if (!hasOptions) return;
+    longPressFired.current = false;
+    clearPressTimer();
+    pressTimer.current = setTimeout(() => { longPressFired.current = true; setExpanded((v) => !v); }, LONG_PRESS_MS);
+  };
+  const handleClick = (event) => {
+    // A long-press's own touchend still fires a synthetic click right after — swallow that one
+    // click so it doesn't also trigger the card's normal select/swap behavior.
+    if (longPressFired.current) { longPressFired.current = false; return; }
+    onClick?.(event);
+  };
 
   return (
-    <div className={`pcard tier-${tier}${positionClass}${compact ? ' pcard-compact' : ''}${selected ? ' selected' : ''}`} onClick={onClick}>
+    <div
+      className={`pcard tier-${tier}${positionClass}${compact ? ' pcard-compact' : ''}${selected ? ' selected' : ''}${expanded ? ' expanded' : ''}`}
+      onClick={handleClick}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={clearPressTimer}
+      onTouchMove={clearPressTimer}
+    >
       <CardTypeMark
         type="player"
         size={compact ? 90 : 170}
@@ -36,7 +74,18 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
         color={tier === 'EXP' ? 'var(--ink-rule)' : 'var(--depth-nontext)'}
       />
       <div className="pcard-header">
-        <span className="pcard-header-pos">{card.position}</span>
+        {compact ? (
+          <span className="pcard-header-pos">{card.position}</span>
+        ) : (
+          <div className="pcard-header-left">
+            <div className="pcard-header-stack">
+              <span className="pcard-header-stage" style={{ color: levelColor }}>{level}</span>
+              <span className="pcard-header-tier">{card.tierName}</span>
+            </div>
+            <span className="pcard-header-sep">•</span>
+            <span className="pcard-header-pos">{card.position}</span>
+          </div>
+        )}
         <span className="pcard-grade" aria-label={`Player grade ${playerGrade(card)}`}>{playerGrade(card)}</span>
       </div>
       <div className="pcard-name-block">
@@ -72,33 +121,48 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
           <div className="pcard-skillset-name" title={skillset?.description}>{skillset?.name || 'None · Legacy Card'}</div>
         </div>
       )}
+      {/* Career Stage and Tier moved up into the header; this row (Release/Develop's old
+          neighborhood) is now reserved for a League Accolade, if this player has one — shown
+          as a single icon (game/constants.js's LEAGUE_ACCOLADES, one mark per honor via
+          CardTypeMark) rather than a whole text row, with the full name on hover/long-press
+          via the native title tooltip. */}
       {!compact && (
-        <div className="pcard-contract pcard-age-row" style={{ alignItems: 'flex-start' }}>
-          <div>
-            <div className="pcard-microlabel" style={{ marginBottom: 3 }}>Career Stage</div>
-            <div className="pcard-microlabel pcard-level" style={{ color: levelColor }}>
-              {level} ({bonus >= 0 ? '+' : ''}{bonus.toFixed(2)})
-            </div>
-            {card.development && <div className="pcard-development">Developed · {card.development.cardName}</div>}
+        <div className="pcard-contract pcard-accolade-row">
+          {accolade ? (
+            <span className="pcard-accolade" title={accolade}><CardTypeMark type={accolade} size={24} /></span>
+          ) : <span />}
+          <div className="pcard-accolade-tags">
+            {pillLabel && <span className="pcard-stamp">{pillLabel}</span>}
+            {card.development && <span className="pcard-development" title={`Developed · ${card.development.cardName}`}>Developed</span>}
           </div>
-          {pillLabel && <span className="pcard-stamp">{pillLabel}</span>}
         </div>
       )}
-      {!compact && (
-        <div className="pcard-footer">
-          <span>{card.tierName}</span>
-          <span>#{card.id}</span>
-        </div>
-      )}
-      {!compact && onRelease && (
-        <button className="pcard-release" onClick={(e) => { e.stopPropagation(); onRelease(card); }}>
-          Release <span className="pcard-release-cost">{card.contract > 0 ? `${formatCoins(Math.round((card.salary / 2) * 100) / 100)} Dead × ${card.contract}yr` : 'No Dead Cap'}</span>
-        </button>
-      )}
-      {!compact && onDevelop && (
-        <button className="pcard-develop" onClick={(e) => { e.stopPropagation(); onDevelop(card); }}>
-          Develop
-        </button>
+      {hasOptions && (
+        <>
+          <button
+            type="button"
+            className="pcard-expand-arrow"
+            onClick={(event) => { event.stopPropagation(); setExpanded((v) => !v); }}
+            aria-expanded={expanded}
+            aria-label={expanded ? 'Hide roster options' : 'Show roster options'}
+          >
+            <span className="pcard-expand-chevron">▾</span>
+          </button>
+          {expanded && (
+            <div className="pcard-options" onClick={(event) => event.stopPropagation()}>
+              {onRelease && (
+                <button className="pcard-release" onClick={() => onRelease(card)}>
+                  Release <span className="pcard-release-cost">{card.contract > 0 ? `${formatCoins(Math.round((card.salary / 2) * 100) / 100)} Dead × ${card.contract}yr` : 'No Dead Cap'}</span>
+                </button>
+              )}
+              {onDevelop && (
+                <button className="pcard-develop" onClick={() => onDevelop(card)}>
+                  Develop
+                </button>
+              )}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

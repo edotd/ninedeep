@@ -329,7 +329,16 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .pcard-compact .pcard-watermark{top:auto;bottom:-10px;right:-14px;}
 .pcard.selected{outline:3px solid var(--franchise);outline-offset:2px;}
 .pcard-header{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:var(--ink);color:var(--file);}
-.pcard-header-pos{font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;}
+/* Career Stage + Tier stack on the left in two small lines; Position sits to their right,
+   sized to visually span both lines rather than sitting at the small header-label size the
+   rest of the header uses — it's the header's other primary code (alongside Grade), not a
+   caption for the stack next to it. */
+.pcard-header-left{display:flex;align-items:center;gap:8px;min-width:0;}
+.pcard-header-stack{display:flex;flex-direction:column;gap:1px;min-width:0;}
+.pcard-header-stage{font-family:var(--font-label);font-size:9px;letter-spacing:.06em;text-transform:uppercase;line-height:1.25;}
+.pcard-header-tier{font-family:var(--font-mono);font-size:9px;letter-spacing:.03em;text-transform:uppercase;line-height:1.25;color:inherit;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:118px;}
+.pcard-header-sep{opacity:.45;font-size:13px;}
+.pcard-header-pos{font-family:var(--font-label);font-size:21px;line-height:1;letter-spacing:.01em;text-transform:uppercase;}
 /* A stylized, bold badge rather than plain header text — Archivo Black (the brand's blockiest
    face, used nowhere else this small) instead of the header's mono label font, sized to
    dominate the thin header bar the way the design's tier-letter squares dominate a card
@@ -350,7 +359,13 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .pcard-stat b{display:block;font-family:var(--font-display);font-size:22px;color:var(--ink);font-weight:400;}
 .pcard-stat-value{display:flex;align-items:baseline;justify-content:center;gap:3px;}.pcard-stat-value em{font-family:var(--font-label);font-size:11px;font-style:normal;color:var(--approved-ink);}
 .pcard-stat span{display:block;margin-top:2px;font-family:var(--font-label);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);}
-.pcard-footer{display:flex;justify-content:space-between;padding:7px 12px;background:var(--file);font-size:9px;letter-spacing:.08em;color:var(--file-muted);font-family:var(--font-mono);}
+/* Where Release/Develop and the Career Stage row used to sit — now reserved for a League
+   Accolade (a single icon, see CardTypeMark) plus whatever tags apply (Selected, Developed). */
+.pcard-accolade-row{min-height:36px;}
+.pcard-accolade{display:inline-flex;color:var(--franchise);}
+.pcard.tier-EXP .pcard-accolade{color:var(--file);}
+.pcard-accolade-tags{display:flex;align-items:center;gap:6px;}
+.pcard-development{display:inline-block;border:1.5px solid var(--approved-file);padding:4px 6px;font-size:9px;letter-spacing:.1em;color:var(--approved-file);font-family:var(--font-mono);text-transform:uppercase;}
 
 .pcard.tier-A .pcard-header{background:var(--franchise);color:var(--ink);}
 .pcard.tier-B .pcard-header{background:var(--ink);color:var(--file);}
@@ -363,7 +378,6 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .pcard.tier-EXP .pcard-name,.pcard.tier-EXP .pcard-budgethit,.pcard.tier-EXP .pcard-stat b{color:var(--file);}
 .pcard.tier-EXP .pcard-name-block,.pcard.tier-EXP .pcard-contract,.pcard.tier-EXP .pcard-stats{border-color:var(--ink-rule);}
 .pcard.tier-EXP .pcard-microlabel,.pcard.tier-EXP .pcard-stat span{color:var(--file);}.pcard.tier-EXP .pcard-stat-value em{color:var(--approved-file);}
-.pcard.tier-EXP .pcard-footer{background:var(--ink-deep);color:var(--ink-muted);}
 .pcard.tier-EXP .pcard-dot{background:var(--file);}
 /* Position is the card header's primary visual code across every player tier. */
 .pcard.position-guard .pcard-header{background:var(--file);color:var(--ink);border-bottom:1px solid var(--file-rule);}
@@ -377,6 +391,18 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .pcard-release-cost{font-family:var(--font-mono);font-weight:normal;letter-spacing:.04em;}
 .pcard-develop{width:100%;border:none;border-top:2px solid var(--approved);background:var(--approved);color:var(--form);font-family:var(--font-label);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:9px 12px;cursor:pointer;}
 .pcard-develop:hover{background:var(--approved-ink);}
+/* Release/Develop no longer sit on the card permanently — a hold (mobile) or this arrow
+   (desktop) reveals them in a panel that drops below the card instead of pushing its own
+   height (position:absolute, .pcard switches to overflow:visible only while open) so a card
+   that's been scaled to fit its slot (see the Rotation carousel's per-card scale-to-fit) never
+   has to be re-measured just because its options got toggled. */
+.pcard-expand-arrow{width:100%;border:none;border-top:1px solid var(--form-rule);background:var(--file);color:var(--file-muted);padding:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.pcard-expand-arrow:hover{background:var(--form);color:var(--ink);}
+.pcard-expand-chevron{font-size:13px;line-height:1;display:inline-block;transition:transform 150ms ease;}
+.pcard.expanded .pcard-expand-chevron{transform:rotate(180deg);}
+.pcard.expanded{overflow:visible;}
+.pcard-options{position:absolute;left:0;right:0;top:100%;z-index:10;display:flex;flex-direction:column;background:var(--form);border:2px solid var(--ink);border-top:none;box-shadow:0 10px 20px rgba(0,0,0,.35);}
+@media(max-width:999px){.pcard-expand-arrow{display:none;}}
 
 /* Renew — the positive counterpart to Release, on the Contracts screen's expiring cards.
    Same full-width footer-bar treatment, approved-green instead of stamp-red. */
@@ -796,7 +822,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .development-picker-backdrop{position:fixed;inset:0;z-index:40;background:rgba(8,18,38,.72);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;}
 .development-picker{width:min(820px,100%);max-height:85vh;overflow:auto;background:var(--form);border:2px solid var(--ink);padding:20px;box-shadow:0 24px 70px rgba(0,0,0,.42);}
 .development-picker-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:16px;}.development-picker-head .ts-heading{margin-bottom:4px;}.development-picker-player{font-family:var(--font-mono);font-size:12px;color:var(--file-body);}.development-picker-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;}.development-picker-card{border:0;background:none;padding:0;text-align:left;cursor:pointer;}.development-picker-card:hover .strategy-card,.development-picker-card:focus .strategy-card{box-shadow:0 0 0 3px var(--approved-file);}.development-picker-card .strategy-card{height:100%;}
-.pcard-level{font-family:var(--font-label);font-size:14px!important;letter-spacing:.08em;}.pcard-development{margin-top:5px;font-family:var(--font-mono);font-size:8px;letter-spacing:.04em;color:var(--approved-file);text-transform:uppercase;}.pcard-stat b{font-size:27px;}
+.pcard-stat b{font-size:27px;}
 @media(max-width:999px){
   .mobile-persistent-top{position:sticky;top:0;z-index:5;}
   .mobile-persistent-top .topbar,.mobile-persistent-top .persistent-franchise-masthead{position:relative;top:auto;}
@@ -1848,9 +1874,6 @@ body:has(.entry-screen){padding-bottom:0;}
      internal scrollbar. A card shorter than the available space just sits at its natural size
      with real margin below it, rather than being force-filled to look busier than it is. */
   .ts-screen-lock .ts-roto-grid .pcard{transform-origin:top;will-change:transform;}
-  /* The "Developed · <card>" note is 8px everywhere else, sized for a compact roster grid —
-     illegible at the size a full-screen locked card renders it. */
-  .ts-screen-lock .ts-roto-grid .pcard-development{font-size:12px;letter-spacing:.06em;margin-top:8px;}
 }
 
 /* A live mobile match owns the viewport. The global chrome gives way to the board, while the

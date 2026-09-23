@@ -36,6 +36,61 @@ const PATHS = {
       <path d="M20 27l6 6 13-15" strokeWidth="2.5" />
     </>
   ),
+  // League accolades (game/constants.js's LEAGUE_ACCOLADES) — one mark per honor, shown on
+  // PlayerCard in place of the full name (still available via a hover/long-press tooltip) so a
+  // decorated player's card doesn't need a whole text row to say so.
+  'All-Star': (
+    <path d="M30 6l7 16 17 2-13 12 4 17-15-9-15 9 4-17-13-12 17-2z" strokeWidth="2.5" strokeLinejoin="round" />
+  ),
+  'All-League Defensive Team': (
+    <>
+      <path d="M30 6l20 8v14c0 14-9 22-20 26-11-4-20-12-20-26V14z" strokeWidth="2.5" strokeLinejoin="round" />
+      <path d="M20 30l7 7 13-15" strokeWidth="2.5" />
+    </>
+  ),
+  'All-League 2nd Team': (
+    <>
+      <circle cx="30" cy="24" r="15" strokeWidth="2.5" />
+      <path d="M21 37l-6 17 10-4 6 10 6-16" strokeWidth="2.5" strokeLinejoin="round" />
+      <text x="30" y="30" fontSize="17" fontFamily="var(--font-display)" textAnchor="middle" fill="currentColor" stroke="none">2</text>
+    </>
+  ),
+  'All-League 1st Team': (
+    <>
+      <circle cx="30" cy="24" r="15" strokeWidth="2.5" />
+      <path d="M21 37l-6 17 10-4 6 10 6-16" strokeWidth="2.5" strokeLinejoin="round" />
+      <text x="30" y="30" fontSize="17" fontFamily="var(--font-display)" textAnchor="middle" fill="currentColor" stroke="none">1</text>
+    </>
+  ),
+  'Defensive Player of the Year': (
+    <>
+      <path d="M30 6l20 8v14c0 14-9 22-20 26-11-4-20-12-20-26V14z" strokeWidth="2.5" strokeLinejoin="round" />
+      <path d="M30 16v9M30 33v9" strokeWidth="2.5" />
+      <circle cx="30" cy="25" r="1.5" fill="currentColor" stroke="none" />
+    </>
+  ),
+  'Scoring Champion': (
+    <path d="M30 6c-9 11-15 18-15 28a15 15 0 0030 0c0-5-3-9-7-12 1 4-1 7-4 7-3 0-5-2-5-6 0-5 2-10 1-17z" strokeWidth="2.5" strokeLinejoin="round" />
+  ),
+  'Rebounding Champion': (
+    <>
+      <circle cx="30" cy="34" r="14" strokeWidth="2.5" />
+      <path d="M30 20V8M23 15l7-7 7 7" strokeWidth="2.5" strokeLinejoin="round" />
+      <path d="M18 30q12 8 24 0" strokeWidth="2" />
+    </>
+  ),
+  'Assist Leader': (
+    <>
+      <circle cx="17" cy="38" r="9" strokeWidth="2.5" />
+      <path d="M28 22h18M39 14l7 8-7 8" strokeWidth="2.5" strokeLinejoin="round" />
+    </>
+  ),
+  'Most Valuable Player': (
+    <>
+      <path d="M10 46l4-25 11 13 5-19 5 19 11-13 4 25z" strokeWidth="2.5" strokeLinejoin="round" />
+      <path d="M10 46h40" strokeWidth="2.5" />
+    </>
+  ),
 };
 // Adjustment cards are this game's matchup cards — same mark, clearer name at the call site.
 PATHS.adjustment = PATHS.matchup;

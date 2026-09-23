@@ -38,19 +38,19 @@ function sampleMatchupCard() {
 
 const PLAYER_NOTES = [
   { key: 'header', selector: '.pcard-header', label: 'Header plate', side: 'left',
-    text: 'Position at a glance, reinforced by a fixed plate color — cream Guard, yellow Forward, navy Big.' },
+    text: 'Position at a glance, reinforced by a fixed plate color — cream Guard, yellow Forward, navy Big. Career stage and tier sit to its left; Grade to its right.' },
   { key: 'name', selector: '.pcard-name-block', label: 'Number and archetype', side: 'left',
     text: "No portraits in this game, so this block is the card. The number is how the persistent bar shows this player in their slot." },
   { key: 'stats', selector: '.pcard-stats', label: 'Stat block', side: 'left',
     text: 'Four fixed cells so all nine cards scan as one table. These drive offense, defense, and rebounding rolls.' },
-  { key: 'footer', selector: '.pcard-footer', label: 'Tier and card ID', side: 'left',
-    text: 'The tier name and a stable card number — collectible information only, no effect in play.' },
+  { key: 'footer', selector: '.pcard-accolade-row', label: 'League accolade', side: 'left',
+    text: 'A league honor, shown as a single icon — hover or hold it to see which one. Collectible information only, no effect in play.' },
   { key: 'budgethit', selector: '.pcard-budgethit-row', circleSelector: '.pcard-budgethit', circle: true, label: 'Cost', side: 'right',
     text: 'The largest figure on the card, and the one this player gets traded on. It charges the budget every season the contract runs.' },
   { key: 'years', selector: '.pcard-years-row', label: 'Turns remaining',
     text: 'Each filled dot is one turn left on the contract. At zero, the player enters free agency.' },
-  { key: 'level', selector: '.pcard-age-row', circleSelector: '.pcard-level', circle: true, label: 'Career stage', side: 'right',
-    text: 'The career stage and a fixed career roll set the bonus or penalty on every stat.' },
+  { key: 'level', selector: '.pcard-header-stack', circleSelector: '.pcard-header-stage', circle: true, label: 'Career stage', side: 'right',
+    text: 'The career stage and tier, stacked above the position — the career stage and a fixed career roll set the bonus or penalty on every stat.' },
 ];
 
 const FRONTOFFICE_NOTES = [
