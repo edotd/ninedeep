@@ -80,7 +80,11 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
           <div className="pcard-header-left">
             <div className="pcard-header-stack">
               <span className="pcard-header-stage" style={{ color: levelColor }}>{level}</span>
-              <span className="pcard-header-tier">{card.tierName}</span>
+              {/* card.tierName doubles as the League Accolade name for an accoladed player
+                  (see cardTier in game/cards.js) — this line is for their actual tier (Role
+                  Player, High IQ, Undrafted, …) only, never an accolade, which gets its own
+                  icon further down instead. */}
+              <span className="pcard-header-tier">{!accolade && card.tierName}</span>
             </div>
             <span className="pcard-header-sep">•</span>
             <span className="pcard-header-pos">{card.position}</span>
@@ -125,12 +129,13 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
           neighborhood) is now reserved for a League Accolade, if this player has one — shown
           as a single icon (game/constants.js's LEAGUE_ACCOLADES, one mark per honor via
           CardTypeMark) rather than a whole text row, with the full name on hover/long-press
-          via the native title tooltip. */}
-      {!compact && (
+          via the native title tooltip. Most players have no accolade and nothing else to show
+          here either, so the row itself is skipped rather than reserving empty space for it. */}
+      {!compact && (accolade || pillLabel || card.development) && (
         <div className="pcard-contract pcard-accolade-row">
-          {accolade ? (
-            <span className="pcard-accolade" title={accolade}><CardTypeMark type={accolade} size={24} /></span>
-          ) : <span />}
+          {accolade
+            ? <span className="pcard-accolade" title={accolade}><CardTypeMark type={accolade} size={24} /></span>
+            : <span />}
           <div className="pcard-accolade-tags">
             {pillLabel && <span className="pcard-stamp">{pillLabel}</span>}
             {card.development && <span className="pcard-development" title={`Developed · ${card.development.cardName}`}>Developed</span>}

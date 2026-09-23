@@ -1825,20 +1825,19 @@ body:has(.entry-screen){padding-bottom:0;}
   .ts-player-carousel .ts-roto-scroll{margin-left:-24px;margin-right:-24px;padding:0;scroll-snap-type:x mandatory;scrollbar-width:none;}
   .ts-player-carousel .ts-roto-scroll::-webkit-scrollbar{display:none;}
   .ts-player-carousel .ts-roto-grid{gap:0;width:100%;align-items:flex-start;}
-  /* Each SLOT (not the card itself) is narrower than the screen by exactly the next card's
-     peek (design ref 5A/Screen 05 "The Hand") — scroll-snap still aligns every slot's LEFT edge
-     to the viewport's, so that 42px shortfall shows up as a sliver of the next card on the
-     right, the same swipe rule 02 describes. The card inside centers within its slot at its
-     own natural, capped width (.pcard's base max-width:264px, untouched here) rather than
-     stretching to fill it — a card that fills the full peek width reads as oversized/stretched
-     on a phone; leaving real margin on both sides is what makes it look like a card and not a
-     panel. */
-  .ts-player-carousel .ts-roto-grid .ts-roto-slot{box-sizing:border-box;width:calc(100vw - 42px);flex:0 0 calc(100vw - 42px);display:flex;justify-content:center;scroll-snap-align:start;scroll-snap-stop:always;}
+  /* Each slot is narrower than the screen by exactly the next card's peek (design ref 5A/
+     Screen 05 "The Hand") — scroll-snap still aligns every slot's LEFT edge to the viewport's,
+     so that 42px shortfall shows up as a sliver of the next card on the right, the same swipe
+     rule 02 describes. The card fills its slot's width (not a smaller, centered natural
+     width) — the earlier "stretched" complaint turned out to be about height (a fixed-height
+     frame with natural-height content floating inside it, or a non-uniform scaleY squashing
+     it), both fixed separately below; at a fixed width there's nothing left to stretch. */
+  .ts-player-carousel .ts-roto-grid .ts-roto-slot{box-sizing:border-box;width:calc(100vw - 42px);flex:0 0 calc(100vw - 42px);display:flex;scroll-snap-align:start;scroll-snap-stop:always;}
+  .ts-player-carousel .ts-roto-grid .ts-roto-slot>*{width:100%;max-width:none;margin:0;}
   /* The last card has no next card to peek at, so reserving 42px for one just leaves the
      scroll container unable to reach flush-left on it (max scrollLeft caps 42px short of that
      card's snap point) — a sliver of the second-to-last card shows instead. Give the last slot
-     the full width back so it actually reaches the edge (the card inside still just centers at
-     its own natural width, same as every other slot). */
+     the full width back so it actually reaches the edge. */
   .ts-player-carousel .ts-roto-grid > .ts-roto-slot:last-child{width:100%;flex-basis:100%;}
   /* The tab sitting on that peek — pinned to the true viewport edge via position:fixed (an
      ancestor's own padding can't push a fixed element in from the edge the way it can an

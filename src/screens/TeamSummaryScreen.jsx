@@ -353,7 +353,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
 
           {showSection('rotation') && (
             <div className="ts-section ts-player-carousel" id="team-rotation">
-              <div className="ts-heading ts-rotation-heading">Rotation <span>{rotationIndex < 5 ? 'Starters' : 'Bench'}</span></div>
+              {!isRotationLocked && <div className="ts-heading ts-rotation-heading">Rotation <span>{rotationIndex < 5 ? 'Starters' : 'Bench'}</span></div>}
               <div className="ts-roto-viewport">
                 <div
                   className="ts-roto-scroll"
@@ -592,12 +592,15 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           )}
         </div>
 
-        {preSeason && team.hand.length !== 9 && (
+        {/* Hidden while the Rotation carousel owns the screen — as a flex sibling of .ts-body
+            these would eat into its flex:1 share of the available height, which is exactly the
+            space the carousel needs every pixel of. They still show on every other tab. */}
+        {!isRotationLocked && preSeason && team.hand.length !== 9 && (
           <div className="statusline" style={{ marginTop: 16 }}>
             Resolve your roster before the season begins: {team.hand.length > 9 ? `release ${team.hand.length - 9} player${team.hand.length - 9 === 1 ? '' : 's'}` : `sign ${9 - team.hand.length} player${9 - team.hand.length === 1 ? '' : 's'} from Free Agency`}.
           </div>
         )}
-        {preSeason && team.hand.length === 9 && committed > cap && (
+        {!isRotationLocked && preSeason && team.hand.length === 9 && committed > cap && (
           <div className="statusline" style={{ marginTop: 16 }}>Get under budget before the season begins. Reduce committed costs by {formatCoins(committed - cap)}.</div>
         )}
         {developPlayer && (
