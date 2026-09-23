@@ -1731,15 +1731,28 @@ body:has(.entry-screen){padding-bottom:0;}
   .ts-player-carousel .ts-roto-scroll{margin-left:-24px;margin-right:-24px;padding:0;scroll-snap-type:x mandatory;scrollbar-width:none;}
   .ts-player-carousel .ts-roto-scroll::-webkit-scrollbar{display:none;}
   .ts-player-carousel .ts-roto-grid{gap:0;width:100%;}
-  .ts-player-carousel .ts-roto-grid .pcard,.ts-player-carousel .ts-bench-open{box-sizing:border-box;width:100vw;max-width:none;flex:0 0 100vw;margin:0;scroll-snap-align:start;scroll-snap-stop:always;}
-  /* One thick line plus a chevron, pinned to the true viewport edge via position:fixed — an
-     ancestor's own padding (ts-body's 24px, or anything else between here and the screen edge)
-     can't push a fixed element in from that edge the way it can an absolutely-positioned one,
-     so this is flush regardless of what's nesting it. Only ever shown on the rotation carousel,
-     so a single instance on screen at a time. */
-  .ts-swipe-hint{position:fixed;top:50%;right:0;transform:translateY(-50%);display:flex;align-items:center;gap:2px;pointer-events:none;z-index:6;}
-  .ts-swipe-line{width:6px;height:68px;border-radius:3px 0 0 3px;background:var(--franchise);opacity:.55;}
-  .ts-swipe-chevron{font-family:var(--font-display);font-size:26px;line-height:1;color:var(--franchise);margin-left:2px;text-shadow:0 1px 2px rgba(0,0,0,.25);}
+  /* Each card is narrower than the screen by exactly the next card's peek (design ref 5A/
+     Screen 05 "The Hand") — scroll-snap still aligns every card's LEFT edge to the viewport's,
+     so that 42px shortfall shows up as a sliver of the next card on the right, the same swipe
+     rule 02 describes ("the next card always peeks 42px at the right edge"). */
+  .ts-player-carousel .ts-roto-grid .pcard,.ts-player-carousel .ts-bench-open{box-sizing:border-box;width:calc(100vw - 42px);max-width:none;flex:0 0 calc(100vw - 42px);margin:0;scroll-snap-align:start;scroll-snap-stop:always;}
+  /* The tab sitting on that peek — pinned to the true viewport edge via position:fixed (an
+     ancestor's own padding can't push a fixed element in from the edge the way it can an
+     absolutely-positioned one) and centered over the card area, not the whole carousel section
+     (heading included). Ink with a running count normally; on the last card it turns amber and
+     names the next tab instead (swipe rule 03) — same element, .next-tab just recolors it and
+     swaps the count for a label. */
+  .ts-hand-peek-tab{position:fixed;top:50%;right:0;transform:translateY(-50%);width:42px;min-height:64px;box-sizing:border-box;padding:8px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:var(--ink-deep);border:1px solid var(--franchise);border-right:none;pointer-events:none;z-index:6;}
+  .ts-hand-peek-tab.next-tab{background:var(--franchise);border-color:var(--franchise);}
+  .ts-hand-peek-chevron{font-family:var(--font-display);font-size:20px;line-height:1;color:var(--franchise);}
+  .ts-hand-peek-tab.next-tab .ts-hand-peek-chevron{color:var(--ink);}
+  .ts-hand-peek-count{font-family:var(--font-mono);font-size:11px;color:var(--file);}
+  .ts-hand-peek-label{font-family:var(--font-label);font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);text-align:center;line-height:1.2;}
+  /* The pager underneath (swipe rule 01: "stays put" — a fixed row of segments, not something
+     that scrolls or fades with the card content). One segment per card, current one filled. */
+  .ts-hand-pager{display:flex;gap:2px;margin:8px -24px 0;flex-shrink:0;}
+  .ts-hand-pager-seg{flex:1;height:4px;background:var(--depth-nontext);}
+  .ts-hand-pager-seg.active{background:var(--franchise);}
 
   /* While the Rotation tab is showing, the card IS the screen — no page scroll competing with
      the horizontal card-to-card swipe. ts-screen-lock (added in TeamSummaryScreen only for

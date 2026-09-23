@@ -152,6 +152,18 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   // knows when to disappear and the end-of-carousel swipe knows when it's actually at the end.
   const mobileCardCount = starters.length + starterOpenSlots + bench.length + benchOpenSlots;
   const rotationTouchStartX = useRef(null);
+  const rotoScrollRef = useRef(null);
+  // The scroll container unmounts whenever another tab is showing (showSection below), so its
+  // native scrollLeft is gone by the time you swipe back — landing back on card one instead of
+  // wherever you left off. Re-derive it from the persisted rotationIndex every time this tab
+  // becomes active again, whether that's a tap on the Hand tab or a swipe back into it.
+  useEffect(() => {
+    if (isDesktop || tab !== 'rotation' || !rotoScrollRef.current) return;
+    rotoScrollRef.current.scrollLeft = rotationIndex * rotoScrollRef.current.clientWidth;
+    // Only ever needs to run when this tab becomes active, not on every rotationIndex tick
+    // (that would fight the user's own in-progress swipe).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, isDesktop]);
   const handleRotationTouchStart = (event) => { rotationTouchStartX.current = event.touches[0].clientX; };
   // Swiping further forward while already on the carousel's last card reads as "done with the
   // rotation" — hand it off to the Chemistry tab (the next one in the bar) instead of just
@@ -229,7 +241,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
       <div className={'screen ts-screen' + (isRotationLocked ? ' ts-screen-lock' : '')}>
         <div className="ts-viewing-franchise"><span>{readOnly ? 'Viewing Franchise' : 'Your Franchise'}</span><strong>{team.name}</strong></div>
         <div className="ts-tabbar">
-          <button className={'ts-tab' + (tab === 'rotation' ? ' active' : '')} onClick={() => setTab('rotation')}>Rotation</button>
+          <button className={'ts-tab' + (tab === 'rotation' ? ' active' : '')} onClick={() => setTab('rotation')}>Hand</button>
           <button className={'ts-tab' + (tab === 'chemistry' ? ' active' : '')} onClick={() => setTab('chemistry')}>Chemistry</button>
           {team.market && (
             <button className={'ts-tab' + (tab === 'office' ? ' active' : '')} onClick={() => setTab('office')}>Staff / Gameplan</button>
@@ -242,10 +254,11 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
 
           {showSection('rotation') && (
             <div className="ts-section ts-player-carousel" id="team-rotation">
-              <div className="ts-heading ts-rotation-heading">Rotation <span>{rotationIndex < 5 ? 'Starters' : 'Bench'}</span></div>
+              <div className="ts-heading ts-rotation-heading">Hand <span>{rotationIndex < 5 ? 'Starters' : 'Bench'}</span></div>
               <div className="ts-roto-viewport">
                 <div
                   className="ts-roto-scroll"
+                  ref={rotoScrollRef}
                   onScroll={!isDesktop ? (event) => {
                     const width = event.currentTarget.clientWidth;
                     if (width) setRotationIndex(Math.round(event.currentTarget.scrollLeft / width));
@@ -278,13 +291,25 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                     {!isDesktop && Array.from({ length: benchOpenSlots }, (_, i) => <div key={'open-' + i} className="ts-bench-open">OPEN</div>)}
                   </div>
                 </div>
-                {!isDesktop && rotationIndex < mobileCardCount - 1 && (
-                  <div className="ts-swipe-hint" aria-hidden="true">
-                    <span className="ts-swipe-line" />
-                    <span className="ts-swipe-chevron">›</span>
-                  </div>
-                )}
+                {!isDesktop && (() => {
+                  const onLastCard = rotationIndex >= mobileCardCount - 1;
+                  return (
+                    <div className={'ts-hand-peek-tab' + (onLastCard ? ' next-tab' : '')} aria-hidden="true">
+                      <span className="ts-hand-peek-chevron">›</span>
+                      {onLastCard
+                        ? <span className="ts-hand-peek-label">Chemistry</span>
+                        : <span className="ts-hand-peek-count">+{mobileCardCount - 1 - rotationIndex}</span>}
+                    </div>
+                  );
+                })()}
               </div>
+              {!isDesktop && (
+                <div className="ts-hand-pager" aria-hidden="true">
+                  {Array.from({ length: mobileCardCount }, (_, i) => (
+                    <span key={i} className={'ts-hand-pager-seg' + (i === rotationIndex ? ' active' : '')} />
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
