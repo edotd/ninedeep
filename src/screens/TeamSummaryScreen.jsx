@@ -216,7 +216,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           {showSection('chemistry') && <TeamChemistry team={team} />}
 
           {showSection('rotation') && (
-            <div className={'ts-section ts-player-carousel' + (!isDesktop && rotationIndex < mobileCardCount - 1 ? ' has-more' : '')} id="team-rotation">
+            <div className="ts-section ts-player-carousel" id="team-rotation">
               <div className="ts-heading ts-rotation-heading">Rotation <span>{rotationIndex < 5 ? 'Starters' : 'Bench'}</span></div>
               <div
                 className="ts-roto-scroll"
@@ -252,6 +252,12 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                   {!isDesktop && Array.from({ length: benchOpenSlots }, (_, i) => <div key={'open-' + i} className="ts-bench-open">OPEN</div>)}
                 </div>
               </div>
+              {!isDesktop && rotationIndex < mobileCardCount - 1 && (
+                <div className="ts-swipe-hint" aria-hidden="true">
+                  {Array.from({ length: Math.min(mobileCardCount - 1 - rotationIndex, 5) }, (_, i) => <span key={i} className="ts-swipe-line" />)}
+                  <span className="ts-swipe-chevron">›</span>
+                </div>
+              )}
             </div>
           )}
 

@@ -95,12 +95,16 @@ function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, gameplan
       <div className="t2-teamboard-meta">
         {team.coach && <div className="t2-coach-dock">
           <div className="nd2-coach-slot"><CompactCoachCard team={team} edge={edge} /></div>
-          {gameplanPlays?.map((entry, i) => (
-            <div className="t2-gameplan-mini" key={`${entry.teamName}-${entry.cardName}-${i}`} title={entry.description}>
-              {entry.card ? <StrategyCard card={entry.card} /> : <span>{entry.cardName}</span>}
-            </div>
-          ))}
         </div>}
+        {gameplanPlays?.length > 0 && (
+          <div className="t2-gameplan-dock">
+            {gameplanPlays.map((entry, i) => (
+              <div className="t2-gameplan-mini" key={`${entry.teamName}-${entry.cardName}-${i}`} title={entry.description}>
+                {entry.card ? <StrategyCard card={entry.card} /> : <span>{entry.cardName}</span>}
+              </div>
+            ))}
+          </div>
+        )}
         <div className="t2-teamboard-name">
           {hca && !flip && <span className="t2-hca-tag">Home Court</span>}
           <div className="t2-teamboard-name-line">
@@ -280,7 +284,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
       rollTimerRef.current = setTimeout(() => setRollPhase('both'), ROLL_REVEAL_MS);
     } else if (rollPhase === 'both' && autoProgress) {
       // With auto-progress off (the default), both post-roll reports wait on their own
-      // "Start Next Possession" / "See Bench Contributions" click instead of advancing here.
+      // "Start Next Possession" / "Start Bench Contribution" click instead of advancing here.
       rollTimerRef.current = setTimeout(() => advance(), ROLL_BOTH_READ_MS);
     }
     return () => clearTimeout(rollTimerRef.current);
@@ -688,7 +692,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
                     <div className="t2-report-footer">
                       {!autoProgress && (
                         <button className="t2-next-possession" onClick={() => advance()}>
-                          {turn.exchangeIndex === 0 ? 'Start Next Possession' : 'See Bench Contributions'}
+                          {turn.exchangeIndex === 0 ? 'Start Next Possession' : 'Start Bench Contribution'}
                         </button>
                       )}
                       <label className="t2-auto-progress">

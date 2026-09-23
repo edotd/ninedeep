@@ -831,6 +831,11 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .t2-teamboard-meta{display:grid;grid-template-columns:220px minmax(0,1fr) 220px;align-items:center;gap:14px;min-width:0;}
 .t2-teamboard-meta>.t2-coach-dock{grid-column:1;grid-row:1;}
 .t2-teamboard.flip .t2-teamboard-meta>.t2-coach-dock{grid-column:3;}
+/* The Gameplan dock sits opposite the coach card, not squeezed into the same column with it
+   (that column only ever needs to fit one or the other — mirrors flip the same way coach does,
+   just inverted, so gameplan always lands on whichever side coach isn't). */
+.t2-teamboard-meta>.t2-gameplan-dock{grid-column:3;grid-row:1;display:flex;align-items:center;justify-content:center;gap:5px;min-width:0;}
+.t2-teamboard.flip .t2-teamboard-meta>.t2-gameplan-dock{grid-column:1;}
 .t2-teamboard-name{grid-column:2;grid-row:1;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-width:0;}
 .t2-teamboard-name-line{display:flex;align-items:center;justify-content:center;gap:12px;min-width:0;width:100%;}
 .t2-hca-tag{display:inline-block;font-family:var(--font-label);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--franchise);border:1px solid var(--franchise);padding:3px 8px;}
@@ -1511,10 +1516,15 @@ body:has(.entry-screen){padding-bottom:0;}
 /* Core — ~60% of the deck, ~/2500. Bare form stock, no ornament; the baseline the rest read against. */
 .mu2-card[data-rarity="Core"]{border:2px solid #C4715A;}
 
-/* Prime — ~28%, ~/1200. A ruled grid ground, register brackets on the top two corners only. */
+/* Prime — ~28%, ~/1200. A ruled grid ground, register brackets on the top two corners only.
+   Translucent, not the opaque paper tone this used to be — CSS transform:scale (used to shrink
+   the whole card for the adjustment dock's minis, the picker list, etc.) scales the background
+   pattern right along with the card, so an 8px repeat at a fraction of native size becomes a
+   near-solid wash over the name/statement text. A translucent line stays a faint texture at any
+   scale instead of turning opaque as the gaps between lines shrink below a pixel. */
 .mu2-card[data-rarity="Prime"]{
   border:3px solid var(--stamp);
-  background-image:repeating-linear-gradient(0deg, transparent 0 7px, #DED3B6 7px 8px), repeating-linear-gradient(90deg, transparent 0 7px, #DED3B6 7px 8px);
+  background-image:repeating-linear-gradient(0deg, transparent 0 7px, rgba(154,139,105,.4) 7px 8px), repeating-linear-gradient(90deg, transparent 0 7px, rgba(154,139,105,.4) 7px 8px);
 }
 .mu2-card[data-rarity="Prime"] .mu2-corner{border-color:var(--file-rule);}
 
@@ -1708,19 +1718,12 @@ body:has(.entry-screen){padding-bottom:0;}
   .ts-player-carousel .ts-roto-scroll::-webkit-scrollbar{display:none;}
   .ts-player-carousel .ts-roto-grid{gap:0;width:100%;}
   .ts-player-carousel .ts-roto-grid .pcard,.ts-player-carousel .ts-bench-open{box-sizing:border-box;width:100vw;max-width:none;flex:0 0 100vw;margin:0;scroll-snap-align:start;scroll-snap-stop:always;}
-  /* A fading chevron on the right edge — the only cue on a full-bleed one-card-per-swipe
-     carousel that there's more to see. Fades out once the carousel actually has nothing left
-     to swipe to (see the has-more class, toggled off scrollIndex in TeamSummaryScreen). */
-  .ts-player-carousel.has-more::after{
-    content:'';position:absolute;top:0;right:0;bottom:6px;width:36px;pointer-events:none;
-    background:linear-gradient(to right,transparent,var(--file) 78%);
-  }
-  .ts-player-carousel.has-more::before{
-    content:'\203A';position:absolute;top:50%;right:6px;bottom:auto;
-    transform:translateY(-50%);pointer-events:none;z-index:2;
-    font-family:var(--font-display);font-size:26px;line-height:1;color:var(--franchise);
-    text-shadow:0 1px 3px rgba(0,0,0,.25);
-  }
+  /* One vertical line per remaining card (capped at 5) plus a chevron, on the right edge — the
+     only cue on a full-bleed one-card-per-swipe carousel that there's more to see. Rendered in
+     JSX (TeamSummaryScreen's ts-swipe-hint), not CSS content, since the count is dynamic. */
+  .ts-swipe-hint{position:absolute;top:50%;right:10px;transform:translateY(-50%);display:flex;align-items:center;gap:4px;pointer-events:none;z-index:2;}
+  .ts-swipe-line{width:3px;height:22px;border-radius:2px;background:var(--franchise);opacity:.5;}
+  .ts-swipe-chevron{font-family:var(--font-display);font-size:24px;line-height:1;color:var(--franchise);margin-left:2px;text-shadow:0 1px 2px rgba(0,0,0,.2);}
 }
 
 /* A live mobile match owns the viewport. The global chrome gives way to the board, while the
@@ -1730,7 +1733,10 @@ body:has(.entry-screen){padding-bottom:0;}
   body:has(.t2-shell){overflow:hidden;}
   .mobile-shell:has(.t2-shell){height:100dvh;overflow:hidden;background:var(--ink);}
   .mobile-shell:has(.t2-shell)>.mobile-persistent-top,.mobile-shell:has(.t2-shell)>.persistent-bar{display:none;}
-  .mobile-shell:has(.t2-shell)>.screen{height:100dvh;box-sizing:border-box;padding:0;overflow:hidden;}
+  /* The normal top masthead/header is hidden entirely during a live match (see above), so
+     nothing else reserves room for the phone's own status bar/notch/dynamic island here —
+     without this, the top team's coach card and roster row render right under it. */
+  .mobile-shell:has(.t2-shell)>.screen{height:100dvh;box-sizing:border-box;padding:env(safe-area-inset-top,0px) 0 0;overflow:hidden;}
   .mobile-shell:has(.t2-shell) .t2-shell{height:100%;box-sizing:border-box;margin:0;padding:4px;max-width:none;overflow:hidden;}
   .mobile-shell:has(.t2-shell) .t2-body{position:relative;height:100%;display:block;overflow:hidden;}
   /* Scrolls internally instead of clipping — the board's real content (two team boards plus
@@ -1762,15 +1768,21 @@ body:has(.entry-screen){padding-bottom:0;}
   .mobile-shell:has(.t2-shell) .nd2-coach-head span:last-child,.mobile-shell:has(.t2-shell) .nd2-coach-desc,.mobile-shell:has(.t2-shell) .nd2-coach-foot{display:none;}
   .mobile-shell:has(.t2-shell) .nd2-coach-body{padding:6px;}
   .mobile-shell:has(.t2-shell) .nd2-coach-name{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .mobile-shell:has(.t2-shell) .t2-gameplan-mini{width:18px;height:34px;flex-basis:18px;}
-  .mobile-shell:has(.t2-shell) .t2-teamboard-name{gap:3px;}
+  /* Alone in its own column now (see t2-gameplan-dock above) instead of squeezed inside the
+     coach's 96px column with it — real size instead of an 18px sliver. */
+  .mobile-shell:has(.t2-shell) .t2-gameplan-mini{width:40px;height:56px;flex-basis:40px;}
+  .mobile-shell:has(.t2-shell) .t2-teamboard-name{gap:2px;}
   .mobile-shell:has(.t2-shell) .t2-teamboard-name-line{gap:6px;}
-  .mobile-shell:has(.t2-shell) .t2-teamboard-name-text{font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  /* Wraps instead of truncating — the flanking coach/gameplan columns leave the center column
+     narrower than some franchise names at any reasonable font size, so ellipsis was cutting
+     names off outright. Two lines reads better than a guess at how much to shrink the font. */
+  .mobile-shell:has(.t2-shell) .t2-teamboard-name-text{font-size:16px;line-height:1.15;white-space:normal;overflow:visible;text-overflow:clip;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
   .mobile-shell:has(.t2-shell) .t2-team-role{font-size:11px;padding:4px 6px;}
   .mobile-shell:has(.t2-shell) .t2-teamboard-status{font-size:8px;}
   .mobile-shell:has(.t2-shell) .t2-hca-tag{font-size:7px;padding:2px 5px;}
-  .mobile-shell:has(.t2-shell) .t2-adjustment-dock{height:20px;}
-  .mobile-shell:has(.t2-shell) .t2-adjustment-mini{width:52px;height:20px;flex-basis:52px;}
+  .mobile-shell:has(.t2-shell) .t2-adjustment-dock{height:18px;}
+  .mobile-shell:has(.t2-shell) .t2-adjustment-mini{width:44px;height:18px;flex-basis:44px;}
+  .mobile-shell:has(.t2-shell) .t2-adjustment-mini>.mu2-wrap{transform:scale(.157);}
   .mobile-shell:has(.t2-shell) .t2-rollzone{flex:1;min-height:0;padding:4px 8px;gap:4px;overflow:hidden;}
   .mobile-shell:has(.t2-shell) .t2-rollzone-dual{gap:4px;}
   .mobile-shell:has(.t2-shell) .t2-rollzone-caption{font-size:9px;line-height:1.15;}
