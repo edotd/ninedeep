@@ -1518,6 +1518,19 @@ body:has(.entry-screen){padding-bottom:0;}
 }
 .mu2-card[data-rarity="Prime"] .mu2-corner{border-color:var(--file-rule);}
 
+/* Match reveals compress cards on phones, which makes Prime's normal 8px ruled grid read as
+   heavy bars over the copy. Give the played card more room and use a quieter, wider grid only
+   in the mobile matchup reveal. */
+@media (max-width:600px){
+  .t2-adjustment-reveal{padding:18px;gap:14px;}
+  .t2-adjustment-reveal-card{width:min(280px,78vw);}
+  .t2-adjustment-reveal-card .mu2-card[data-rarity="Prime"]{
+    background-image:
+      repeating-linear-gradient(0deg,transparent 0 11px,rgba(154,139,105,.22) 11px 12px),
+      repeating-linear-gradient(90deg,transparent 0 11px,rgba(154,139,105,.22) 11px 12px);
+  }
+}
+
 /* Signature — ~10%, ~/400. File stock, a 45° hatch, a double frame (heavier stamp-text outer
    plus a thin file inner hairline), brackets on all four corners, and the top-right corner
    physically clipped. */
