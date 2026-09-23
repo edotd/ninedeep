@@ -159,7 +159,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   // becomes active again, whether that's a tap on the Hand tab or a swipe back into it.
   useEffect(() => {
     if (isDesktop || tab !== 'rotation' || !rotoScrollRef.current) return;
-    rotoScrollRef.current.scrollLeft = rotationIndex * rotoScrollRef.current.clientWidth;
+    rotoScrollRef.current.scrollLeft = rotationIndex * (rotoScrollRef.current.scrollWidth / mobileCardCount);
     // Only ever needs to run when this tab becomes active, not on every rotationIndex tick
     // (that would fight the user's own in-progress swipe).
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -260,7 +260,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                   className="ts-roto-scroll"
                   ref={rotoScrollRef}
                   onScroll={!isDesktop ? (event) => {
-                    const width = event.currentTarget.clientWidth;
+                    const width = event.currentTarget.scrollWidth / mobileCardCount;
                     if (width) setRotationIndex(Math.round(event.currentTarget.scrollLeft / width));
                   } : undefined}
                   onTouchStart={!isDesktop ? handleRotationTouchStart : undefined}

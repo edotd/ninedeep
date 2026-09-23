@@ -1755,12 +1755,16 @@ body:has(.entry-screen){padding-bottom:0;}
   .ts-hand-pager-seg.active{background:var(--franchise);}
 
   /* While the Rotation tab is showing, the card IS the screen — no page scroll competing with
-     the horizontal card-to-card swipe. ts-screen-lock (added in TeamSummaryScreen only for
-     this tab, mobile only) turns the screen into a fixed-height flex column so ts-body, the
-     carousel, and the scroller each hand their full share of that height down to the card
-     itself, the same "owns the viewport" pattern the live match board uses. Other tabs
-     (Chemistry/Ledger/Staff) go back to the normal scrolling page. */
-  .ts-screen.ts-screen-lock{height:calc(100dvh - var(--mobile-persistent-top-height,0px));box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;padding-bottom:calc(150px + env(safe-area-inset-bottom,0px));}
+     the horizontal card-to-card swipe, and no franchise header/persistent bar to leave room
+     for (their heights are only ever guesses that drift with device/content). Instead the
+     whole mobile-shell hands the viewport over, exactly like the live match board's t2-shell
+     treatment (see .mobile-shell:has(.t2-shell) below) — header, bottom persistent bar and the
+     Begin Season corner button are hidden outright rather than budgeted around. Other tabs
+     (Chemistry/Ledger/Staff) go back to the normal scrolling page with all chrome visible. */
+  .mobile-shell:has(.ts-screen-lock){height:100dvh;overflow:hidden;}
+  .mobile-shell:has(.ts-screen-lock)>.mobile-persistent-top,.mobile-shell:has(.ts-screen-lock)>.persistent-bar,.mobile-shell:has(.ts-screen-lock)>.bottombar{display:none;}
+  .ts-screen.ts-screen-lock{height:100dvh;box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);}
+  .ts-screen-lock .ts-tabbar{position:static;box-shadow:none;}
   .ts-screen-lock .ts-body{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;}
   .ts-screen-lock .ts-player-carousel{flex:1;min-height:0;display:flex;flex-direction:column;}
   .ts-screen-lock .ts-roto-viewport{flex:1;min-height:0;position:relative;}
