@@ -1708,6 +1708,19 @@ body:has(.entry-screen){padding-bottom:0;}
   .ts-player-carousel .ts-roto-scroll::-webkit-scrollbar{display:none;}
   .ts-player-carousel .ts-roto-grid{gap:0;width:100%;}
   .ts-player-carousel .ts-roto-grid .pcard,.ts-player-carousel .ts-bench-open{box-sizing:border-box;width:100vw;max-width:none;flex:0 0 100vw;margin:0;scroll-snap-align:start;scroll-snap-stop:always;}
+  /* A fading chevron on the right edge — the only cue on a full-bleed one-card-per-swipe
+     carousel that there's more to see. Fades out once the carousel actually has nothing left
+     to swipe to (see the has-more class, toggled off scrollIndex in TeamSummaryScreen). */
+  .ts-player-carousel.has-more::after{
+    content:'';position:absolute;top:0;right:0;bottom:6px;width:36px;pointer-events:none;
+    background:linear-gradient(to right,transparent,var(--file) 78%);
+  }
+  .ts-player-carousel.has-more::before{
+    content:'\203A';position:absolute;top:50%;right:6px;bottom:auto;
+    transform:translateY(-50%);pointer-events:none;z-index:2;
+    font-family:var(--font-display);font-size:26px;line-height:1;color:var(--franchise);
+    text-shadow:0 1px 3px rgba(0,0,0,.25);
+  }
 }
 
 /* A live mobile match owns the viewport. The global chrome gives way to the board, while the
@@ -1720,8 +1733,13 @@ body:has(.entry-screen){padding-bottom:0;}
   .mobile-shell:has(.t2-shell)>.screen{height:100dvh;box-sizing:border-box;padding:0;overflow:hidden;}
   .mobile-shell:has(.t2-shell) .t2-shell{height:100%;box-sizing:border-box;margin:0;padding:4px;max-width:none;overflow:hidden;}
   .mobile-shell:has(.t2-shell) .t2-body{position:relative;height:100%;display:block;overflow:hidden;}
-  .mobile-shell:has(.t2-shell) .t2-board{height:100%;overflow:hidden;}
-  .mobile-shell:has(.t2-shell) .t2-teamboard{flex:0 0 auto;padding:4px 5px;gap:3px;}
+  /* Scrolls internally instead of clipping — the board's real content (two team boards plus
+     the roll zone) doesn't always fit inside 100dvh (a short phone, a wider coach card, a
+     played-card notice appearing), and losing the bottom of the board with no way to reach it
+     is worse than an occasional scroll. .t2-log stays a position:absolute overlay anchored to
+     .t2-body, not a sibling inside this scroller, so it doesn't move when this scrolls. */
+  .mobile-shell:has(.t2-shell) .t2-board{height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .mobile-shell:has(.t2-shell) .t2-teamboard{flex:0 0 auto;padding:6px 8px;gap:4px;}
   .mobile-shell:has(.t2-shell) .nd2-roster{flex-wrap:nowrap;gap:2px;padding:0;}
   .mobile-shell:has(.t2-shell) .nd2-tile{min-width:0;flex:1 1 0;}
   .mobile-shell:has(.t2-shell) .nd2-tile-head{padding:2px 3px;}
@@ -1734,21 +1752,23 @@ body:has(.entry-screen){padding-bottom:0;}
   .mobile-shell:has(.t2-shell) .nd2-tile-stat b{font-size:10px;}
   .mobile-shell:has(.t2-shell) .nd2-tile-stat span{display:none;}
   .mobile-shell:has(.t2-shell) .nd2-tile.empty{min-height:53px;}
-  .mobile-shell:has(.t2-shell) .t2-teamboard-meta{grid-template-columns:78px minmax(0,1fr) 78px;gap:4px;min-height:42px;}
-  .mobile-shell:has(.t2-shell) .nd2-coach-slot{width:78px;flex:1 1 78px;}
+  /* Team names and coach cards get real room now (see t2-board's scroll above — growing these
+     no longer risks losing content off the bottom of the screen). */
+  .mobile-shell:has(.t2-shell) .t2-teamboard-meta{grid-template-columns:96px minmax(0,1fr) 96px;gap:6px;min-height:54px;}
+  .mobile-shell:has(.t2-shell) .nd2-coach-slot{width:96px;flex:1 1 96px;}
   .mobile-shell:has(.t2-shell) .nd2-coach{box-shadow:none;}
-  .mobile-shell:has(.t2-shell) .nd2-coach-head{padding:3px 4px;}
-  .mobile-shell:has(.t2-shell) .nd2-coach-head span:first-child{font-size:6px;}
+  .mobile-shell:has(.t2-shell) .nd2-coach-head{padding:4px 6px;}
+  .mobile-shell:has(.t2-shell) .nd2-coach-head span:first-child{font-size:7px;}
   .mobile-shell:has(.t2-shell) .nd2-coach-head span:last-child,.mobile-shell:has(.t2-shell) .nd2-coach-desc,.mobile-shell:has(.t2-shell) .nd2-coach-foot{display:none;}
-  .mobile-shell:has(.t2-shell) .nd2-coach-body{padding:5px 4px;}
-  .mobile-shell:has(.t2-shell) .nd2-coach-name{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .mobile-shell:has(.t2-shell) .nd2-coach-body{padding:6px;}
+  .mobile-shell:has(.t2-shell) .nd2-coach-name{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .mobile-shell:has(.t2-shell) .t2-gameplan-mini{width:18px;height:34px;flex-basis:18px;}
-  .mobile-shell:has(.t2-shell) .t2-teamboard-name{gap:2px;}
-  .mobile-shell:has(.t2-shell) .t2-teamboard-name-line{gap:4px;}
-  .mobile-shell:has(.t2-shell) .t2-teamboard-name-text{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .mobile-shell:has(.t2-shell) .t2-team-role{font-size:10px;padding:3px 4px;}
-  .mobile-shell:has(.t2-shell) .t2-teamboard-status{font-size:7px;}
-  .mobile-shell:has(.t2-shell) .t2-hca-tag{font-size:6px;padding:2px 4px;}
+  .mobile-shell:has(.t2-shell) .t2-teamboard-name{gap:3px;}
+  .mobile-shell:has(.t2-shell) .t2-teamboard-name-line{gap:6px;}
+  .mobile-shell:has(.t2-shell) .t2-teamboard-name-text{font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .mobile-shell:has(.t2-shell) .t2-team-role{font-size:11px;padding:4px 6px;}
+  .mobile-shell:has(.t2-shell) .t2-teamboard-status{font-size:8px;}
+  .mobile-shell:has(.t2-shell) .t2-hca-tag{font-size:7px;padding:2px 5px;}
   .mobile-shell:has(.t2-shell) .t2-adjustment-dock{height:20px;}
   .mobile-shell:has(.t2-shell) .t2-adjustment-mini{width:52px;height:20px;flex-basis:52px;}
   .mobile-shell:has(.t2-shell) .t2-rollzone{flex:1;min-height:0;padding:4px 8px;gap:4px;overflow:hidden;}

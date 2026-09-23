@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useIsDesktop } from '../hooks/useIsDesktop';
 import TeamChemistry from '../components/TeamChemistry';
 import PlayerCard from '../components/PlayerCard';
@@ -147,6 +147,25 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   const [developPlayer, setDevelopPlayer] = useState(null);
   const [rotationIndex, setRotationIndex] = useState(0);
   useEffect(() => { setSelectedId(null); setRotationIndex(0); }, [team.id, canEdit]);
+  // Mobile's rotation carousel is one card per swipe (starters then bench, in that order —
+  // see the JSX below) — this is how many pages it actually has, so the "more cards" chevron
+  // knows when to disappear and the end-of-carousel swipe knows when it's actually at the end.
+  const mobileCardCount = starters.length + starterOpenSlots + bench.length + benchOpenSlots;
+  const rotationTouchStartX = useRef(null);
+  const handleRotationTouchStart = (event) => { rotationTouchStartX.current = event.touches[0].clientX; };
+  // Swiping further forward while already on the carousel's last card reads as "done with the
+  // rotation" — hand it off to the Chemistry tab (the next one in the bar) instead of just
+  // bouncing off the end of the scroll the way a native carousel would.
+  const handleRotationTouchEnd = (event) => {
+    const startX = rotationTouchStartX.current;
+    rotationTouchStartX.current = null;
+    if (startX == null) return;
+    const el = event.currentTarget;
+    const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 4;
+    if (!atEnd) return;
+    const deltaX = startX - event.changedTouches[0].clientX;
+    if (deltaX > 40) setTab('chemistry');
+  };
   const handleCardClick = (card) => {
     if (!canEdit) return;
     const isStarter = activeSet.has(card.id);
@@ -197,12 +216,17 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           {showSection('chemistry') && <TeamChemistry team={team} />}
 
           {showSection('rotation') && (
-            <div className="ts-section ts-player-carousel" id="team-rotation">
+            <div className={'ts-section ts-player-carousel' + (!isDesktop && rotationIndex < mobileCardCount - 1 ? ' has-more' : '')} id="team-rotation">
               <div className="ts-heading ts-rotation-heading">Rotation <span>{rotationIndex < 5 ? 'Starters' : 'Bench'}</span></div>
-              <div className="ts-roto-scroll" onScroll={!isDesktop ? (event) => {
-                const width = event.currentTarget.clientWidth;
-                if (width) setRotationIndex(Math.round(event.currentTarget.scrollLeft / width));
-              } : undefined}>
+              <div
+                className="ts-roto-scroll"
+                onScroll={!isDesktop ? (event) => {
+                  const width = event.currentTarget.clientWidth;
+                  if (width) setRotationIndex(Math.round(event.currentTarget.scrollLeft / width));
+                } : undefined}
+                onTouchStart={!isDesktop ? handleRotationTouchStart : undefined}
+                onTouchEnd={!isDesktop ? handleRotationTouchEnd : undefined}
+              >
                 <div className="ts-roto-grid">
                   {starters.map((c) => (
                     <PlayerCard
