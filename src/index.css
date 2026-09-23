@@ -667,6 +667,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .ts-roto-scroll{overflow-x:auto;padding-bottom:6px;margin-bottom:8px;}
 .ts-roto-grid{display:flex;gap:14px;}
 .ts-roto-grid .pcard{width:230px;flex-shrink:0;margin:0;}
+.ts-card-stack-cue,.ts-bench-cue{display:none;}
 /* Bench renders the same full PlayerCards as Rotation now (see ts-roto-grid) — an OPEN slot
    just needs to be a fixed-width dashed placeholder; flex's default align-items:stretch makes
    it match whatever height the real cards next to it end up being. */
@@ -820,7 +821,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .t2-teamboard:nth-of-type(2){border-top:1px solid var(--ink-rule);}
 .t2-teamboard.active{background:rgba(240,160,61,.05);}
 .t2-teamboard.flip{flex-direction:column-reverse;}
-.t2-teamboard-meta{display:grid;grid-template-columns:160px minmax(0,1fr) 160px;align-items:center;gap:14px;min-width:0;}
+.t2-teamboard-meta{display:grid;grid-template-columns:220px minmax(0,1fr) 220px;align-items:center;gap:14px;min-width:0;}
 .t2-teamboard-meta>.t2-coach-dock{grid-column:1;grid-row:1;}
 .t2-teamboard.flip .t2-teamboard-meta>.t2-coach-dock{grid-column:3;}
 .t2-teamboard-name{grid-column:2;grid-row:1;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-width:0;}
@@ -839,7 +840,8 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .t2-adjustment-mini:hover{overflow:visible;z-index:30;}
 .t2-adjustment-mini:hover>.mu2-wrap{left:50%;top:calc(100% + 7px);transform:translateX(-50%) scale(1);transform-origin:top center;filter:drop-shadow(0 16px 28px rgba(0,0,0,.55));}
 .t2-teamboard.flip .t2-adjustment-mini:hover>.mu2-wrap{top:auto;bottom:calc(100% + 7px);transform-origin:bottom center;}
-.t2-coach-dock{display:flex;align-items:center;gap:5px;min-width:0;position:relative;z-index:5;}
+.t2-coach-dock{display:flex;align-items:center;gap:5px;min-width:0;max-width:100%;position:relative;z-index:5;}
+.t2-coach-dock .nd2-coach-slot{min-width:0;flex:1 1 160px;}
 .t2-teamboard.flip .t2-coach-dock{flex-direction:row-reverse;}
 .t2-gameplan-mini{position:relative;width:42px;height:58px;overflow:hidden;flex:0 0 42px;border:1px solid var(--franchise);background:var(--ink);z-index:4;}
 .t2-gameplan-mini>.strategy-card{position:absolute;left:0;top:0;width:240px;min-height:150px;transform:scale(.175);transform-origin:top left;}
@@ -1076,7 +1078,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
   .desktop-content:has(.t2-shell) .nd2-tile{min-width:0;flex-basis:0;}
   .desktop-content:has(.t2-shell) .nd2-tile-tags{display:none;}
   .desktop-content:has(.t2-shell) .t2-teamboard-meta{gap:8px;}
-  .desktop-content:has(.t2-shell) .t2-teamboard-meta{grid-template-columns:150px minmax(0,1fr) 150px;}
+  .desktop-content:has(.t2-shell) .t2-teamboard-meta{grid-template-columns:220px minmax(0,1fr) 220px;}
   .desktop-content:has(.t2-shell) .nd2-coach-slot{width:150px;flex-basis:150px;}
   .desktop-content:has(.t2-shell) .nd2-coach-body{padding:5px 8px;}
   .desktop-content:has(.t2-shell) .nd2-coach-desc{display:none;}
@@ -1678,6 +1680,75 @@ body:has(.entry-screen){padding-bottom:0;}
 @media(max-width:999px){
   .deal-intro{display:none;}
   .ts-tabbar,.bracket-round-tabbar{position:sticky;top:var(--mobile-persistent-top-height,0px);z-index:4;box-shadow:0 3px 8px rgba(0,0,0,.22);}
+  .ts-player-carousel{position:relative;}
+  .ts-player-carousel .ts-roto-scroll{margin-right:-24px;padding-right:38px;scroll-snap-type:x mandatory;scrollbar-width:none;}
+  .ts-player-carousel .ts-roto-scroll::-webkit-scrollbar{display:none;}
+  .ts-player-carousel .ts-roto-grid{gap:10px;}
+  .ts-player-carousel .ts-roto-grid .pcard,.ts-player-carousel .ts-bench-open{width:calc(100vw - 76px);max-width:none;scroll-snap-align:start;scroll-snap-stop:always;}
+  .ts-card-stack-cue{display:block;position:absolute;right:-18px;top:52%;width:22px;height:96px;transform:translateY(-50%);pointer-events:none;z-index:3;}
+  .ts-card-stack-cue i{position:absolute;top:0;bottom:0;width:4px;border-radius:4px;background:var(--franchise);box-shadow:0 0 0 1px var(--ink);}
+  .ts-card-stack-cue i:nth-child(1){right:14px;opacity:.45;}
+  .ts-card-stack-cue i:nth-child(2){right:7px;opacity:.7;}
+  .ts-card-stack-cue i:nth-child(3){right:0;}
+  .ts-bench-cue{display:flex;width:100%;align-items:center;justify-content:center;gap:10px;margin-top:12px;padding:11px;border:1px solid var(--ink);background:transparent;color:var(--ink);font:11px var(--font-label);letter-spacing:.12em;text-transform:uppercase;}
+  .ts-bench-cue span{font-size:19px;color:var(--stamp);line-height:1;}
+  #team-bench{scroll-margin-top:calc(var(--mobile-persistent-top-height,0px) + 48px);}
+}
+
+/* A live mobile match owns the viewport. The global chrome gives way to the board, while the
+   log remains available as a compact overlay so neither it nor the coach docks move the dice
+   or roster tiles out of view. */
+@media(max-width:999px){
+  body:has(.t2-shell){overflow:hidden;}
+  .mobile-shell:has(.t2-shell){height:100dvh;overflow:hidden;background:var(--ink);}
+  .mobile-shell:has(.t2-shell)>.mobile-persistent-top,.mobile-shell:has(.t2-shell)>.persistent-bar{display:none;}
+  .mobile-shell:has(.t2-shell)>.screen{height:100dvh;box-sizing:border-box;padding:0;overflow:hidden;}
+  .mobile-shell:has(.t2-shell) .t2-shell{height:100%;box-sizing:border-box;margin:0;padding:4px;max-width:none;overflow:hidden;}
+  .mobile-shell:has(.t2-shell) .t2-body{position:relative;height:100%;display:block;overflow:hidden;}
+  .mobile-shell:has(.t2-shell) .t2-board{height:100%;overflow:hidden;}
+  .mobile-shell:has(.t2-shell) .t2-teamboard{flex:0 0 auto;padding:4px 5px;gap:3px;}
+  .mobile-shell:has(.t2-shell) .nd2-roster{flex-wrap:nowrap;gap:2px;padding:0;}
+  .mobile-shell:has(.t2-shell) .nd2-tile{min-width:0;flex:1 1 0;}
+  .mobile-shell:has(.t2-shell) .nd2-tile-head{padding:2px 3px;}
+  .mobile-shell:has(.t2-shell) .nd2-tile-head span:first-child,.mobile-shell:has(.t2-shell) .nd2-tile-tags,.mobile-shell:has(.t2-shell) .nd2-tile-status{display:none;}
+  .mobile-shell:has(.t2-shell) .nd2-tile-head span:last-child{font-size:9px;margin-left:auto;}
+  .mobile-shell:has(.t2-shell) .nd2-tile-body{padding:3px 2px;display:block;text-align:center;}
+  .mobile-shell:has(.t2-shell) .nd2-tile-jersey{font-size:14px;}
+  .mobile-shell:has(.t2-shell) .nd2-tile-pos{font-size:8px;}
+  .mobile-shell:has(.t2-shell) .nd2-tile-stat{padding:2px 0;}
+  .mobile-shell:has(.t2-shell) .nd2-tile-stat b{font-size:10px;}
+  .mobile-shell:has(.t2-shell) .nd2-tile-stat span{display:none;}
+  .mobile-shell:has(.t2-shell) .nd2-tile.empty{min-height:53px;}
+  .mobile-shell:has(.t2-shell) .t2-teamboard-meta{grid-template-columns:78px minmax(0,1fr) 78px;gap:4px;min-height:42px;}
+  .mobile-shell:has(.t2-shell) .nd2-coach-slot{width:78px;flex:1 1 78px;}
+  .mobile-shell:has(.t2-shell) .nd2-coach{box-shadow:none;}
+  .mobile-shell:has(.t2-shell) .nd2-coach-head{padding:3px 4px;}
+  .mobile-shell:has(.t2-shell) .nd2-coach-head span:first-child{font-size:6px;}
+  .mobile-shell:has(.t2-shell) .nd2-coach-head span:last-child,.mobile-shell:has(.t2-shell) .nd2-coach-desc,.mobile-shell:has(.t2-shell) .nd2-coach-foot{display:none;}
+  .mobile-shell:has(.t2-shell) .nd2-coach-body{padding:5px 4px;}
+  .mobile-shell:has(.t2-shell) .nd2-coach-name{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .mobile-shell:has(.t2-shell) .t2-gameplan-mini{width:18px;height:34px;flex-basis:18px;}
+  .mobile-shell:has(.t2-shell) .t2-teamboard-name{gap:2px;}
+  .mobile-shell:has(.t2-shell) .t2-teamboard-name-line{gap:4px;}
+  .mobile-shell:has(.t2-shell) .t2-teamboard-name-text{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .mobile-shell:has(.t2-shell) .t2-team-role{font-size:10px;padding:3px 4px;}
+  .mobile-shell:has(.t2-shell) .t2-teamboard-status{font-size:7px;}
+  .mobile-shell:has(.t2-shell) .t2-hca-tag{font-size:6px;padding:2px 4px;}
+  .mobile-shell:has(.t2-shell) .t2-adjustment-dock{height:20px;}
+  .mobile-shell:has(.t2-shell) .t2-adjustment-mini{width:52px;height:20px;flex-basis:52px;}
+  .mobile-shell:has(.t2-shell) .t2-rollzone{flex:1;min-height:0;padding:4px 8px;gap:4px;overflow:hidden;}
+  .mobile-shell:has(.t2-shell) .t2-rollzone-dual{gap:4px;}
+  .mobile-shell:has(.t2-shell) .t2-rollzone-caption{font-size:9px;line-height:1.15;}
+  .mobile-shell:has(.t2-shell) .t2-rollzone-caption span{font-size:8px;}
+  .mobile-shell:has(.t2-shell) .t2-possession{gap:3px;}
+  .mobile-shell:has(.t2-shell) .t2-possession-label{font-size:7px;}
+  .mobile-shell:has(.t2-shell) .t2-roll-btn{font-size:10px;padding:7px 18px;}
+  .mobile-shell:has(.t2-shell) .t2-coin,.mobile-shell:has(.t2-shell) .t2-coin-start{width:64px;height:64px;}
+  .mobile-shell:has(.t2-shell) .t2-log{position:absolute;top:4px;right:4px;z-index:20;width:min(88vw,340px);max-height:calc(100% - 8px);box-sizing:border-box;padding:10px;overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,.5);}
+  .mobile-shell:has(.t2-shell) .t2-log.collapsed{width:28px;height:28px;padding:1px;background:var(--ink);}
+  .mobile-shell:has(.t2-shell) .t2-log-head{margin-bottom:6px;}
+  .mobile-shell:has(.t2-shell) .t2-log-body{max-height:calc(100dvh - 56px);}
+  .mobile-shell:has(.t2-shell) .t2-log-entry{font-size:10px;padding:6px 0;}
 }
 
 @media (max-width:820px){

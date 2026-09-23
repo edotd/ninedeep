@@ -194,7 +194,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           {showSection('chemistry') && <TeamChemistry team={team} />}
 
           {showSection('rotation') && (
-            <div className="ts-section" id="team-rotation">
+            <div className="ts-section ts-player-carousel" id="team-rotation">
               <div className="ts-heading">Rotation</div>
               <div className="ts-roto-scroll">
                 <div className="ts-roto-grid">
@@ -211,11 +211,13 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                   {Array.from({ length: starterOpenSlots }, (_, i) => <div key={'starter-open-' + i} className="ts-bench-open starter">OPEN STARTER</div>)}
                 </div>
               </div>
+              {starters.length + starterOpenSlots > 1 && <div className="ts-card-stack-cue" aria-hidden="true"><i /><i /><i /></div>}
+              <button className="ts-bench-cue" onClick={() => document.getElementById('team-bench')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Bench <span>↓</span></button>
             </div>
           )}
 
           {showSection('rotation') && (
-            <div className="ts-section">
+            <div className="ts-section ts-player-carousel" id="team-bench">
               <div className="ts-heading">Bench</div>
               <div className="ts-roto-scroll">
                 <div className="ts-roto-grid">
@@ -234,6 +236,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                   ))}
                 </div>
               </div>
+              {bench.length + benchOpenSlots > 1 && <div className="ts-card-stack-cue" aria-hidden="true"><i /><i /><i /></div>}
             </div>
           )}
 

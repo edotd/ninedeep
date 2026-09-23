@@ -134,8 +134,8 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
   const turn = m.turn;
   const teamA = m.a, teamB = m.b;
   const isDesktop = useIsDesktop();
-  const dieSize = isDesktop ? 96 : 80;
-  const coinSize = isDesktop ? 100 : 84;
+  const dieSize = isDesktop ? 96 : 58;
+  const coinSize = isDesktop ? 100 : 64;
   const myTeam = state.teams[myTeamId];
   const humanInMatch = teamA === myTeam || teamB === myTeam;
   const [timeLeft, setTimeLeft] = useState(CARD_TIMER_SECONDS);
@@ -153,7 +153,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
   // the exchange or stage moves on, so it never lingers open over stale numbers.
   const [breakdownOpen, setBreakdownOpen] = useState(null);
   useEffect(() => { setBreakdownOpen(null); }, [turn.stage, turn.exchangeIndex]);
-  const [logCollapsed, setLogCollapsed] = useState(readLogCollapsed);
+  const [logCollapsed, setLogCollapsed] = useState(() => !window.matchMedia('(min-width: 900px)').matches || readLogCollapsed());
   const toggleLogCollapsed = () => {
     setLogCollapsed((v) => {
       const next = !v;
