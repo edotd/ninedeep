@@ -229,16 +229,16 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
     const deltaX = startX - event.changedTouches[0].clientX;
     if (deltaX > 40) setTab('chemistry');
   };
-  // Swipe near the screen's left/right edge to move between tabs, on any tab except Rotation
-  // (that one already owns left/right for its own card-to-card carousel, including the
-  // hand-off into Chemistry past the last card — see handleRotationTouchStart/End above).
-  // This only arms on a touch that STARTS within EDGE_SWIPE_ZONE of either edge, rather than
-  // anywhere in the body: any other horizontally-interactive content living in here (a card's
-  // own buttons, the Development-card picker's grid, a future modal) would otherwise have its
-  // own left/right drags misread as a tab swipe, since nothing about a touch starting on an
-  // ordinary button distinguishes it from one meant to change tabs.
+  // Swipe anywhere in the body to move between tabs, on any tab except Rotation (that one
+  // already owns left/right for its own card-to-card carousel, including the hand-off into
+  // Chemistry past the last card — see handleRotationTouchStart/End above). Bails out for a
+  // touch that starts inside .ts-roto-scroll (Rotation's own carousel, reachable here via
+  // bubbling since these handlers are always attached) or .development-picker (its card grid
+  // wraps rather than scrolls, so a drag there is easily misread as a tab swipe) — an earlier
+  // version tried gating this by requiring the touch to START within ~32px of the screen edge
+  // instead, which also blocked the ordinary case of swiping back to Rotation from the middle
+  // of the Chemistry tab, where nothing actually conflicts.
   const TAB_ORDER = ['rotation', 'chemistry', team.market ? 'office' : null, 'ledger'].filter(Boolean);
-  const EDGE_SWIPE_ZONE = 32;
   const bodyTouchStartX = useRef(null);
   const tabbarRef = useRef(null);
   const underlineRef = useRef(null);
@@ -262,9 +262,11 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, isDesktop, team.market]);
   const handleBodyTouchStart = (event) => {
-    if (event.target.closest('.ts-roto-scroll')) { bodyTouchStartX.current = null; return; }
-    const x = event.touches[0].clientX;
-    bodyTouchStartX.current = (x <= EDGE_SWIPE_ZONE || x >= window.innerWidth - EDGE_SWIPE_ZONE) ? x : null;
+    if (event.target.closest('.ts-roto-scroll') || event.target.closest('.development-picker')) {
+      bodyTouchStartX.current = null;
+      return;
+    }
+    bodyTouchStartX.current = event.touches[0].clientX;
   };
   const handleBodyTouchMove = (event) => {
     const startX = bodyTouchStartX.current;
