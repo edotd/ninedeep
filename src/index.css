@@ -997,16 +997,27 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .t2-carddecision-desc{font-family:var(--font-mono);font-size:13px;color:var(--ink-muted);line-height:1.5;margin-bottom:16px;}
 .t2-carddecision-actions{margin-top:6px;}
 
-.t2-report{background:var(--form);padding:20px;width:100%;max-width:640px;}
-.t2-report-window{position:fixed;inset:0;z-index:110;background:rgba(11,17,30,.72);display:flex;align-items:center;justify-content:center;padding:20px;}
-.t2-report-window .t2-report{box-shadow:0 22px 70px rgba(0,0,0,.45);border:2px solid var(--ink);}
-.t2-report-row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-family:var(--font-mono);font-size:14px;color:var(--file-body);padding:8px 0;border-bottom:1px solid var(--form-rule);}
+/* The possession report takes over the arrow's own slot between the two dice the instant both
+   land (see t2-possession-report in TurnPanel.jsx), instead of a separate full-screen dialog —
+   reading the breakdown never means looking away from the dice that produced it. */
+.t2-possession-report{flex:1 1 240px;max-width:320px;background:var(--form);padding:14px 16px;border:1px solid var(--ink-rule);align-items:stretch;gap:0;}
+.t2-report-row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-family:var(--font-mono);font-size:13px;color:var(--file-body);padding:7px 0;border-bottom:1px solid var(--form-rule);}
 .t2-report-row.t2-report-row-last{border-bottom:none;}
 .t2-report-label{color:var(--file-muted);}
-.t2-report-footer{display:flex;align-items:center;gap:14px;margin-top:12px;}
+.t2-report-footer{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;}
 .t2-report-footer .t2-next-possession{width:auto;flex:1 1 auto;margin-top:0;}
 .t2-auto-progress{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:11px;color:var(--file-muted);white-space:nowrap;cursor:pointer;flex:0 0 auto;}
 .t2-auto-progress input{accent-color:var(--franchise);width:14px;height:14px;cursor:pointer;}
+
+/* Spins and blurs the way the possession arrow itself would settle, so the report reads as
+   that same fixture resolving into detail rather than a new thing appearing over it. */
+@keyframes t2-report-spin-in{
+  0%{opacity:0;transform:scale(.7) rotate(-20deg);filter:blur(6px);}
+  60%{opacity:1;filter:blur(0);}
+  100%{opacity:1;transform:scale(1) rotate(0deg);filter:blur(0);}
+}
+.t2-report-spin-in{animation:t2-report-spin-in 420ms cubic-bezier(.2,.8,.25,1) both;}
+@media(prefers-reduced-motion:reduce){.t2-report-spin-in{animation:none;}}
 
 .t2-carddecision-compact{max-width:420px;padding:16px 20px;}
 .t2-adjustment-picker-window{position:fixed;inset:0;z-index:105;background:rgba(11,17,30,.76);display:flex;align-items:center;justify-content:center;padding:18px;}
@@ -1789,6 +1800,16 @@ body:has(.entry-screen){padding-bottom:0;}
   .mobile-shell:has(.t2-shell) .t2-rollzone-caption span{font-size:8px;}
   .mobile-shell:has(.t2-shell) .t2-possession{gap:3px;}
   .mobile-shell:has(.t2-shell) .t2-possession-label{font-size:7px;}
+  /* The report only ever needs to be as wide as its own text on a phone — let the dice
+     columns (already flex:1 1 0;min-width:0) give up their width to it instead of it trying
+     to hold a desktop-sized 240px column. */
+  .mobile-shell:has(.t2-shell) .t2-possession-report{flex-basis:150px;max-width:100%;padding:8px 9px;}
+  .mobile-shell:has(.t2-shell) .t2-report-row{font-size:10px;padding:4px 0;gap:4px;}
+  .mobile-shell:has(.t2-shell) .t2-report-cut em{display:block;margin-left:0;}
+  .mobile-shell:has(.t2-shell) .t2-report-footer{gap:6px;margin-top:6px;}
+  .mobile-shell:has(.t2-shell) .t2-next-possession{font-size:10px;padding:7px 8px;}
+  .mobile-shell:has(.t2-shell) .t2-auto-progress{font-size:9px;gap:4px;}
+  .mobile-shell:has(.t2-shell) .t2-auto-progress input{width:11px;height:11px;}
   .mobile-shell:has(.t2-shell) .t2-roll-btn{font-size:10px;padding:7px 18px;}
   .mobile-shell:has(.t2-shell) .t2-coin,.mobile-shell:has(.t2-shell) .t2-coin-start{width:64px;height:64px;}
   .mobile-shell:has(.t2-shell) .t2-log{position:absolute;top:4px;right:4px;z-index:20;width:min(88vw,340px);max-height:calc(100% - 8px);box-sizing:border-box;padding:10px;overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,.5);}

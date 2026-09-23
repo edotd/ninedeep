@@ -552,10 +552,37 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
             )}
           </div>
 
-          <div className="t2-possession">
-            <div className="t2-possession-label">Possession</div>
-            <div className="t2-possession-arrow" />
-          </div>
+          {rollPhase === 'both' ? (
+            // The possession arrow's job — "here's who has it" — is done the instant both dice
+            // land; a full report of the same possession slots into that exact spot instead of
+            // popping up as a separate dialog elsewhere, so reading the breakdown never means
+            // looking away from the dice that produced it. t2-report-spin-in plays the arrow's
+            // own spin-and-blur into the report appearing, rather than a plain fade.
+            <div className="t2-possession t2-possession-report t2-report-spin-in">
+              <div className="t2-report-row"><span className="t2-report-label">Possession</span><span>{offWon ? `${offTeam.name} wins` : `${defTeam.name} wins`}</span></div>
+              <div className="t2-report-row">
+                <span className="t2-report-label">{offTeam.name} Offense</span>
+                <span>{offWon ? `+${offTotal}` : <span className="t2-report-cut"><s>+{offRaw}</s> +{offTotal} <em>(−{haircutPct}% from {defTeam.name}'s defense)</em></span>}</span>
+              </div>
+              <div className="t2-report-row t2-report-row-last"><span className="t2-report-label">{defTeam.name} Defense</span><span>+{turn[`${defSide}DefTotal`]}</span></div>
+              <div className="t2-report-footer">
+                {!autoProgress && (
+                  <button className="t2-next-possession" onClick={() => advance()}>
+                    {turn.exchangeIndex === 0 ? 'Start Next Possession' : 'Start Bench Contribution'}
+                  </button>
+                )}
+                <label className="t2-auto-progress">
+                  <input type="checkbox" checked={autoProgress} onChange={(e) => toggleAutoProgress(e.target.checked)} />
+                  Auto-progress
+                </label>
+              </div>
+            </div>
+          ) : (
+            <div className="t2-possession">
+              <div className="t2-possession-label">Possession</div>
+              <div className="t2-possession-arrow" />
+            </div>
+          )}
 
           <div className="t2-rollzone-die">
             <div className={'t2-die-stage' + (defInteractive ? ' t2-die-clickable' : '')} onClick={defInteractive ? () => startRoll('def') : undefined}>
@@ -672,38 +699,6 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
             {turn.stage === 'card' && waitingOnOpponent && (
               <div className="t2-waiting">Waiting on {actingTeam.name} to lock in a card…</div>
             )}
-
-            {turn.stage === 'resolved' && rollPhase === 'both' && (() => {
-              const offSide = turn.offenseSide, defSide = turn.defenseSide;
-              const offTeam = offSide === 'a' ? teamA : teamB;
-              const defTeam = defSide === 'a' ? teamA : teamB;
-              const offTotal = turn[`${offSide}OffTotal`], offWon = turn[`${offSide}OffWon`];
-              const offRaw = turn[`${offSide}OffRaw`], haircutPct = Math.round((turn[`${offSide}Haircut`] || 0) * 100);
-              const defTotal = turn[`${defSide}DefTotal`];
-              return (
-                <div className="t2-report-window t2-fade-in">
-                  <div className="t2-report" role="dialog" aria-modal="true" aria-label="Possession result">
-                    <div className="t2-report-row"><span className="t2-report-label">Possession</span><span>{offWon ? `${offTeam.name} wins` : `${defTeam.name} wins`}</span></div>
-                    <div className="t2-report-row">
-                      <span className="t2-report-label">{offTeam.name} Offense</span>
-                      <span>{offWon ? `+${offTotal}` : <span className="t2-report-cut"><s>+{offRaw}</s> +{offTotal} <em>(−{haircutPct}% from {defTeam.name}'s defense)</em></span>}</span>
-                    </div>
-                    <div className="t2-report-row t2-report-row-last"><span className="t2-report-label">{defTeam.name} Defense</span><span>+{defTotal}</span></div>
-                    <div className="t2-report-footer">
-                      {!autoProgress && (
-                        <button className="t2-next-possession" onClick={() => advance()}>
-                          {turn.exchangeIndex === 0 ? 'Start Next Possession' : 'Start Bench Contribution'}
-                        </button>
-                      )}
-                      <label className="t2-auto-progress">
-                        <input type="checkbox" checked={autoProgress} onChange={(e) => toggleAutoProgress(e.target.checked)} />
-                        Auto-progress
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
 
           </div>
 
