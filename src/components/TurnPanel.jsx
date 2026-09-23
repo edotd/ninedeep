@@ -30,6 +30,41 @@ const ROLL_REVEAL_MS = 700;
 const ROLL_BOTH_READ_MS = 1600;
 const ADJUSTMENT_REVEAL_MS = 2200;
 
+// The possession report reveals in three beats rather than all at once: the winner line sits
+// alone for REPORT_BEAT_MS, then Offense fades in and tallies up to its total over
+// REPORT_COUNT_MS, then after REPORT_HALF_BEAT_MS Defense does the same — mirroring the
+// "arrow settles, then each side's number builds" read a real box score gets.
+const REPORT_BEAT_MS = 550;
+const REPORT_COUNT_MS = 550;
+const REPORT_HALF_BEAT_MS = 275;
+
+// Rounds a mid-tally value to 2 decimals and drops trailing zeros, so the count-up reads
+// cleanly frame to frame (no floating-point noise) and lands on exactly the same string the
+// static "+N" display always used (whole totals print as "10", not "10.00").
+function formatTally(n) { return Number(n.toFixed(2)).toString(); }
+
+// Animates 0 -> target over durationMs via rAF while `running` is true, and resets to 0 the
+// moment it goes false — used so each report row's number visibly builds up rather than just
+// appearing, and starts fresh again on the next possession.
+function useCountUp(target, durationMs, running) {
+  const [value, setValue] = useState(0);
+  useEffect(() => {
+    if (!running) { setValue(0); return undefined; }
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { setValue(target); return undefined; }
+    let raf;
+    const start = performance.now();
+    const tick = (now) => {
+      const t = Math.min(1, (now - start) / durationMs);
+      setValue(target * t);
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [running, target, durationMs]);
+  return running ? value : 0;
+}
+
 // The bench stage reveals the same way: the coin-toss winner's bench figure first, a read
 // pause, then the other team's, then a final read pause before the result card appears.
 const BENCH_REVEAL_MS = 1300;
@@ -151,6 +186,20 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
   // 'idle-off' | 'rolling-off' | 'revealed-off' | 'idle-def' | 'rolling-def' | 'revealed-def' | 'both'
   const [rollPhase, setRollPhase] = useState('idle-off');
   const rollTimerRef = useRef(null);
+  // The possession report's own staged reveal once rollPhase reaches 'both': 'winner' (just the
+  // winner line) -> 'offense' (offense row tallying up) -> 'defense' (defense row tallying up)
+  // -> 'done' (footer/auto-progress controls appear). Driven by the effect below, not clicks.
+  const [reportStage, setReportStage] = useState('winner');
+  const reportTimersRef = useRef([]);
+  // useCountUp is a hook, so it has to run unconditionally at the top level every render —
+  // renderRollCircle below is only a plain helper (not itself a component), and it early-returns
+  // for every turn.stage other than 'resolved', so hooks can't live inside it. The 0-fallbacks
+  // keep the targets valid before there's a real total to count up to; `running` (not the target)
+  // is what actually gates whether either one is animating at all.
+  const reportOffTotal = turn.stage === 'resolved' ? turn[`${turn.offenseSide}OffTotal`] : 0;
+  const reportDefTotal = turn.stage === 'resolved' ? turn[`${turn.defenseSide}DefTotal`] : 0;
+  const offenseCount = useCountUp(reportOffTotal, REPORT_COUNT_MS, ['offense', 'defense', 'done'].includes(reportStage));
+  const defenseCount = useCountUp(reportDefTotal, REPORT_COUNT_MS, ['defense', 'done'].includes(reportStage));
   // 'first' | 'second' | 'result' — the bench stage's own reveal sequence, mirroring rollPhase.
   const [benchPhase, setBenchPhase] = useState('first');
   const benchTimerRef = useRef(null);
@@ -285,14 +334,32 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
       rollTimerRef.current = setTimeout(() => setRollPhase('revealed-def'), ROLL_DURATION_MS);
     } else if (rollPhase === 'revealed-def') {
       rollTimerRef.current = setTimeout(() => setRollPhase('both'), ROLL_REVEAL_MS);
-    } else if (rollPhase === 'both' && autoProgress) {
+    } else if (rollPhase === 'both' && autoProgress && reportStage === 'done') {
       // With auto-progress off (the default), both post-roll reports wait on their own
       // "Start Next Possession" / "Start Bench Contribution" click instead of advancing here.
+      // Waits for the report's own reveal (see reportStage below) to finish first, so
+      // auto-progress never skips past the Offense/Defense tally-up before it's readable.
       rollTimerRef.current = setTimeout(() => advance(), ROLL_BOTH_READ_MS);
     }
     return () => clearTimeout(rollTimerRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rollPhase, turn.exchangeIndex, autoProgress]);
+  }, [rollPhase, turn.exchangeIndex, autoProgress, reportStage]);
+
+  // Stages the possession report's reveal once both dice have landed: winner line alone, then
+  // Offense fades in and tallies, then (after a shorter half-beat) Defense does the same, then
+  // 'done' unlocks the footer/auto-progress. Resets back to 'winner' the instant rollPhase
+  // leaves 'both' so the next possession's report starts its reveal from scratch too.
+  useEffect(() => {
+    reportTimersRef.current.forEach(clearTimeout);
+    if (rollPhase !== 'both') { setReportStage('winner'); return undefined; }
+    setReportStage('winner');
+    reportTimersRef.current = [
+      setTimeout(() => setReportStage('offense'), REPORT_BEAT_MS),
+      setTimeout(() => setReportStage('defense'), REPORT_BEAT_MS + REPORT_COUNT_MS + REPORT_HALF_BEAT_MS),
+      setTimeout(() => setReportStage('done'), REPORT_BEAT_MS + REPORT_COUNT_MS + REPORT_HALF_BEAT_MS + REPORT_COUNT_MS),
+    ];
+    return () => reportTimersRef.current.forEach(clearTimeout);
+  }, [rollPhase, turn.exchangeIndex]);
 
   // Only the side's own controlling human ever clicks its die — an AI-controlled side (or the
   // other real player's side, in online play) never waits on this client's click. AI sides
@@ -563,22 +630,32 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
             // own spin-and-blur into the report appearing, rather than a plain fade.
             <div className="t2-possession t2-possession-report t2-report-spin-in">
               <div className="t2-report-winner">{offWon ? offTeam.name : defTeam.name} Wins</div>
-              <div className="t2-report-row">
-                <span>{offTeam.name} Offense</span>
-                <span>{offWon ? `+${offTotal}` : <span className="t2-report-cut"><s>+{offRaw}</s> +{offTotal} <em>(−{haircutPct}% from {defTeam.name}'s defense)</em></span>}</span>
-              </div>
-              <div className="t2-report-row t2-report-row-last"><span>{defTeam.name} Defense</span><span>+{turn[`${defSide}DefTotal`]}</span></div>
-              <div className="t2-report-footer">
-                {!autoProgress && (
-                  <button className="t2-next-possession" onClick={() => advance()}>
-                    {turn.exchangeIndex === 0 ? 'Start Next Possession' : 'Start Bench Contribution'}
-                  </button>
-                )}
-                <label className="t2-auto-progress">
-                  <input type="checkbox" checked={autoProgress} onChange={(e) => toggleAutoProgress(e.target.checked)} />
-                  Auto-progress
-                </label>
-              </div>
+              {reportStage !== 'winner' && (
+                <div className="t2-report-row t2-fade-in">
+                  <span>{offTeam.name} Offense</span>
+                  <span>{offWon
+                    ? `+${formatTally(offenseCount)}`
+                    : <span className="t2-report-cut"><s>+{offRaw}</s> +{formatTally(offenseCount)} <em>(−{haircutPct}% from {defTeam.name}'s defense)</em></span>}</span>
+                </div>
+              )}
+              {(reportStage === 'defense' || reportStage === 'done') && (
+                <div className="t2-report-row t2-report-row-last t2-fade-in">
+                  <span>{defTeam.name} Defense</span><span>+{formatTally(defenseCount)}</span>
+                </div>
+              )}
+              {reportStage === 'done' && (
+                <div className="t2-report-footer t2-fade-in">
+                  {!autoProgress && (
+                    <button className="t2-next-possession" onClick={() => advance()}>
+                      {turn.exchangeIndex === 0 ? 'Start Next Possession' : 'Start Bench Contribution'}
+                    </button>
+                  )}
+                  <label className="t2-auto-progress">
+                    <input type="checkbox" checked={autoProgress} onChange={(e) => toggleAutoProgress(e.target.checked)} />
+                    Auto-progress
+                  </label>
+                </div>
+              )}
             </div>
           ) : (
             <div className="t2-possession">
