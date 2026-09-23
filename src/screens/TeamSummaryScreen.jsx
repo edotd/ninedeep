@@ -145,7 +145,8 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   // any bench card fills it directly via promoteToStarter instead of requiring a selection.
   const [selectedId, setSelectedId] = useState(null);
   const [developPlayer, setDevelopPlayer] = useState(null);
-  useEffect(() => { setSelectedId(null); }, [team.id, canEdit]);
+  const [rotationIndex, setRotationIndex] = useState(0);
+  useEffect(() => { setSelectedId(null); setRotationIndex(0); }, [team.id, canEdit]);
   const handleCardClick = (card) => {
     if (!canEdit) return;
     const isStarter = activeSet.has(card.id);
@@ -197,8 +198,11 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
 
           {showSection('rotation') && (
             <div className="ts-section ts-player-carousel" id="team-rotation">
-              <div className="ts-heading">Rotation</div>
-              <div className="ts-roto-scroll">
+              <div className="ts-heading ts-rotation-heading">Rotation <span>{rotationIndex < 5 ? 'Starters' : 'Bench'}</span></div>
+              <div className="ts-roto-scroll" onScroll={!isDesktop ? (event) => {
+                const width = event.currentTarget.clientWidth;
+                if (width) setRotationIndex(Math.round(event.currentTarget.scrollLeft / width));
+              } : undefined}>
                 <div className="ts-roto-grid">
                   {starters.map((c) => (
                     <PlayerCard
@@ -211,14 +215,23 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                     />
                   ))}
                   {Array.from({ length: starterOpenSlots }, (_, i) => <div key={'starter-open-' + i} className="ts-bench-open starter">OPEN STARTER</div>)}
+                  {!isDesktop && bench.map((c) => (
+                    <PlayerCard
+                      key={c.id}
+                      card={c}
+                      selected={selectedId === c.id}
+                      onClick={canEdit ? () => handleCardClick(c) : undefined}
+                      onRelease={canEdit ? handleRelease : undefined}
+                      onDevelop={!readOnly && !c.development ? setDevelopPlayer : undefined}
+                    />
+                  ))}
+                  {!isDesktop && Array.from({ length: benchOpenSlots }, (_, i) => <div key={'open-' + i} className="ts-bench-open">OPEN</div>)}
                 </div>
               </div>
-              {starters.length + starterOpenSlots > 1 && <div className="ts-card-stack-cue" aria-hidden="true"><i /><i /><i /></div>}
-              <button className="ts-bench-cue" onClick={() => document.getElementById('team-bench')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Bench <span>↓</span></button>
             </div>
           )}
 
-          {showSection('rotation') && (
+          {isDesktop && showSection('rotation') && (
             <div className="ts-section ts-player-carousel" id="team-bench">
               <div className="ts-heading">Bench</div>
               <div className="ts-roto-scroll">

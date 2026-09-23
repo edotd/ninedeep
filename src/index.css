@@ -670,7 +670,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .ts-roto-scroll{overflow-x:auto;padding-bottom:6px;margin-bottom:8px;}
 .ts-roto-grid{display:flex;gap:14px;}
 .ts-roto-grid .pcard{width:230px;flex-shrink:0;margin:0;}
-.ts-card-stack-cue,.ts-bench-cue{display:none;}
+.ts-rotation-heading span{display:none;}
 /* Bench renders the same full PlayerCards as Rotation now (see ts-roto-grid) — an OPEN slot
    just needs to be a fixed-width dashed placeholder; flex's default align-items:stretch makes
    it match whatever height the real cards next to it end up being. */
@@ -1689,18 +1689,12 @@ body:has(.entry-screen){padding-bottom:0;}
   .ts-viewing-franchise{display:block;}
   .ts-tabbar,.bracket-round-tabbar{position:sticky;top:var(--mobile-persistent-top-height,0px);z-index:4;box-shadow:0 3px 8px rgba(0,0,0,.22);}
   .ts-player-carousel{position:relative;}
-  .ts-player-carousel .ts-roto-scroll{margin-right:-24px;padding-right:38px;scroll-snap-type:x mandatory;scrollbar-width:none;}
+  .ts-rotation-heading{display:flex;align-items:baseline;gap:9px;}
+  .ts-rotation-heading span{display:inline;color:var(--stamp);font:10px var(--font-mono);letter-spacing:.1em;}
+  .ts-player-carousel .ts-roto-scroll{margin-left:-24px;margin-right:-24px;padding:0;scroll-snap-type:x mandatory;scrollbar-width:none;}
   .ts-player-carousel .ts-roto-scroll::-webkit-scrollbar{display:none;}
-  .ts-player-carousel .ts-roto-grid{gap:10px;}
-  .ts-player-carousel .ts-roto-grid .pcard,.ts-player-carousel .ts-bench-open{width:calc(100vw - 76px);max-width:none;scroll-snap-align:start;scroll-snap-stop:always;}
-  .ts-card-stack-cue{display:block;position:absolute;right:-18px;top:52%;width:22px;height:96px;transform:translateY(-50%);pointer-events:none;z-index:3;}
-  .ts-card-stack-cue i{position:absolute;top:0;bottom:0;width:4px;border-radius:4px;background:var(--franchise);box-shadow:0 0 0 1px var(--ink);}
-  .ts-card-stack-cue i:nth-child(1){right:14px;opacity:.45;}
-  .ts-card-stack-cue i:nth-child(2){right:7px;opacity:.7;}
-  .ts-card-stack-cue i:nth-child(3){right:0;}
-  .ts-bench-cue{display:flex;width:100%;align-items:center;justify-content:center;gap:10px;margin-top:12px;padding:11px;border:1px solid var(--ink);background:transparent;color:var(--ink);font:11px var(--font-label);letter-spacing:.12em;text-transform:uppercase;}
-  .ts-bench-cue span{font-size:19px;color:var(--stamp);line-height:1;}
-  #team-bench{scroll-margin-top:calc(var(--mobile-persistent-top-height,0px) + 48px);}
+  .ts-player-carousel .ts-roto-grid{gap:0;width:100%;}
+  .ts-player-carousel .ts-roto-grid .pcard,.ts-player-carousel .ts-bench-open{box-sizing:border-box;width:100vw;max-width:none;flex:0 0 100vw;margin:0;scroll-snap-align:start;scroll-snap-stop:always;}
 }
 
 /* A live mobile match owns the viewport. The global chrome gives way to the board, while the
