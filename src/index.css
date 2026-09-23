@@ -361,9 +361,14 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .pcard-stat span{display:block;margin-top:2px;font-family:var(--font-label);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);}
 /* Where Release/Develop and the Career Stage row used to sit — now reserved for a League
    Accolade (a single icon, see CardTypeMark) plus whatever tags apply (Selected, Developed). */
-.pcard-accolade-row{min-height:36px;}
+.pcard-accolade-block{position:relative;background:var(--file);padding:11px 12px 12px;border-bottom:1px solid var(--form-rule);}
+.pcard-accolade-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.pcard-accolade-value{display:flex;align-items:center;min-height:26px;}
 .pcard-accolade{display:inline-flex;color:var(--franchise);}
+.pcard.tier-EXP .pcard-accolade-block{background:#162034;border-color:var(--ink-rule);}
 .pcard.tier-EXP .pcard-accolade{color:var(--file);}
+.pcard-accolade-none{font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--file-muted);}
+.pcard.tier-EXP .pcard-accolade-none{color:var(--ink-muted);}
 .pcard-accolade-tags{display:flex;align-items:center;gap:6px;}
 .pcard-development{display:inline-block;border:1.5px solid var(--approved-file);padding:4px 6px;font-size:9px;letter-spacing:.1em;color:var(--approved-file);font-family:var(--font-mono);text-transform:uppercase;}
 
@@ -1822,7 +1827,11 @@ body:has(.entry-screen){padding-bottom:0;}
   .ts-player-carousel{position:relative;}
   .ts-rotation-heading{display:flex;align-items:baseline;gap:9px;}
   .ts-rotation-heading span{display:inline;color:var(--stamp);font:10px var(--font-mono);letter-spacing:.1em;}
-  .ts-player-carousel .ts-roto-scroll{margin-left:-24px;margin-right:-24px;padding:0;scroll-snap-type:x mandatory;scrollbar-width:none;}
+  /* The bleed out of .ts-body's 24px side padding lives on the VIEWPORT now, not the scroller —
+     the peek tab (a sibling of .ts-roto-scroll, not a descendant) needs that same full-bleed
+     edge to anchor position:absolute against, or it lands 24px short of the true screen edge. */
+  .ts-player-carousel .ts-roto-viewport{margin-left:-24px;margin-right:-24px;}
+  .ts-player-carousel .ts-roto-scroll{padding:0;scroll-snap-type:x mandatory;scrollbar-width:none;}
   .ts-player-carousel .ts-roto-scroll::-webkit-scrollbar{display:none;}
   .ts-player-carousel .ts-roto-grid{gap:0;width:100%;align-items:flex-start;}
   /* Each slot is narrower than the screen by exactly the next card's peek (design ref 5A/
@@ -1839,13 +1848,14 @@ body:has(.entry-screen){padding-bottom:0;}
      card's snap point) — a sliver of the second-to-last card shows instead. Give the last slot
      the full width back so it actually reaches the edge. */
   .ts-player-carousel .ts-roto-grid > .ts-roto-slot:last-child{width:100%;flex-basis:100%;}
-  /* The tab sitting on that peek — pinned to the true viewport edge via position:fixed (an
-     ancestor's own padding can't push a fixed element in from the edge the way it can an
-     absolutely-positioned one) and centered over the card area, not the whole carousel section
-     (heading included). Ink with a running count normally; on the last card it turns amber and
-     names the next tab instead (swipe rule 03) — same element, .next-tab just recolors it and
-     swaps the count for a label. */
-  .ts-hand-peek-tab{position:fixed;top:50%;right:0;transform:translateY(-50%);width:42px;min-height:64px;box-sizing:border-box;padding:8px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:var(--ink-deep);border:1px solid var(--franchise);border-right:none;pointer-events:none;z-index:6;}
+  /* The tab sitting on that peek — pinned to the true viewport edge and spanning the full
+     height of the card area (not a small centered pill), matching the reference sketch:
+     position:absolute against .ts-roto-viewport now that IT owns the full-bleed edge (see
+     above), so top:0/bottom:0 tracks exactly the card area's own height with no viewport-math
+     needed. Ink with a running count normally; on the last card it turns amber and names the
+     next tab instead (swipe rule 03) — same element, .next-tab just recolors it and swaps the
+     count for a label. */
+  .ts-hand-peek-tab{position:absolute;top:0;bottom:0;right:0;width:42px;box-sizing:border-box;padding:8px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:var(--ink-deep);border:1px solid var(--franchise);border-right:none;pointer-events:none;z-index:6;}
   .ts-hand-peek-tab.next-tab{background:var(--franchise);border-color:var(--franchise);}
   .ts-hand-peek-chevron{font-family:var(--font-display);font-size:20px;line-height:1;color:var(--franchise);}
   .ts-hand-peek-tab.next-tab .ts-hand-peek-chevron{color:var(--ink);}
@@ -1864,7 +1874,11 @@ body:has(.entry-screen){padding-bottom:0;}
   .ts-screen-lock .ts-body{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;}
   .ts-screen-lock .ts-player-carousel{flex:1;min-height:0;display:flex;flex-direction:column;}
   .ts-screen-lock .ts-roto-viewport{flex:1;min-height:0;position:relative;}
-  .ts-screen-lock .ts-roto-scroll{height:100%;}
+  /* overflow-x:auto alone (set on .ts-player-carousel .ts-roto-scroll above) makes the UA
+     compute overflow-y as auto too, per spec — which let the carousel scroll vertically
+     whenever a card came out even a hair taller than the box. This is the one tab meant to own
+     the screen with no scroll of its own but the horizontal swipe, so shut that axis off. */
+  .ts-screen-lock .ts-roto-scroll{height:100%;overflow-y:hidden;}
   .ts-screen-lock .ts-roto-grid{height:100%;}
   /* A card never stretches to fill its slot — it sizes to its own natural width/height (capped,
      centered) and, only when that natural height is actually taller than the space available,
@@ -1873,6 +1887,26 @@ body:has(.entry-screen){padding-bottom:0;}
      internal scrollbar. A card shorter than the available space just sits at its natural size
      with real margin below it, rather than being force-filled to look busier than it is. */
   .ts-screen-lock .ts-roto-grid .pcard{transform-origin:top;will-change:transform;}
+  /* "Bigger, not stretched" — instead of a single transform blowing up the whole card (and its
+     fixed peek-slot width along with it), the card's own internal sizes step up here: bigger
+     type and more generous padding on every section, so the card's natural height at the same
+     fixed width genuinely grows to use more of the space the locked screen hands it, rather
+     than an unscaled 375px-optimized-for-a-grid card just floating in a taller box. */
+  .ts-screen-lock .ts-roto-grid .pcard-header{padding:12px 16px;}
+  .ts-screen-lock .ts-roto-grid .pcard-header-pos{font-size:26px;}
+  .ts-screen-lock .ts-roto-grid .pcard-header-stage{font-size:11px;}
+  .ts-screen-lock .ts-roto-grid .pcard-header-tier{font-size:11px;max-width:150px;}
+  .ts-screen-lock .ts-roto-grid .pcard-grade{font-size:34px;}
+  .ts-screen-lock .ts-roto-grid .pcard-name-block{padding:22px 16px 18px;gap:16px;}
+  .ts-screen-lock .ts-roto-grid .pcard-jersey{font-size:66px;}
+  .ts-screen-lock .ts-roto-grid .pcard-name{font-size:32px;}
+  .ts-screen-lock .ts-roto-grid .pcard-contract,.ts-screen-lock .ts-roto-grid .pcard-stats,.ts-screen-lock .ts-roto-grid .pcard-accolade-block{padding:14px 16px;}
+  .ts-screen-lock .ts-roto-grid .pcard-microlabel{font-size:10px;}
+  .ts-screen-lock .ts-roto-grid .pcard-budgethit{font-size:34px;}
+  .ts-screen-lock .ts-roto-grid .pcard-stat b{font-size:32px;}
+  .ts-screen-lock .ts-roto-grid .pcard-stat span{font-size:12px;}
+  .ts-screen-lock .ts-roto-grid .pcard-skillset-name{font-size:32px;}
+  .ts-screen-lock .ts-roto-grid .pcard-accolade-value{min-height:32px;}
 }
 
 /* A live mobile match owns the viewport. The global chrome gives way to the board, while the
