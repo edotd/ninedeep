@@ -394,12 +394,11 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                 </div>
                 {!isDesktop && (() => {
                   const onLastCard = rotationIndex >= mobileCardCount - 1;
+                  if (onLastCard) return null;
                   return (
-                    <div className={'ts-hand-peek-tab' + (onLastCard ? ' next-tab' : '')} aria-hidden="true">
+                    <div className="ts-hand-peek-tab" aria-hidden="true">
                       <span className="ts-hand-peek-chevron">›</span>
-                      {onLastCard
-                        ? <span className="ts-hand-peek-label">Chemistry</span>
-                        : <span className="ts-hand-peek-count">+{mobileCardCount - 1 - rotationIndex}</span>}
+                      <span className="ts-hand-peek-count">+{mobileCardCount - 1 - rotationIndex}</span>
                     </div>
                   );
                 })()}

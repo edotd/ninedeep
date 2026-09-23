@@ -6,7 +6,13 @@ const PersistentBar = forwardRef(function PersistentBar({ state, myTeamId, onNav
   const team = state.teams[myTeamId];
   const inDeal = state.phase === 'pullhand';
   const rawHand = team.hand || [];
-  const fullyDealt = !inDeal || (dealProgress ?? 0) >= rawHand.length + 3 + (team.matchupCards || []).length;
+  // Front Office deals in a fixed [coach, fanbase, market] order, but fanbase is skipped
+  // entirely (see DealScreen's own FO_KINDS) when Fanbase Cards is off for this era — only 2
+  // Front Office cards land, not always 3, or dealProgress never reaches the old hardcoded
+  // threshold and Gameplan/Adjustment stay stuck reporting 0 for the rest of pullhand (same fix
+  // as DesktopBar's foTotal, missed here originally).
+  const foTotal = state.settings.fanbaseCardsEnabled !== false ? 3 : 2;
+  const fullyDealt = !inDeal || (dealProgress ?? 0) >= rawHand.length + foTotal + (team.matchupCards || []).length;
   const coachDealt = !inDeal || (dealProgress ?? 0) > rawHand.length;
   const available = (cards) => (fullyDealt ? (cards || []).filter((card) => !card.used).length : 0);
 

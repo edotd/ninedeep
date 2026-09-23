@@ -1846,21 +1846,21 @@ body:has(.entry-screen){padding-bottom:0;}
   /* The last card has no next card to peek at, so reserving 42px for one just leaves the
      scroll container unable to reach flush-left on it (max scrollLeft caps 42px short of that
      card's snap point) — a sliver of the second-to-last card shows instead. Give the last slot
-     the full width back so it actually reaches the edge. */
-  .ts-player-carousel .ts-roto-grid > .ts-roto-slot:last-child{width:100%;flex-basis:100%;}
+     the full width back so it actually reaches the edge — but the CARD inside stays the same
+     width as every other card and simply centers in that extra room, rather than stretching to
+     fill it (which made the last card visibly bigger than the rest) or peeking at a next card
+     that doesn't exist (the peek tab is gone entirely here too, see TeamSummaryScreen.jsx). */
+  .ts-player-carousel .ts-roto-grid > .ts-roto-slot:last-child{width:100%;flex-basis:100%;justify-content:center;}
+  .ts-player-carousel .ts-roto-grid > .ts-roto-slot:last-child>*{width:calc(100vw - 42px);flex-shrink:0;}
   /* The tab sitting on that peek — pinned to the true viewport edge and spanning the full
      height of the card area (not a small centered pill), matching the reference sketch:
      position:absolute against .ts-roto-viewport now that IT owns the full-bleed edge (see
      above), so top:0/bottom:0 tracks exactly the card area's own height with no viewport-math
-     needed. Ink with a running count normally; on the last card it turns amber and names the
-     next tab instead (swipe rule 03) — same element, .next-tab just recolors it and swaps the
-     count for a label. */
+     needed. Gone entirely on the last card (see TeamSummaryScreen.jsx) rather than switching to
+     a "next tab" state — there's nothing left to peek at. */
   .ts-hand-peek-tab{position:absolute;top:0;bottom:0;right:0;width:42px;box-sizing:border-box;padding:8px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:var(--ink-deep);border:1px solid var(--franchise);border-right:none;pointer-events:none;z-index:6;}
-  .ts-hand-peek-tab.next-tab{background:var(--franchise);border-color:var(--franchise);}
   .ts-hand-peek-chevron{font-family:var(--font-display);font-size:20px;line-height:1;color:var(--franchise);}
-  .ts-hand-peek-tab.next-tab .ts-hand-peek-chevron{color:var(--ink);}
   .ts-hand-peek-count{font-family:var(--font-mono);font-size:11px;color:var(--file);}
-  .ts-hand-peek-label{font-family:var(--font-label);font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);text-align:center;line-height:1.2;}
 
   /* While the Rotation tab is showing, the card IS the screen — no page scroll competing with
      the horizontal card-to-card swipe. The franchise header AND the persistent bar (with its
