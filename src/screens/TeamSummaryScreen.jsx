@@ -342,9 +342,9 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
         <div className="ts-viewing-franchise"><span>{readOnly ? 'Viewing Franchise' : 'Your Franchise'}</span><strong>{team.name}</strong></div>
         <div className="ts-tabbar" ref={tabbarRef}>
           <button className={'ts-tab' + (tab === 'rotation' ? ' active' : '')} onClick={() => setTab('rotation')}>Rotation</button>
-          <button className={'ts-tab' + (tab === 'chemistry' ? ' active' : '')} onClick={() => setTab('chemistry')}>Chemistry</button>
+          <button className={'ts-tab' + (tab === 'chemistry' ? ' active' : '')} onClick={() => setTab('chemistry')}>Lineup & Chemistry</button>
           {team.market && (
-            <button className={'ts-tab' + (tab === 'office' ? ' active' : '')} onClick={() => setTab('office')}>Staff / Gameplan</button>
+            <button className={'ts-tab' + (tab === 'office' ? ' active' : '')} onClick={() => setTab('office')}>Staff & Gameplan</button>
           )}
           <button className={'ts-tab' + (tab === 'ledger' ? ' active' : '')} onClick={() => setTab('ledger')}>Ledger</button>
           {!isDesktop && <span className="ts-tab-underline" ref={underlineRef} aria-hidden="true" />}
