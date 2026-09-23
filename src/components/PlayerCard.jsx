@@ -3,7 +3,6 @@ import { skillsetFor } from '../game/skillsets';
 import { formatCoins } from '../game/economy';
 import { careerLevel } from '../game/aging';
 import { cardTier, jerseyNumber, playerGrade } from '../game/cards';
-import { LEAGUE_ACCOLADES } from '../game/constants';
 import CardTypeMark from './CardTypeMark';
 
 const LEGACY_DEVELOPMENT_CHANGES = {
@@ -13,8 +12,6 @@ const LEGACY_DEVELOPMENT_CHANGES = {
   'Defensive Camp': { DEF: 2 },
   'Complete Program': { SCO: 1, PLM: 1, REB: 1, DEF: 1 },
 };
-
-const ACCOLADE_NAMES = new Set(LEAGUE_ACCOLADES.map((a) => a.name));
 
 // How long a touch has to sit still before it counts as a hold rather than a tap — long enough
 // that a normal card-select tap never trips it, short enough that it doesn't feel unresponsive.
@@ -33,7 +30,7 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
   const levelColor = tier === 'EXP'
     ? (level === 'Prime' ? '#8FD9B0' : level === 'Declining' ? 'var(--franchise)' : 'var(--ink-muted)')
     : (level === 'Prime' ? 'var(--approved)' : level === 'Declining' ? 'var(--stamp)' : 'var(--depth)');
-  const accolade = ACCOLADE_NAMES.has(card.tierName) ? card.tierName : null;
+  const accolade = card.accolade || null;
 
   // Release/Develop are destructive/rare actions, not something every glance at the roster
   // needs to see — they now live behind a hold (mobile) or the expand arrow (desktop, see
@@ -80,11 +77,7 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
           <div className="pcard-header-left">
             <div className="pcard-header-stack">
               <span className="pcard-header-stage" style={{ color: levelColor }}>{level}</span>
-              {/* card.tierName doubles as the League Accolade name for an accoladed player
-                  (see cardTier in game/cards.js) — this line is for their actual tier (Role
-                  Player, High IQ, Undrafted, …) only, never an accolade, which gets its own
-                  icon further down instead. */}
-              <span className="pcard-header-tier">{!accolade && card.tierName}</span>
+              <span className="pcard-header-tier">{card.tierName}</span>
             </div>
             <span className="pcard-header-sep">•</span>
             <span className="pcard-header-pos">{card.position}</span>

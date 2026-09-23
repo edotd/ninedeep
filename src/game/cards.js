@@ -1,5 +1,5 @@
 import { rollSkillset } from './skillsets';
-import { ARCHETYPES, POSITIONS, POSITION_MOD, COACH_ARCHETYPES, COACH_MODIFIERS, MATCHUP_MODIFIER_TYPES, PLAYER_RELATIONSHIP_MIN, PLAYER_RELATIONSHIP_MAX, LEAGUE_ACCOLADES, MIN_PLAYER_SALARY } from './constants';
+import { ARCHETYPES, POSITIONS, POSITION_MOD, COACH_ARCHETYPES, COACH_MODIFIERS, MATCHUP_MODIFIER_TYPES, PLAYER_RELATIONSHIP_MIN, PLAYER_RELATIONSHIP_MAX, MIN_PLAYER_SALARY } from './constants';
 import { rollWithVariance, weightedPick, shuffle } from './rng';
 import { randomCareerStage, careerMultiplier } from './aging';
 
@@ -10,15 +10,18 @@ export function nextCardId(state) {
   return 'c' + state.cardCounter;
 }
 
-const ACCOLADE_NAMES = new Set(LEAGUE_ACCOLADES.map((t) => t.name));
-
-// Card tier per the brand handoff: A (franchise) = League Accolade tiers, D (depth) =
+// Card tier per the brand handoff: A (franchise) = has a League Accolade, D (depth) =
 // Undrafted replacements, EXP (expiring) overrides everything in a player's final contract
 // year, everything else is B (standard). Shared by PlayerCard and the persistent bar's
 // player slots so a card's tier reads the same everywhere it appears.
+//
+// Tier and Accolade are independent fields (card.tierName / card.accolade) — every card has a
+// genuine tier (Role Player, High IQ, Undrafted, ...) whether or not it also carries one of the
+// rarer League Accolades (All-Star, MVP, ...), which used to double up as an alternate,
+// mutually-exclusive tierName value instead of a real, separate honor. See makeCard below.
 export function cardTier(card) {
   if (card.contract <= 1) return 'EXP';
-  if (ACCOLADE_NAMES.has(card.tierName)) return 'A';
+  if (card.accolade) return 'A';
   if (card.tierName === 'Undrafted') return 'D';
   return 'B';
 }
@@ -51,33 +54,41 @@ export function statsToCoins(total) {
   return Math.max(MIN_PLAYER_SALARY, Math.min(5, v));
 }
 
-export function makeCard(state, archName, position, tier, forcedCareerStage = null) {
+// `tier` always names the card's genuine, independent tier (Role Player, High IQ, Undrafted,
+// ...) — its own uniform/peak/contract shape the card UNLESS `accolade` is also given, in which
+// case the accolade (an elite, much rarer honor) shapes stats/contract instead, exactly as it
+// did back when accolade and tier were the same mutually-exclusive field. tierName still comes
+// from `tier`, so the display and the stat math can genuinely disagree about what "shaped" this
+// card — an accoladed player still has a real tier label, it just isn't what's driving numbers.
+export function makeCard(state, archName, position, tier, forcedCareerStage = null, accolade = null) {
   const arch = ARCHETYPES[archName];
-  const peakKeys = tier.forceStats || (tier.forceStat ? [tier.forceStat] : [arch.peak]);
+  const shaper = accolade || tier;
+  const peakKeys = shaper.forceStats || (shaper.forceStat ? [shaper.forceStat] : [arch.peak]);
   const stats = {};
   let total = 0;
   ['SCO', 'PLM', 'REB', 'DEF'].forEach((k) => {
     const base = arch.base[k] + POSITION_MOD[position][k];
-    let v = base * tier.uniform;
-    if (peakKeys.includes(k)) v *= tier.peak;
+    let v = base * shaper.uniform;
+    if (peakKeys.includes(k)) v *= shaper.peak;
     v = Math.round(v);
     v = rollWithVariance(v, 1);
     v = Math.max(1, v);
     stats[k] = v;
     total += v;
   });
-  const contract = Math.max(1, rollWithVariance(tier.contract, 1));
-  const contractDeviation = tier.contract - contract; // positive = shorter than typical for this tier
+  const contract = Math.max(1, rollWithVariance(shaper.contract, 1));
+  const contractDeviation = shaper.contract - contract; // positive = shorter than typical for this shaper
   let salary = statsToCoins(total) * (1 + contractDeviation * 0.15);
   salary = Math.max(MIN_PLAYER_SALARY, Math.round(salary * 2) / 2);
-  // League Accolade tiers only roll on players in their prime.
-  const careerStage = forcedCareerStage || (tier.accolade ? 'Prime' : randomCareerStage());
+  // League Accolades only roll on players in their prime.
+  const careerStage = forcedCareerStage || (accolade ? 'Prime' : randomCareerStage());
   return {
     id: nextCardId(state),
     archetype: archName,
     position,
     skillsetId: rollSkillset(position, archName, careerStage),
     tierName: tier.name,
+    accolade: accolade ? accolade.name : null,
     stats,
     salary,
     contract,

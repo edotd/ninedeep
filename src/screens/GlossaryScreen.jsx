@@ -129,7 +129,7 @@ export default function GlossaryScreen({ state, onBack }) {
         {TIERS.map((t) => <TierBlock key={t.name} t={t} />)}
 
         <h2 id="league-accolades">League Accolades</h2>
-        <p className="lede">Elite, statistical-distinction tiers roll on players in the Prime career stage. Draft prospects cannot roll League Accolades.</p>
+        <p className="lede">An elite, statistical-distinction honor layered on top of a player's own tier, not a replacement for one — every player still has a genuine tier above. Only rolls on players in the Prime career stage, and never on draft prospects.</p>
         {LEAGUE_ACCOLADES.map((t) => <TierBlock key={t.name} t={t} />)}
 
         <h2 id="aging-experience">Aging &amp; Experience</h2>

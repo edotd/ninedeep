@@ -41,14 +41,39 @@ export function newEraState() {
   };
 }
 
+// Weighted by count, same shape as draft.js's pickWeightedTier — used below to give every
+// League Accolade card a genuine, independent tier label alongside its accolade (see
+// game/cards.js's makeCard) rather than reusing that helper across a circular import for six
+// lines of logic.
+function pickWeightedTier(pool) {
+  const total = pool.reduce((s, t) => s + t.count, 0);
+  let r = Math.random() * total;
+  for (const t of pool) {
+    if (r < t.count) return t;
+    r -= t.count;
+  }
+  return pool[pool.length - 1];
+}
+
 export function buildStarPool(state) {
   state.starPool = [];
   state.freeAgentCoaches = [];
-  [...TIERS, ...LEAGUE_ACCOLADES].forEach((tier) => {
+  TIERS.forEach((tier) => {
     for (let i = 0; i < tier.count; i++) {
       const posPool = tier.allowedPositions || POSITIONS;
       const pos = posPool[Math.floor(Math.random() * posPool.length)];
       state.starPool.push(makeCard(state, randomArchForTier(tier), pos, tier));
+    }
+  });
+  // Accolade cards still fill exactly LEAGUE_ACCOLADES' own counts, same total headcount of
+  // "special" players the pool has always had — the difference is each one now also gets a
+  // real tier of its own (Role Player, High IQ, ...) as an independent label, instead of the
+  // accolade name standing in for tierName outright.
+  LEAGUE_ACCOLADES.forEach((accolade) => {
+    for (let i = 0; i < accolade.count; i++) {
+      const posPool = accolade.allowedPositions || POSITIONS;
+      const pos = posPool[Math.floor(Math.random() * posPool.length)];
+      state.starPool.push(makeCard(state, randomArchForTier(accolade), pos, pickWeightedTier(TIERS), null, accolade));
     }
   });
   shuffle(state.starPool);
