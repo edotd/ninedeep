@@ -31,7 +31,7 @@ export default function Header({ state, myTeamId, overlay, onTeam, onFreeAgency,
           <BallMark size={28} variant="onInk" />
         </button>
         <span className="topbar-wordmark"><b>NINE</b> <i>DEEP</i></span>
-        <div className="topbar-title">{team.name}</div>
+        <div className="topbar-title">{team.name} {team.tricode && <span className="topbar-tricode">{team.tricode}</span>}</div>
       </div>
       <div className="era-bar-wrap">
         <div className="era-bar-label"><span>Era 01 · Year {seasonNum} of {ERA_LENGTH}</span></div>

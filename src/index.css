@@ -103,6 +103,7 @@ p.lede{color:var(--file-body);font-size:14px;line-height:1.5;margin:0 0 14px;}
 .topbar{position:sticky;top:0;z-index:5;background:var(--ink);color:var(--file);max-width:var(--content-width);margin:0 auto;}
 .topbar-lockup{display:flex;align-items:center;gap:12px;padding:10px 16px 8px;}
 .topbar-title{font-family:var(--font-display);font-size:20px;letter-spacing:.015em;flex:1;text-align:right;color:var(--file);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.topbar-tricode{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;color:var(--franchise);}
 .topbar-wordmark{font-family:var(--font-display);font-size:22px;letter-spacing:.015em;white-space:nowrap;}
 .topbar-wordmark b{color:var(--file);font-weight:400;}
 .topbar-wordmark i{color:var(--franchise);font-style:normal;font-weight:400;}
