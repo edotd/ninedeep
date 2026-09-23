@@ -404,13 +404,6 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                   );
                 })()}
               </div>
-              {!isDesktop && (
-                <div className="ts-hand-pager" aria-hidden="true">
-                  {Array.from({ length: mobileCardCount }, (_, i) => (
-                    <span key={i} className={'ts-hand-pager-seg' + (i === rotationIndex ? ' active' : '')} />
-                  ))}
-                </div>
-              )}
             </div>
           )}
 

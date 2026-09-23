@@ -1801,11 +1801,6 @@ body:has(.entry-screen){padding-bottom:0;}
   .ts-hand-peek-tab.next-tab .ts-hand-peek-chevron{color:var(--ink);}
   .ts-hand-peek-count{font-family:var(--font-mono);font-size:11px;color:var(--file);}
   .ts-hand-peek-label{font-family:var(--font-label);font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);text-align:center;line-height:1.2;}
-  /* The pager underneath (swipe rule 01: "stays put" — a fixed row of segments, not something
-     that scrolls or fades with the card content). One segment per card, current one filled. */
-  .ts-hand-pager{display:flex;gap:2px;margin:8px -24px 0;flex-shrink:0;}
-  .ts-hand-pager-seg{flex:1;height:4px;background:var(--depth-nontext);}
-  .ts-hand-pager-seg.active{background:var(--franchise);}
 
   /* While the Rotation tab is showing, the card IS the screen — no page scroll competing with
      the horizontal card-to-card swipe. The franchise header AND the persistent bar (with its
