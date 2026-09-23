@@ -126,10 +126,15 @@ p.lede{color:var(--file-body);font-size:14px;line-height:1.5;margin:0 0 14px;}
    has no `display:none` to override there, so `.open` never has anything to do. */
 @media(max-width:999px){
   .topbar-menu-btn.open{border-color:var(--franchise);}
-  /* .topbar sits inside .mobile-persistent-top, which is what's actually stacked against the
-     persistent bar (z-index:6) at the .mobile-shell level — bumping .topbar alone wouldn't
-     escape that outer cap. Bumped while open so the backdrop actually dims the persistent bar
-     (and a tap there closes the menu) instead of it poking through undimmed on top. */
+  /* Two separate stacking fights, both need their own bump while open:
+     - .topbar and .persistent-franchise-masthead (Chemistry/Output/…) are SIBLINGS inside
+       .mobile-persistent-top, both z-index:5 — with equal z-index, later DOM order wins, and
+       the masthead comes after Header, so it was painting over the dropdown outright.
+     - .mobile-persistent-top itself only ever matched the persistent bar's z-index:6 at the
+       .mobile-shell level, so the bar could still poke through above the whole header.
+     Bumping both here (rather than a permanent, always-on z-index) keeps the normal stacking
+     order intact everywhere else, including right after the menu closes. */
+  .topbar:has(.topbar-nav.open){z-index:8;}
   .mobile-persistent-top:has(.topbar-nav.open){z-index:50;}
   .topbar-menu-backdrop{position:fixed;inset:0;z-index:19;background:rgba(8,18,38,.55);}
   .topbar-nav{display:none;position:absolute;top:100%;left:16px;z-index:20;flex-direction:column;gap:0;overflow-x:visible;background:var(--ink);border:1px solid var(--ink-rule);box-shadow:0 14px 30px rgba(0,0,0,.45);padding:6px;min-width:190px;}
