@@ -26,6 +26,7 @@ test('numeric age in an older save is read and converted when its season closes'
 
 test('front office deals GM types and a visible first-season fanbase modifier', () => {
   const state = newEraState();
+  state.settings.fanbaseCardsEnabled = true; // fanbase defaults off; this test is specifically about it
   buildTeams(state, [{ name: 'Test', human: true }]);
   initFrontOffice(state);
   const team = state.teams[0];

@@ -36,7 +36,7 @@ export function newEraState() {
       actionLogSpeed: 'normal',
       winCondition: 'outright', // 'bar' = must clear the championship bar; 'outright' = winning the Finals is enough
       matchupCardsEnabled: true,
-      fanbaseCardsEnabled: true,
+      fanbaseCardsEnabled: false,
     },
   };
 }

@@ -53,7 +53,7 @@ export async function createRoom() {
       actionLogSpeed: 'normal',
       winCondition: 'outright',
       matchupCardsEnabled: true,
-      fanbaseCardsEnabled: true,
+      fanbaseCardsEnabled: false,
     },
   });
   return { code, uid: user.uid };
