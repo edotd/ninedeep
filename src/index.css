@@ -652,12 +652,13 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 /* Mobile-only tab bar (per the brand handoff's mobile Team File) — desktop keeps every
    section stacked in one scroll (TeamSummaryScreen's showSection() ignores `tab` there), so
    this bar only needs to exist below the shell's own 1000px desktop breakpoint. */
-.ts-tabbar{display:flex;background:var(--ink);border-top:1px solid var(--ink-rule);}
+.ts-tabbar{display:flex;position:relative;background:var(--ink);border-top:1px solid var(--ink-rule);}
+.ts-tab-underline{position:absolute;left:0;bottom:-1px;height:2px;width:0;background:var(--franchise);transition:left .22s ease,width .22s ease;pointer-events:none;}
 .ts-viewing-franchise{display:none;background:var(--file);border-bottom:1px solid var(--form-rule);padding:10px 16px;}
 .ts-viewing-franchise span{display:block;font:8px var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--file-muted);}
 .ts-viewing-franchise strong{display:block;margin-top:2px;font:26px/1 var(--font-display);font-weight:400;text-transform:uppercase;color:var(--ink);}
 .ts-tab{flex:1;background:none;border:none;border-bottom:2px solid transparent;padding:12px 6px;font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-muted);cursor:pointer;}
-.ts-tab.active{color:var(--franchise);border-bottom-color:var(--franchise);}
+.ts-tab.active{color:var(--franchise);}
 @media (min-width:1000px){.ts-tabbar{display:none;}}
 
 .ts-body{background:var(--file);padding:22px 24px;display:flex;flex-direction:column;gap:20px;}
@@ -1736,6 +1737,11 @@ body:has(.entry-screen){padding-bottom:0;}
      so that 42px shortfall shows up as a sliver of the next card on the right, the same swipe
      rule 02 describes ("the next card always peeks 42px at the right edge"). */
   .ts-player-carousel .ts-roto-grid .pcard,.ts-player-carousel .ts-bench-open{box-sizing:border-box;width:calc(100vw - 42px);max-width:none;flex:0 0 calc(100vw - 42px);margin:0;scroll-snap-align:start;scroll-snap-stop:always;}
+  /* The last card has no next card to peek at, so reserving 42px for one just leaves the
+     scroll container unable to reach flush-left on it (max scrollLeft caps 42px short of that
+     card's snap point) — a sliver of the second-to-last card shows instead. Give the last card
+     the full width back so it actually reaches the edge. */
+  .ts-player-carousel .ts-roto-grid > :last-child{width:100%;flex-basis:100%;}
   /* The tab sitting on that peek — pinned to the true viewport edge via position:fixed (an
      ancestor's own padding can't push a fixed element in from the edge the way it can an
      absolutely-positioned one) and centered over the card area, not the whole carousel section
@@ -1755,15 +1761,15 @@ body:has(.entry-screen){padding-bottom:0;}
   .ts-hand-pager-seg.active{background:var(--franchise);}
 
   /* While the Rotation tab is showing, the card IS the screen — no page scroll competing with
-     the horizontal card-to-card swipe, and no franchise header/persistent bar to leave room
-     for (their heights are only ever guesses that drift with device/content). Instead the
-     whole mobile-shell hands the viewport over, exactly like the live match board's t2-shell
-     treatment (see .mobile-shell:has(.t2-shell) below) — header, bottom persistent bar and the
-     Begin Season corner button are hidden outright rather than budgeted around. Other tabs
-     (Chemistry/Ledger/Staff) go back to the normal scrolling page with all chrome visible. */
+     the horizontal card-to-card swipe. The franchise header stays put (it's a real live-measured
+     height via --mobile-persistent-top-height, set in GameShell, not a guess), so the screen only
+     needs to subtract that one known quantity. The bottom persistent bar and Begin Season corner
+     button are still hidden outright (their heights aren't tracked anywhere), same as the live
+     match board's t2-shell treatment. Other tabs (Chemistry/Ledger/Staff) go back to the normal
+     scrolling page with all chrome visible. */
   .mobile-shell:has(.ts-screen-lock){height:100dvh;overflow:hidden;}
-  .mobile-shell:has(.ts-screen-lock)>.mobile-persistent-top,.mobile-shell:has(.ts-screen-lock)>.persistent-bar,.mobile-shell:has(.ts-screen-lock)>.bottombar{display:none;}
-  .ts-screen.ts-screen-lock{height:100dvh;box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);}
+  .mobile-shell:has(.ts-screen-lock)>.persistent-bar,.mobile-shell:has(.ts-screen-lock)>.bottombar{display:none;}
+  .ts-screen.ts-screen-lock{height:calc(100dvh - var(--mobile-persistent-top-height,0px));box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px);}
   .ts-screen-lock .ts-tabbar{position:static;box-shadow:none;}
   .ts-screen-lock .ts-body{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;}
   .ts-screen-lock .ts-player-carousel{flex:1;min-height:0;display:flex;flex-direction:column;}
@@ -1771,6 +1777,30 @@ body:has(.entry-screen){padding-bottom:0;}
   .ts-screen-lock .ts-roto-scroll{height:100%;}
   .ts-screen-lock .ts-roto-grid{height:100%;}
   .ts-screen-lock .ts-roto-grid .pcard,.ts-screen-lock .ts-roto-grid .ts-bench-open{height:100%;}
+  /* A card's own content (header through Release/Develop) doesn't always reach the full height
+     the locked screen hands it — shorter bios leave blank space at the bottom. Rather than guess
+     at a filler height, let Release/Develop grow to soak up whatever's left: turning the card
+     into a flex column costs nothing for the fixed-height sections above them (they keep their
+     natural size) and means the two buttons divide whatever true leftover space exists.
+     flex-basis:auto (not the flex:1 shorthand's 0%) is load-bearing — it means "grow" only ever
+     ADDS genuinely free space on top of the button's own natural size, so on a fuller card
+     (bio + all-league note + footer already filling the box) these fall back to their normal
+     size instead of forcing a fixed floor that would push past pcard's own overflow:hidden and
+     clip the buttons off the bottom entirely. */
+  /* overflow-y:auto (not the base rule's hidden) is the other half of the fix above: a card
+     whose fixed-size sections alone already exceed the box (a long bio, an all-league note,
+     etc.) can't shrink them any further without guessing at smaller fonts per section, so
+     rather than let that spill silently clip Release/Develop off the bottom, that one card
+     scrolls internally to reach them. Shorter cards never show a scrollbar — the flex-grow
+     above already fills their leftover space instead. */
+  .ts-screen-lock .ts-roto-grid .pcard{display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;}
+  .ts-screen-lock .ts-roto-grid .pcard::-webkit-scrollbar{display:none;}
+  .ts-screen-lock .ts-roto-grid .pcard-release,.ts-screen-lock .ts-roto-grid .pcard-develop{flex:1 1 auto;display:flex;align-items:center;justify-content:center;font-size:15px;letter-spacing:.08em;}
+  .ts-screen-lock .ts-roto-grid .pcard-release{justify-content:space-between;padding:0 16px;}
+  .ts-screen-lock .ts-roto-grid .pcard-release-cost{font-size:13px;}
+  /* The "Developed · <card>" note is 8px everywhere else, sized for a compact roster grid —
+     illegible at the size a full-screen locked card renders it. */
+  .ts-screen-lock .ts-roto-grid .pcard-development{font-size:12px;letter-spacing:.06em;margin-top:8px;}
 }
 
 /* A live mobile match owns the viewport. The global chrome gives way to the board, while the

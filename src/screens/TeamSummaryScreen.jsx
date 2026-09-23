@@ -178,25 +178,72 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
     const deltaX = startX - event.changedTouches[0].clientX;
     if (deltaX > 40) setTab('chemistry');
   };
-  // Swipe anywhere on the body to move between tabs, on any tab except Rotation — that one
-  // already owns left/right for its own card-to-card carousel (handleRotationTouchStart/End
-  // above), including its own hand-off into Chemistry once you're past the last card, so this
-  // bails out entirely for a touch that started inside .ts-roto-scroll rather than doubling up
-  // on the same gesture.
+  // Swipe near the screen's left/right edge to move between tabs, on any tab except Rotation
+  // (that one already owns left/right for its own card-to-card carousel, including the
+  // hand-off into Chemistry past the last card — see handleRotationTouchStart/End above).
+  // This only arms on a touch that STARTS within EDGE_SWIPE_ZONE of either edge, rather than
+  // anywhere in the body: any other horizontally-interactive content living in here (a card's
+  // own buttons, the Development-card picker's grid, a future modal) would otherwise have its
+  // own left/right drags misread as a tab swipe, since nothing about a touch starting on an
+  // ordinary button distinguishes it from one meant to change tabs.
   const TAB_ORDER = ['rotation', 'chemistry', team.market ? 'office' : null, 'ledger'].filter(Boolean);
+  const EDGE_SWIPE_ZONE = 32;
   const bodyTouchStartX = useRef(null);
+  const tabbarRef = useRef(null);
+  const underlineRef = useRef(null);
+  // Moves the single sliding underline to sit under TAB_ORDER[index]. `animate` toggles the
+  // CSS transition off for a live drag (where the underline should track the finger 1:1, with
+  // no lag) and on for a settle — either a normal tap-to-switch, or the snap-to-rest at the end
+  // of a drag (design ref Screen 05 swipe rule 04: "the amber underline tracks the finger").
+  const positionUnderline = (index, animate) => {
+    const bar = tabbarRef.current;
+    const underline = underlineRef.current;
+    if (!bar || !underline) return;
+    const btn = bar.querySelectorAll(':scope > .ts-tab')[index];
+    if (!btn) return;
+    underline.style.transition = animate ? '' : 'none';
+    underline.style.left = btn.offsetLeft + 'px';
+    underline.style.width = btn.offsetWidth + 'px';
+  };
+  useEffect(() => {
+    if (isDesktop) return;
+    positionUnderline(TAB_ORDER.indexOf(tab), true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, isDesktop, team.market]);
   const handleBodyTouchStart = (event) => {
-    bodyTouchStartX.current = event.target.closest('.ts-roto-scroll') ? null : event.touches[0].clientX;
+    if (event.target.closest('.ts-roto-scroll')) { bodyTouchStartX.current = null; return; }
+    const x = event.touches[0].clientX;
+    bodyTouchStartX.current = (x <= EDGE_SWIPE_ZONE || x >= window.innerWidth - EDGE_SWIPE_ZONE) ? x : null;
+  };
+  const handleBodyTouchMove = (event) => {
+    const startX = bodyTouchStartX.current;
+    if (startX == null) return;
+    const idx = TAB_ORDER.indexOf(tab);
+    const deltaX = startX - event.touches[0].clientX;
+    const targetIdx = deltaX > 0 ? idx + 1 : idx - 1;
+    if (targetIdx < 0 || targetIdx >= TAB_ORDER.length) return;
+    const bar = tabbarRef.current;
+    const underline = underlineRef.current;
+    if (!bar || !underline) return;
+    const buttons = bar.querySelectorAll(':scope > .ts-tab');
+    const cur = buttons[idx];
+    const next = buttons[targetIdx];
+    if (!cur || !next) return;
+    const progress = Math.min(1, Math.abs(deltaX) / window.innerWidth);
+    underline.style.transition = 'none';
+    underline.style.left = (cur.offsetLeft + (next.offsetLeft - cur.offsetLeft) * progress) + 'px';
+    underline.style.width = (cur.offsetWidth + (next.offsetWidth - cur.offsetWidth) * progress) + 'px';
   };
   const handleBodyTouchEnd = (event) => {
     const startX = bodyTouchStartX.current;
     bodyTouchStartX.current = null;
-    if (startX == null || event.target.closest('.ts-roto-scroll')) return;
+    if (startX == null) return;
     const deltaX = startX - event.changedTouches[0].clientX;
-    if (Math.abs(deltaX) < 50) return;
     const idx = TAB_ORDER.indexOf(tab);
+    if (Math.abs(deltaX) < 50) { positionUnderline(idx, true); return; }
     if (deltaX > 0 && idx < TAB_ORDER.length - 1) setTab(TAB_ORDER[idx + 1]);
     else if (deltaX < 0 && idx > 0) setTab(TAB_ORDER[idx - 1]);
+    else positionUnderline(idx, true);
   };
 
   const handleCardClick = (card) => {
@@ -240,21 +287,22 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
     <>
       <div className={'screen ts-screen' + (isRotationLocked ? ' ts-screen-lock' : '')}>
         <div className="ts-viewing-franchise"><span>{readOnly ? 'Viewing Franchise' : 'Your Franchise'}</span><strong>{team.name}</strong></div>
-        <div className="ts-tabbar">
-          <button className={'ts-tab' + (tab === 'rotation' ? ' active' : '')} onClick={() => setTab('rotation')}>Hand</button>
+        <div className="ts-tabbar" ref={tabbarRef}>
+          <button className={'ts-tab' + (tab === 'rotation' ? ' active' : '')} onClick={() => setTab('rotation')}>Rotation</button>
           <button className={'ts-tab' + (tab === 'chemistry' ? ' active' : '')} onClick={() => setTab('chemistry')}>Chemistry</button>
           {team.market && (
             <button className={'ts-tab' + (tab === 'office' ? ' active' : '')} onClick={() => setTab('office')}>Staff / Gameplan</button>
           )}
           <button className={'ts-tab' + (tab === 'ledger' ? ' active' : '')} onClick={() => setTab('ledger')}>Ledger</button>
+          {!isDesktop && <span className="ts-tab-underline" ref={underlineRef} aria-hidden="true" />}
         </div>
 
-        <div className="ts-body" onTouchStart={!isDesktop ? handleBodyTouchStart : undefined} onTouchEnd={!isDesktop ? handleBodyTouchEnd : undefined}>
+        <div className="ts-body" onTouchStart={!isDesktop ? handleBodyTouchStart : undefined} onTouchMove={!isDesktop ? handleBodyTouchMove : undefined} onTouchEnd={!isDesktop ? handleBodyTouchEnd : undefined}>
           {showSection('chemistry') && <TeamChemistry team={team} />}
 
           {showSection('rotation') && (
             <div className="ts-section ts-player-carousel" id="team-rotation">
-              <div className="ts-heading ts-rotation-heading">Hand <span>{rotationIndex < 5 ? 'Starters' : 'Bench'}</span></div>
+              <div className="ts-heading ts-rotation-heading">Rotation <span>{rotationIndex < 5 ? 'Starters' : 'Bench'}</span></div>
               <div className="ts-roto-viewport">
                 <div
                   className="ts-roto-scroll"
