@@ -1,7 +1,7 @@
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from './config';
-import { INJURY_CHANCE, CHAMPIONSHIP_BAR_MULT } from '../game/constants';
+import { INJURY_CHANCE, CHAMPIONSHIP_BAR_MULT, LEAGUE_TEAM_COUNT } from '../game/constants';
 
 export function ensureAuth() {
   return new Promise((resolve, reject) => {
@@ -21,7 +21,7 @@ function randomRoomCode() {
   return code;
 }
 
-const ROOM_SEAT_COUNT = 10;
+const ROOM_SEAT_COUNT = LEAGUE_TEAM_COUNT;
 
 export async function createRoom() {
   const user = await ensureAuth();

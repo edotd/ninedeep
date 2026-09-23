@@ -1,5 +1,5 @@
 import { acquireOffseasonPlayer } from './gm';
-import { TIERS, POSITIONS, REPLACEMENT_TIER } from './constants';
+import { TIERS, POSITIONS, REPLACEMENT_TIER, ERA_LENGTH } from './constants';
 import { makeCard, randomArch, randomArchForTier, cardTotal, neededPosition } from './cards';
 import { autoSelectFive } from './roster';
 import { startNewSeasonRoster } from './season';
@@ -95,7 +95,7 @@ function finishDraftIfDone(state) {
       team.lineupConfirmed = false;
     });
     state.season++;
-    if (state.season > 8) state.phase = 'era_end';
+    if (state.season > ERA_LENGTH) state.phase = 'era_end';
     else {
       startNewSeasonRoster(state);
       state.phase = 'teamsummary';

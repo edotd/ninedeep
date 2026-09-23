@@ -1,8 +1,7 @@
 import { teamOutput } from '../game/matchup';
 import { teamExperience } from '../game/aging';
 import { formatCoins, rosterSalary } from '../game/economy';
-
-const ERA_LENGTH = 8;
+import { ERA_LENGTH } from '../game/constants';
 const RESULT_LABEL = { TITLE: 'Champions', FINALS: 'Lost The Final', R2: 'Lost Round 2', R1: 'Lost Round 1', MISSED: 'Missed The Playoffs' };
 
 // The Odometer (design brand handoff, "Nine Deep Transitions" 2A) — a one-time beat shown

@@ -1,7 +1,6 @@
 import { teamSynergy } from '../game/skillsets';
 import { benchScore, teamOutput } from '../game/matchup';
-
-const ERA_LENGTH = 8;
+import { ERA_LENGTH } from '../game/constants';
 function ordinal(n) {
   const s = ['th', 'st', 'nd', 'rd'];
   const v = n % 100;

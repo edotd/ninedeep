@@ -1,7 +1,7 @@
 // Room-lobby mutators — these operate on the pre-game "lobby" shape of the shared doc
 // (phase: 'lobby', seats: [...]) rather than the full in-era game state, so they live
 // outside game/actionMap.js (which is shared with solo mode, which has no lobby at all).
-import { AI_NAMES } from './constants';
+import { AI_NAMES, LEAGUE_TEAM_COUNT } from './constants';
 import { newEraState, buildStarPool, buildTeams, dealHands, initFrontOffice, initSeasonModifierCards } from './season';
 import { autoSelectFive } from './roster';
 
@@ -30,7 +30,7 @@ export function leaveSeat(state, seatIndex, uid) {
 
 function teamSeatsFromLobby(seats) {
   const humanSeats = seats.filter((s) => s.ownerUid).map((s) => ({ name: s.name, human: true, ownerUid: s.ownerUid }));
-  const aiNeeded = Math.max(0, 10 - humanSeats.length);
+  const aiNeeded = Math.max(0, LEAGUE_TEAM_COUNT - humanSeats.length);
   const aiSeats = AI_NAMES.slice(0, aiNeeded).map((n) => ({ name: n, human: false }));
   return [...humanSeats, ...aiSeats];
 }
@@ -71,7 +71,7 @@ export function startEraOnline(state, hostUid) {
 export function resetRoomToLobby(state, hostUid) {
   if (state.hostUid !== hostUid) return;
   const priorHumanTeams = (state.teams || []).filter((t) => t.human);
-  const seatCount = state.seatCount || (state.teams ? state.teams.length : 10);
+  const seatCount = state.seatCount || (state.teams ? state.teams.length : LEAGUE_TEAM_COUNT);
   const seats = Array.from({ length: seatCount }, (_, i) => {
     const prior = priorHumanTeams[i];
     return prior ? { seatIndex: i, ownerUid: prior.ownerUid, name: prior.name } : { seatIndex: i, ownerUid: null, name: '' };

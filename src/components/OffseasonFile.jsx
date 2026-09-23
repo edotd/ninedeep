@@ -1,4 +1,5 @@
 import { rosterSalary, formatCoins } from '../game/economy';
+import { ERA_LENGTH } from '../game/constants';
 
 const STEPS = [['contracts', 'Contracts'], ['draft', 'Draft']];
 
@@ -6,7 +7,7 @@ export default function OffseasonFile({ state, team, children }) {
   const current = STEPS.findIndex(([phase]) => phase === state.phase);
   const used = rosterSalary(team);
   return <div className="offseason-file">
-    <div className="of-kicker">02 · OFFSEASON FILE <span>ERA 01 · YR {state.season} OF 8</span></div>
+    <div className="of-kicker">02 · OFFSEASON FILE <span>ERA 01 · YR {state.season} OF {ERA_LENGTH}</span></div>
     <div className="of-title">{team.name} <span>PERSONNEL FILE</span></div>
     <nav className="of-index" aria-label="Offseason phases">
       {STEPS.map(([phase, name], i) => <div key={phase} className={i === current ? 'current' : i < current ? 'filed' : ''}><small>0{i + 1}</small>{name}<em>{i < current ? 'FILED' : i === current ? 'OPEN' : 'PENDING'}</em></div>)}

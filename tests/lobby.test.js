@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { startEra } from '../src/game/engine.js';
+import { LEAGUE_TEAM_COUNT } from '../src/game/constants.js';
 import { claimSeat, startEraOnline } from '../src/game/lobby.js';
 import { newEraState } from '../src/game/season.js';
 
@@ -10,6 +11,13 @@ test('solo era cannot start without a franchise name', () => {
   assert.equal(startEra(state, '   '), false);
   assert.equal(state.phase, initialPhase);
   assert.equal(state.teams.length, 0);
+});
+
+test('a new solo era contains nine teams', () => {
+  const state = newEraState();
+  assert.equal(startEra(state, 'Test'), true);
+  assert.equal(state.teams.length, LEAGUE_TEAM_COUNT);
+  assert.equal(LEAGUE_TEAM_COUNT, 9);
 });
 
 test('an online seat requires a franchise name before it can be claimed', () => {

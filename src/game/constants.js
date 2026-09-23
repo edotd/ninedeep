@@ -2,6 +2,8 @@
 // Do not change values or behavior here without checking against that file.
 
 export const POSITIONS = ['Guard', 'Forward', 'Big'];
+export const ERA_LENGTH = 9;
+export const LEAGUE_TEAM_COUNT = 9;
 
 export const ARCHETYPES = {
   'Pass-First': { base: { SCO: 4, PLM: 10, REB: 3, DEF: 5 }, peak: 'PLM' },

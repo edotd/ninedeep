@@ -1,7 +1,6 @@
 import BallMark from './BallMark';
 import { teamOutput } from '../game/matchup';
-
-const ERA_LENGTH = 8;
+import { ERA_LENGTH } from '../game/constants';
 
 function outputFor(team) {
   return team && team.coach && team.activeIds && team.activeIds.length > 0 ? teamOutput(team) : null;

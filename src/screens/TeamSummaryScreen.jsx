@@ -9,6 +9,7 @@ import { skillsetFor } from '../game/skillsets';
 import { FANBASE_BOOST_COST } from '../game/constants';
 import MatchupCard from '../components/MatchupCard';
 import StrategyCard from '../components/StrategyCard';
+import CardBack from '../components/CardBack';
 
 const tabForSection = (section) => ['gameplan', 'adjustment'].includes(section) ? 'office' : section || 'rotation';
 
@@ -181,6 +182,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   return (
     <>
       <div className="screen ts-screen">
+        <div className="ts-viewing-franchise"><span>{readOnly ? 'Viewing Franchise' : 'Your Franchise'}</span><strong>{team.name}</strong></div>
         <div className="ts-tabbar">
           <button className={'ts-tab' + (tab === 'rotation' ? ' active' : '')} onClick={() => setTab('rotation')}>Rotation</button>
           <button className={'ts-tab' + (tab === 'chemistry' ? ' active' : '')} onClick={() => setTab('chemistry')}>Chemistry</button>
@@ -361,7 +363,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             <div className="ts-section" id="team-gameplan-cards">
               <div className="ts-heading">Development Cards</div>
               <div className="strategy-deal-row">
-                {(team.developmentCards || []).map((card) => <div className="strategy-card-wrap" key={card.id}><StrategyCard card={card} /><StrategyAction card={card} team={team} state={state} actions={actions} myTeamId={myTeamId} readOnly={readOnly} /></div>)}
+                {(team.developmentCards || []).map((card) => <div className="strategy-card-wrap" key={card.id}>{readOnly ? <CardBack /> : <><StrategyCard card={card} /><StrategyAction card={card} team={team} state={state} actions={actions} myTeamId={myTeamId} readOnly={readOnly} /></>}</div>)}
                 {(team.developmentCards || []).length === 0 && <div className="strategy-empty">New cards are dealt at the start of each season.</div>}
               </div>
             </div>
@@ -371,7 +373,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             <div className="ts-section">
               <div className="ts-heading">Gameplan Cards</div>
               <div className="strategy-deal-row">
-                {(team.gameplanCards || []).map((card) => <div className="strategy-card-wrap" key={card.id}><StrategyCard card={card} /><StrategyAction card={card} team={team} state={state} actions={actions} myTeamId={myTeamId} readOnly={readOnly} /></div>)}
+                {(team.gameplanCards || []).map((card) => <div className="strategy-card-wrap" key={card.id}>{readOnly ? <CardBack /> : <><StrategyCard card={card} /><StrategyAction card={card} team={team} state={state} actions={actions} myTeamId={myTeamId} readOnly={readOnly} /></>}</div>)}
                 {(team.gameplanCards || []).length === 0 && <div className="strategy-empty">New cards are dealt at the start of each season.</div>}
               </div>
             </div>
@@ -381,7 +383,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             <div className="ts-section" id="team-adjustment-cards">
               <div className="ts-heading">Adjustment Cards</div>
               <div className="mu-deal-row" style={{ margin: 0 }}>
-                {team.matchupCards.map((c) => <MatchupCard key={c.id} card={c} />)}
+                {team.matchupCards.map((c) => readOnly ? <CardBack key={c.id} shape="adjustment" /> : <MatchupCard key={c.id} card={c} />)}
               </div>
             </div>
           )}

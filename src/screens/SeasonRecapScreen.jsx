@@ -1,8 +1,8 @@
 import { teamOutput } from '../game/matchup';
+import { ERA_LENGTH } from '../game/constants';
 import { teamSynergy } from '../game/skillsets';
 import { cardTier } from '../game/cards';
 
-const ERA_LENGTH = 8;
 const RESULT_LABEL = { TITLE: 'TITLE', FINALS: 'FINALS', R2: 'R2', R1: 'R1', MISSED: null };
 const OUTCOME_LABEL = { TITLE: 'CHAMPIONS', FINALS: 'FINALS', R2: 'ROUND 2', R1: 'ROUND 1', MISSED: 'MISSED' };
 const TIER_COLOR = { A: 'var(--franchise)', B: 'var(--file)', D: 'var(--depth)', EXP: 'var(--stamp)' };

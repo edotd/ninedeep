@@ -1,6 +1,5 @@
 import BallMark from './BallMark';
-
-const ERA_LENGTH = 8;
+import { ERA_LENGTH } from '../game/constants';
 
 // The Cap/Bar/Titles stats strip that used to live here is gone — the persistent bar is
 // always up now (see GameShell) and already carries cap; Titles has its own home on the Team

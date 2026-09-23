@@ -1,5 +1,5 @@
 import { addToRoster, creditTeamSeason } from './chemistry';
-import { TIERS, LEAGUE_ACCOLADES, REPLACEMENT_TIER, FREE_AGENT_TIER, FREE_AGENT_POOL_SIZE, AI_NAMES, AI_TRICODES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_ARCHETYPES, MATCHUP_CARD_DRAW_COUNT } from './constants';
+import { TIERS, LEAGUE_ACCOLADES, REPLACEMENT_TIER, FREE_AGENT_TIER, FREE_AGENT_POOL_SIZE, AI_NAMES, AI_TRICODES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_ARCHETYPES, MATCHUP_CARD_DRAW_COUNT, LEAGUE_TEAM_COUNT } from './constants';
 import { drawGM, acquireOffseasonPlayer } from './gm';
 import { advanceCareer } from './aging';
 import { shuffle, weightedPick } from './rng';
@@ -105,7 +105,7 @@ export function buildTeams(state, teamSeats) {
 }
 
 export function defaultSoloSeats(teamName) {
-  return [{ name: teamName, human: true }, ...AI_NAMES.map((n) => ({ name: n, human: false }))];
+  return [{ name: teamName, human: true }, ...AI_NAMES.slice(0, LEAGUE_TEAM_COUNT - 1).map((n) => ({ name: n, human: false }))];
 }
 
 // Shuffles the star pool and deals it out evenly (extras distributed randomly), then tops
