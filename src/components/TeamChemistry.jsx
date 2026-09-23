@@ -90,7 +90,7 @@ export default function TeamChemistry({ team }) {
           <span className="tc2-synergy-total-value offense">+{current.skillOffense}% OFF</span>
           <span className="tc2-synergy-total-value defense">+{current.skillDefense}% DEF</span>
         </div>
-        <button className="tc2-synergy-btn" onClick={() => setSynergyOpen(true)}>Open Team Synergy Table</button>
+        <button className="tc2-synergy-btn" onClick={() => setSynergyOpen(true)}>Team Synergy</button>
         {current.pairs.length ? (
           <div className="tc2-pairs-grid">
             {current.pairs.map((pair) => (

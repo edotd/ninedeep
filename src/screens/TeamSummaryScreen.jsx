@@ -218,46 +218,48 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           {showSection('rotation') && (
             <div className="ts-section ts-player-carousel" id="team-rotation">
               <div className="ts-heading ts-rotation-heading">Rotation <span>{rotationIndex < 5 ? 'Starters' : 'Bench'}</span></div>
-              <div
-                className="ts-roto-scroll"
-                onScroll={!isDesktop ? (event) => {
-                  const width = event.currentTarget.clientWidth;
-                  if (width) setRotationIndex(Math.round(event.currentTarget.scrollLeft / width));
-                } : undefined}
-                onTouchStart={!isDesktop ? handleRotationTouchStart : undefined}
-                onTouchEnd={!isDesktop ? handleRotationTouchEnd : undefined}
-              >
-                <div className="ts-roto-grid">
-                  {starters.map((c) => (
-                    <PlayerCard
-                      key={c.id}
-                      card={c}
-                      selected={selectedId === c.id}
-                      onClick={canEdit ? () => handleCardClick(c) : undefined}
-                      onRelease={canEdit ? handleRelease : undefined}
-                      onDevelop={!readOnly && !c.development ? setDevelopPlayer : undefined}
-                    />
-                  ))}
-                  {Array.from({ length: starterOpenSlots }, (_, i) => <div key={'starter-open-' + i} className="ts-bench-open starter">OPEN STARTER</div>)}
-                  {!isDesktop && bench.map((c) => (
-                    <PlayerCard
-                      key={c.id}
-                      card={c}
-                      selected={selectedId === c.id}
-                      onClick={canEdit ? () => handleCardClick(c) : undefined}
-                      onRelease={canEdit ? handleRelease : undefined}
-                      onDevelop={!readOnly && !c.development ? setDevelopPlayer : undefined}
-                    />
-                  ))}
-                  {!isDesktop && Array.from({ length: benchOpenSlots }, (_, i) => <div key={'open-' + i} className="ts-bench-open">OPEN</div>)}
+              <div className="ts-roto-viewport">
+                <div
+                  className="ts-roto-scroll"
+                  onScroll={!isDesktop ? (event) => {
+                    const width = event.currentTarget.clientWidth;
+                    if (width) setRotationIndex(Math.round(event.currentTarget.scrollLeft / width));
+                  } : undefined}
+                  onTouchStart={!isDesktop ? handleRotationTouchStart : undefined}
+                  onTouchEnd={!isDesktop ? handleRotationTouchEnd : undefined}
+                >
+                  <div className="ts-roto-grid">
+                    {starters.map((c) => (
+                      <PlayerCard
+                        key={c.id}
+                        card={c}
+                        selected={selectedId === c.id}
+                        onClick={canEdit ? () => handleCardClick(c) : undefined}
+                        onRelease={canEdit ? handleRelease : undefined}
+                        onDevelop={!readOnly && !c.development ? setDevelopPlayer : undefined}
+                      />
+                    ))}
+                    {Array.from({ length: starterOpenSlots }, (_, i) => <div key={'starter-open-' + i} className="ts-bench-open starter">OPEN STARTER</div>)}
+                    {!isDesktop && bench.map((c) => (
+                      <PlayerCard
+                        key={c.id}
+                        card={c}
+                        selected={selectedId === c.id}
+                        onClick={canEdit ? () => handleCardClick(c) : undefined}
+                        onRelease={canEdit ? handleRelease : undefined}
+                        onDevelop={!readOnly && !c.development ? setDevelopPlayer : undefined}
+                      />
+                    ))}
+                    {!isDesktop && Array.from({ length: benchOpenSlots }, (_, i) => <div key={'open-' + i} className="ts-bench-open">OPEN</div>)}
+                  </div>
                 </div>
+                {!isDesktop && rotationIndex < mobileCardCount - 1 && (
+                  <div className="ts-swipe-hint" aria-hidden="true">
+                    {Array.from({ length: Math.min(mobileCardCount - 1 - rotationIndex, 5) }, (_, i) => <span key={i} className="ts-swipe-line" />)}
+                    <span className="ts-swipe-chevron">›</span>
+                  </div>
+                )}
               </div>
-              {!isDesktop && rotationIndex < mobileCardCount - 1 && (
-                <div className="ts-swipe-hint" aria-hidden="true">
-                  {Array.from({ length: Math.min(mobileCardCount - 1 - rotationIndex, 5) }, (_, i) => <span key={i} className="ts-swipe-line" />)}
-                  <span className="ts-swipe-chevron">›</span>
-                </div>
-              )}
             </div>
           )}
 

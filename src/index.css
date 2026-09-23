@@ -1729,12 +1729,19 @@ body:has(.entry-screen){padding-bottom:0;}
   .ts-player-carousel .ts-roto-scroll::-webkit-scrollbar{display:none;}
   .ts-player-carousel .ts-roto-grid{gap:0;width:100%;}
   .ts-player-carousel .ts-roto-grid .pcard,.ts-player-carousel .ts-bench-open{box-sizing:border-box;width:100vw;max-width:none;flex:0 0 100vw;margin:0;scroll-snap-align:start;scroll-snap-stop:always;}
-  /* One vertical line per remaining card (capped at 5) plus a chevron, on the right edge — the
-     only cue on a full-bleed one-card-per-swipe carousel that there's more to see. Rendered in
-     JSX (TeamSummaryScreen's ts-swipe-hint), not CSS content, since the count is dynamic. */
-  .ts-swipe-hint{position:absolute;top:50%;right:10px;transform:translateY(-50%);display:flex;align-items:center;gap:4px;pointer-events:none;z-index:2;}
-  .ts-swipe-line{width:3px;height:22px;border-radius:2px;background:var(--franchise);opacity:.5;}
-  .ts-swipe-chevron{font-family:var(--font-display);font-size:24px;line-height:1;color:var(--franchise);margin-left:2px;text-shadow:0 1px 2px rgba(0,0,0,.2);}
+  /* One vertical line per remaining card (capped at 5) plus a chevron, flush against the very
+     right edge of the screen and spanning the full height of the card viewport (not the
+     heading above it — ts-roto-viewport wraps just the scroll area + hint, not the "Rotation
+     Starters/Bench" label) — the only cue on a full-bleed one-card-per-swipe carousel that
+     there's more to see. Rendered in JSX (TeamSummaryScreen's ts-swipe-hint), not CSS content,
+     since the count is dynamic. */
+  .ts-roto-viewport{position:relative;}
+  /* right:-24px, not 0 — ts-roto-viewport itself sits inside ts-body's 24px side padding (the
+     same padding ts-roto-scroll's own -24px margins cancel out to bleed edge-to-edge), so 0
+     would land 24px short of the actual screen edge. */
+  .ts-swipe-hint{position:absolute;top:0;right:-24px;bottom:0;display:flex;align-items:stretch;gap:3px;pointer-events:none;z-index:2;}
+  .ts-swipe-line{width:4px;background:var(--franchise);opacity:.45;}
+  .ts-swipe-chevron{align-self:center;font-family:var(--font-display);font-size:24px;line-height:1;color:var(--franchise);margin-left:3px;text-shadow:0 1px 2px rgba(0,0,0,.2);}
 }
 
 /* A live mobile match owns the viewport. The global chrome gives way to the board, while the
@@ -1744,10 +1751,12 @@ body:has(.entry-screen){padding-bottom:0;}
   body:has(.t2-shell){overflow:hidden;}
   .mobile-shell:has(.t2-shell){height:100dvh;overflow:hidden;background:var(--ink);}
   .mobile-shell:has(.t2-shell)>.mobile-persistent-top,.mobile-shell:has(.t2-shell)>.persistent-bar{display:none;}
-  /* The normal top masthead/header is hidden entirely during a live match (see above), so
-     nothing else reserves room for the phone's own status bar/notch/dynamic island here —
-     without this, the top team's coach card and roster row render right under it. */
-  .mobile-shell:has(.t2-shell)>.screen{height:100dvh;box-sizing:border-box;padding:env(safe-area-inset-top,0px) 0 0;overflow:hidden;}
+  /* The normal top masthead/header and bottom persistent bar are both hidden entirely during a
+     live match (see above), so nothing else reserves room for the phone's own status bar/
+     notch/dynamic island at the top, or the home-indicator gesture bar at the bottom — without
+     this, the top team's coach card renders under the former and the bottom team's roster (or
+     the browser's own address bar chrome) crowds out the latter. */
+  .mobile-shell:has(.t2-shell)>.screen{height:100dvh;box-sizing:border-box;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);overflow:hidden;}
   .mobile-shell:has(.t2-shell) .t2-shell{height:100%;box-sizing:border-box;margin:0;padding:4px;max-width:none;overflow:hidden;}
   .mobile-shell:has(.t2-shell) .t2-body{position:relative;height:100%;display:block;overflow:hidden;}
   /* Scrolls internally instead of clipping — the board's real content (two team boards plus
