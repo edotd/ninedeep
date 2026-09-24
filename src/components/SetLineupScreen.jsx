@@ -235,6 +235,12 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
 
         <p className="slf-note">{canEdit ? 'Set your lineup. Lines between players show how pairings affect your team’s offense and/or defense.' : 'Your lineup. Lines between players show how pairings affect your team’s offense and/or defense.'}</p>
 
+        {canEdit && (
+          <div className="slf-quick-actions">
+            <button type="button" className="secondary" onClick={handleAutoSet}>Auto Set Lineup</button>
+          </div>
+        )}
+
         {wires.length > 0 && (
           <div className="slf-pairings">
             <div className="slf-microlabel">Active Pairings</div>
@@ -292,10 +298,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
 
         <div className="slf-footer">
           {canEdit ? (
-            <>
-              <button type="button" className="secondary" onClick={handleAutoSet}>Auto Set Lineup</button>
-              <button type="button" className="primary" onClick={handleSave}>Save Lineup</button>
-            </>
+            <button type="button" className="primary" onClick={handleSave}>Save Lineup</button>
           ) : (
             <button type="button" className="secondary" onClick={onClose}>Close</button>
           )}

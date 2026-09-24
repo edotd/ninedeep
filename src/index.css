@@ -1963,6 +1963,8 @@ body:has(.entry-screen){padding-bottom:0;}
 .slf-synergy-totals .off{color:var(--franchise);}
 .slf-synergy-totals .def{color:var(--approved-ink);}
 .slf-note{font-family:var(--font-mono);font-size:11px;line-height:1.5;color:var(--file);margin:0;padding:12px 24px 0;}
+.slf-quick-actions{padding:12px 24px 0;display:flex;}
+.slf-quick-actions button{width:100%;}
 .slf-columns{display:flex;flex-direction:column;gap:16px;margin:16px 24px 0;}
 .slf-court-col{display:flex;flex-direction:column;gap:12px;flex:1;}
 .slf-court{position:relative;aspect-ratio:3/4;background:var(--form);border:2px solid var(--ink-rule);border-radius:10px;overflow:hidden;}
