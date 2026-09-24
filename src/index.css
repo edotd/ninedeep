@@ -136,6 +136,11 @@ p.lede{color:var(--file-body);font-size:14px;line-height:1.5;margin:0 0 14px;}
 
 .era-bar-wrap{padding:0 16px 8px;}
 .era-bar-label{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;color:var(--ink-muted);text-transform:uppercase;margin-bottom:5px;}
+/* Once a multiplayer game is underway the room code otherwise only ever appeared in the
+   Lobby, before the era started — surfaced here (and in the desktop Sidebar) so it's still
+   findable to share with someone joining late. Solo play never gets this (roomCode is only
+   ever passed for an online room — see OnlineGame.jsx). */
+.topbar-room-code{color:var(--franchise);}
 .era-bar{display:flex;gap:4px;}
 .era-seg{height:7px;flex:1;background:var(--ink-rule);}
 .era-seg.done{background:var(--franchise);}
@@ -499,6 +504,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .sidebar{width:220px;flex-shrink:0;background:var(--ink-deep);display:flex;flex-direction:column;padding:24px 18px;box-sizing:border-box;position:sticky;top:0;height:100vh;}
 .sidebar-lockup{display:flex;align-items:center;gap:10px;margin-bottom:10px;background:none;border:0;padding:0;width:fit-content;cursor:pointer;text-align:left;color:inherit;}
 .sidebar-team{font-family:var(--font-mono);font-size:12px;color:var(--ink-muted);margin-bottom:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sidebar-room-code{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--franchise);margin:-12px 0 16px;}
 .sidebar-nav{display:flex;flex-direction:column;gap:3px;flex:0 0 auto;}
 .sidebar-nav-item{background:none;border:none;text-align:left;font-family:var(--font-label);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-muted);padding:9px 11px;}
 .sidebar-nav-item.active{background:var(--file);color:var(--ink);}

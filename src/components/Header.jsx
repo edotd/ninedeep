@@ -13,7 +13,7 @@ import { ERA_LENGTH } from '../game/constants';
 // doubles as that row's menu trigger there (see .topbar-menu-btn / .topbar-nav in index.css,
 // scoped to the mobile breakpoint only); desktop keeps the row inline exactly as before, so
 // menuOpen never applies there.
-export default function Header({ state, myTeamId, overlay, onTeam, onFreeAgency, onGlossary, onStandings, onSettings, navNeedsAttention, onAcknowledgeNav }) {
+export default function Header({ state, myTeamId, overlay, onTeam, onFreeAgency, onGlossary, onStandings, onSettings, navNeedsAttention, onAcknowledgeNav, roomCode }) {
   const team = state.teams[myTeamId];
   const seasonNum = Math.min(state.season, ERA_LENGTH);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -34,7 +34,10 @@ export default function Header({ state, myTeamId, overlay, onTeam, onFreeAgency,
         <div className="topbar-title">{team.name} {team.tricode && <span className="topbar-tricode">{team.tricode}</span>}</div>
       </div>
       <div className="era-bar-wrap">
-        <div className="era-bar-label"><span>Era 01 · Year {seasonNum} of {ERA_LENGTH}</span></div>
+        <div className="era-bar-label">
+          <span>Era 01 · Year {seasonNum} of {ERA_LENGTH}</span>
+          {roomCode && <span className="topbar-room-code" title="Share this code so others can join this room">Room {roomCode}</span>}
+        </div>
         <div className="era-bar">
           {Array.from({ length: ERA_LENGTH }, (_, i) => (
             <div key={i} className={'era-seg' + (i < seasonNum ? ' done' : '')} />

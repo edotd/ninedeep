@@ -61,7 +61,7 @@ const HIDE_BAR_PHASES = new Set(['simulating', 'seasontransition']);
 // shell changes at the desktop breakpoint: a Sidebar + full-width persistent bar per the
 // brand handoff, instead of the phone-width top bar + collapsed bottom bar. Same
 // `overlay`/`Screen` resolution feeds both shells so the two never drift out of sync.
-export default function GameShell({ state, actions, myTeamId, onNewEra }) {
+export default function GameShell({ state, actions, myTeamId, onNewEra, roomCode }) {
   const mobileTopRef = useRef(null);
   const [mobileTopHeight, setMobileTopHeight] = useState(0);
   const persistentBarRef = useRef(null);
@@ -187,6 +187,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
     onFreeAgency: () => toggleOverlay('freeagency'),
     navNeedsAttention,
     onAcknowledgeNav: acknowledgeNav,
+    roomCode,
   };
 
   const showBar = showChrome && !HIDE_BAR_PHASES.has(state.phase);
@@ -215,7 +216,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
   if (isDesktop && showChrome) {
     return (
       <div className="desktop-shell">
-        <Sidebar state={state} myTeamId={myTeamId} overlay={overlay} viewTeamId={viewTeamId} onNav={handleNav} onViewTeam={(id) => openTeamView(id, overlay)} onAcknowledgeNav={acknowledgeNav} />
+        <Sidebar state={state} myTeamId={myTeamId} overlay={overlay} viewTeamId={viewTeamId} onNav={handleNav} onViewTeam={(id) => openTeamView(id, overlay)} onAcknowledgeNav={acknowledgeNav} roomCode={roomCode} />
         <div className="desktop-content">
           <FranchiseMasthead state={state} teamId={mastheadTeamId} />
           {mainBody}

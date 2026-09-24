@@ -30,5 +30,5 @@ export default function OnlineGame({ roomCode, myUid, onExit }) {
     );
   }
 
-  return <GameShell state={state} actions={actions} myTeamId={myTeamId} onNewEra={() => actions.resetRoomToLobby(myUid)} />;
+  return <GameShell state={state} actions={actions} myTeamId={myTeamId} roomCode={roomCode} onNewEra={() => actions.resetRoomToLobby(myUid)} />;
 }

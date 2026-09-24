@@ -32,7 +32,7 @@ const SUPPORT_NAV_ITEMS = [
 // into the sidebar's vertical list. Team was dropped for a while when the persistent bar
 // alone covered the roster/front-office/matchup view, but it's the only way to reach the
 // front-office moves (fire coach or GM, invest in fanbase), so it's back.
-export default function Sidebar({ state, myTeamId, overlay, viewTeamId, onNav, onViewTeam, onAcknowledgeNav }) {
+export default function Sidebar({ state, myTeamId, overlay, viewTeamId, onNav, onViewTeam, onAcknowledgeNav, roomCode }) {
   const team = state.teams[myTeamId];
   const seasonNum = Math.min(state.season, ERA_LENGTH);
   // The Team overlay is showing someone else's file (opened from a standings row) when
@@ -66,6 +66,7 @@ export default function Sidebar({ state, myTeamId, overlay, viewTeamId, onNav, o
         <span className="topbar-wordmark"><b>NINE</b> <i>DEEP</i></span>
       </button>
       <div className="sidebar-team">{team.name}</div>
+      {roomCode && <div className="sidebar-room-code" title="Share this code so others can join this room">Room {roomCode}</div>}
       <nav className="sidebar-nav">
         {PRIMARY_NAV_ITEMS.map((item) => (
           <button
