@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { SKILLSET_PAIRS, skillsetFor } from '../game/skillsets';
+import { findSkillPair, skillsetFor } from '../game/skillsets';
 import { jerseyNumber, playerGrade } from '../game/cards';
 
 // The Team Synergy cross table — every starter against every other starter, filled cells pay a
@@ -7,10 +7,7 @@ import { jerseyNumber, playerGrade } from '../game/cards';
 // it's a reference/inspection view of the current five, not a place to make changes, so it takes
 // focus and has to be dismissed deliberately (no backdrop-click dismiss, Escape still works)
 // rather than living inline where it would compete with the rest of the franchise page.
-function findPair(a, b) {
-  if (!a?.skillsetId || !b?.skillsetId) return null;
-  return SKILLSET_PAIRS.find((p) => p.skills.includes(a.skillsetId) && p.skills.includes(b.skillsetId)) || null;
-}
+const findPair = findSkillPair;
 
 function HeaderCell({ card }) {
   const skillset = skillsetFor(card);

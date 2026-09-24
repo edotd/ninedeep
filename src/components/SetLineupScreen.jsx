@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { SKILLSET_PAIRS, skillsetFor, teamSynergy } from '../game/skillsets';
+import { findSkillPair, skillsetFor, teamSynergy } from '../game/skillsets';
 import { jerseyNumber, playerGrade } from '../game/cards';
 
 // "The Floor" (design ref 1a) — the starting five placed on a half-court diagram, wired
@@ -16,11 +16,6 @@ const COURT_SLOTS = [
   { left: '30%', top: '80%' },
   { left: '70%', top: '80%' },
 ];
-
-function findPair(a, b) {
-  if (!a?.skillsetId || !b?.skillsetId) return null;
-  return SKILLSET_PAIRS.find((p) => p.skills.includes(a.skillsetId) && p.skills.includes(b.skillsetId)) || null;
-}
 
 // team.activeIds has no slot concept at all — it's just an unordered array, and
 // promoteToStarter always appends to its end regardless of which visual court slot was
@@ -125,11 +120,18 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
         const r = el.getBoundingClientRect();
         return { x: r.left + r.width / 2 - courtRect.left, y: r.top + r.height / 2 - courtRect.top };
       });
+      // A named pairing pays out once no matter how many starter pairs satisfy it (see
+      // teamSynergy in game/skillsets.js — it dedupes by rule, not by player pair), so only the
+      // first starter pair found for a given rule gets a wire. Without this, three starters
+      // sharing one half of a pairing would draw — and list, and sum — that same bonus two or
+      // three times over, well past what the team's actual Offense/Defense total reflects.
+      const seenRules = new Set();
       const next = [];
       for (let i = 0; i < starters.length; i++) {
         for (let j = i + 1; j < starters.length; j++) {
-          const pair = findPair(starters[i], starters[j]);
-          if (!pair || !centers[i] || !centers[j]) continue;
+          const pair = findSkillPair(starters[i], starters[j]);
+          if (!pair || !centers[i] || !centers[j] || seenRules.has(pair.name)) continue;
+          seenRules.add(pair.name);
           next.push({ id: i + '-' + j, x1: centers[i].x, y1: centers[i].y, x2: centers[j].x, y2: centers[j].y, pair });
         }
       }

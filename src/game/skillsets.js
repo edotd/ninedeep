@@ -97,6 +97,17 @@ const NAMED_PAIRS = [
   { pair: [18, 19], side: 'defense', percent: 15, name: 'Fortress Defense' },
 ];
 export const SKILLSET_PAIRS = NAMED_PAIRS.map(({ pair, ...rule }) => ({ ...rule, skills: pair.map((n) => SKILLSETS[n - 1].id) }));
+
+// Two players form a named pairing only when they hold the pair's two DISTINCT skillsets
+// between them — the `a.skillsetId === b.skillsetId` guard matters because every rule's
+// `skills` array is checked with plain `.includes()`, and without it two players who happen to
+// share the SAME skillset (which is only one half of some rule) would pass both `.includes()`
+// checks vacuously, lighting up a pairing whose other required skillset isn't on the roster at
+// all.
+export function findSkillPair(a, b) {
+  if (!a?.skillsetId || !b?.skillsetId || a.skillsetId === b.skillsetId) return null;
+  return SKILLSET_PAIRS.find((p) => p.skills.includes(a.skillsetId) && p.skills.includes(b.skillsetId)) || null;
+}
 // Raised alongside the bigger per-pair values above (was 12, when pairs topped out at 3%) — a
 // single Signature pairing (+15%) used to be five separate elite pairs' worth of cap room, which
 // would have made the cap the only thing that mattered instead of which pairs you actually have.
