@@ -48,6 +48,7 @@ export function startEra(state, teamNameRaw) {
   const val = (teamNameRaw || '').trim();
   if (!val.length) return false;
   state.teamName = val.slice(0, 32);
+  state.eraId = Date.now();
   buildStarPool(state);
   buildTeams(state, defaultSoloSeats(state.teamName));
   dealHands(state);

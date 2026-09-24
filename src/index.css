@@ -145,6 +145,10 @@ p.lede{color:var(--file-body);font-size:14px;line-height:1.5;margin:0 0 14px;}
 .reset-link{background:none;border:none;color:var(--ink-muted);font-family:var(--font-label);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:8px 10px;white-space:nowrap;}
 .reset-link.active{color:var(--ink);background:var(--file);}
 .topbar-menu-btn{background:none;border:1px solid transparent;padding:2px;line-height:0;cursor:pointer;}
+.nav-attention{position:relative;animation:nav-attention-pulse .8s ease-in-out infinite alternate;}
+.nav-attention::after{content:'!';position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--stamp);color:#fff;border:2px solid var(--file);font:700 13px/1 var(--font-label);box-shadow:0 0 14px 5px rgba(205,71,39,.75);}
+@keyframes nav-attention-pulse{from{filter:drop-shadow(0 0 2px rgba(255,154,31,.5));transform:scale(1);}to{filter:drop-shadow(0 0 13px rgba(255,154,31,1));transform:scale(1.08);}}
+@media(prefers-reduced-motion:reduce){.nav-attention{animation:none;filter:drop-shadow(0 0 8px rgba(255,154,31,.9));}}
 
 /* On mobile the logo doubles as the Team/Free Agency/Standings/Glossary/Settings menu's
    trigger instead of that row sitting permanently under the era bar — real vertical space
@@ -489,7 +493,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .desktop-shell{display:flex;min-height:100vh;}
 
 .sidebar{width:220px;flex-shrink:0;background:var(--ink-deep);display:flex;flex-direction:column;padding:24px 18px;box-sizing:border-box;position:sticky;top:0;height:100vh;}
-.sidebar-lockup{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.sidebar-lockup{display:flex;align-items:center;gap:10px;margin-bottom:10px;background:none;border:0;padding:0;width:fit-content;cursor:pointer;text-align:left;color:inherit;}
 .sidebar-team{font-family:var(--font-mono);font-size:12px;color:var(--ink-muted);margin-bottom:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sidebar-nav{display:flex;flex-direction:column;gap:3px;flex:0 0 auto;}
 .sidebar-nav-item{background:none;border:none;text-align:left;font-family:var(--font-label);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-muted);padding:9px 11px;}

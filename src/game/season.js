@@ -30,6 +30,7 @@ export function newEraState() {
     cardCounter: 0,
     strategyCardCounter: 0,
     freeAgentCoachCounter: 0,
+    eraId: null,
     settings: {
       injuryChance: INJURY_CHANCE,
       championshipBarMult: CHAMPIONSHIP_BAR_MULT,

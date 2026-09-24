@@ -45,6 +45,7 @@ export function startEraOnline(state, hostUid) {
   // cardCounter) before running the same season-1 setup solo mode uses. Keep the lobby's
   // settings rather than overwriting them with fresh defaults.
   const base = newEraState();
+  state.eraId = Date.now();
   state.season = base.season;
   state.freeAgents = base.freeAgents;
   state.lastExpiredPlayers = base.lastExpiredPlayers;

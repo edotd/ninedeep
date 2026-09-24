@@ -13,7 +13,7 @@ import { ERA_LENGTH } from '../game/constants';
 // doubles as that row's menu trigger there (see .topbar-menu-btn / .topbar-nav in index.css,
 // scoped to the mobile breakpoint only); desktop keeps the row inline exactly as before, so
 // menuOpen never applies there.
-export default function Header({ state, myTeamId, overlay, onTeam, onFreeAgency, onGlossary, onStandings, onSettings }) {
+export default function Header({ state, myTeamId, overlay, onTeam, onFreeAgency, onGlossary, onStandings, onSettings, navNeedsAttention, onAcknowledgeNav }) {
   const team = state.teams[myTeamId];
   const seasonNum = Math.min(state.season, ERA_LENGTH);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -23,8 +23,8 @@ export default function Header({ state, myTeamId, overlay, onTeam, onFreeAgency,
       <div className="topbar-lockup">
         <button
           type="button"
-          className={'topbar-menu-btn' + (menuOpen ? ' open' : '')}
-          onClick={() => setMenuOpen((v) => !v)}
+          className={'topbar-menu-btn' + (menuOpen ? ' open' : '') + (navNeedsAttention ? ' nav-attention' : '')}
+          onClick={() => { onAcknowledgeNav?.(); setMenuOpen((v) => !v); }}
           aria-expanded={menuOpen}
           aria-label={menuOpen ? 'Close menu' : 'Open menu'}
         >

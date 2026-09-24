@@ -67,6 +67,14 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
   const persistentBarRef = useRef(null);
   const [persistentBarHeight, setPersistentBarHeight] = useState(0);
   const [overlay, setOverlay] = useState(null); // null | 'glossary' | 'settings' | 'standings' | 'team' | 'freeagency' | 'cardtypes'
+  const navAttentionKey = `nine-deep-nav-seen:${state.eraId || state.teamName || state.teams?.map((team) => team.name).join('|')}:${myTeamId}`;
+  const [navNeedsAttention, setNavNeedsAttention] = useState(() => {
+    try { return localStorage.getItem(navAttentionKey) !== '1'; } catch { return true; }
+  });
+  const acknowledgeNav = () => {
+    setNavNeedsAttention(false);
+    try { localStorage.setItem(navAttentionKey, '1'); } catch { /* storage can be unavailable */ }
+  };
   // Clicking another team in Standings opens the Team overlay on THEIR file instead of the
   // caller's own (viewTeamId), remembering whatever overlay (or none, for a phase screen like
   // StandingsScreen) was showing so Back returns there rather than dumping out to the base game.
@@ -177,6 +185,8 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
     onSettings: () => toggleOverlay('settings'),
     onTeam: () => handleNav('team'),
     onFreeAgency: () => toggleOverlay('freeagency'),
+    navNeedsAttention,
+    onAcknowledgeNav: acknowledgeNav,
   };
 
   const showBar = showChrome && !HIDE_BAR_PHASES.has(state.phase);
@@ -187,13 +197,13 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
   if (overlay === 'glossary') overlayBody = <GlossaryScreen state={state} onBack={close} />;
   else if (overlay === 'settings') overlayBody = <SettingsScreen state={state} actions={actions} onBack={close} onNewEra={onNewEra} />;
   else if (overlay === 'standings') overlayBody = <LeagueScreen state={state} myTeamId={myTeamId} onBack={close} onViewTeam={(id) => openTeamView(id, 'standings')} />;
-  else if (overlay === 'team') overlayBody = <TeamSummaryScreen key={teamFocus?.request || 'team'} state={state} actions={actions} myTeamId={myTeamId} viewTeamId={viewTeamId} onBack={closeTeamView} focusSection={teamFocus} />;
+  else if (overlay === 'team') overlayBody = <TeamSummaryScreen key={teamFocus?.request || 'team'} state={state} actions={actions} myTeamId={myTeamId} viewTeamId={viewTeamId} onBack={closeTeamView} focusSection={teamFocus} onFreeAgency={() => setOverlay('freeagency')} />;
   else if (overlay === 'freeagency') overlayBody = <FreeAgencyScreen state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
   else if (overlay === 'cardtypes') overlayBody = <CardOverviewScreen state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
 
   const Screen = SCREENS[effectivePhase];
   const mainBody = overlayBody || (Screen
-    ? <Screen state={state} actions={actions} myTeamId={myTeamId} onViewTeam={(id) => openTeamView(id, null)} onEndGame={onNewEra} dealProgress={dealProgress} onDealProgress={setDealProgress} onDealDone={() => setPastDeal(true)} />
+    ? <Screen state={state} actions={actions} myTeamId={myTeamId} onViewTeam={(id) => openTeamView(id, null)} onFreeAgency={() => setOverlay('freeagency')} onEndGame={onNewEra} dealProgress={dealProgress} onDealProgress={setDealProgress} onDealDone={() => setPastDeal(true)} />
     : (
       <div className="screen">
         <h1>Something broke</h1>
@@ -205,7 +215,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
   if (isDesktop && showChrome) {
     return (
       <div className="desktop-shell">
-        <Sidebar state={state} myTeamId={myTeamId} overlay={overlay} viewTeamId={viewTeamId} onNav={handleNav} onViewTeam={(id) => openTeamView(id, overlay)} />
+        <Sidebar state={state} myTeamId={myTeamId} overlay={overlay} viewTeamId={viewTeamId} onNav={handleNav} onViewTeam={(id) => openTeamView(id, overlay)} navNeedsAttention={navNeedsAttention} onAcknowledgeNav={acknowledgeNav} />
         <div className="desktop-content">
           <FranchiseMasthead state={state} teamId={mastheadTeamId} />
           {mainBody}
