@@ -1694,6 +1694,7 @@ body:has(.entry-screen){padding-bottom:0;}
 .entry-tab{flex:1;background:none;box-shadow:inset 0 0 0 1.5px var(--ink-muted);padding:13px;text-align:center;font-family:var(--font-label);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);border:none;cursor:pointer;}
 .entry-tab.active{background:var(--ink);box-shadow:none;color:var(--franchise);}
 .entry-tab:disabled{opacity:.4;cursor:not-allowed;}
+.entry-version{text-align:center;font:11px var(--font-mono);font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--stamp-text);margin-bottom:-10px;}
 
 .entry-field-group{display:flex;flex-direction:column;gap:10px;}
 .entry-field-heading{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--file-muted);}
