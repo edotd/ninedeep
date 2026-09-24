@@ -17,15 +17,6 @@ export default function DraftScreen({ state, actions, myTeamId }) {
   const sortedPool = [...draft.pool].sort((a, b) => cardTotal(b) - cardTotal(a));
   const onTheClock = draft.queue[0] === myTeam;
 
-  const laterTeams = [];
-  const seen = new Set();
-  draft.queue.forEach((t, i) => {
-    if (i > 0 && t !== myTeam && !seen.has(t)) {
-      seen.add(t);
-      laterTeams.push({ team: t, slotsAway: i });
-    }
-  });
-
   return (
     <OffseasonFile state={state} team={myTeam}>
       <div className="of-section-label">02 / DRAFT</div><h1>Draft — Season {state.season}</h1>
@@ -63,25 +54,6 @@ export default function DraftScreen({ state, actions, myTeamId }) {
             <div key={'pending-' + t.id} className={'standing-row' + (t === myTeam ? ' you' : '')}>
               <span>#{draft.picks.length + i + 1} {t.name}</span>
               <span>{i === 0 ? 'On the clock' : 'Pending'}</span>
-            </div>
-          ))}
-        </>
-      )}
-
-      {onTheClock && laterTeams.length > 0 && (
-        <>
-          <h2>Trade Down</h2>
-          {laterTeams.map(({ team, slotsAway }) => (
-            <div
-              key={team.name}
-              className="pull-slot"
-              style={{ cursor: 'pointer' }}
-              onClick={() => actions.tradeDown(myTeamId, state.teams.indexOf(team))}
-            >
-              <div className="pull-label">Swap with {team.name}</div>
-              <div className="pull-value" style={{ fontSize: 15 }}>
-                Move back {slotsAway} pick{slotsAway === 1 ? '' : 's'} for +{formatCoins(Math.max(0.5, slotsAway * 0.5))} cap next season
-              </div>
             </div>
           ))}
         </>

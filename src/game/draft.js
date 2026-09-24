@@ -126,9 +126,7 @@ export function draftPick(state, teamIdx, cardId) {
 }
 
 // Pass on this pick entirely for a flat cap bonus next season — reuses draftTradeBonus (see
-// economy.js, where it's applied once then reset to 0) since it's the same kind of one-season
-// cap lift tradeDown already grants, just for skipping the pick outright instead of trading
-// position for it.
+// economy.js, where it's applied once then reset to 0).
 export function forfeitPick(state, teamIdx) {
   if (state.phase !== 'draft') return { ok: false, msg: 'The draft is closed.' };
   const human = state.draft.queue[0];
@@ -137,22 +135,4 @@ export function forfeitPick(state, teamIdx) {
   state.draft.queue.shift();
   resolveAiPicksUntilHuman(state);
   return { ok: true };
-}
-
-// Trade down: the human gives up their current (earlier) queue slot to swap places with
-// a team picking later, taking that later slot in exchange for a cap bonus next season —
-// a simplified stand-in for a real multi-asset trade negotiation (no other tradable
-// resource — draft picks, future cap space — exists in the game yet).
-export function tradeDown(state, teamIdx, partnerTeamIndex) {
-  if (state.phase !== 'draft') return { ok: false, msg: 'The draft is closed.' };
-  const queue = state.draft.queue;
-  const human = queue[0];
-  if (!human || !human.human || human.id !== state.teams[teamIdx].id) return;
-  const partner = state.teams[partnerTeamIndex];
-  const partnerSlot = queue.findIndex((t, i) => i > 0 && t === partner);
-  if (partnerSlot < 0) return;
-  queue[0] = partner;
-  queue[partnerSlot] = human;
-  human.draftTradeBonus = (human.draftTradeBonus || 0) + Math.max(0.5, partnerSlot * 0.5);
-  resolveAiPicksUntilHuman(state);
 }
