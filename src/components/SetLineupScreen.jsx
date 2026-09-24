@@ -55,7 +55,7 @@ function MiniCard({ card, selected, onClick, onRemove, dim }) {
         <span className="slf-card-name">{card.archetype}</span>
         <span className="slf-card-skill">{skillset?.name || 'No Skillset'}</span>
       </button>
-      {onRemove && <button type="button" className="slf-card-remove" onClick={onRemove} aria-label={`Remove ${card.archetype} from the lineup`}>−</button>}
+      {onRemove && <button type="button" className="slf-card-remove" onClick={onRemove} aria-label={`Remove ${card.archetype} from the lineup`}>-</button>}
     </div>
   );
 }
@@ -190,6 +190,19 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
 
         <p className="slf-note">{canEdit ? 'Set your lineup. Lines between players show how pairings affect your team’s offense and/or defense.' : 'Your lineup. Lines between players show how pairings affect your team’s offense and/or defense.'}</p>
 
+        {wires.length > 0 && (
+          <div className="slf-pairings">
+            <div className="slf-microlabel">Active Pairings</div>
+            {wires.map((w, i) => (
+              <div key={w.id} className="slf-pairing-row">
+                <span className={'slf-pairing-num ' + w.pair.side}>{i + 1}</span>
+                <span className="slf-pairing-name">{w.pair.name}</span>
+                <span className={'slf-pairing-value ' + w.pair.side}>+{w.pair.percent}% {w.pair.side === 'offense' ? 'OFF' : 'DEF'}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className="slf-columns">
           <div className="slf-court-col">
             <div className="slf-court" ref={courtRef}>
@@ -197,9 +210,9 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
               <svg className="slf-wire-svg">
                 {wires.map((w) => <line key={w.id} x1={w.x1} y1={w.y1} x2={w.x2} y2={w.y2} className={'slf-wire ' + w.pair.side} />)}
               </svg>
-              {wires.map((w) => (
-                <div key={w.id} className={'slf-wire-badge ' + w.pair.side} style={{ left: (w.x1 + w.x2) / 2, top: (w.y1 + w.y2) / 2 }}>
-                  {w.pair.name} +{w.pair.percent}% {w.pair.side === 'offense' ? 'OFF' : 'DEF'}
+              {wires.map((w, i) => (
+                <div key={w.id} className={'slf-wire-badge ' + w.pair.side} style={{ left: (w.x1 + w.x2) / 2, top: (w.y1 + w.y2) / 2 }} title={`${w.pair.name} +${w.pair.percent}% ${w.pair.side === 'offense' ? 'OFF' : 'DEF'}`}>
+                  {i + 1}
                 </div>
               ))}
               {COURT_SLOTS.map((pos, i) => (
