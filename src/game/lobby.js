@@ -5,18 +5,15 @@ import { AI_NAMES, LEAGUE_TEAM_COUNT } from './constants';
 import { newEraState, buildStarPool, buildTeams, dealHands, initFrontOffice, initSeasonModifierCards } from './season';
 import { autoSelectFive } from './roster';
 
-// One identity can only ever hold one seat — release any other seat this uid already
-// claimed first (a real player never has a reason to hold two; this mostly guards against
-// two browser tabs on the same device silently sharing one anonymous auth session).
+// One browser identity can only hold one seat. A player must explicitly leave their current
+// seat before choosing another, so an accidental click cannot silently move their franchise.
 export function claimSeat(state, seatIndex, uid, name) {
   const seat = state.seats[seatIndex];
   const franchiseName = (name || '').trim().slice(0, 32);
   if (!seat) return;
   if (!franchiseName) return;
   if (seat.ownerUid && seat.ownerUid !== uid) return; // already taken by someone else
-  state.seats.forEach((s) => {
-    if (s.seatIndex !== seatIndex && s.ownerUid === uid) { s.ownerUid = null; s.name = ''; }
-  });
+  if (state.seats.some((s) => s.seatIndex !== seatIndex && s.ownerUid === uid)) return;
   seat.ownerUid = uid;
   seat.name = franchiseName;
 }

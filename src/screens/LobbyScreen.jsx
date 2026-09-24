@@ -6,6 +6,7 @@ export default function LobbyScreen({ state, actions, roomCode, myUid, onExit, a
   const [seatNames, setSeatNames] = useState({});
   const isHost = state.hostUid === myUid;
   const claimedCount = state.seats.filter((s) => s.ownerUid).length;
+  const claimedSeat = state.seats.find((seat) => seat.ownerUid === myUid);
   const link = typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}?room=${roomCode}` : '';
 
   return (
@@ -23,8 +24,9 @@ export default function LobbyScreen({ state, actions, roomCode, myUid, onExit, a
       {state.seats.map((seat) => {
         const seatName = seatNames[seat.seatIndex] || '';
         const setSeatName = (name) => setSeatNames((current) => ({ ...current, [seat.seatIndex]: name }));
+        const unavailableToMe = !seat.ownerUid && claimedSeat && claimedSeat.seatIndex !== seat.seatIndex;
         return (
-          <div key={seat.seatIndex} className={'standing-row lobby-seat-row' + (seat.ownerUid === myUid ? ' you' : '')}>
+          <div key={seat.seatIndex} className={'standing-row lobby-seat-row' + (seat.ownerUid === myUid ? ' you' : '') + (unavailableToMe ? ' unavailable-to-you' : '')}>
             <span>{seat.ownerUid ? seat.name : 'Open seat'}{seat.ownerUid === myUid ? ' (you)' : ''}</span>
             {!seat.ownerUid && (
               <div className="lobby-claim-controls">
@@ -32,17 +34,19 @@ export default function LobbyScreen({ state, actions, roomCode, myUid, onExit, a
                   className="text-input lobby-name-input"
                   value={seatName}
                   onChange={(event) => setSeatName(event.target.value)}
+                  disabled={unavailableToMe}
                   maxLength={32}
                   placeholder="Franchise name"
                   aria-label={`Franchise name for seat ${seat.seatIndex + 1}`}
                 />
                 <button
                   className="lobby-randomize-name"
+                  disabled={unavailableToMe}
                   onClick={() => setSeatName(randomFranchiseName())}
                   aria-label={`Choose a random franchise name for seat ${seat.seatIndex + 1}`}
                   title="Choose a random franchise name"
                 >🎲</button>
-                <button className="secondary" disabled={!seatName.trim()} onClick={() => actions.claimSeat(seat.seatIndex, myUid, seatName)}>Claim</button>
+                <button className="secondary" disabled={unavailableToMe || !seatName.trim()} onClick={() => actions.claimSeat(seat.seatIndex, myUid, seatName)}>Claim</button>
               </div>
             )}
             {seat.ownerUid === myUid && (

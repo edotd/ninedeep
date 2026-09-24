@@ -29,6 +29,18 @@ test('an online seat requires a franchise name before it can be claimed', () => 
   assert.equal(state.seats[0].name, 'Riverside Ironclads');
 });
 
+test('one browser identity cannot claim a second seat without leaving the first', () => {
+  const state = { seats: [
+    { seatIndex: 0, ownerUid: null, name: '' },
+    { seatIndex: 1, ownerUid: null, name: '' },
+  ] };
+  claimSeat(state, 0, 'user-1', 'First Franchise');
+  claimSeat(state, 1, 'user-1', 'Second Franchise');
+  assert.equal(state.seats[0].ownerUid, 'user-1');
+  assert.equal(state.seats[0].name, 'First Franchise');
+  assert.equal(state.seats[1].ownerUid, null);
+});
+
 test('online era rejects a legacy claimed seat with no franchise name', () => {
   const state = {
     phase: 'lobby',

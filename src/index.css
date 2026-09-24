@@ -223,10 +223,14 @@ p.lede{color:var(--file-body);font-size:14px;line-height:1.5;margin:0 0 14px;}
 .standing-row.you{color:var(--stamp);font-weight:500;}
 .standing-row:hover{background:var(--form-rule);}
 .lobby-seat-row{align-items:center;gap:12px;}
+.lobby-seat-row.unavailable-to-you{opacity:.38;background:var(--form-rule);}
+.lobby-seat-row.unavailable-to-you:hover{background:var(--form-rule);}
+.lobby-seat-row.unavailable-to-you .lobby-claim-controls{pointer-events:none;}
 .lobby-claim-controls{display:flex;align-items:stretch;justify-content:flex-end;gap:8px;flex:1;max-width:430px;}
 input.text-input.lobby-name-input{min-width:0;margin:0;padding:10px 12px;}
 .lobby-randomize-name{flex:0 0 42px;border:1px solid var(--form-rule);background:var(--form);color:var(--ink);font-size:17px;cursor:pointer;}
 .lobby-randomize-name:hover{background:var(--franchise);}
+.lobby-randomize-name:disabled{cursor:not-allowed;}
 .lobby-claim-controls .secondary{padding:10px 14px;}
 @media (max-width:600px){.lobby-seat-row{align-items:flex-start;flex-direction:column;}.lobby-claim-controls{width:100%;max-width:none;}.lobby-name-input{flex:1;}}
 
