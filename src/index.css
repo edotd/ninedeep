@@ -1064,8 +1064,11 @@ button.t2-adjustment-mini.empty.pulsing{cursor:pointer;}
 .t2-teamboard.flip .t2-coach-dock{flex-direction:row-reverse;}
 .t2-gameplan-mini{width:90px;height:90px;box-sizing:border-box;position:relative;display:flex;align-items:center;justify-content:center;border:2px solid var(--franchise);background:var(--ink);color:var(--franchise);}
 .t2-gameplan-mini.empty,.t2-adjustment-mini.empty{border-style:dashed;border-color:var(--ink-rule);background:none;}
-.t2-gameplan-mini.empty svg,.t2-adjustment-mini.empty svg{opacity:.4;}
-.t2-mini-plus{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-label);font-size:42px;font-weight:700;color:var(--franchise);}
+/* The icon is the point of an empty slot ("this is a Gameplan/Adjustment slot") — the "+" is
+   just a secondary "empty, tap to fill" cue, so it sits as a small corner badge rather than a
+   dead-center overlay competing with the icon for the same space. */
+.t2-gameplan-mini.empty svg,.t2-adjustment-mini.empty svg{opacity:.85;}
+.t2-mini-plus{position:absolute;right:-4px;bottom:-4px;width:20px;height:20px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--franchise);font-family:var(--font-label);font-size:13px;font-weight:700;line-height:1;color:var(--ink);}
 .t2-gameplan-mini.empty.pulsing,.t2-adjustment-mini.empty.pulsing{border-style:solid;border-color:var(--franchise);animation:t2-mini-pulse 1.8s ease-in-out infinite;}
 @keyframes t2-mini-pulse{0%,100%{box-shadow:0 0 0 0 rgba(240,160,61,.6);}50%{box-shadow:0 0 0 16px rgba(240,160,61,0);}}
 @media(prefers-reduced-motion:reduce){.t2-gameplan-mini.empty.pulsing,.t2-adjustment-mini.empty.pulsing{animation:none;}}
@@ -1144,13 +1147,20 @@ button.t2-adjustment-mini.empty.pulsing{cursor:pointer;}
 .t2-possession{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;flex:0 0 auto;}
 .t2-possession-label{font-family:var(--font-label);font-size:14px;letter-spacing:.18em;color:var(--ink-muted);text-transform:uppercase;white-space:nowrap;}
 /* Drawn rather than a text glyph, so "thicker" is just a width/border tweak instead of fighting
-   a font's own stroke weight. Offense is always the left die for the whole exchange (both the
-   card-stage preview and the resolved roll below), so this never needs to change direction —
-   it's a fixed shaft-plus-head pointing left at whichever team currently has the ball. */
+   a font's own stroke weight. Each team's die stays on its own fixed side of the board, so
+   offense isn't always the left die anymore — points left by default (whoever's on the left is
+   on offense), and .flip mirrors the whole shape when offense has moved to the right instead. */
 .t2-possession-arrow{width:72px;height:30px;flex-shrink:0;position:relative;}
 .t2-possession-arrow::before{content:'';position:absolute;top:50%;right:0;width:42px;height:16px;background:var(--franchise);transform:translateY(-50%);}
 .t2-possession-arrow::after{content:'';position:absolute;top:50%;left:0;width:0;height:0;border-top:21px solid transparent;border-bottom:21px solid transparent;border-right:30px solid var(--franchise);transform:translateY(-50%);}
-.t2-die-stage{display:flex;align-items:center;justify-content:center;}
+.t2-possession-arrow.flip{transform:scaleX(-1);}
+.t2-die-stage{position:relative;display:flex;align-items:center;justify-content:center;}
+/* Replaces the old standalone Roll button — the prompt lives right on the die's own face
+   instead of a separate control underneath it, and the die itself pulses to invite the tap. */
+.t2-die-roll-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(240,160,61,.92);color:var(--ink);font-family:var(--font-label);font-size:15px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;pointer-events:none;}
+.t2-die-stage.t2-die-clickable{animation:t2-die-roll-pulse 1.8s ease-in-out infinite;}
+@keyframes t2-die-roll-pulse{0%,100%{box-shadow:0 0 0 0 rgba(240,160,61,.5);}50%{box-shadow:0 0 0 10px rgba(240,160,61,0);}}
+@media(prefers-reduced-motion:reduce){.t2-die-stage.t2-die-clickable{animation:none;}}
 
 /* The mod value sits right in the die's caption as a small pill — clicking it opens the
    breakdown popover anchored to that same die column (.t2-rollzone-die is its offset parent). */
@@ -1171,11 +1181,6 @@ button.t2-adjustment-mini.empty.pulsing{cursor:pointer;}
    over-budget figure elsewhere, but big enough to read at a glance without opening anything. */
 .t2-die-stage.t2-die-cut{animation:t2-die-cut-pulse 1.4s ease-out 1;}
 @keyframes t2-die-cut-pulse{0%{box-shadow:0 0 0 0 rgba(181,67,31,.6);}70%{box-shadow:0 0 0 18px rgba(181,67,31,0);}100%{box-shadow:0 0 0 0 rgba(181,67,31,0);}}
-.t2-cut-badge{margin-top:8px;background:var(--ink-deep);border:1.5px solid var(--stamp);padding:6px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;}
-.t2-cut-badge-label{font-family:var(--font-label);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--stamp-ink);}
-.t2-cut-badge-value{font-family:var(--font-mono);font-size:12px;color:var(--file);display:flex;align-items:baseline;gap:6px;}
-.t2-cut-badge-value s{color:var(--ink-muted);}
-.t2-cut-badge-value b{color:var(--stamp-ink);font-weight:500;}
 .t2-report-cut s{color:var(--ink-muted);margin-right:4px;}
 .t2-report-cut em{color:var(--stamp-ink);font-style:normal;font-size:10px;margin-left:4px;}
 @media(prefers-reduced-motion:reduce){.t2-die-stage.t2-die-cut{animation:none;box-shadow:0 0 0 3px var(--stamp);}}
@@ -1272,10 +1277,6 @@ button.t2-adjustment-mini.empty.pulsing{cursor:pointer;}
 .t2-waiting{font-family:var(--font-mono);font-size:13px;color:var(--ink-muted);}
 
 .t2-die-clickable{cursor:pointer;}
-.t2-roll-btn{background:var(--franchise);border:none;color:var(--ink);font-family:var(--font-label);font-size:14px;letter-spacing:.12em;text-transform:uppercase;padding:14px 36px;cursor:pointer;animation:t2-roll-btn-pulse 1.8s ease-in-out infinite;}
-.t2-roll-btn:hover{background:#ffb455;}
-@keyframes t2-roll-btn-pulse{0%,100%{box-shadow:0 0 0 0 rgba(240,160,61,.5);}50%{box-shadow:0 0 0 10px rgba(240,160,61,0);}}
-@media(prefers-reduced-motion:reduce){.t2-roll-btn{animation:none;}}
 
 .t2-advance-btn{background:var(--stamp);border:none;color:var(--stamp-plate-text);font-family:var(--font-label);font-size:13px;letter-spacing:.12em;text-transform:uppercase;padding:16px 30px;cursor:pointer;flex-shrink:0;}
 .t2-advance-btn:hover{background:var(--stamp-text);}
@@ -2211,7 +2212,7 @@ body:has(.entry-screen){padding-bottom:0;}
   .mobile-shell:has(.t2-shell) .t2-next-possession{font-size:10px;padding:7px 8px;}
   .mobile-shell:has(.t2-shell) .t2-auto-progress{font-size:9px;gap:4px;}
   .mobile-shell:has(.t2-shell) .t2-auto-progress input{width:11px;height:11px;}
-  .mobile-shell:has(.t2-shell) .t2-roll-btn{font-size:10px;padding:7px 18px;}
+  .mobile-shell:has(.t2-shell) .t2-die-roll-label{font-size:9px;}
   .mobile-shell:has(.t2-shell) .t2-coin,.mobile-shell:has(.t2-shell) .t2-coin-start{width:64px;height:64px;}
   .mobile-shell:has(.t2-shell) .t2-log{position:absolute;top:4px;right:4px;z-index:20;width:min(88vw,340px);max-height:calc(100% - 8px);box-sizing:border-box;padding:10px;overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,.5);}
   .mobile-shell:has(.t2-shell) .t2-log.collapsed{width:28px;height:28px;padding:1px;background:var(--ink);}

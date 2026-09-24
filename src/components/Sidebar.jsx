@@ -32,7 +32,7 @@ const SUPPORT_NAV_ITEMS = [
 // into the sidebar's vertical list. Team was dropped for a while when the persistent bar
 // alone covered the roster/front-office/matchup view, but it's the only way to reach the
 // front-office moves (fire coach or GM, invest in fanbase), so it's back.
-export default function Sidebar({ state, myTeamId, overlay, viewTeamId, onNav, onViewTeam, navNeedsAttention, onAcknowledgeNav }) {
+export default function Sidebar({ state, myTeamId, overlay, viewTeamId, onNav, onViewTeam, onAcknowledgeNav }) {
   const team = state.teams[myTeamId];
   const seasonNum = Math.min(state.season, ERA_LENGTH);
   // The Team overlay is showing someone else's file (opened from a standings row) when
@@ -57,7 +57,11 @@ export default function Sidebar({ state, myTeamId, overlay, viewTeamId, onNav, o
         });
   return (
     <div className="sidebar">
-      <button type="button" className={'sidebar-lockup' + (navNeedsAttention ? ' nav-attention' : '')} onClick={onAcknowledgeNav} aria-label="Nine Deep menu">
+      {/* Unlike the mobile topbar's logo (Header.jsx), this one doesn't open anything — the
+          sidebar's nav is always visible already — so it never needs the nav-attention
+          treatment; onAcknowledgeNav still fires on click so a desktop user can dismiss the
+          same to-do state some other way. */}
+      <button type="button" className="sidebar-lockup" onClick={onAcknowledgeNav} aria-label="Nine Deep menu">
         <BallMark size={36} variant="onInk" />
         <span className="topbar-wordmark"><b>NINE</b> <i>DEEP</i></span>
       </button>

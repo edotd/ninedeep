@@ -34,7 +34,7 @@ const ADJUSTMENT_REVEAL_MS = 2200;
 // alone for REPORT_BEAT_MS, then Offense fades in and tallies up to its total over
 // REPORT_COUNT_MS, then after REPORT_HALF_BEAT_MS Defense does the same — mirroring the
 // "arrow settles, then each side's number builds" read a real box score gets.
-const REPORT_BEAT_MS = 550;
+const REPORT_BEAT_MS = 1550;
 const REPORT_COUNT_MS = 550;
 const REPORT_HALF_BEAT_MS = 275;
 
@@ -595,27 +595,29 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
     if (turn.stage === 'card') {
       // Nothing is actually being rolled yet at this point (cards aren't even decided) — this
       // previews both dice at rest, sized to what each side would actually roll, so the board
-      // always shows two dice the whole exchange, never just one. Offense is always the left
-      // die and defense the right one for the whole exchange (both here and in the resolved
-      // stage below), so the possession arrow just points at offense the whole time — it used
-      // to also flip to track whichever side was currently acting (card pick, then roll), which
-      // read as flickering back and forth for no real reason since the two sides never actually
-      // swap screen position mid-exchange.
-      const offSides = offenseDieSize(offenseTeam);
-      const defSides = defenseDieSize(defenseTeam);
+      // always shows two dice the whole exchange, never just one. Each team's die always sits
+      // on the same physical side as that team's own board (topSide/bottomSide) — offense and
+      // defense swap sides between exchanges (whoever doesn't have the ball defends), but a
+      // given team's die never visually moves; only which role it's playing changes. The
+      // possession arrow points toward whichever side currently has the ball.
+      const leftTeam = teamOf(topSide);
+      const rightTeam = teamOf(bottomSide);
+      const leftIsOffense = offenseTeam === leftTeam;
+      const leftSides = leftIsOffense ? offenseDieSize(leftTeam) : defenseDieSize(leftTeam);
+      const rightSides = leftIsOffense ? defenseDieSize(rightTeam) : offenseDieSize(rightTeam);
       return (
         <div className="t2-rollzone-dual">
           <div className="t2-rollzone-die">
-            <div className="t2-die-stage"><Die sides={offSides} value={offSides} size={dieSize} /></div>
-            <div className="t2-rollzone-caption">{offenseTeam.name} On Offense</div>
+            <div className="t2-die-stage"><Die sides={leftSides} value={leftSides} size={dieSize} /></div>
+            <div className="t2-rollzone-caption">{leftTeam.name} On {leftIsOffense ? 'Offense' : 'Defense'}</div>
           </div>
           <div className="t2-possession">
             <div className="t2-possession-label">Possession</div>
-            <div className="t2-possession-arrow" />
+            <div className={'t2-possession-arrow' + (leftIsOffense ? '' : ' flip')} />
           </div>
           <div className="t2-rollzone-die">
-            <div className="t2-die-stage"><Die sides={defSides} value={defSides} size={dieSize} /></div>
-            <div className="t2-rollzone-caption">{defenseTeam.name} On Defense</div>
+            <div className="t2-die-stage"><Die sides={rightSides} value={rightSides} size={dieSize} /></div>
+            <div className="t2-rollzone-caption">{rightTeam.name} On {leftIsOffense ? 'Defense' : 'Offense'}</div>
           </div>
         </div>
       );
@@ -628,12 +630,10 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
       const defDie = turn[`${defSide}DefDie`], defSides = turn[`${defSide}DefSides`];
 
       // Both dice stay on the board the whole exchange — offense's sits at its rest/size
-      // preview until it settles, defense's does the same — with a static Possession arrow
-      // between them pointing at offense (always the left die for the whole exchange, in both
-      // this stage and the card stage above). Only the acting side's own controlling human ever
-      // gets the clickable die/Roll button for their turn; an AI side rolls itself (see the
-      // effect above), and a human opponent's side just sits idle here until their own client
-      // rolls it.
+      // preview until it settles, defense's does the same. Only the acting side's own
+      // controlling human ever gets the clickable die for their turn; an AI side rolls itself
+      // (see the effect above), and a human opponent's side just sits idle here until their own
+      // client rolls it.
       const offRolling = rollPhase === 'rolling-off';
       const offSettled = !['idle-off', 'rolling-off'].includes(rollPhase);
       const offInteractive = !revealingAdjustments && rollPhase === 'idle-off' && offTeam === myTeam;
@@ -647,28 +647,47 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
       // Only knowable once defense's own die has actually revealed — same gate as the full
       // report below, so this never spoils the outcome before defense's roll lands on screen.
       const showCut = rollPhase === 'both' && !offWon;
+      // Offense/defense swap which physical die they occupy between exchanges (whoever doesn't
+      // have the ball defends), but each team's own die never visually moves — it always sits
+      // on the same side as that team's board (topSide/bottomSide), matching the board's own
+      // stability, so nothing appears to swap sides mid-match the way roles do.
+      const offenseIsLeft = offTeam === teamOf(topSide);
+
+      const offenseBlock = (
+        <div className="t2-rollzone-die" key="offense">
+          <div className={'t2-die-stage' + (offInteractive ? ' t2-die-clickable' : '') + (showCut ? ' t2-die-cut' : '')} onClick={offInteractive ? () => startRoll('off') : undefined}>
+            <Die sides={offSides} value={offSettled ? offDie : offSides} size={dieSize} rolling={offRolling} />
+            {rollPhase === 'idle-off' && offInteractive && <span className="t2-die-roll-label">Roll</span>}
+          </div>
+          <div className="t2-rollzone-caption">
+            {offSettled ? `${offTeam.name} Rolls ${offDie}` : `${offTeam.name} On Offense`}
+            {offSettled && (
+              <button className="t2-mod-info" aria-label="Show offense output breakdown" onClick={() => setBreakdownOpen((v) => (v === 'off' ? null : 'off'))}>+{offRaw}</button>
+            )}
+          </div>
+          {breakdownOpen === 'off' && renderModBreakdown(offTeam, 'offense', offBreakdown)}
+        </div>
+      );
+
+      const defenseBlock = (
+        <div className="t2-rollzone-die" key="defense">
+          <div className={'t2-die-stage' + (defInteractive ? ' t2-die-clickable' : '')} onClick={defInteractive ? () => startRoll('def') : undefined}>
+            <Die sides={defSides} value={defSettled ? defDie : defSides} size={dieSize} rolling={defRolling} />
+            {rollPhase === 'idle-def' && defInteractive && <span className="t2-die-roll-label">Roll</span>}
+          </div>
+          <div className="t2-rollzone-caption">
+            {defSettled ? `${defTeam.name} Rolls ${defDie}` : `${defTeam.name} On Defense`}
+            {defSettled && (
+              <button className="t2-mod-info" aria-label="Show defense mod breakdown" onClick={() => setBreakdownOpen((v) => (v === 'def' ? null : 'def'))}>+{defMod}</button>
+            )}
+          </div>
+          {breakdownOpen === 'def' && renderModBreakdown(defTeam, 'defense', defBreakdown)}
+        </div>
+      );
 
       return (
         <div className="t2-rollzone-dual">
-          <div className="t2-rollzone-die">
-            <div className={'t2-die-stage' + (offInteractive ? ' t2-die-clickable' : '') + (showCut ? ' t2-die-cut' : '')} onClick={offInteractive ? () => startRoll('off') : undefined}>
-              <Die sides={offSides} value={offSettled ? offDie : offSides} size={dieSize} rolling={offRolling} />
-            </div>
-            <div className="t2-rollzone-caption">
-              {offSettled ? `${offTeam.name} Rolls ${offDie}` : `${offTeam.name} On Offense`}
-              {offSettled && (
-                <button className="t2-mod-info" aria-label="Show offense output breakdown" onClick={() => setBreakdownOpen((v) => (v === 'off' ? null : 'off'))}>+{offRaw}</button>
-              )}
-            </div>
-            {rollPhase === 'idle-off' && offInteractive && <button className="t2-roll-btn" onClick={() => startRoll('off')}>Roll</button>}
-            {breakdownOpen === 'off' && renderModBreakdown(offTeam, 'offense', offBreakdown)}
-            {showCut && (
-              <div className="t2-cut-badge t2-fade-in">
-                <span className="t2-cut-badge-label">{defTeam.name} defense cuts it</span>
-                <span className="t2-cut-badge-value"><s>{offRaw}</s> → {offTotal}<b>−{haircutPct}%</b></span>
-              </div>
-            )}
-          </div>
+          {offenseIsLeft ? offenseBlock : defenseBlock}
 
           {rollPhase === 'both' ? (
             // The possession arrow's job — "here's who has it" — is done the instant both dice
@@ -708,23 +727,11 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
           ) : (
             <div className="t2-possession">
               <div className="t2-possession-label">Possession</div>
-              <div className="t2-possession-arrow" />
+              <div className={'t2-possession-arrow' + (offenseIsLeft ? '' : ' flip')} />
             </div>
           )}
 
-          <div className="t2-rollzone-die">
-            <div className={'t2-die-stage' + (defInteractive ? ' t2-die-clickable' : '')} onClick={defInteractive ? () => startRoll('def') : undefined}>
-              <Die sides={defSides} value={defSettled ? defDie : defSides} size={dieSize} rolling={defRolling} />
-            </div>
-            <div className="t2-rollzone-caption">
-              {defSettled ? `${defTeam.name} Rolls ${defDie}` : `${defTeam.name} On Defense`}
-              {defSettled && (
-                <button className="t2-mod-info" aria-label="Show defense mod breakdown" onClick={() => setBreakdownOpen((v) => (v === 'def' ? null : 'def'))}>+{defMod}</button>
-              )}
-            </div>
-            {rollPhase === 'idle-def' && defInteractive && <button className="t2-roll-btn" onClick={() => startRoll('def')}>Roll</button>}
-            {breakdownOpen === 'def' && renderModBreakdown(defTeam, 'defense', defBreakdown)}
-          </div>
+          {offenseIsLeft ? defenseBlock : offenseBlock}
         </div>
       );
     }
