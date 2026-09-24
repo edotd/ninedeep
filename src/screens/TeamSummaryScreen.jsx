@@ -367,7 +367,10 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           {team.market && (
             <button className={'ts-tab' + (tab === 'office' ? ' active' : '')} onClick={() => setTab('office')}>Staff & Gameplan</button>
           )}
-          <button className={'ts-tab' + (tab === 'ledger' ? ' active' : '')} onClick={() => setTab('ledger')}>Budget</button>
+          <button className={'ts-tab' + (tab === 'ledger' ? ' active' : '')} onClick={() => setTab('ledger')}>
+            Budget
+            {!readOnly && preSeason && committed > cap && <span className="ts-tab-dot" aria-label="Team is over budget" />}
+          </button>
           {!isDesktop && <span className="ts-tab-underline" ref={underlineRef} aria-hidden="true" />}
         </div>
 
