@@ -1005,14 +1005,18 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .t2-teamboard:nth-of-type(2){border-top:1px solid var(--ink-rule);}
 .t2-teamboard.active{background:rgba(240,160,61,.05);}
 .t2-teamboard.flip{flex-direction:column-reverse;}
-.t2-teamboard-meta{display:grid;grid-template-columns:220px minmax(0,1fr) 220px;align-items:center;gap:14px;min-width:0;}
+.t2-teamboard-meta{display:grid;grid-template-columns:220px minmax(0,1fr) 220px;grid-template-rows:auto auto;align-items:center;gap:8px 14px;min-width:0;}
 .t2-teamboard-meta>.t2-coach-dock{grid-column:1;grid-row:1;}
 .t2-teamboard.flip .t2-teamboard-meta>.t2-coach-dock{grid-column:3;}
 /* The Gameplan dock sits opposite the coach card, not squeezed into the same column with it
    (that column only ever needs to fit one or the other — mirrors flip the same way coach does,
-   just inverted, so gameplan always lands on whichever side coach isn't). */
+   just inverted, so gameplan always lands on whichever side coach isn't). Adjustment stacks
+   below coach, on that same side, so both card docks sit to a side of the team name rather
+   than under it. */
 .t2-teamboard-meta>.t2-gameplan-dock{grid-column:3;grid-row:1;display:flex;align-items:center;justify-content:center;gap:5px;min-width:0;}
 .t2-teamboard.flip .t2-teamboard-meta>.t2-gameplan-dock{grid-column:1;}
+.t2-teamboard-meta>.t2-adjustment-dock{grid-column:1;grid-row:2;justify-self:center;}
+.t2-teamboard.flip .t2-teamboard-meta>.t2-adjustment-dock{grid-column:3;}
 .t2-teamboard-name{grid-column:2;grid-row:1;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-width:0;}
 .t2-teamboard-name-line{display:flex;align-items:center;justify-content:center;gap:12px;min-width:0;width:100%;}
 .t2-hca-tag{display:inline-block;font-family:var(--font-label);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--franchise);border:1px solid var(--franchise);padding:3px 8px;}
@@ -1022,17 +1026,23 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .t2-teamboard-status{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--ink-muted);text-transform:uppercase;}
 .t2-teamboard.active .t2-teamboard-status{color:var(--franchise);}
 .t2-adjustment-dock{display:flex;align-items:center;justify-content:center;gap:5px;max-width:100%;flex-wrap:wrap;animation:t2-dock-arrive 180ms ease-out both;}
-.t2-teamboard.flip .t2-adjustment-dock{order:-1;}
 /* Played Gameplan/Adjustment cards show as a plain icon badge (clipboard / X's-and-O's, see
    CardTypeMark) rather than an illegibly tiny scaled-down card — the point was always just "a
    card of this type got played here," and the icon says that in a fraction of the space, with
-   the card's own name/effect available on hover via the native title tooltip. */
-.t2-adjustment-mini{width:26px;height:26px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;border:1px solid var(--franchise);background:var(--ink-deep);color:var(--franchise);}
+   the card's own name/effect available on hover via the native title tooltip. An empty slot
+   (nothing played yet) shows the same icon dimmed with a "+" over it, and pulses when the
+   viewer's own team actually has an eligible card to play (see TurnPanel's *CanPlayFor). */
+.t2-adjustment-mini{width:26px;height:26px;box-sizing:border-box;position:relative;display:flex;align-items:center;justify-content:center;border:1px solid var(--franchise);background:var(--ink-deep);color:var(--franchise);}
 .t2-coach-dock{display:flex;align-items:center;gap:5px;min-width:0;max-width:100%;position:relative;z-index:5;}
 .t2-coach-dock .nd2-coach-slot{min-width:0;flex:1 1 160px;}
 .t2-teamboard.flip .t2-coach-dock{flex-direction:row-reverse;}
-.t2-gameplan-mini{width:30px;height:30px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;border:1px solid var(--franchise);background:var(--ink);color:var(--franchise);}
-.t2-gameplan-mini.empty{border-style:dashed;border-color:var(--ink-rule);background:none;}
+.t2-gameplan-mini{width:30px;height:30px;box-sizing:border-box;position:relative;display:flex;align-items:center;justify-content:center;border:1px solid var(--franchise);background:var(--ink);color:var(--franchise);}
+.t2-gameplan-mini.empty,.t2-adjustment-mini.empty{border-style:dashed;border-color:var(--ink-rule);background:none;}
+.t2-gameplan-mini.empty svg,.t2-adjustment-mini.empty svg{opacity:.4;}
+.t2-mini-plus{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-label);font-size:14px;font-weight:700;color:var(--franchise);}
+.t2-gameplan-mini.empty.pulsing,.t2-adjustment-mini.empty.pulsing{border-style:solid;border-color:var(--franchise);animation:t2-mini-pulse 1.8s ease-in-out infinite;}
+@keyframes t2-mini-pulse{0%,100%{box-shadow:0 0 0 0 rgba(240,160,61,.6);}50%{box-shadow:0 0 0 6px rgba(240,160,61,0);}}
+@media(prefers-reduced-motion:reduce){.t2-gameplan-mini.empty.pulsing,.t2-adjustment-mini.empty.pulsing{animation:none;}}
 @keyframes t2-dock-arrive{from{opacity:0;transform:scale(1.35);}to{opacity:1;transform:scale(1);}}
 
 /* Played Adjustment cards reveal above the entire match board, so they never alter the dice
@@ -1094,7 +1104,9 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .nd2-coach-foot span{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);}
 .nd2-coach-foot b{font-family:var(--font-display);font-size:16px;line-height:1;color:var(--franchise);font-weight:400;}
 
-.t2-rollzone{padding:44px 24px;border-bottom:1px solid var(--ink-rule);border-top:1px solid var(--ink-rule);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;min-height:300px;box-sizing:border-box;}
+/* Trimmed down from 44px/300px so the two team sections read as closer to the center of the
+   board — the roll circle itself (dice/coin sizes) is untouched, only its own breathing room. */
+.t2-rollzone{padding:20px 24px;border-bottom:1px solid var(--ink-rule);border-top:1px solid var(--ink-rule);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;min-height:220px;box-sizing:border-box;}
 .t2-rollzone-coin,.t2-rollzone-die{display:flex;flex-direction:column;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;width:100%;}
 .t2-rollzone-dual{display:flex;gap:clamp(8px,3vw,48px);flex-wrap:nowrap;justify-content:center;align-items:center;width:100%;}
 .t2-rollzone-dual > .t2-rollzone-die{width:auto;flex:1 1 0;min-width:0;}
@@ -1144,9 +1156,22 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .t2-coin-brand{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--file-muted);text-transform:uppercase;}
 .t2-coin-start{width:130px;height:130px;border-radius:50%;background:none;border:none;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;padding:0;}
 .t2-coin-start.pulsing{animation:t2-coin-pulse 1.8s ease-in-out infinite;}
-.t2-coin-start.spinning{animation:t2-coin-spin 0.9s cubic-bezier(.25,.7,.3,1) both;cursor:default;}
+.t2-coin-start.spinning{animation:t2-coin-flip 1.3s cubic-bezier(.2,.5,.3,1) both;cursor:default;}
 @keyframes t2-coin-pulse{0%,100%{box-shadow:0 0 0 0 rgba(240,160,61,.55);}50%{box-shadow:0 0 0 14px rgba(240,160,61,0);}}
-@keyframes t2-coin-spin{from{transform:rotate(0deg);}to{transform:rotate(1080deg);}}
+/* A real flip, not a flat spin — rotateY tumbles the coin edge-on and back each half-turn,
+   and the keyframe spacing itself decelerates (each step covers a smaller angle) so it visibly
+   flips a few times, slowing, before settling flat at a clean multiple of 360deg. */
+@keyframes t2-coin-flip{
+  0%{transform:rotateY(0deg);}
+  15%{transform:rotateY(400deg);}
+  30%{transform:rotateY(760deg);}
+  45%{transform:rotateY(1080deg);}
+  60%{transform:rotateY(1350deg);}
+  73%{transform:rotateY(1550deg);}
+  84%{transform:rotateY(1690deg);}
+  93%{transform:rotateY(1770deg);}
+  100%{transform:rotateY(1800deg);}
+}
 @media(prefers-reduced-motion:reduce){.t2-coin-start.pulsing,.t2-coin-start.spinning{animation:none;}}
 
 .t2-fade-in{animation:t2-fade-in 450ms ease-out both;}
@@ -1154,6 +1179,9 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 @media(prefers-reduced-motion:reduce){.t2-fade-in{animation:none;}}
 .t2-rollzone-caption{font-family:var(--font-label);font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--file);text-align:center;line-height:1.5;}
 .t2-rollzone-caption span{display:block;font-family:var(--font-mono);font-size:12px;letter-spacing:.02em;color:var(--ink-muted);text-transform:none;margin-top:2px;}
+/* The pre-flip hint ("Winner opens on offense") — scaled up 3x from the shared caption-span
+   size above since it's the only thing on screen before the coin's even been touched. */
+.t2-rollzone-caption .t2-coin-hint{font-size:36px;margin-top:6px;line-height:1.2;}
 /* One block per side now (rendered once above the roll circle for teamA's play, once below
    for teamB's — see TurnPanel), so this is just a single stacked column, not the old shared
    two-team grid. */
@@ -1248,6 +1276,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
   .t2-possession-arrow::after{border-top-width:12px;border-bottom-width:12px;border-right-width:16px;}
   .t2-possession-label{font-size:11px;}
   .t2-rollzone-caption{font-size:12px;}
+  .t2-rollzone-caption .t2-coin-hint{font-size:28px;}
 }
 
 .t2-log{background:var(--ink-deep);border:1px solid var(--ink-rule);padding:20px;display:flex;flex-direction:column;min-height:0;}
@@ -2131,6 +2160,7 @@ body:has(.entry-screen){padding-bottom:0;}
   .mobile-shell:has(.t2-shell) .t2-rollzone-dual{gap:4px;}
   .mobile-shell:has(.t2-shell) .t2-rollzone-caption{font-size:9px;line-height:1.15;}
   .mobile-shell:has(.t2-shell) .t2-rollzone-caption span{font-size:8px;}
+  .mobile-shell:has(.t2-shell) .t2-rollzone-caption .t2-coin-hint{font-size:24px;}
   .mobile-shell:has(.t2-shell) .t2-possession{gap:3px;}
   .mobile-shell:has(.t2-shell) .t2-possession-label{font-size:7px;}
   /* The report only ever needs to be as wide as its own text on a phone — let the dice

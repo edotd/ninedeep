@@ -18,7 +18,7 @@ const CARD_TIMER_SECONDS = 12;
 // How long the coin spins before the flip actually resolves, and how long the result reads
 // on screen before auto-advancing into the first card window — both purely presentational
 // delays around the instant, synchronous advanceTurn() call.
-const COIN_SPIN_MS = 900;
+const COIN_SPIN_MS = 1300;
 const COIN_RESULT_MS = 1400;
 
 // The engine resolves both of an exchange's dice in one atomic step, but the roll zone plays
@@ -114,13 +114,19 @@ function readAutoProgress() {
 }
 
 // All nine rotation tiles remain visible. The coach gets a dedicated dock beside the team
-// name: below the home roster on the left, and above the away roster on the right.
-function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, gameplanPlays, isActive, flip, contributing }) {
+// name: below the home roster on the left, and above the away roster on the right. Gameplan
+// and Adjustment each get their own dock on the side opposite the other — gameplan mirrors
+// coach's column (a coach's plan, so it visually pairs there), adjustment stacks below
+// whichever side coach isn't on. Both always render, even with nothing played yet, so the
+// slot (and whether it's pulsing — see gameplanCanPlay/adjustmentCanPlay) is always visible.
+function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, gameplanPlays, gameplanCanPlay, adjustmentCanPlay, isActive, flip, contributing }) {
   const hand = team.hand || [];
   const activeIds = ids || team.activeIds || [];
   const starters = activeIds.map((id) => hand.find((c) => c.id === id)).filter(Boolean);
   const bench = hand.filter((c) => !activeIds.includes(c.id));
   const edge = flip ? 'top' : 'bottom';
+  const hasGameplan = gameplanPlays?.length > 0;
+  const hasAdjustment = cardPlays?.length > 0;
   return (
     <div className={'t2-teamboard' + (isActive ? ' active' : '') + (flip ? ' flip' : '')}>
       <div className="nd2-roster">
@@ -131,17 +137,19 @@ function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, gameplan
         {team.coach && <div className="t2-coach-dock">
           <div className="nd2-coach-slot"><CompactCoachCard team={team} edge={edge} /></div>
         </div>}
-        {/* Always present, even with nothing active yet — an empty slot here (rather than the
-            dock only appearing once a Gameplan card is in play) keeps the board's layout, and
-            where the eye looks for it, consistent turn to turn. */}
         <div className="t2-gameplan-dock">
-          {gameplanPlays?.length > 0
+          {hasGameplan
             ? gameplanPlays.map((entry, i) => (
               <div className="t2-gameplan-mini" key={`${entry.teamName}-${entry.cardName}-${i}`} title={entry.card ? `${entry.card.name} — ${entry.description}` : entry.cardName}>
                 <CardTypeMark type="gameplan" size={20} />
               </div>
             ))
-            : <div className="t2-gameplan-mini empty" aria-hidden="true" />}
+            : (
+              <div className={'t2-gameplan-mini empty' + (gameplanCanPlay ? ' pulsing' : '')} aria-hidden="true">
+                <CardTypeMark type="gameplan" size={14} />
+                <span className="t2-mini-plus">+</span>
+              </div>
+            )}
         </div>
         <div className="t2-teamboard-name">
           {hca && !flip && <span className="t2-hca-tag">Home Court</span>}
@@ -150,15 +158,20 @@ function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, gameplan
             <div className="t2-teamboard-name-text">{team.name}</div>
           </div>
           {statusLabel && <div className="t2-teamboard-status">{statusLabel}</div>}
-          {cardPlays?.length > 0 && (
-            <div className="t2-adjustment-dock">
-              {cardPlays.map((entry, i) => (
-                <div className="t2-adjustment-mini" key={`${entry.stepIndex}-${entry.teamName}-${entry.cardName}-${i}`} title={entry.card ? `${entry.card.name} — ${entry.description}` : entry.cardName}>
-                  <CardTypeMark type="adjustment" size={16} />
-                </div>
-              ))}
-            </div>
-          )}
+        </div>
+        <div className="t2-adjustment-dock">
+          {hasAdjustment
+            ? cardPlays.map((entry, i) => (
+              <div className="t2-adjustment-mini" key={`${entry.stepIndex}-${entry.teamName}-${entry.cardName}-${i}`} title={entry.card ? `${entry.card.name} — ${entry.description}` : entry.cardName}>
+                <CardTypeMark type="adjustment" size={16} />
+              </div>
+            ))
+            : (
+              <div className={'t2-adjustment-mini empty' + (adjustmentCanPlay ? ' pulsing' : '')} aria-hidden="true">
+                <CardTypeMark type="adjustment" size={12} />
+                <span className="t2-mini-plus">+</span>
+              </div>
+            )}
         </div>
       </div>
     </div>
@@ -175,11 +188,18 @@ function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, gameplan
 export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
   const turn = m.turn;
   const teamA = m.a, teamB = m.b;
+  const myTeam = state.teams[myTeamId];
+  const humanInMatch = teamA === myTeam || teamB === myTeam;
+  // m.a/m.b can represent home/away (or bracket seeding) rather than "which side the viewer is
+  // on" — with the board always rendering teamA on top, a human's own team could land on top in
+  // one match and bottom in the next, reading as the two teams randomly swapping sides. Pin the
+  // viewer's own team to a fixed side (bottom, the flip slot) whenever they're actually playing;
+  // a spectated AI-vs-AI match keeps the original a/b order, which is stable for that match too.
+  const topSide = humanInMatch && teamA === myTeam ? 'b' : 'a';
+  const bottomSide = topSide === 'a' ? 'b' : 'a';
   const isDesktop = useIsDesktop();
   const dieSize = isDesktop ? 96 : 58;
   const coinSize = isDesktop ? 100 : 64;
-  const myTeam = state.teams[myTeamId];
-  const humanInMatch = teamA === myTeam || teamB === myTeam;
   const [timeLeft, setTimeLeft] = useState(CARD_TIMER_SECONDS);
   const [coinSpinning, setCoinSpinning] = useState(false);
   const coinTimerRef = useRef(null);
@@ -469,6 +489,25 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
   const settledTeamACards = revealingAdjustments ? [] : teamACardPlays;
   const settledTeamBCards = revealingAdjustments ? [] : teamBCardPlays;
 
+  // Board-position lookups, keyed by side ('a'/'b') rather than physical position — topSide/
+  // bottomSide (above) decide which side actually renders where.
+  const teamOf = (side) => (side === 'a' ? teamA : teamB);
+  const idsOf = (side) => (side === 'a' ? turn.idsA : turn.idsB);
+  const hcaOf = (side) => (side === 'a' ? turn.hcaA : turn.hcaB);
+  const cardsOf = (side) => (side === 'a' ? settledTeamACards : settledTeamBCards);
+  const gameplansOf = (side) => (side === 'a' ? teamAGameplans : teamBGameplans);
+  // Only the viewer's own empty slot ever pulses — you can't play the opponent's cards, so
+  // there's nothing actionable to draw their eye to on that side. Gameplan mirrors
+  // playGameplanCard's own 'playoff' eligibility window and its one-active-at-a-time rule;
+  // Adjustment mirrors the picker's own availableAdjustments during the human's own card turn.
+  const gameplanCanPlayFor = (team) => (
+    team === myTeam
+    && ['coinflip', 'coinflipped'].includes(turn.stage)
+    && !(team.gameplanCards || []).some((c) => c.used)
+    && (team.gameplanCards || []).some((c) => !c.used && c.contexts.includes('playoff'))
+  );
+  const adjustmentCanPlayFor = (team) => team === myTeam && myTurnToAct && availableAdjustments.length > 0;
+
   const statusFor = (side) => {
     const team = side === 'a' ? teamA : teamB;
     if (turn.stage === 'coinflip') return '';
@@ -533,7 +572,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
             >
               <BallMark size={coinSize} variant="onInk" />
             </button>
-            <div className="t2-rollzone-caption">Coin Flip<br /><span>Winner opens on offense</span></div>
+            <div className="t2-rollzone-caption">Coin Flip<br /><span className="t2-coin-hint">Winner opens on offense</span></div>
           </div>
         );
       }
@@ -746,7 +785,13 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
       )}
       <div className={'t2-body' + (logCollapsed ? ' log-collapsed' : '')}>
         <div className="t2-board">
-          <TeamBoard team={teamA} ids={turn.idsA} hca={turn.hcaA} statusLabel={statusFor('a')} roleLabel={roleFor(teamA)} cardPlays={settledTeamACards} gameplanPlays={teamAGameplans} isActive={offenseTeam === teamA || defenseTeam === teamA} contributing={rollingSide === teamA} />
+          <TeamBoard
+            team={teamOf(topSide)} ids={idsOf(topSide)} hca={hcaOf(topSide)}
+            statusLabel={statusFor(topSide)} roleLabel={roleFor(teamOf(topSide))}
+            cardPlays={cardsOf(topSide)} gameplanPlays={gameplansOf(topSide)}
+            gameplanCanPlay={gameplanCanPlayFor(teamOf(topSide))} adjustmentCanPlay={adjustmentCanPlayFor(teamOf(topSide))}
+            isActive={offenseTeam === teamOf(topSide) || defenseTeam === teamOf(topSide)} contributing={rollingSide === teamOf(topSide)}
+          />
 
           <div className="t2-rollzone">
             {renderRollCircle()}
@@ -782,7 +827,14 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
 
           </div>
 
-          <TeamBoard team={teamB} ids={turn.idsB} hca={turn.hcaB} statusLabel={statusFor('b')} roleLabel={roleFor(teamB)} cardPlays={settledTeamBCards} gameplanPlays={teamBGameplans} isActive={offenseTeam === teamB || defenseTeam === teamB} contributing={rollingSide === teamB} flip />
+          <TeamBoard
+            team={teamOf(bottomSide)} ids={idsOf(bottomSide)} hca={hcaOf(bottomSide)}
+            statusLabel={statusFor(bottomSide)} roleLabel={roleFor(teamOf(bottomSide))}
+            cardPlays={cardsOf(bottomSide)} gameplanPlays={gameplansOf(bottomSide)}
+            gameplanCanPlay={gameplanCanPlayFor(teamOf(bottomSide))} adjustmentCanPlay={adjustmentCanPlayFor(teamOf(bottomSide))}
+            isActive={offenseTeam === teamOf(bottomSide) || defenseTeam === teamOf(bottomSide)} contributing={rollingSide === teamOf(bottomSide)}
+            flip
+          />
         </div>
 
         <div className={'t2-log' + (logCollapsed ? ' collapsed' : '')}>
