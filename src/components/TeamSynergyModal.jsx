@@ -75,14 +75,14 @@ export default function TeamSynergyModal({ team, onClose }) {
   }
 
   return (
-    <div className="tsx-overlay" role="dialog" aria-modal="true" aria-label="Team Synergy">
+    <div className="tsx-overlay" role="dialog" aria-modal="true" aria-label="Synergy">
       <div className="tsx-panel">
         <div className="tsx-panel-head">
           <div>
-            <div className="tsx-eyebrow">Team Synergy</div>
+            <div className="tsx-eyebrow">Synergy</div>
             <h2 className="tsx-title">{team.name}</h2>
           </div>
-          <button className="tsx-close" onClick={onClose} aria-label="Close Team Synergy">Close ×</button>
+          <button className="tsx-close" onClick={onClose} aria-label="Close Synergy">Close ×</button>
         </div>
 
         {starters.length < 2 ? (
