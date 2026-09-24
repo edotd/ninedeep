@@ -17,7 +17,7 @@ const LEGACY_DEVELOPMENT_CHANGES = {
 // that a normal card-select tap never trips it, short enough that it doesn't feel unresponsive.
 const LONG_PRESS_MS = 500;
 
-export default function PlayerCard({ card, onClick, selected, rosterLabel, compact, onRelease, onDevelop }) {
+export default function PlayerCard({ card, onClick, selected, rosterLabel, compact, onRelease, onDevelop, alwaysShowOptions }) {
   const pillLabel = rosterLabel || (selected ? 'Selected' : null);
   const tier = cardTier(card);
   const skillset = skillsetFor(card);
@@ -33,10 +33,12 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
   const accolade = card.accolade || null;
 
   // Release/Develop are destructive/rare actions, not something every glance at the roster
-  // needs to see — they now live behind a hold (mobile) or the expand arrow (desktop, see
-  // .pcard-expand-arrow) instead of sitting on the card permanently. Only relevant at all when
-  // the caller actually wired up one of the two actions (a read-only or compact context never
-  // gets the arrow/hold treatment since there'd be nothing to reveal).
+  // needs to see in the carousel/row contexts — they live behind a hold (mobile) or the expand
+  // arrow (desktop, see .pcard-expand-arrow) there instead of sitting on the card permanently.
+  // The Players tab's List view has no scale-to-fit height to protect (it's a plain scrolling
+  // stack, not the carousel), so alwaysShowOptions skips the hold/arrow entirely and just
+  // renders them as a normal footer. Only relevant at all when the caller actually wired up one
+  // of the two actions (a read-only or compact context never gets any of this).
   const hasOptions = !compact && (onRelease || onDevelop);
   const [expanded, setExpanded] = useState(false);
   const pressTimer = useRef(null);
@@ -44,7 +46,7 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
 
   const clearPressTimer = () => { clearTimeout(pressTimer.current); pressTimer.current = null; };
   const handleTouchStart = () => {
-    if (!hasOptions) return;
+    if (!hasOptions || alwaysShowOptions) return;
     longPressFired.current = false;
     clearPressTimer();
     pressTimer.current = setTimeout(() => { longPressFired.current = true; setExpanded((v) => !v); }, LONG_PRESS_MS);
@@ -143,7 +145,21 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
           </div>
         </div>
       )}
-      {hasOptions && (
+      {hasOptions && alwaysShowOptions && (
+        <div className="pcard-options pcard-options-static" onClick={(event) => event.stopPropagation()}>
+          {onRelease && (
+            <button className="pcard-release" onClick={() => onRelease(card)}>
+              Release <span className="pcard-release-cost">{card.contract > 0 ? `${formatCoins(Math.round((card.salary / 2) * 100) / 100)} Dead × ${card.contract}yr` : 'No Dead Cap'}</span>
+            </button>
+          )}
+          {onDevelop && (
+            <button className="pcard-develop" onClick={() => onDevelop(card)}>
+              Develop
+            </button>
+          )}
+        </div>
+      )}
+      {hasOptions && !alwaysShowOptions && (
         <>
           <button
             type="button"

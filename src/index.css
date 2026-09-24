@@ -439,6 +439,9 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .pcard-expand-chevron{font-size:13px;line-height:1;display:inline-block;transition:transform 150ms ease;}
 .pcard.expanded .pcard-expand-chevron{transform:rotate(180deg);}
 .pcard-options{position:absolute;left:0;right:0;bottom:0;z-index:10;display:flex;flex-direction:column;background:var(--form);border-top:2px solid var(--ink);box-shadow:0 -8px 18px rgba(0,0,0,.28);}
+/* List view (Players tab) has no scale-to-fit height to protect, so Release/Develop render as
+   a normal static footer instead of the overlay above. */
+.pcard-options.pcard-options-static{position:static;box-shadow:none;}
 @media(max-width:999px){.pcard-expand-arrow{display:none;}}
 
 /* Renew — the positive counterpart to Release, on the Contracts screen's expiring cards.
@@ -760,6 +763,25 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .ts-tab-dot{display:inline-block;width:6px;height:6px;margin-left:5px;border-radius:50%;background:var(--stamp);vertical-align:middle;}
 .ts-set-lineup-cta{display:flex;justify-content:flex-end;margin-bottom:-8px;}
 @media (min-width:1000px){.ts-tabbar{display:none;}}
+
+/* Players tab's view picker — a caret next to the tab label that drops down Carousel/List,
+   only shown while that tab is the active one (desktop never shows it; it has no carousel to
+   begin with). */
+.ts-tab-players{display:flex;align-items:center;justify-content:center;position:relative;padding:0;}
+.ts-tab-main{flex:1;background:none;border:none;padding:12px 2px 12px 6px;font:inherit;color:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer;}
+.ts-tab-caret{flex-shrink:0;background:none;border:none;padding:12px 6px 12px 0;color:inherit;cursor:pointer;display:flex;align-items:center;}
+.ts-tab-caret-icon{font-size:9px;display:inline-block;transition:transform 120ms ease;}
+.ts-tab-caret-icon.open{transform:rotate(180deg);}
+.ts-view-menu-backdrop{position:fixed;inset:0;z-index:29;}
+.ts-view-menu{position:absolute;top:100%;left:0;z-index:30;display:flex;flex-direction:column;background:var(--ink);border:1px solid var(--ink-rule);box-shadow:0 10px 20px rgba(0,0,0,.4);min-width:130px;margin-top:1px;}
+.ts-view-menu button{background:none;border:none;padding:10px 14px;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--file-muted);text-align:left;cursor:pointer;}
+.ts-view-menu button.active{color:var(--franchise);}
+.ts-view-menu button:hover{background:var(--ink-rule);}
+
+/* List view — a plain vertical stack of full cards, same width rule as a bare .pcard gets
+   anywhere outside the carousel's own .ts-roto-grid (max-width:264px, centered). */
+.ts-roto-list{display:flex;flex-direction:column;gap:14px;}
+.ts-roto-list .ts-bench-open{width:100%;max-width:264px;margin:0 auto;box-sizing:border-box;}
 
 .ts-body{background:var(--file);padding:22px 24px;display:flex;flex-direction:column;gap:20px;}
 .ts-section[id]{scroll-margin-top:150px;}

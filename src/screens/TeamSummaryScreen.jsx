@@ -150,6 +150,12 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   const [developPlayer, setDevelopPlayer] = useState(null);
   const [lineupScreenOpen, setLineupScreenOpen] = useState(false);
   const [rotationIndex, setRotationIndex] = useState(0);
+  // Players tab view — 'carousel' is the existing one-card-per-swipe locked view; 'list' is a
+  // plain scrolling stack of full cards (Release/Develop shown inline instead of behind a
+  // hold/expand, since there's no scale-to-fit height to protect outside the carousel).
+  const [viewMode, setViewMode] = useState('carousel');
+  const [viewMenuOpen, setViewMenuOpen] = useState(false);
+  useEffect(() => { if (tab !== 'rotation') setViewMenuOpen(false); }, [tab]);
   useEffect(() => { setSelectedId(null); setRotationIndex(0); }, [team.id, canEdit]);
   // Mobile's rotation carousel is one card per swipe (starters then bench, in that order —
   // see the JSX below) — this is how many pages it actually has, so the "more cards" chevron
@@ -311,16 +317,39 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
     if (res && res.ok === false) alert(res.msg);
   };
 
-  // The Rotation tab's card carousel takes over the whole screen on mobile — no page scroll
-  // competing with the horizontal card swipe (see ts-screen-lock in index.css).
-  const isRotationLocked = !isDesktop && tab === 'rotation';
+  // The Players tab's card carousel takes over the whole screen on mobile — no page scroll
+  // competing with the horizontal card swipe (see ts-screen-lock in index.css). Only true in
+  // the Carousel view — List is a plain scrolling stack, same as every other tab.
+  const isRotationLocked = !isDesktop && tab === 'rotation' && viewMode === 'carousel';
 
   return (
     <>
       <div className={'screen ts-screen' + (isRotationLocked ? ' ts-screen-lock' : '')}>
         <div className="ts-viewing-franchise"><span>{readOnly ? 'Viewing Franchise' : 'Your Franchise'}</span><strong>{team.name}</strong></div>
         <div className="ts-tabbar" ref={tabbarRef}>
-          <button className={'ts-tab' + (tab === 'rotation' ? ' active' : '')} onClick={() => setTab('rotation')}>Rotation</button>
+          <div className={'ts-tab ts-tab-players' + (tab === 'rotation' ? ' active' : '')}>
+            <button className="ts-tab-main" onClick={() => { setTab('rotation'); setViewMenuOpen(false); }}>Players</button>
+            {tab === 'rotation' && !isDesktop && (
+              <button
+                type="button"
+                className="ts-tab-caret"
+                aria-label="Choose view"
+                aria-expanded={viewMenuOpen}
+                onClick={(event) => { event.stopPropagation(); setViewMenuOpen((v) => !v); }}
+              >
+                <span className={'ts-tab-caret-icon' + (viewMenuOpen ? ' open' : '')}>▾</span>
+              </button>
+            )}
+            {viewMenuOpen && (
+              <>
+                <div className="ts-view-menu-backdrop" onClick={() => setViewMenuOpen(false)} />
+                <div className="ts-view-menu" onClick={(event) => event.stopPropagation()}>
+                  <button className={viewMode === 'carousel' ? 'active' : ''} onClick={() => { setViewMode('carousel'); setViewMenuOpen(false); }}>Carousel</button>
+                  <button className={viewMode === 'list' ? 'active' : ''} onClick={() => { setViewMode('list'); setViewMenuOpen(false); }}>List</button>
+                </div>
+              </>
+            )}
+          </div>
           <button className={'ts-tab' + (tab === 'chemistry' ? ' active' : '')} onClick={() => setTab('chemistry')}>
             Lineup & Chemistry
             {!readOnly && !team.lineupSet && <span className="ts-tab-dot" aria-label="Lineup not set" />}
@@ -346,9 +375,43 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             </>
           )}
 
-          {showSection('rotation') && (
+          {showSection('rotation') && !isDesktop && viewMode === 'list' && (
+            <div className="ts-section" id="team-rotation">
+              <div className="ts-heading">Players</div>
+              <div className="ts-roto-list">
+                {starters.map((c) => (
+                  <PlayerCard
+                    key={c.id}
+                    card={c}
+                    rosterLabel="Starter"
+                    selected={selectedId === c.id}
+                    onClick={canEdit ? () => handleCardClick(c) : undefined}
+                    onRelease={canEdit ? handleRelease : undefined}
+                    onDevelop={!readOnly && !c.development ? setDevelopPlayer : undefined}
+                    alwaysShowOptions
+                  />
+                ))}
+                {Array.from({ length: starterOpenSlots }, (_, i) => <div className="ts-bench-open starter" key={'starter-open-' + i}>OPEN STARTER</div>)}
+                {bench.map((c) => (
+                  <PlayerCard
+                    key={c.id}
+                    card={c}
+                    rosterLabel="Bench"
+                    selected={selectedId === c.id}
+                    onClick={canEdit ? () => handleCardClick(c) : undefined}
+                    onRelease={canEdit ? handleRelease : undefined}
+                    onDevelop={!readOnly && !c.development ? setDevelopPlayer : undefined}
+                    alwaysShowOptions
+                  />
+                ))}
+                {Array.from({ length: benchOpenSlots }, (_, i) => <div className="ts-bench-open" key={'open-' + i}>OPEN</div>)}
+              </div>
+            </div>
+          )}
+
+          {showSection('rotation') && !(!isDesktop && viewMode === 'list') && (
             <div className="ts-section ts-player-carousel" id="team-rotation">
-              {!isRotationLocked && <div className="ts-heading ts-rotation-heading">Rotation <span>{rotationIndex < 5 ? 'Starters' : 'Bench'}</span></div>}
+              {!isRotationLocked && <div className="ts-heading ts-rotation-heading">Players <span>{rotationIndex < 5 ? 'Starters' : 'Bench'}</span></div>}
               <div className="ts-roto-viewport">
                 <div
                   className="ts-roto-scroll"
