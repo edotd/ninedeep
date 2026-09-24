@@ -124,6 +124,10 @@ export function buildTeams(state, teamSeats) {
     seasonGameplanEffects: { offPercent: 0, defPercent: 0, benchBonus: 0, seedingPercent: 0 },
     fanbaseBaseline: 0,
     financeBoostUsedThisSeason: false,
+    // Distinct from lineupConfirmed: this tracks whether the user has been through the Set
+    // Lineup screen this season at all (a human must; an AI team never needs to, since its
+    // auto-selected five is never reviewed by anyone — see every autoSelectFive call site).
+    lineupSet: false,
     // One entry pushed per season in proceedFromResults, feeding the Season Recap screen's
     // era ledger (result reached, cap used, players under contract) — see seasonResultForTeam.
     seasonHistory: [],
@@ -215,6 +219,9 @@ export function startNewSeasonRoster(state) {
     finalizeCap(team);
     if (!team.activeIds || !validateLineup(team).valid) team.activeIds = autoSelectFive(team.hand);
     team.lineupConfirmed = false;
+    // Human teams must revisit Set Lineup each season; AI teams' auto-selected five never
+    // gets (or needs) manual review, so treat it as already set.
+    team.lineupSet = !team.human;
     team.financeBoostUsedThisSeason = false;
   });
   initSeasonModifierCards(state);

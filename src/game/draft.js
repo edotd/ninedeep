@@ -89,10 +89,12 @@ function finishDraftIfDone(state) {
       }
       team.activeIds = autoSelectFive(team.hand);
       team.lineupConfirmed = false;
+      team.lineupSet = true;
     });
     state.teams.filter((team) => team.human).forEach((team) => {
       team.activeIds = autoSelectFive(team.hand);
       team.lineupConfirmed = false;
+      team.lineupSet = false;
     });
     state.season++;
     if (state.season > ERA_LENGTH) state.phase = 'era_end';

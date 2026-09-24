@@ -56,14 +56,19 @@ export default function FranchiseMasthead({ state, teamId }) {
   const [openMetric, setOpenMetric] = useState(null);
   if (!team) return null;
   const seasonNum = Math.min(state.season, ERA_LENGTH);
-  const synergy = teamSynergy(team);
-  const output = team.coach && team.activeIds?.length ? teamOutput(team) : null;
-  const outputs = state.teams.map((t) => (t.coach && t.activeIds?.length ? teamOutput(t) : null));
+  // A human team's chemistry/output/offense/defense are only meaningful once they've actually
+  // reviewed a lineup on the Set Lineup screen — before that, the auto-selected five is a
+  // placeholder, not a real projection. AI teams have no such review step (lineupSet is set
+  // true for them the moment autoSelectFive runs), so they're never gated here.
+  const lineupReady = team.coach && team.activeIds?.length === 5 && team.lineupSet;
+  const synergy = lineupReady ? teamSynergy(team) : null;
+  const output = lineupReady ? teamOutput(team) : null;
+  const outputs = state.teams.map((t) => (t.coach && t.activeIds?.length === 5 && t.lineupSet ? teamOutput(t) : null));
   const rankedCount = outputs.filter(Boolean).length;
   const rankFor = (key) => output ? outputs.filter((o) => o && o[key] > output[key]).length + 1 : null;
 
   const toggleMetric = (kind) => () => setOpenMetric((v) => (v === kind ? null : kind));
-  const rows = openMetric && output ? breakdownRows(openMetric, team, synergy, output) : null;
+  const rows = openMetric && lineupReady ? breakdownRows(openMetric, team, synergy, output) : null;
 
   return (
     <div className="ts-masthead persistent-franchise-masthead">
@@ -79,7 +84,7 @@ export default function FranchiseMasthead({ state, teamId }) {
         </div>
       </div>
       <div className="ts-masthead-right persistent">
-        <button type="button" className={'ts-hero-metric chemistry' + (openMetric === 'chemistry' ? ' open' : '')} onClick={toggleMetric('chemistry')}><div className="ts-proj-label">Chemistry</div><div className="ts-hero-value">{synergy.grade}</div><div className="ts-proj-rank">{synergy.score}</div></button>
+        <button type="button" className={'ts-hero-metric chemistry' + (openMetric === 'chemistry' ? ' open' : '')} onClick={synergy ? toggleMetric('chemistry') : undefined} disabled={!synergy}><div className="ts-proj-label">Chemistry</div><div className="ts-hero-value">{synergy ? synergy.grade : '—'}</div><div className="ts-proj-rank">{synergy ? synergy.score : '—'}</div></button>
         <button type="button" className={'ts-hero-metric' + (openMetric === 'output' ? ' open' : '')} onClick={output ? toggleMetric('output') : undefined} disabled={!output}><div className="ts-proj-label">Output</div><div className="ts-hero-value accent">{output ? output.total : '—'}</div><div className="ts-proj-rank">{output ? `${ordinal(rankFor('total'))} of ${rankedCount}` : '—'}</div></button>
         <button type="button" className={'ts-hero-metric' + (openMetric === 'offense' ? ' open' : '')} onClick={output ? toggleMetric('offense') : undefined} disabled={!output}><div className="ts-proj-label">Offense</div><div className="ts-hero-value">{output ? output.off : '—'}</div><div className="ts-proj-rank">{output ? ordinal(rankFor('off')) : '—'}</div></button>
         <button type="button" className={'ts-hero-metric' + (openMetric === 'defense' ? ' open' : '')} onClick={output ? toggleMetric('defense') : undefined} disabled={!output}><div className="ts-proj-label">Defense</div><div className="ts-hero-value">{output ? output.def : '—'}</div><div className="ts-proj-rank">{output ? ordinal(rankFor('def')) : '—'}</div></button>

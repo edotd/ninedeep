@@ -53,7 +53,7 @@ export function startEraOnline(state, hostUid) {
   buildStarPool(state);
   buildTeams(state, seats);
   dealHands(state);
-  state.teams.forEach((t) => { t.activeIds = autoSelectFive(t.hand); });
+  state.teams.forEach((t) => { t.activeIds = autoSelectFive(t.hand); if (!t.human) t.lineupSet = true; });
   // Same one-time opening-era sequence engine.js's startEra runs for solo — hand, Front
   // Office, and this season's Matchup Cards all dealt together into the consolidated Deal
   // screen (phase 'pullhand'), not the old three-separate-screens flow. initFrontOffice and

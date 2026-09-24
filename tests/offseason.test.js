@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { newEraState, renewExpiredContract, signFreeAgent } from '../src/game/season.js';
 import { startDraft, draftPick } from '../src/game/draft.js';
-import { startEra, confirmLineup } from '../src/game/engine.js';
+import { startEra, confirmLineup, markLineupSet } from '../src/game/engine.js';
 import { fireCoach, hireFreeAgentCoach, releasePlayer } from '../src/game/finances.js';
 import { LEAGUE_ACCOLADES, TIERS } from '../src/game/constants.js';
 
@@ -126,4 +126,17 @@ test('season start rejects a franchise with an open coach slot', () => {
   const cards = Array.from({ length: 9 }, (_, i) => ({ id: `p${i}`, position: ['Guard', 'Forward', 'Big'][i % 3], salary: 1 }));
   state.teams = [{ id: 0, human: true, hand: cards, activeIds: cards.slice(0, 5).map((card) => card.id), seasonCap: 20, coach: null }];
   assert.match(confirmLineup(state, 0).msg, /Hire a coach/);
+});
+
+test('confirmLineup requires a reviewed lineup; markLineupSet unlocks it', () => {
+  const state = newEraState();
+  startEra(state, 'Test');
+  const team = state.teams[0];
+  team.seasonCap = 999;
+  assert.match(confirmLineup(state, 0).msg, /Set your lineup/);
+  assert.equal(team.lineupConfirmed, undefined);
+  assert.equal(markLineupSet(state, 0).valid, true);
+  assert.equal(team.lineupSet, true);
+  assert.equal(confirmLineup(state, 0).valid, true);
+  assert.equal(team.lineupConfirmed, true);
 });

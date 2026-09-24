@@ -51,7 +51,7 @@ export function startEra(state, teamNameRaw) {
   buildStarPool(state);
   buildTeams(state, defaultSoloSeats(state.teamName));
   dealHands(state);
-  state.teams.forEach((t) => { t.activeIds = autoSelectFive(t.hand); });
+  state.teams.forEach((t) => { t.activeIds = autoSelectFive(t.hand); if (!t.human) t.lineupSet = true; });
   initFrontOffice(state);
   initSeasonModifierCards(state);
   state.phase = 'pullhand';
@@ -63,7 +63,7 @@ export function startEra(state, teamNameRaw) {
 export function proceedFromCardOverview(state) {
   if (state.phase !== 'cardoverview') return;
   dealHands(state);
-  state.teams.forEach((t) => { t.activeIds = autoSelectFive(t.hand); });
+  state.teams.forEach((t) => { t.activeIds = autoSelectFive(t.hand); if (!t.human) t.lineupSet = true; });
   state.phase = 'pullhand';
 }
 
@@ -130,13 +130,27 @@ export function confirmLineup(state, teamIdx) {
   if (team.hand.length !== 9) return { valid: false, msg: `Resolve your roster before the season begins. You currently have ${team.hand.length} of 9 players.` };
   const committed = rosterSalary(team);
   if (committed > team.seasonCap) return { valid: false, msg: `Get under budget before the season begins. You are using ${committed} of ${team.seasonCap}.` };
+  if (!team.lineupSet) return { valid: false, msg: 'Set your lineup before the season begins.' };
   const v = validateLineup(team);
   if (!v.valid) return v;
   team.lineupConfirmed = true;
   if (allHumansReady(state, (t) => t.lineupConfirmed)) {
-    state.teams.filter((t) => !t.human).forEach((t) => { t.activeIds = autoSelectFive(t.hand); });
+    state.teams.filter((t) => !t.human).forEach((t) => { t.activeIds = autoSelectFive(t.hand); t.lineupSet = true; });
     lockSeasonAndSeed(state);
   }
+  return { valid: true };
+}
+
+// Set from the Set Lineup screen ("The Floor") once the user is happy with their starting
+// five — distinct from confirmLineup, which locks the season for everyone; this just marks
+// that a human has actually reviewed their own lineup at least once this season, so
+// confirmLineup (and the top bar's projections) can require it without forcing a second,
+// redundant confirmation step.
+export function markLineupSet(state, teamIdx) {
+  const team = state.teams[teamIdx];
+  const v = validateLineup(team);
+  if (!v.valid) return v;
+  team.lineupSet = true;
   return { valid: true };
 }
 

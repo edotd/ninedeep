@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useIsDesktop } from '../hooks/useIsDesktop';
 import TeamChemistry from '../components/TeamChemistry';
+import SetLineupScreen from '../components/SetLineupScreen';
 import PlayerCard from '../components/PlayerCard';
 import FrontOfficeCard from '../components/FrontOfficeCard';
 import { formatCoins, rosterSalary, gmCost } from '../game/economy';
@@ -170,6 +171,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   // any bench card fills it directly via promoteToStarter instead of requiring a selection.
   const [selectedId, setSelectedId] = useState(null);
   const [developPlayer, setDevelopPlayer] = useState(null);
+  const [lineupScreenOpen, setLineupScreenOpen] = useState(false);
   const [rotationIndex, setRotationIndex] = useState(0);
   useEffect(() => { setSelectedId(null); setRotationIndex(0); }, [team.id, canEdit]);
   // Mobile's rotation carousel is one card per swipe (starters then bench, in that order —
@@ -342,7 +344,10 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
         <div className="ts-viewing-franchise"><span>{readOnly ? 'Viewing Franchise' : 'Your Franchise'}</span><strong>{team.name}</strong></div>
         <div className="ts-tabbar" ref={tabbarRef}>
           <button className={'ts-tab' + (tab === 'rotation' ? ' active' : '')} onClick={() => setTab('rotation')}>Rotation</button>
-          <button className={'ts-tab' + (tab === 'chemistry' ? ' active' : '')} onClick={() => setTab('chemistry')}>Lineup & Chemistry</button>
+          <button className={'ts-tab' + (tab === 'chemistry' ? ' active' : '')} onClick={() => setTab('chemistry')}>
+            Lineup & Chemistry
+            {!readOnly && !team.lineupSet && <span className="ts-tab-dot" aria-label="Lineup not set" />}
+          </button>
           {team.market && (
             <button className={'ts-tab' + (tab === 'office' ? ' active' : '')} onClick={() => setTab('office')}>Staff & Gameplan</button>
           )}
@@ -351,7 +356,18 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
         </div>
 
         <div className="ts-body" onTouchStart={!isDesktop ? handleBodyTouchStart : undefined} onTouchMove={!isDesktop ? handleBodyTouchMove : undefined} onTouchEnd={!isDesktop ? handleBodyTouchEnd : undefined}>
-          {showSection('chemistry') && <TeamChemistry team={team} />}
+          {showSection('chemistry') && (
+            <>
+              {!readOnly && (
+                <div className="ts-set-lineup-cta">
+                  <button className="secondary" onClick={() => setLineupScreenOpen(true)}>
+                    {!canEdit ? 'View Lineup' : team.lineupSet ? 'Edit Lineup' : 'Set Lineup'}
+                  </button>
+                </div>
+              )}
+              <TeamChemistry team={team} />
+            </>
+          )}
 
           {showSection('rotation') && (
             <div className="ts-section ts-player-carousel" id="team-rotation">
@@ -619,6 +635,15 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             </div>
           </div>
         )}
+        {lineupScreenOpen && (
+          <SetLineupScreen
+            team={team}
+            actions={actions}
+            myTeamId={myTeamId}
+            canEdit={canEdit}
+            onClose={() => setLineupScreenOpen(false)}
+          />
+        )}
       </div>
       <div className="bottombar">
         {onBack ? (
@@ -628,6 +653,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             className="primary"
             disabled={team.lineupConfirmed}
             onClick={() => {
+              if (!team.lineupSet) { setTab('chemistry'); setLineupScreenOpen(true); return; }
               const res = actions.confirmLineup(myTeamId);
               if (res && res.valid === false) alert(res.msg);
             }}
@@ -637,6 +663,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
               : !team.coach ? 'Hire A Coach'
               : team.hand.length !== 9 ? `Resolve Roster · ${team.hand.length}/9`
               : committed > cap ? 'Resolve Budget'
+              : !team.lineupSet ? 'Set Your Lineup'
               : 'Begin Season'}
           </button>
         )}
