@@ -83,7 +83,31 @@
 @media(max-width:680px){.offseason-file{margin:0 0 110px;min-height:0;border-inline:0;box-shadow:none}.of-title{font-size:25px}.of-title span{display:none}.of-index>div{padding:9px 5px;font-size:8px;text-align:center}.of-index small,.of-index em{font-size:7px}.of-content{padding:14px 16px;max-height:none;overflow:visible}.of-content h1{font-size:38px}.of-table-head,.of-table-row{grid-template-columns:1fr 78px 42px;gap:6px;padding:9px 6px}.of-ledger{font-size:8px;padding:10px;flex-wrap:wrap}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body,#root{margin:0;padding:0;background:var(--file);color:var(--ink);font-family:var(--font-mono);}
-body{min-height:100vh;padding-bottom:138px;}
+/* The ball under the hand (design ref 5b) — a fine pebble grain across the cream ground,
+   plus a basketball's black channel lines running behind everything. Lives on body, not any
+   individual screen or card, since .screen and most panels carry no background of their own
+   (see .screen above) — the texture only ever becomes visible in the gaps between opaque
+   surfaces (margins, gutters, card-stack peeks), exactly where 5b's own caption puts it.
+   Grain is five differently-sized dot layers so it doesn't read as an obvious repeating tile;
+   channels are two thin lines (one vertical, one horizontal, repeating down the page) rather
+   than 5c's full leather-ball treatment. Dark mode inverts to a navy ground where a "ball on
+   leather" texture no longer reads, so it's switched off entirely below.*/
+body{
+  min-height:100vh;
+  padding-bottom:138px;
+  background-color:var(--file);
+  background-image:
+    radial-gradient(circle at 15% 25%, rgba(30,43,71,.07) .6px, transparent .6px),
+    radial-gradient(circle at 55% 65%, rgba(30,43,71,.06) .6px, transparent .6px),
+    radial-gradient(circle at 80% 15%, rgba(30,43,71,.07) .6px, transparent .6px),
+    radial-gradient(circle at 35% 85%, rgba(30,43,71,.05) .6px, transparent .6px),
+    radial-gradient(circle at 90% 55%, rgba(30,43,71,.05) .6px, transparent .6px),
+    linear-gradient(90deg, transparent calc(41% - 1px), rgba(30,43,71,.15) calc(41% - 1px), rgba(30,43,71,.15) calc(41% + 1px), transparent calc(41% + 1px)),
+    linear-gradient(180deg, transparent calc(58% - 1px), rgba(30,43,71,.12) calc(58% - 1px), rgba(30,43,71,.12) calc(58% + 1px), transparent calc(58% + 1px));
+  background-size:6px 6px,9px 9px,11px 11px,8px 8px,13px 13px,100% 100%,100% 100vh;
+  background-repeat:repeat,repeat,repeat,repeat,repeat,no-repeat,repeat-y;
+}
+html[data-theme="dark"] body{background-image:none;}
 h1{font-family:var(--font-display);font-size:38px;line-height:0.86;margin:6px 0 14px;font-weight:400;color:var(--ink);letter-spacing:.01em;}
 h2{font-family:var(--font-label);font-size:13px;line-height:1.3;margin:22px 0 10px;color:var(--file-muted);font-weight:400;text-transform:uppercase;letter-spacing:.12em;}
 p.lede{color:var(--file-body);font-size:14px;line-height:1.5;margin:0 0 14px;}
