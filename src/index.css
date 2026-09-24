@@ -713,9 +713,21 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 
 /* Wrappers pairing each card with a bullet list of its bonuses/modifiers underneath, and
    the horizontally centered rows the Front Office / Matchup Card pull screens deal into. */
-.fo2-wrap{width:100%;max-width:340px;}
+.fo2-wrap{width:100%;max-width:340px;container-type:inline-size;}
 .fo2-wrap .fo2-card{margin:0 0 10px;}
 .fo2-bullets{list-style:disc;margin:0;padding-left:20px;font-size:11px;line-height:1.6;color:var(--ink-muted);}
+@container(max-width:220px){
+  .fo2-name-row{flex-direction:column;gap:7px;padding:11px;}
+  .fo2-name{font-size:23px;line-height:.95;overflow-wrap:anywhere;}
+  .fo2-disposition{font-size:19px;line-height:1;text-align:left;max-width:100%;overflow-wrap:anywhere;}
+  .fo2-qualifier{font-size:8px;}
+  .fo2-header{padding:9px 10px;gap:5px;}
+  .fo2-kind-group{gap:5px;}
+  .fo2-kind-label{font-size:21px;}
+  .fo2-dice{font-size:10px;}
+  .fo2-effects{padding:7px 10px;}
+  .fo2-effect-row{font-size:9px;gap:5px;}
+}
 .mu2-wrap{width:100%;max-width:280px;}
 .mu2-wrap .mu2-card{margin:0 0 10px;}
 .mu2-bullets{list-style:disc;margin:0;padding-left:20px;font-size:11px;line-height:1.6;color:var(--file-muted);}
