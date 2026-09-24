@@ -2025,6 +2025,7 @@ body:has(.entry-screen){padding-bottom:0;}
 
 @media(max-width:999px){
   .deal-intro{display:none;}
+  .slf-bench-row{justify-content:center;}
   .ts-tabbar,.bracket-round-tabbar{position:sticky;top:var(--mobile-persistent-top-height,0px);z-index:4;box-shadow:0 3px 8px rgba(0,0,0,.22);}
   .ts-player-carousel{position:relative;}
   .ts-rotation-heading{display:flex;align-items:baseline;gap:9px;}
