@@ -1,5 +1,5 @@
 import { addToRoster, creditTeamSeason } from './chemistry';
-import { TIERS, LEAGUE_ACCOLADES, REPLACEMENT_TIER, FREE_AGENT_TIER, FREE_AGENT_POOL_SIZE, AI_NAMES, AI_TRICODES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_ARCHETYPES, MATCHUP_CARD_DRAW_COUNT, LEAGUE_TEAM_COUNT } from './constants';
+import { TIERS, LEAGUE_ACCOLADES, REPLACEMENT_TIER, FREE_AGENT_TIER, BARGAIN_FREE_AGENT_TIER, BARGAIN_FREE_AGENT_COUNT, FREE_AGENT_POOL_SIZE, AI_NAMES, AI_TRICODES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_ARCHETYPES, MATCHUP_CARD_DRAW_COUNT, LEAGUE_TEAM_COUNT } from './constants';
 import { drawGM, acquireOffseasonPlayer } from './gm';
 import { advanceCareer } from './aging';
 import { shuffle, weightedPick } from './rng';
@@ -94,10 +94,13 @@ export function seedFreeAgentCoachPool(state) {
 // dealHands doesn't check budget, so some teams start over cap with no way to fix it until
 // the first round of releases/expirations stocks free agency — these cheap, low-output
 // fillers (see FREE_AGENT_TIER) give every team an immediate option to shed salary instead.
+// A handful roll the even-cheaper BARGAIN_FREE_AGENT_TIER instead, landing at
+// MIN_PLAYER_SALARY — a true minimum-contract option alongside the regular fillers.
 export function seedFreeAgentPool(state) {
   for (let i = 0; i < FREE_AGENT_POOL_SIZE; i++) {
     const position = POSITIONS[i % POSITIONS.length];
-    state.freeAgents.push(makeCard(state, randomArch(), position, FREE_AGENT_TIER));
+    const tier = i < BARGAIN_FREE_AGENT_COUNT ? BARGAIN_FREE_AGENT_TIER : FREE_AGENT_TIER;
+    state.freeAgents.push(makeCard(state, randomArch(), position, tier));
   }
 }
 

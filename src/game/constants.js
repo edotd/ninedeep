@@ -36,8 +36,13 @@ export const REPLACEMENT_TIER = { name: 'Undrafted', uniform: 1, peak: 1, contra
 // way to shed salary instead of waiting for the first round of releases/expirations to stock
 // the free agent pool. Below-floor stat totals still clamp to MIN_PLAYER_SALARY in cardTotal.
 export const FREE_AGENT_TIER = { name: 'Undrafted', uniform: 0.7, peak: 1, contract: 3 };
+// A handful of even-cheaper fillers mixed into the same pool (see season.js's
+// seedFreeAgentPool) — reliably floors out at MIN_PLAYER_SALARY, a genuine salary-dump /
+// minimum-contract option distinct from the regular filler above.
+export const BARGAIN_FREE_AGENT_TIER = { name: 'Undrafted', uniform: 0.5, peak: 1, contract: 2 };
+export const BARGAIN_FREE_AGENT_COUNT = 3;
 export const FREE_AGENT_POOL_SIZE = 12;
-export const MIN_PLAYER_SALARY = 0.5;
+export const MIN_PLAYER_SALARY = 0.25;
 export const MIN_GM_COST = 0.5;
 
 // League Accolades — elite, statistical-distinction tiers. These only roll on players in

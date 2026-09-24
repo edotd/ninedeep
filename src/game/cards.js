@@ -50,7 +50,7 @@ export function playerGrade(card) {
 }
 
 export function statsToCoins(total) {
-  let v = Math.round(((total - 12) / 6) * 2) / 2;
+  let v = Math.round(((total - 12) / 6) * 4) / 4;
   return Math.max(MIN_PLAYER_SALARY, Math.min(5, v));
 }
 
@@ -79,7 +79,7 @@ export function makeCard(state, archName, position, tier, forcedCareerStage = nu
   const contract = Math.max(1, rollWithVariance(shaper.contract, 1));
   const contractDeviation = shaper.contract - contract; // positive = shorter than typical for this shaper
   let salary = statsToCoins(total) * (1 + contractDeviation * 0.15);
-  salary = Math.max(MIN_PLAYER_SALARY, Math.round(salary * 2) / 2);
+  salary = Math.max(MIN_PLAYER_SALARY, Math.round(salary * 4) / 4);
   // League Accolades only roll on players in their prime.
   const careerStage = forcedCareerStage || (accolade ? 'Prime' : randomCareerStage());
   return {
