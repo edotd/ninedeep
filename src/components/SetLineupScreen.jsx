@@ -293,7 +293,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
         <div className="slf-footer">
           {canEdit ? (
             <>
-              <button type="button" className="secondary" onClick={handleAutoSet}>Auto Set</button>
+              <button type="button" className="secondary" onClick={handleAutoSet}>Auto Set Lineup</button>
               <button type="button" className="primary" onClick={handleSave}>Save Lineup</button>
             </>
           ) : (

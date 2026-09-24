@@ -47,8 +47,6 @@ export default function TeamChemistry({ team }) {
   const experience = team.coach ? teamExperience(team) : null;
   const coachOffense = team.coach ? Math.round((team.coach.offBonus + retentionBonus(team) + relationshipBonus(team)) * 100) : 0;
   const coachDefense = team.coach ? Math.round((team.coach.defBonus + retentionBonus(team) + relationshipBonus(team)) * 100) : 0;
-  const offPairs = current.pairs.filter((p) => p.side === 'offense');
-  const defPairs = current.pairs.filter((p) => p.side === 'defense');
   const profile = teamProfile(team, current, experience, coachOffense, coachDefense);
 
   return (
@@ -60,19 +58,17 @@ export default function TeamChemistry({ team }) {
             <span className="tc2-grade">{current.grade}</span>
             <span className="tc2-score">{current.score}</span>
           </div>
-          <p className="tc2-note">Grade is the roster's Skillset fit, continuity, and Wise Veteran leadership read as one figure. Score: 50 base + {current.fitPoints} fit + {current.tenurePoints} tenure + {current.leadershipPoints} leadership.</p>
+          <p className="tc2-note">Your team's fit, continuity and bonuses from any chemistry-related card effects</p>
         </div>
 
         <div className="tc2-bonus-row">
           <div className="tc2-bonus">
             <div className="tc2-bonus-label">Offensive Bonus</div>
             <div className="tc2-bonus-value">{bonusValue(current.offense + coachOffense)}</div>
-            <div className="tc2-bonus-sub">Chemistry {bonusValue(current.offense)} · Coach {bonusValue(coachOffense)} · {offPairs.length} live pairing{offPairs.length === 1 ? '' : 's'}</div>
           </div>
           <div className="tc2-bonus">
             <div className="tc2-bonus-label">Defensive Bonus</div>
             <div className="tc2-bonus-value">{bonusValue(current.defense + coachDefense)}</div>
-            <div className="tc2-bonus-sub">Chemistry {bonusValue(current.defense)} · Coach {bonusValue(coachDefense)} · {defPairs.length} live pairing{defPairs.length === 1 ? '' : 's'}</div>
           </div>
           <div className="tc2-experience-inline">
             <div className="tc2-bonus-label">Experience</div>
