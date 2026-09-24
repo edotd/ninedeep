@@ -231,13 +231,10 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
             <span className="off">Offense +{synergy.skillOffense}</span>
             <span className="def">Defense +{synergy.skillDefense}</span>
           </div>
+          <button type="button" className="slf-auto-set" disabled={!canEdit} onClick={handleAutoSet}>Auto Set Lineup</button>
         </div>
 
         <p className="slf-note">{canEdit ? 'Set your lineup. Lines between players show how pairings affect your team’s offense and/or defense.' : 'Your lineup. Lines between players show how pairings affect your team’s offense and/or defense.'}</p>
-
-        <div className="slf-quick-actions">
-          <button type="button" className="secondary" disabled={!canEdit} onClick={handleAutoSet}>Auto Set Lineup</button>
-        </div>
 
         {wires.length > 0 && (
           <div className="slf-pairings">
