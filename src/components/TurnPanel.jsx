@@ -115,11 +115,9 @@ function readAutoProgress() {
 
 // All nine rotation tiles remain visible. The coach gets a dedicated dock beside the team
 // name: below the home roster on the left, and above the away roster on the right. Gameplan
-// and Adjustment each get their own dock on the side opposite the other — gameplan mirrors
-// coach's column (a coach's plan, so it visually pairs there), adjustment stacks below
-// whichever side coach isn't on. Both always render, even with nothing played yet, so the
-// slot (and whether it's pulsing — see gameplanCanPlay/adjustmentCanPlay) is always visible.
-function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, gameplanPlays, gameplanCanPlay, adjustmentCanPlay, isActive, flip, contributing }) {
+// and Adjustment sit together on the side opposite the coach. Both always render, even with
+// nothing played yet, so the slot (and whether it is actionable) remains visible.
+function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, gameplanPlays, gameplanCanPlay, adjustmentCanPlay, onAdjustmentSlotClick, isActive, flip, contributing }) {
   const hand = team.hand || [];
   const activeIds = ids || team.activeIds || [];
   const starters = activeIds.map((id) => hand.find((c) => c.id === id)).filter(Boolean);
@@ -137,19 +135,42 @@ function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, gameplan
         {team.coach && <div className="t2-coach-dock">
           <div className="nd2-coach-slot"><CompactCoachCard team={team} edge={edge} /></div>
         </div>}
-        <div className="t2-gameplan-dock">
-          {hasGameplan
-            ? gameplanPlays.map((entry, i) => (
-              <div className="t2-gameplan-mini" key={`${entry.teamName}-${entry.cardName}-${i}`} title={entry.card ? `${entry.card.name} — ${entry.description}` : entry.cardName}>
-                <CardTypeMark type="gameplan" size={20} />
-              </div>
-            ))
-            : (
-              <div className={'t2-gameplan-mini empty' + (gameplanCanPlay ? ' pulsing' : '')} aria-hidden="true">
-                <CardTypeMark type="gameplan" size={14} />
-                <span className="t2-mini-plus">+</span>
-              </div>
-            )}
+        <div className="t2-card-docks">
+          <div className="t2-gameplan-dock">
+            {hasGameplan
+              ? gameplanPlays.map((entry, i) => (
+                <div className="t2-gameplan-mini" key={`${entry.teamName}-${entry.cardName}-${i}`} title={entry.card ? `${entry.card.name} — ${entry.description}` : entry.cardName}>
+                  <CardTypeMark type="gameplan" size={20} />
+                </div>
+              ))
+              : (
+                <div className={'t2-gameplan-mini empty' + (gameplanCanPlay ? ' pulsing' : '')} aria-hidden="true">
+                  <CardTypeMark type="gameplan" size={14} />
+                  <span className="t2-mini-plus">+</span>
+                </div>
+              )}
+          </div>
+          <div className="t2-adjustment-dock">
+            {hasAdjustment
+              ? cardPlays.map((entry, i) => (
+                <div className="t2-adjustment-mini" key={`${entry.stepIndex}-${entry.teamName}-${entry.cardName}-${i}`} title={entry.card ? `${entry.card.name} — ${entry.description}` : entry.cardName}>
+                  <CardTypeMark type="adjustment" size={16} />
+                </div>
+              ))
+              : (
+                <button
+                  type="button"
+                  className={'t2-adjustment-mini empty' + (adjustmentCanPlay ? ' pulsing' : '')}
+                  onClick={adjustmentCanPlay ? onAdjustmentSlotClick : undefined}
+                  disabled={!adjustmentCanPlay}
+                  aria-label={adjustmentCanPlay ? 'Play an Adjustment card' : undefined}
+                  aria-hidden={!adjustmentCanPlay}
+                >
+                  <CardTypeMark type="adjustment" size={12} />
+                  <span className="t2-mini-plus">+</span>
+                </button>
+              )}
+          </div>
         </div>
         <div className="t2-teamboard-name">
           {hca && !flip && <span className="t2-hca-tag">Home Court</span>}
@@ -158,20 +179,6 @@ function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, gameplan
             <div className="t2-teamboard-name-text">{team.name}</div>
           </div>
           {statusLabel && <div className="t2-teamboard-status">{statusLabel}</div>}
-        </div>
-        <div className="t2-adjustment-dock">
-          {hasAdjustment
-            ? cardPlays.map((entry, i) => (
-              <div className="t2-adjustment-mini" key={`${entry.stepIndex}-${entry.teamName}-${entry.cardName}-${i}`} title={entry.card ? `${entry.card.name} — ${entry.description}` : entry.cardName}>
-                <CardTypeMark type="adjustment" size={16} />
-              </div>
-            ))
-            : (
-              <div className={'t2-adjustment-mini empty' + (adjustmentCanPlay ? ' pulsing' : '')} aria-hidden="true">
-                <CardTypeMark type="adjustment" size={12} />
-                <span className="t2-mini-plus">+</span>
-              </div>
-            )}
         </div>
       </div>
     </div>
@@ -201,6 +208,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
   const dieSize = isDesktop ? 96 : 58;
   const coinSize = isDesktop ? 100 : 64;
   const [timeLeft, setTimeLeft] = useState(CARD_TIMER_SECONDS);
+  const [adjustmentPickerOpen, setAdjustmentPickerOpen] = useState(false);
   const [coinSpinning, setCoinSpinning] = useState(false);
   const coinTimerRef = useRef(null);
   // 'idle-off' | 'rolling-off' | 'revealed-off' | 'idle-def' | 'rolling-def' | 'revealed-def' | 'both'
@@ -453,6 +461,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myTurnToAct, turn.exchangeIndex, cur?.team, cur?.role]);
   useEffect(() => { if (!myTurnToAct) setSelectedAdjustment(null); }, [myTurnToAct]);
+  useEffect(() => { setAdjustmentPickerOpen(false); }, [myTurnToAct, turn.exchangeIndex]);
 
   // Blind by convention: a card play is logged the instant it's chosen, but withheld from
   // display until its own exchange resolves — otherwise the second team to act (or a
@@ -776,7 +785,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
       {revealingAdjustments && (
         <div className="t2-adjustment-reveal" aria-live="polite">
           {visibleBoardActions.map((entry, i) => (
-            <div className="t2-adjustment-reveal-card" key={`${entry.stepIndex}-${entry.teamName}-${entry.cardName}-${i}`}>
+            <div className={'t2-adjustment-reveal-card ' + (entry.teamName === teamOf(topSide).name ? 'settle-top' : 'settle-bottom')} key={`${entry.stepIndex}-${entry.teamName}-${entry.cardName}-${i}`}>
               <div className="t2-adjustment-reveal-team">{entry.teamName} played</div>
               {entry.card ? <MatchupCard card={entry.card} playoff /> : renderPlayedCards([entry])}
             </div>
@@ -790,16 +799,20 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
             statusLabel={statusFor(topSide)} roleLabel={roleFor(teamOf(topSide))}
             cardPlays={cardsOf(topSide)} gameplanPlays={gameplansOf(topSide)}
             gameplanCanPlay={gameplanCanPlayFor(teamOf(topSide))} adjustmentCanPlay={adjustmentCanPlayFor(teamOf(topSide))}
+            onAdjustmentSlotClick={() => setAdjustmentPickerOpen(true)}
             isActive={offenseTeam === teamOf(topSide) || defenseTeam === teamOf(topSide)} contributing={rollingSide === teamOf(topSide)}
           />
 
           <div className="t2-rollzone">
             {renderRollCircle()}
 
-            {turn.stage === 'card' && myTurnToAct && (
+            {turn.stage === 'card' && myTurnToAct && adjustmentPickerOpen && (
               <div className="t2-adjustment-picker-window">
                 <div className="t2-adjustment-picker" role="dialog" aria-modal="true" aria-label="Play an Adjustment card">
-                  <div className="t2-carddecision-head"><span>Play An Adjustment Card</span><span className={'t2-timer' + (timeLeft <= 3 ? ' urgent' : '')}>{Math.ceil(timeLeft)}s</span></div>
+                  <div className="t2-carddecision-head">
+                    <div className="t2-carddecision-title"><span>Play An Adjustment Card</span><span className={'t2-timer' + (timeLeft <= 3 ? ' urgent' : '')}>{Math.ceil(timeLeft)}s</span></div>
+                    <button type="button" className="t2-carddecision-close" onClick={() => { setSelectedAdjustment(null); setAdjustmentPickerOpen(false); }} aria-label="Close">×</button>
+                  </div>
                   <div className="t2-carddecision-desc">Choose one available card or pass. Your selection stays hidden until both teams lock in.</div>
                   <div className="t2-adjustment-picker-cards">
                     {availableAdjustments.map((card) => <button key={card.id} className={'t2-adjustment-picker-card' + (selectedAdjustment?.id === card.id ? ' selected' : '')} onClick={() => chooseAdjustment(card)}><MatchupCard card={card} playoff /></button>)}
@@ -832,6 +845,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
             statusLabel={statusFor(bottomSide)} roleLabel={roleFor(teamOf(bottomSide))}
             cardPlays={cardsOf(bottomSide)} gameplanPlays={gameplansOf(bottomSide)}
             gameplanCanPlay={gameplanCanPlayFor(teamOf(bottomSide))} adjustmentCanPlay={adjustmentCanPlayFor(teamOf(bottomSide))}
+            onAdjustmentSlotClick={() => setAdjustmentPickerOpen(true)}
             isActive={offenseTeam === teamOf(bottomSide) || defenseTeam === teamOf(bottomSide)} contributing={rollingSide === teamOf(bottomSide)}
             flip
           />
