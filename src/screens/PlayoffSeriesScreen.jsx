@@ -5,6 +5,13 @@ import { matchTeams } from '../game/matchup';
 import { ACTION_LOG_SPEEDS } from '../game/constants';
 
 export default function PlayoffSeriesScreen({ state, actions, myTeamId }) {
+  // This screen replaces the bracket outright (PlayoffsScreen swaps components rather than
+  // routing), so it always mounts fresh when a series is opened — but .mobile-shell:has(.t2-
+  // shell) only clips to the viewport height, it never resets scroll. Opening a series from
+  // partway down a long bracket left the live board's top portion scrolled out of view, still
+  // clipped by that same overflow:hidden, since nothing had told the page to scroll back up.
+  useEffect(() => { window.scrollTo(0, 0); }, []);
+
   const p = state.playoff;
   const idx = p.activeMatchIndex;
   const m = p.matches[idx];
