@@ -523,9 +523,10 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                 <div className="ts-ledger-subtitle">Players</div>
                 <div className="ts-ledger-list">
                   {team.hand.map((card) => (
-                    <div className="ts-ledger-person" key={card.id}>
+                    <div className={'ts-ledger-person' + (canEdit ? ' releasable' : '')} key={card.id}>
                       <PlayerLedgerIdentity card={card} role={activeSet.has(card.id) ? 'Starter' : 'Bench'} />
                       <CostBlocks turns={card.contract} amount={card.salary} />
+                      {canEdit && <button className="ts-ledger-release" onClick={() => handleRelease(card)}>Release</button>}
                     </div>
                   ))}
                 </div>
@@ -722,6 +723,8 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                     <li key={msg}>
                       {msg === 'Set your lineup' ? (
                         <button type="button" onClick={() => { setSeasonIssuesOpen(false); setTab('chemistry'); setLineupScreenOpen(true); }}>{msg}</button>
+                      ) : msg === 'Resolve team budget' ? (
+                        <button type="button" onClick={() => { setSeasonIssuesOpen(false); setTab('ledger'); }}>{msg}</button>
                       ) : msg}
                     </li>
                   ))}

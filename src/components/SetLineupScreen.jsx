@@ -214,6 +214,14 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
     else onClose();
   };
 
+  // A valid five, never the strongest one (see roster.js's autoValidFive) — an escape hatch
+  // for someone who doesn't want to hand-pick, not a "set my best lineup" shortcut.
+  const handleAutoSet = () => {
+    setSelectedId(null);
+    const res = actions.autoSetLineup(myTeamId);
+    if (res && res.ok === false) alert(res.msg);
+  };
+
   return (
     <div className="tsx-overlay" role="dialog" aria-modal="true" aria-label="Your Lineup">
       <div className="slf-panel">
@@ -283,9 +291,14 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
         </div>
 
         <div className="slf-footer">
-          {canEdit
-            ? <button type="button" className="primary" onClick={handleSave}>Save Lineup</button>
-            : <button type="button" className="secondary" onClick={onClose}>Close</button>}
+          {canEdit ? (
+            <>
+              <button type="button" className="secondary" onClick={handleAutoSet}>Auto Set</button>
+              <button type="button" className="primary" onClick={handleSave}>Save Lineup</button>
+            </>
+          ) : (
+            <button type="button" className="secondary" onClick={onClose}>Close</button>
+          )}
         </div>
       </div>
     </div>

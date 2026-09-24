@@ -18,6 +18,24 @@ export function autoSelectFive(hand) {
   return chosen.slice(0, 5).map((c) => c.id);
 }
 
+// Deliberately not "best five" — autoSelectFive above is the highest-cardTotal pick per
+// position (used to seed a placeholder before anyone's reviewed a lineup); this is what the
+// Set Lineup screen's own "Auto Set" button calls, which explicitly promises a valid five,
+// never the strongest one. One random card per position covers validateLineup's own
+// requirement (at least one Guard/Forward/Big), then the rest is filled randomly from
+// whatever's left.
+export function autoValidFive(hand) {
+  const shuffled = [...hand].sort(() => Math.random() - 0.5);
+  const chosen = [];
+  POSITIONS.forEach((p) => {
+    const pick = shuffled.find((c) => c.position === p && !chosen.includes(c));
+    if (pick) chosen.push(pick);
+  });
+  const remaining = shuffled.filter((c) => !chosen.includes(c));
+  while (chosen.length < 5 && remaining.length) chosen.push(remaining.pop());
+  return chosen.slice(0, 5).map((c) => c.id);
+}
+
 export function validateLineup(team) {
   if (team.activeIds.length !== 5) return { valid: false, msg: 'Select exactly 5 players for your active roster.' };
   const positions = new Set(team.activeIds.map((id) => team.hand.find((h) => h.id === id)?.position).filter(Boolean));

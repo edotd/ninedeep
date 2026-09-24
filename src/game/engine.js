@@ -11,7 +11,7 @@ import { applySupplementalCard } from './supplementalEffects';
 // game/useLocalGame.js and game/useRoomGame.js for the two callers.
 import { drawMatchupModifierCard } from './cards';
 import { MATCHUP_CARD_DRAW_COUNT, HOME_COURT_BONUS } from './constants';
-import { autoSelectFive, validateLineup } from './roster';
+import { autoSelectFive, autoValidFive, validateLineup } from './roster';
 import {
   buildStarPool, buildTeams, defaultSoloSeats, dealHands, initFrontOffice,
   initSeasonModifierCards, lockSeasonAndSeed, startPlayoffs,
@@ -162,6 +162,17 @@ export function clearLineup(state, teamIdx) {
   const team = state.teams[teamIdx];
   if (!team) return { ok: false, msg: 'Nothing to clear yet.' };
   team.activeIds = [];
+  return { ok: true };
+}
+
+// The Set Lineup screen's "Auto Set" button — a valid five (one Guard, one Forward, one Big,
+// two more at random), never the strongest one. See autoValidFive's own note for why that
+// distinction matters: this is an escape hatch for someone who doesn't want to hand-pick, not
+// a "do it optimally for me" shortcut.
+export function autoSetLineup(state, teamIdx) {
+  const team = state.teams[teamIdx];
+  if (!team) return { ok: false, msg: 'Nothing to set yet.' };
+  team.activeIds = autoValidFive(team.hand);
   return { ok: true };
 }
 

@@ -297,9 +297,12 @@ button.primary.needs-attention:hover:not(:disabled){background:var(--depth);}
 .bottombar-issues{position:absolute;right:0;bottom:100%;width:max-content;min-width:220px;max-width:min(280px,calc(100vw - 32px));margin-bottom:8px;background:var(--ink-deep);border:1px solid var(--franchise);box-shadow:0 -10px 24px rgba(0,0,0,.4);padding:12px 14px;}
 .bottombar-issues-head{font-family:var(--font-label);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--franchise);margin-bottom:8px;}
 .bottombar-issues ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;}
-.bottombar-issues li{font-family:var(--font-mono);font-size:12px;color:var(--file);}
-.bottombar-issues li::before{content:'• ';color:var(--franchise);}
-.bottombar-issues li button{background:none;border:none;padding:0;color:var(--file);font:inherit;text-decoration:underline;cursor:pointer;}
+/* flex + baseline instead of a ::before bullet floating against the line box — a bare text
+   node and a <button> (its own line-height/font metrics) don't sit on the same baseline
+   otherwise, so the bullet drifted out of alignment with the button rows specifically. */
+.bottombar-issues li{display:flex;align-items:baseline;gap:7px;font-family:var(--font-mono);font-size:12px;color:var(--file);}
+.bottombar-issues li::before{content:'•';flex-shrink:0;color:var(--franchise);}
+.bottombar-issues li button{background:none;border:none;padding:0;margin:0;color:var(--file);font:inherit;text-align:left;text-decoration:underline;cursor:pointer;}
 .bottombar button{flex:none;min-width:190px;}
 
 /* A corner-docked action button, used in place of the full-width .bottombar where the
@@ -778,8 +781,8 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
    team.lineupSet) — this dot is the only hint of that on the tab bar itself. */
 .ts-tab-dot{display:inline-block;width:6px;height:6px;margin-left:5px;border-radius:50%;background:var(--stamp);vertical-align:middle;animation:ts-tab-dot-pulse 1.8s ease-in-out infinite;}
 @keyframes ts-tab-dot-pulse{
-  0%,100%{box-shadow:0 0 0 0 rgba(181,67,31,.55);}
-  50%{box-shadow:0 0 4px 3px rgba(181,67,31,.35);}
+  0%,100%{box-shadow:0 0 0 0 rgba(181,67,31,.85);}
+  50%{box-shadow:0 0 7px 6px rgba(181,67,31,.55);}
 }
 @media (prefers-reduced-motion: reduce){.ts-tab-dot{animation:none;}}
 .ts-set-lineup-cta{display:flex;justify-content:flex-end;margin-bottom:-8px;}
@@ -856,12 +859,15 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .ts-budget-legend span{display:flex;align-items:center;gap:5px;}.ts-budget-legend i{width:9px;height:9px;background:var(--ink);}.ts-budget-legend .coach i{background:var(--franchise);}.ts-budget-legend .gm i{background:var(--approved);}.ts-budget-legend .dead i{background:var(--stamp);}
 .ts-ledger-group{border-top:2px solid var(--ink);padding-top:10px;margin-top:18px;}.ts-ledger-group-title{font:20px var(--font-display);letter-spacing:.04em;text-transform:uppercase;color:var(--ink);}.ts-ledger-subtitle{font:9px var(--font-label);letter-spacing:.12em;text-transform:uppercase;color:var(--file-muted);margin:13px 0 6px;}
 .ts-ledger-list{display:flex;flex-direction:column;border-top:1px solid var(--form-rule);}.ts-ledger-person{display:grid;grid-template-columns:minmax(210px,1fr) minmax(280px,2fr);gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--form-rule);}
+.ts-ledger-person.releasable{grid-template-columns:minmax(170px,1fr) minmax(220px,2fr) auto;}
+.ts-ledger-release{background:none;border:1px solid var(--stamp);color:var(--stamp);font:9px var(--font-label);letter-spacing:.08em;text-transform:uppercase;padding:8px 10px;white-space:nowrap;cursor:pointer;}
+.ts-ledger-release:hover{background:var(--stamp);color:var(--form);}
 .ts-ledger-identity{display:flex;align-items:center;gap:8px;min-width:0;font:10px var(--font-mono);color:var(--file-body);}.ts-ledger-identity strong{font:22px var(--font-display);font-weight:400;color:var(--stamp);}.ts-ledger-identity .ts-ledger-grade{font:16px var(--font-label);color:var(--ink);}.ts-ledger-identity>span:not(.ts-ledger-grade){white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.ts-ledger-identity em{font-style:normal;text-transform:uppercase;font-size:8px;letter-spacing:.08em;color:var(--file-muted);border:1px solid var(--form-rule);padding:2px 5px;white-space:nowrap;}
 .ts-cost-blocks{display:flex;gap:4px;justify-content:flex-start;overflow-x:auto;padding-bottom:2px;}.ts-cost-block{min-width:55px;height:35px;background:var(--ink);color:var(--file);border-radius:2px;padding:4px 6px;display:flex;flex-direction:column;justify-content:center;}.ts-cost-block span{font:10px var(--font-mono);white-space:nowrap;}.ts-cost-block small{font:7px var(--font-mono);letter-spacing:.08em;color:var(--ink-muted);}
 .ts-team-costs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}.ts-team-costs>div{background:var(--form);border:1px solid var(--form-rule);padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:12px;}.ts-team-costs span{font:10px var(--font-label);text-transform:uppercase;color:var(--file-body);}.ts-team-costs strong{font:15px var(--font-mono);font-weight:500;color:var(--ink);}
 .ts-ledger-group.expiring .ts-cost-block,.ts-ledger-group.dead-cap .ts-cost-block{background:var(--stamp);}.ts-ledger-empty{padding:12px 0;font:11px var(--font-mono);color:var(--file-muted);}
 .ts-empty-coach{height:100%;min-height:250px;border:2px dashed var(--depth-nontext);background:var(--form);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;}.ts-empty-coach span{font:9px var(--font-label);letter-spacing:.12em;text-transform:uppercase;color:var(--file-muted);}.ts-empty-coach strong{font:32px var(--font-display);font-weight:400;color:var(--ink);margin:7px 0;}.ts-empty-coach small{font:10px var(--font-mono);color:var(--file-muted);max-width:180px;}
-@media(max-width:700px){.ts-ledger-person{grid-template-columns:1fr;gap:7px;}.ts-team-costs{grid-template-columns:1fr;}.ts-ledger-topline strong{font-size:27px;}.ts-ledger-identity{flex-wrap:wrap;}.ts-budget-seg span{display:none;}}
+@media(max-width:700px){.ts-ledger-person,.ts-ledger-person.releasable{grid-template-columns:1fr;gap:7px;}.ts-team-costs{grid-template-columns:1fr;}.ts-ledger-topline strong{font-size:27px;}.ts-ledger-identity{flex-wrap:wrap;}.ts-budget-seg span{display:none;}.ts-ledger-release{width:100%;}}
 .ts-ledger-row{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:12px;color:var(--ink);border-bottom:1px solid var(--form-rule);padding-bottom:5px;margin-top:5px;}
 .ts-ledger-row span:first-child{color:var(--file-muted);}
 .ts-ledger-row span.bad{color:var(--stamp-text);}
@@ -1994,8 +2000,8 @@ body:has(.entry-screen){padding-bottom:0;}
 .slf-bench-empty{font-family:var(--font-mono);font-size:11px;color:var(--file-muted);}
 .slf-coach{align-self:center;width:fit-content;max-width:100%;background:var(--form);border:2px solid var(--franchise);padding:8px 14px;box-sizing:border-box;text-align:center;}
 .slf-coach-name{font-family:var(--font-label);font-size:12px;text-transform:uppercase;color:var(--ink);margin-top:2px;white-space:nowrap;}
-.slf-footer{padding:18px 24px 22px;}
-.slf-footer button{width:100%;}
+.slf-footer{padding:18px 24px 22px;display:flex;gap:10px;}
+.slf-footer button{flex:1;}
 @media(max-width:520px){
   .tsx-overlay:has(.slf-panel){padding:0;align-items:stretch;}
   .slf-panel{max-width:100%;height:100%;}
