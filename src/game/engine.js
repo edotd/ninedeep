@@ -154,6 +154,17 @@ export function markLineupSet(state, teamIdx) {
   return { valid: true };
 }
 
+// Empties the starting five so the Set Lineup screen can open onto nine empty-looking slots
+// instead of the auto-selected placeholder (see SetLineupScreen.jsx's mount effect) — only
+// ever called pre-season, before lineupSet is true, so there's nothing live to protect here
+// the way swapStarter/promoteToStarter protect a mid-match lineup.
+export function clearLineup(state, teamIdx) {
+  const team = state.teams[teamIdx];
+  if (!team) return { ok: false, msg: 'Nothing to clear yet.' };
+  team.activeIds = [];
+  return { ok: true };
+}
+
 export function beginPlayoffs(state) {
   startPlayoffs(state);
 }

@@ -83,18 +83,19 @@
 @media(max-width:680px){.offseason-file{margin:0 0 110px;min-height:0;border-inline:0;box-shadow:none}.of-title{font-size:25px}.of-title span{display:none}.of-index>div{padding:9px 5px;font-size:8px;text-align:center}.of-index small,.of-index em{font-size:7px}.of-content{padding:14px 16px;max-height:none;overflow:visible}.of-content h1{font-size:38px}.of-table-head,.of-table-row{grid-template-columns:1fr 78px 42px;gap:6px;padding:9px 6px}.of-ledger{font-size:8px;padding:10px;flex-wrap:wrap}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body,#root{margin:0;padding:0;background:var(--file);color:var(--ink);font-family:var(--font-mono);}
+body{min-height:100vh;padding-bottom:138px;}
 /* The ball under the hand (design ref 5b) — a fine pebble grain across the cream ground,
-   plus a basketball's black channel lines running behind everything. Lives on body, not any
+   plus a basketball's black channel lines running behind everything. Lives on #root, the
+   actual full-height painted surface (body itself is just as tall as #root's content, and
+   the dark-theme override just below already re-targets #root for the same reason) — not any
    individual screen or card, since .screen and most panels carry no background of their own
-   (see .screen above) — the texture only ever becomes visible in the gaps between opaque
+   (see .screen above), so the texture only ever becomes visible in the gaps between opaque
    surfaces (margins, gutters, card-stack peeks), exactly where 5b's own caption puts it.
    Grain is five differently-sized dot layers so it doesn't read as an obvious repeating tile;
    channels are two thin lines (one vertical, one horizontal, repeating down the page) rather
    than 5c's full leather-ball treatment. Dark mode inverts to a navy ground where a "ball on
    leather" texture no longer reads, so it's switched off entirely below.*/
-body{
-  min-height:100vh;
-  padding-bottom:138px;
+#root{
   background-color:var(--file);
   background-image:
     radial-gradient(circle at 15% 25%, rgba(30,43,71,.07) .6px, transparent .6px),
@@ -107,7 +108,8 @@ body{
   background-size:6px 6px,9px 9px,11px 11px,8px 8px,13px 13px,100% 100%,100% 100vh;
   background-repeat:repeat,repeat,repeat,repeat,repeat,no-repeat,repeat-y;
 }
-html[data-theme="dark"] body{background-image:none;}
+/* html[data-theme="dark"] #root further down already overrides `background` (the shorthand,
+   which resets background-image to none along with the color) — nothing extra needed here. */
 h1{font-family:var(--font-display);font-size:38px;line-height:0.86;margin:6px 0 14px;font-weight:400;color:var(--ink);letter-spacing:.01em;}
 h2{font-family:var(--font-label);font-size:13px;line-height:1.3;margin:22px 0 10px;color:var(--file-muted);font-weight:400;text-transform:uppercase;letter-spacing:.12em;}
 p.lede{color:var(--file-body);font-size:14px;line-height:1.5;margin:0 0 14px;}
@@ -421,16 +423,19 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .pcard-develop{width:100%;border:none;border-top:2px solid var(--approved);background:var(--approved);color:var(--form);font-family:var(--font-label);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:9px 12px;cursor:pointer;}
 .pcard-develop:hover{background:var(--approved-ink);}
 /* Release/Develop no longer sit on the card permanently — a hold (mobile) or this arrow
-   (desktop) reveals them in a panel that drops below the card instead of pushing its own
-   height (position:absolute, .pcard switches to overflow:visible only while open) so a card
-   that's been scaled to fit its slot (see the Rotation carousel's per-card scale-to-fit) never
-   has to be re-measured just because its options got toggled. */
+   (desktop) reveals them in a panel overlaid on the card's own bottom edge (position:absolute,
+   bottom:0, not top:100%) instead of pushing its own height, so a card that's been scaled to
+   fit its slot (see the Rotation carousel's per-card scale-to-fit) never has to be re-measured
+   just because its options got toggled. Pinned to bottom:0 rather than dropping below
+   (top:100%) so it stays entirely inside the card's own box — every card-hosting row here
+   scrolls horizontally (overflow-x:auto), which per spec forces overflow-y to auto too, so
+   anything that actually extended past the card's own bottom edge got clipped by that row
+   before it was ever visible; an overlay never needs to escape that box in the first place. */
 .pcard-expand-arrow{width:100%;border:none;border-top:1px solid var(--form-rule);background:var(--file);color:var(--file-muted);padding:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
 .pcard-expand-arrow:hover{background:var(--form);color:var(--ink);}
 .pcard-expand-chevron{font-size:13px;line-height:1;display:inline-block;transition:transform 150ms ease;}
 .pcard.expanded .pcard-expand-chevron{transform:rotate(180deg);}
-.pcard.expanded{overflow:visible;}
-.pcard-options{position:absolute;left:0;right:0;top:100%;z-index:10;display:flex;flex-direction:column;background:var(--form);border:2px solid var(--ink);border-top:none;box-shadow:0 10px 20px rgba(0,0,0,.35);}
+.pcard-options{position:absolute;left:0;right:0;bottom:0;z-index:10;display:flex;flex-direction:column;background:var(--form);border-top:2px solid var(--ink);box-shadow:0 -8px 18px rgba(0,0,0,.28);}
 @media(max-width:999px){.pcard-expand-arrow{display:none;}}
 
 /* Renew — the positive counterpart to Release, on the Contracts screen's expiring cards.
@@ -1858,13 +1863,15 @@ body:has(.entry-screen){padding-bottom:0;}
 .slf-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:20px 24px 12px;border-bottom:2px solid var(--franchise);}
 .slf-eyebrow{font-family:var(--font-label);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--franchise);}
 .slf-title{font-family:var(--font-display);font-size:24px;line-height:1.1;color:var(--ink);text-transform:uppercase;margin-top:2px;}
+/* The only thing left in the header's upper-right corner now that there's no close button
+   (Save/Close live in the footer instead) — see slf-footer below. */
 .slf-synergy-totals{display:flex;flex-direction:column;gap:2px;font-family:var(--font-mono);font-size:12px;font-weight:600;align-items:flex-end;white-space:nowrap;}
 .slf-synergy-totals .off{color:var(--stamp-text);}
 .slf-synergy-totals .def{color:var(--approved-ink);}
-.slf-close{background:none;border:1px solid var(--ink-rule);color:var(--ink);font-family:var(--font-label);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:8px 12px;cursor:pointer;flex-shrink:0;}
-.slf-close:hover{border-color:var(--franchise);color:var(--stamp-text);}
-.slf-note{font-family:var(--font-mono);font-size:11px;line-height:1.5;color:var(--ink-muted);margin:0;padding:12px 24px 0;}
-.slf-court{position:relative;margin:16px 24px 0;aspect-ratio:3/4;background:radial-gradient(circle at 50% 10%, rgba(30,43,71,.06), transparent 32%),var(--form);border:2px solid var(--ink-rule);border-radius:10px;overflow:hidden;}
+.slf-note{font-family:var(--font-mono);font-size:11px;line-height:1.5;color:var(--ink);margin:0;padding:12px 24px 0;}
+.slf-columns{display:flex;flex-direction:column;gap:16px;margin:16px 24px 0;}
+.slf-court{position:relative;flex:1;aspect-ratio:3/4;background:var(--form);border:2px solid var(--ink-rule);border-radius:10px;overflow:hidden;}
+.slf-court-lines{position:absolute;inset:0;width:100%;height:100%;fill:none;stroke:var(--ink-rule);stroke-width:2;opacity:.55;}
 .slf-wire-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;}
 .slf-wire{stroke:var(--stamp-text);stroke-width:2;stroke-dasharray:5 4;}
 .slf-wire.defense{stroke:var(--approved-ink);}
@@ -1881,18 +1888,29 @@ body:has(.entry-screen){padding-bottom:0;}
 .slf-card-num{font-family:var(--font-display);font-size:20px;line-height:1;color:var(--stamp-text);}
 .slf-card-name{font-family:var(--font-label);font-size:11px;text-transform:uppercase;letter-spacing:.02em;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .slf-card-skill{font-size:9px;color:var(--depth);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.slf-sideline{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;margin:16px 24px 0;}
+.slf-sideline{display:flex;flex-direction:column;gap:16px;}
 .slf-microlabel{font-family:var(--font-label);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:6px;}
 .slf-bench{flex:1;min-width:0;}
 .slf-bench-row{display:flex;gap:8px;flex-wrap:wrap;}
 .slf-bench-empty{font-family:var(--font-mono);font-size:11px;color:var(--ink-muted);}
-.slf-coach{flex:0 0 130px;background:var(--form);border:2px solid var(--franchise);padding:8px 10px;}
+.slf-coach{flex:0 0 auto;background:var(--form);border:2px solid var(--franchise);padding:8px 10px;}
 .slf-coach-name{font-family:var(--font-label);font-size:12px;text-transform:uppercase;color:var(--ink);margin-top:2px;}
 .slf-footer{padding:18px 24px 22px;}
-.slf-footer .primary{width:100%;}
+.slf-footer button{width:100%;}
 @media(max-width:520px){
   .tsx-overlay:has(.slf-panel){padding:0;align-items:stretch;}
   .slf-panel{max-width:100%;height:100%;}
+}
+/* Desktop gets its own layout, not the mobile panel just centered wider — a real two-column
+   floor (court left, bench/coach as a sidebar list on the right), matching the shell's own
+   999px/1000px mobile/desktop split used everywhere else (see .ts-tabbar and friends). */
+@media(min-width:1000px){
+  .slf-panel{max-width:920px;}
+  .slf-columns{flex-direction:row;align-items:flex-start;}
+  .slf-court{flex:1.4;max-width:520px;}
+  .slf-sideline{flex:1;min-width:220px;}
+  .slf-bench-row{flex-direction:column;}
+  .slf-bench-row .slf-card{width:100%;}
 }
 
 @media(max-width:999px){
