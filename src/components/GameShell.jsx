@@ -23,6 +23,7 @@ import SimulatingSeasonScreen from '../screens/SimulatingSeasonScreen';
 import SeasonTransitionScreen from '../screens/SeasonTransitionScreen';
 import ContractsScreen from '../screens/ContractsScreen';
 import FreeAgencyScreen from '../screens/FreeAgencyScreen';
+import WelcomeScreen from '../screens/WelcomeScreen';
 import FranchiseMasthead from './FranchiseMasthead';
 
 const SCREENS = {
@@ -153,8 +154,19 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
   // everyone else's screen to Team Summary too. Now each player moves on at their own pace,
   // and TeamSummaryScreen treats 'pullhand' the same as 'teamsummary' once reached this way.
   const [pastDeal, setPastDeal] = useState(false);
-  useEffect(() => { if (state.phase !== 'pullhand') setPastDeal(false); }, [state.phase]);
+  const [showWelcome, setShowWelcome] = useState(false);
+  useEffect(() => {
+    if (state.phase !== 'pullhand') {
+      setPastDeal(false);
+      setShowWelcome(false);
+    }
+  }, [state.phase]);
   const effectivePhase = state.phase === 'pullhand' && pastDeal ? 'teamsummary' : state.phase;
+
+  const finishWelcome = () => {
+    setShowWelcome(false);
+    setPastDeal(true);
+  };
 
   const openTeamView = (teamId, fromOverlay) => {
     setReturnOverlay(fromOverlay);
@@ -192,8 +204,10 @@ export default function GameShell({ state, actions, myTeamId, onNewEra }) {
   else if (overlay === 'cardtypes') overlayBody = <CardOverviewScreen state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
 
   const Screen = SCREENS[effectivePhase];
-  const mainBody = overlayBody || (Screen
-    ? <Screen state={state} actions={actions} myTeamId={myTeamId} onViewTeam={(id) => openTeamView(id, null)} onEndGame={onNewEra} dealProgress={dealProgress} onDealProgress={setDealProgress} onDealDone={() => setPastDeal(true)} />
+  const mainBody = overlayBody || (showWelcome
+    ? <WelcomeScreen onContinue={finishWelcome} />
+    : Screen
+    ? <Screen state={state} actions={actions} myTeamId={myTeamId} onViewTeam={(id) => openTeamView(id, null)} onEndGame={onNewEra} dealProgress={dealProgress} onDealProgress={setDealProgress} onDealDone={() => setShowWelcome(true)} />
     : (
       <div className="screen">
         <h1>Something broke</h1>
