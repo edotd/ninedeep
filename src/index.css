@@ -665,14 +665,16 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .fo2-kind-badge.franchise{color:var(--franchise);}
 .fo2-kind-badge.approved-ink{color:var(--approved-ink);}
 .fo2-name-row{display:flex;justify-content:space-between;align-items:flex-start;padding:13px;gap:10px;}
+.fo2-name-col{min-width:0;}
 .fo2-name{font-family:var(--font-display);font-size:30px;line-height:.85;color:var(--file);}
 .fo2-qualifier{font-size:10px;letter-spacing:.06em;color:var(--ink-muted);margin-top:5px;}
 .fo2-disposition{font-family:var(--font-display);font-size:26px;line-height:.85;text-align:right;flex-shrink:0;}
 .fo2-disposition.franchise{color:var(--franchise);}
 .fo2-disposition.approved-ink{color:var(--approved-ink);}
 .fo2-effects{border-top:1px solid var(--ink-rule);padding:8px 13px;}
-.fo2-effect-row{display:flex;justify-content:space-between;font-size:11px;padding:3px 0;}
-.fo2-effect-label{color:var(--ink-muted);}
+.fo2-effect-row{display:flex;justify-content:space-between;gap:8px;font-size:11px;padding:3px 0;}
+.fo2-effect-label{color:var(--ink-muted);flex:0 0 auto;}
+.fo2-effect-value{min-width:0;text-align:right;overflow-wrap:anywhere;}
 .fo2-effect-value.approved-ink{color:var(--approved-ink);}
 .fo2-effect-value.stamp-ink{color:var(--stamp-ink);}
 .fo2-effect-value.file{color:var(--file);}
@@ -900,7 +902,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 @media(max-width:999px){
   .fo-deal-row.row-scroll,.mu-deal-row.row-scroll{display:flex;grid-template-columns:none;overflow-x:auto;gap:14px;scroll-snap-type:x proximity;scrollbar-width:none;}
   .fo-deal-row.row-scroll::-webkit-scrollbar,.mu-deal-row.row-scroll::-webkit-scrollbar{display:none;}
-  .fo-deal-row.row-scroll>.ts-fo-col{flex:0 0 200px;scroll-snap-align:start;}
+  .fo-deal-row.row-scroll>.ts-fo-col{flex:0 0 min(300px,calc(100vw - 48px));scroll-snap-align:start;}
   .mu-deal-row.row-scroll>.mu2-wrap{flex:0 0 200px;scroll-snap-align:start;}
   .fo-deal-row.row-fit,.mu-deal-row.row-fit{display:flex;grid-template-columns:none;overflow-x:visible;gap:14px;}
   .fo-deal-row.row-fit>.ts-fo-col,.mu-deal-row.row-fit>.mu2-wrap{flex:1 1 0;min-width:0;}

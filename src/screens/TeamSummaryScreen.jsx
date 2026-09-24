@@ -367,7 +367,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             {!readOnly && !team.lineupSet && <span className="ts-tab-dot" aria-label="Lineup not set" />}
           </button>
           {team.market && (
-            <button className={'ts-tab' + (tab === 'office' ? ' active' : '')} onClick={() => setTab('office')}>Staff & Gameplan</button>
+            <button className={'ts-tab' + (tab === 'office' ? ' active' : '')} onClick={() => setTab('office')}>Gameplan</button>
           )}
           <button className={'ts-tab' + (tab === 'ledger' ? ' active' : '')} onClick={() => setTab('ledger')}>
             Budget
