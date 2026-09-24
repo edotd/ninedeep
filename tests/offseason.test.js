@@ -5,12 +5,23 @@ import { startDraft, draftPick } from '../src/game/draft.js';
 import { startEra, confirmLineup, markLineupSet } from '../src/game/engine.js';
 import { fireCoach, hireFreeAgentCoach, releasePlayer } from '../src/game/finances.js';
 import { LEAGUE_ACCOLADES, TIERS } from '../src/game/constants.js';
+import { rehydrateState } from '../src/game/rehydrate.js';
 
 test('Generational Talent is a modifier while All-Star and Most Valuable Player are accolades', () => {
   assert(TIERS.some((tier) => tier.name === 'Generational Talent'));
   assert(!TIERS.some((tier) => tier.name === 'All-Star'));
   assert(LEAGUE_ACCOLADES.some((tier) => tier.name === 'All-Star'));
   assert(LEAGUE_ACCOLADES.some((tier) => tier.name === 'Most Valuable Player'));
+});
+
+test('Journeyman replaces the legacy Bench Player tier in new and saved games', () => {
+  assert(TIERS.some((tier) => tier.name === 'Journeyman'));
+  assert(!TIERS.some((tier) => tier.name === 'Bench Player'));
+  const state = rehydrateState({
+    teams: [{ id: 0, hand: [{ id: 'legacy', archetype: 'Bench Player', tierName: 'Bench Player' }] }],
+  });
+  assert.equal(state.teams[0].hand[0].archetype, 'Journeyman');
+  assert.equal(state.teams[0].hand[0].tierName, 'Journeyman');
 });
 
 test('free agency begins with two to four coaches and excludes Hall of Fame', () => {

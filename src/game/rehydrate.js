@@ -4,6 +4,11 @@
 // reference sites and relinks them back to the matching object in state.teams (matched by the
 // stable `id` set in season.js's buildTeams), so the rest of the codebase — which was written
 // assuming object identity — keeps working unmodified.
+function migratePlayerTier(card) {
+  if (card?.archetype === 'Bench Player') card.archetype = 'Journeyman';
+  if (card?.tierName === 'Bench Player') card.tierName = 'Journeyman';
+}
+
 export function rehydrateState(state) {
   if (!state || !state.teams) return state;
   state.strategyCardCounter ||= 0;
@@ -13,7 +18,13 @@ export function rehydrateState(state) {
     team.developmentCards ||= [];
     team.gameplanCards ||= [];
     team.seasonGameplanEffects ||= { offPercent: 0, defPercent: 0, benchBonus: 0, seedingPercent: 0 };
+    (team.hand || []).forEach(migratePlayerTier);
+    (team.deadCap || []).forEach((entry) => migratePlayerTier(entry.player));
   });
+  (state.freeAgents || []).forEach(migratePlayerTier);
+  (state.starPool || []).forEach(migratePlayerTier);
+  (state.draft?.pool || []).forEach(migratePlayerTier);
+  (state.draft?.picks || []).forEach((pick) => migratePlayerTier(pick.card));
   const byId = new Map(state.teams.map((t) => [t.id, t]));
   const relink = (ref) => (ref && ref.id != null ? byId.get(ref.id) ?? ref : ref);
 

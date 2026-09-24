@@ -24,7 +24,7 @@ export const POSITION_MOD = {
 // Base Player Modifiers — quality/trait tiers with no age restriction on who can roll them.
 export const TIERS = [
   { name: 'Role Player', uniform: 1.00, peak: 1.00, contract: 7, count: 7 },
-  { name: 'Bench Player', uniform: 1.05, peak: 1.10, contract: 6, count: 4 },
+  { name: 'Journeyman', uniform: 1.05, peak: 1.10, contract: 6, count: 4 },
   { name: 'High IQ', uniform: 1.10, peak: 1.20, contract: 4, count: 4, forceStat: 'PLM' },
   { name: 'Hustler', uniform: 1.10, peak: 1.20, contract: 4, count: 4, forceStats: ['DEF', 'REB'] },
   { name: 'Generational Talent', uniform: 1.30, peak: 1.65, contract: 2, count: 2 },
