@@ -446,6 +446,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                           onClick={canEdit ? () => handleCardClick(c) : undefined}
                           onRelease={canEdit ? handleRelease : undefined}
                           onDevelop={!readOnly && !c.development ? setDevelopPlayer : undefined}
+                          alwaysShowOptions={!isDesktop}
                         />
                       </div>
                     ))}
@@ -458,6 +459,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                           onClick={canEdit ? () => handleCardClick(c) : undefined}
                           onRelease={canEdit ? handleRelease : undefined}
                           onDevelop={!readOnly && !c.development ? setDevelopPlayer : undefined}
+                          alwaysShowOptions
                         />
                       </div>
                     ))}
