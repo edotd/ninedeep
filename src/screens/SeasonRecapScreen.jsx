@@ -1,11 +1,10 @@
 import { teamOutput } from '../game/matchup';
 import { ERA_LENGTH } from '../game/constants';
 import { teamSynergy } from '../game/skillsets';
-import { cardTier } from '../game/cards';
+import { PlayerLedgerIdentity, CostBlocks } from '../components/LedgerRow';
 
 const RESULT_LABEL = { TITLE: 'TITLE', FINALS: 'FINALS', R2: 'R2', R1: 'R1', MISSED: null };
 const OUTCOME_LABEL = { TITLE: 'CHAMPIONS', FINALS: 'FINALS', R2: 'ROUND 2', R1: 'ROUND 1', MISSED: 'MISSED' };
-const TIER_COLOR = { A: 'var(--franchise)', B: 'var(--file)', D: 'var(--depth)', EXP: 'var(--stamp)' };
 
 // Season Recap — "the era ledger" (design brand handoff, 1b) — filed once when a season
 // closes, between the Results screen and the Draft. Organised by time: one column per era
@@ -65,27 +64,19 @@ export default function SeasonRecapScreen({ state, actions, myTeamId }) {
 
         <div className="sr-section">
           <div className="sr-heading">Contracts On The Books</div>
-          <div className="sr-contract-list">
+          <div className="ts-ledger-list">
             {team.hand.map((c) => (
-              <div key={c.id} className="sr-contract-row">
-                <span className="sr-contract-name">{c.archetype}</span>
-                <div className="sr-contract-track">
-                  <div className="sr-contract-fill" style={{ width: `${Math.min(100, (c.contract / c.maxContract) * 100)}%`, background: TIER_COLOR[cardTier(c)] }} />
-                </div>
-                <span className="sr-contract-years">{c.contract} YR{c.contract === 1 ? '' : 'S'} LEFT</span>
+              <div className="ts-ledger-person" key={c.id}>
+                <PlayerLedgerIdentity card={c} />
+                <CostBlocks turns={c.contract} amount={c.salary} />
               </div>
             ))}
             {team.hand.length === 0 && <p className="lede">No players carrying a contract into next season.</p>}
           </div>
         </div>
-
-        <div className="sr-footer">
-          <div><div className="sr-figure-label">Titles</div><div className="sr-figure-value accent">{team.titles}</div></div>
-          <div><div className="sr-figure-label">Yr</div><div className="sr-figure-value">{Math.min(state.season, ERA_LENGTH)} / {ERA_LENGTH}</div></div>
-        </div>
       </div>
       <div className="bottombar">
-        <button className="primary" onClick={actions.proceedFromSeasonRecap}>Open Contract File</button>
+        <button className="primary" onClick={actions.proceedFromSeasonRecap}>Begin Off-Season</button>
       </div>
     </>
   );

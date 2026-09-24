@@ -1,8 +1,15 @@
 import PlayerCard from '../components/PlayerCard';
-import { cardTotal } from '../game/cards';
+import { cardTotal, jerseyNumber, playerGrade } from '../game/cards';
+import { careerLevel } from '../game/aging';
 import { formatCoins } from '../game/economy';
 import OffseasonFile from '../components/OffseasonFile';
 import { offseasonPrice } from '../game/gm';
+
+// "Number + Grade + Career + Tier + Position" — the one full-identity line the draft order
+// table and this screen's Recent Picks list both use for a pick's card.
+function pickLine(card) {
+  return `#${jerseyNumber(card)} · ${playerGrade(card)} · ${careerLevel(card)} · ${card.tierName} · ${card.position}`;
+}
 
 export default function DraftScreen({ state, actions, myTeamId }) {
   const draft = state.draft;
@@ -23,20 +30,39 @@ export default function DraftScreen({ state, actions, myTeamId }) {
     <OffseasonFile state={state} team={myTeam}>
       <div className="of-section-label">02 / DRAFT</div><h1>Draft — Season {state.season}</h1>
       <p className="lede">
-        Every team gets one pick, worst record first. Draft picks can take a roster above nine players; resolve your final nine on the Team screen after the draft.{' '}
+        Every team gets one pick, worst record first.{' '}
         {onTheClock
-          ? "You're on the clock — draft a card, or trade your pick down to another team for a cap bonus next season."
+          ? "You're on the clock - draft a player or forfeit your pick for a cap bonus next season."
           : draft.queue[0] ? `Waiting on ${draft.queue[0].name} to pick…` : ''}
       </p>
       <div className="statusline">{draft.queue.length} pick{draft.queue.length === 1 ? '' : 's'} remaining · {draft.pool.length} card{draft.pool.length === 1 ? '' : 's'} in the pool</div>
 
-      {draft.picks.length > 0 && (
+      {onTheClock && (
+        <button
+          className="secondary"
+          style={{ width: '100%', marginTop: 6 }}
+          onClick={() => {
+            const res = actions.forfeitPick(myTeamId);
+            if (res && res.ok === false) alert(res.msg);
+          }}
+        >
+          Forfeit Pick — +{formatCoins(1)} Cap Next Season
+        </button>
+      )}
+
+      {(draft.picks.length > 0 || draft.queue.length > 0) && (
         <>
-          <h2>Recent Picks</h2>
-          {draft.picks.slice(0, 5).map((p, i) => (
-            <div key={i} className={'standing-row' + (p.teamId === myTeamId ? ' you' : '')}>
-              <span>{p.teamName}</span>
-              <span>{p.card.archetype} · {p.card.tierName}</span>
+          <h2>Draft Order</h2>
+          {[...draft.picks].reverse().map((p, i) => (
+            <div key={'picked-' + p.card.id} className={'standing-row' + (p.teamId === myTeamId ? ' you' : '')}>
+              <span>#{i + 1} {p.teamName}</span>
+              <span>{p.card.archetype} — {pickLine(p.card)}</span>
+            </div>
+          ))}
+          {draft.queue.map((t, i) => (
+            <div key={'pending-' + t.id} className={'standing-row' + (t === myTeam ? ' you' : '')}>
+              <span>#{draft.picks.length + i + 1} {t.name}</span>
+              <span>{i === 0 ? 'On the clock' : 'Pending'}</span>
             </div>
           ))}
         </>

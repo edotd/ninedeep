@@ -47,9 +47,9 @@ const SCREENS = {
 // read as empty (see PersistentBar/DesktopBar) until each card type is actually dealt, so the
 // bar filling in phase by phase (hand, then front office, then matchup cards) IS the deal
 // animation's payoff rather than something hidden until Team Summary. It's still hidden during
-// the Simulating Season loading beat and the Season Recap screen — the roster the bar would
-// show is about to be replaced by next season's, same full-screen treatment as Constructing.
-const HIDE_BAR_PHASES = new Set(['simulating', 'seasonrecap', 'seasontransition']);
+// the Simulating Season loading beat and the season transition — full-screen loading treatment,
+// same as Constructing.
+const HIDE_BAR_PHASES = new Set(['simulating', 'seasontransition']);
 
 // Glossary/Standings/Settings/Team/Card Types are client-local overlays, not part of the shared game
 // phase — a room's `state.phase` drives what everyone in the room sees, so if opening the

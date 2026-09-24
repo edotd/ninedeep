@@ -270,6 +270,9 @@ input.text-input.lobby-name-input{min-width:0;margin:0;padding:10px 12px;}
 .card-log{margin-top:8px;padding:6px 10px;background:var(--file);border:1px solid var(--form-rule);}
 .card-log-header{display:flex;align-items:center;justify-content:space-between;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--file-muted);padding:2px 0 4px;font-family:var(--font-label);}
 .card-log-header button{font-size:10px;padding:3px 7px;}
+.card-log-toggle{display:flex;align-items:center;gap:5px;background:none;border:none;padding:0;color:inherit;font:inherit;text-transform:inherit;letter-spacing:inherit;cursor:pointer;}
+.card-log-chevron{display:inline-block;font-size:9px;transition:transform 120ms ease;}
+.card-log-chevron.open{transform:rotate(90deg);}
 .card-log-entry{display:flex;align-items:flex-start;gap:7px;font-size:12px;color:var(--file-body);padding:4px 0;font-family:var(--font-mono);}
 .card-log-entry + .card-log-entry{border-top:1px dashed var(--form-rule);}
 .card-log-bullet{flex-shrink:0;}
@@ -912,14 +915,6 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .sr-grid-num.low{color:var(--stamp-ink);}
 .sr-section{background:var(--file);padding:18px 24px;display:flex;flex-direction:column;gap:10px;}
 .sr-heading{font-family:var(--font-label);font-size:11px;letter-spacing:.14em;color:var(--ink);text-transform:uppercase;}
-.sr-contract-list{display:flex;flex-direction:column;gap:7px;}
-.sr-contract-row{display:flex;align-items:center;gap:10px;}
-.sr-contract-name{width:120px;flex-shrink:0;font-family:var(--font-mono);font-size:11px;color:var(--file-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.sr-contract-track{flex:1;height:10px;background:var(--form);border:1px solid var(--form-rule);}
-.sr-contract-fill{height:100%;}
-.sr-contract-years{width:78px;flex-shrink:0;text-align:right;font-family:var(--font-mono);font-size:10px;color:var(--file-muted);}
-.sr-footer{background:var(--ink);padding:16px 24px;display:flex;gap:28px;}
-@media (max-width:600px){.sr-contract-name{width:80px;}}
 
 
 /* ================= The Die — "Nine Deep Die" design doc. A fixed three-quarter cube; only the

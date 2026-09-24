@@ -4,9 +4,8 @@ import TeamChemistry from '../components/TeamChemistry';
 import SetLineupScreen from '../components/SetLineupScreen';
 import PlayerCard from '../components/PlayerCard';
 import FrontOfficeCard from '../components/FrontOfficeCard';
+import { PlayerLedgerIdentity, CostBlocks } from '../components/LedgerRow';
 import { formatCoins, rosterSalary, gmCost } from '../game/economy';
-import { jerseyNumber, playerGrade } from '../game/cards';
-import { skillsetFor } from '../game/skillsets';
 import { FANBASE_BOOST_COST } from '../game/constants';
 import MatchupCard from '../components/MatchupCard';
 import StrategyCard from '../components/StrategyCard';
@@ -32,28 +31,6 @@ function useRowEnd(count) {
 function RowSwipeHint({ row }) {
   if (!row.scrolls || row.atEnd) return null;
   return <div className="row-swipe-hint" aria-hidden="true"><span className="row-swipe-hint-chevron">›</span></div>;
-}
-
-function PlayerLedgerIdentity({ card, role }) {
-  const skillset = skillsetFor(card);
-  return (
-    <div className="ts-ledger-identity">
-      <strong>#{jerseyNumber(card)}</strong>
-      <span className="ts-ledger-grade">{playerGrade(card)}</span>
-      <span>{skillset?.name || 'No Skillset'}</span>
-      <em>{role}</em>
-    </div>
-  );
-}
-
-function CostBlocks({ turns, amount }) {
-  return (
-    <div className="ts-cost-blocks" aria-label={`${turns} turns remaining at ${formatCoins(amount)} each`}>
-      {Array.from({ length: Math.max(0, turns || 0) }, (_, index) => (
-        <div className="ts-cost-block" key={index}><span>{formatCoins(amount)}</span><small>T{index + 1}</small></div>
-      ))}
-    </div>
-  );
 }
 
 function StrategyAction({ card, team, state, actions, myTeamId, readOnly }) {

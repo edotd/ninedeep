@@ -2,7 +2,7 @@
 // (solo, in-memory) and useRoomGame (Firestore-backed). Every mutator has the same signature
 // either way: (state, ...args) => result | undefined, mutating state in place.
 import { newEraState, signFreeAgent, proceedFromResults, proceedFromSeasonRecap, proceedFromSeasonTransition, finishPlayoffs, fileContracts, renewExpiredContract } from './season';
-import { draftPick, tradeDown } from './draft';
+import { draftPick, tradeDown, forfeitPick } from './draft';
 import { fireCoach, fireGM, hireFreeAgentCoach, investInFanbase, releasePlayer } from './finances';
 import * as engine from './engine';
 import { beginTurn, advanceTurn } from './turn';
@@ -40,6 +40,7 @@ export const actionMap = {
   renewExpiredContract,
   draftPick,
   tradeDown,
+  forfeitPick,
   signFreeAgent,
   proceedFromSeasonTransition,
   fireCoach,

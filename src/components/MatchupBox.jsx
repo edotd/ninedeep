@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 // A matchup roll is narrated as an ordered list of events — advantage declarations,
 // injuries, card plays, each team's dice rolls, bench, then the final total. `revealIndex`
 // (how many events have played out so far) drives both the score-cell reveal in each
@@ -121,6 +123,9 @@ function MatchupRow({ m, side, name, isWinner, advantage, extra, showOff, showDe
 }
 
 export default function MatchupBox({ title, m, revealIndex = Infinity, onSkip }) {
+  // Collapsed by default — a full series page is a wall of these once every game's logged,
+  // so only the score rows show at a glance and the user opts into a given game's log.
+  const [logOpen, setLogOpen] = useState(false);
   const events = buildMatchEvents(m);
   const shown = Math.min(revealIndex, events.length);
   const isDone = shown >= events.length;
@@ -152,10 +157,13 @@ export default function MatchupBox({ title, m, revealIndex = Infinity, onSkip })
       {logEntries.length > 0 && (
         <div className="card-log">
           <div className="card-log-header">
-            <span>Action Log</span>
+            <button type="button" className="card-log-toggle" onClick={() => setLogOpen((v) => !v)} aria-expanded={logOpen}>
+              <span className={'card-log-chevron' + (logOpen ? ' open' : '')}>▸</span>
+              <span>Action Log</span>
+            </button>
             {!isDone && onSkip && <button className="reset-link" onClick={onSkip}>Skip ▸▸</button>}
           </div>
-          {logEntries.map((n, i) => {
+          {logOpen && logEntries.map((n, i) => {
             const idx = n.highlight ? n.text.indexOf(n.highlight) : -1;
             const before = idx >= 0 ? n.text.slice(0, idx) : n.text;
             const after = idx >= 0 ? n.text.slice(idx + n.highlight.length) : '';
