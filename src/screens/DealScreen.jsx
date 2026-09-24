@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import PlayerCard from '../components/PlayerCard';
 import FrontOfficeCard from '../components/FrontOfficeCard';
 import MatchupCard from '../components/MatchupCard';
+import WelcomeScreen from './WelcomeScreen';
 
 const ALL_FO_KINDS = ['coach', 'fanbase', 'market'];
 
@@ -43,7 +44,7 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
   const total = starters.length + bench.length + FO_KINDS.length + matchupCards.length;
   const instant = state.settings.actionLogSpeed === 'instant' || reducedMotion();
 
-  // 'deck' -> 'dealing' -> 'review'
+  // 'deck' -> 'dealing' -> 'welcome'
   const [phase, setPhase] = useState(instant ? 'review' : 'deck');
   const [dealt, setDealt] = useState(instant ? total : 0);
   const [tokens, setTokens] = useState([]); // transient flying-card visuals, purely decorative
@@ -52,9 +53,7 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
 
   const clearTimers = () => { timersRef.current.forEach(clearTimeout); timersRef.current = []; };
 
-  // Once the deal lands, every client goes directly to its Franchise page. Card Types remains
-  // available from navigation, so a second post-deal review screen only adds an extra stop.
-  const finishDealing = () => onDealDone();
+  const finishDealing = () => setPhase('welcome');
 
   useEffect(() => {
     if (instant) { onDealProgress(total); finishDealing(); return undefined; }
@@ -84,9 +83,9 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
     finishDealing();
   };
 
-  // Mobile never actually settles into 'review' (finishDealing calls onDealDone instead) —
-  // this only guards the one-frame window on an 'instant' mount, before that effect above has
-  // run, so nothing flashes the desktop grid first.
+  if (phase === 'welcome') return <WelcomeScreen onContinue={onDealDone} />;
+
+  // This guards the one-frame window on an instant mount before its effect moves to welcome.
   if (phase === 'review') return null;
 
   if (phase !== 'review') {

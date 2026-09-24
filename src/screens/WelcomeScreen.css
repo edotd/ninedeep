@@ -39,7 +39,7 @@
 .welcome-continue{width:100%;margin-top:32px;}
 
 @media(max-width:600px){
-  .welcome-screen{min-height:calc(100dvh - var(--mobile-persistent-top-height,0px) - var(--persistent-bar-height,0px));padding:18px 14px;}
+  .welcome-screen{min-height:calc(var(--app-vh,100dvh) - var(--mobile-persistent-top-height,0px) - var(--mobile-persistent-bar-height,0px));padding:18px 14px;}
   .welcome-file{box-shadow:6px 6px 0 var(--form-rule);}
   .welcome-lockup{padding:20px;}
   .welcome-lockup span{font-size:34px;}

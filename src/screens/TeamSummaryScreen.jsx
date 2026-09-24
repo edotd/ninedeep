@@ -312,7 +312,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
       ? `Release ${card.archetype} · ${card.position}? Their contract is already expired, so this leaves no dead cap.`
       : years === 1
         ? `Release ${card.archetype} · ${card.position}? Leaves ${formatCoins(deadCapCharge)} in dead cap against your budget this season.`
-        : `Release ${card.archetype} · ${card.position}? Leaves ${formatCoins(deadCapCharge)} in dead cap against your budget for each of the next ${years} seasons, starting this one.`;
+        : `Release ${card.archetype} · ${card.position}? Leaves ${formatCoins(deadCapCharge)} in dead cap against your budget for each of the next ${years} seasons, starting this season.`;
     if (!window.confirm(msg)) return;
     const res = actions.releasePlayer(myTeamId, card.id);
     if (res && res.ok === false) alert(res.msg);

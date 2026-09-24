@@ -522,7 +522,8 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
    declarations per-property rather than per-rule. That gap is what left visible margins down
    both sides of the desktop content pane even after this rule's padding was already in place. */
 .desktop-content .screen{max-width:none;margin:0;padding:28px;}
-.desktop-content .bottombar{left:auto;right:20px;bottom:calc(var(--desktop-bar-height) + 20px);padding:10px;}
+.desktop-content .bottombar{left:auto;right:16px;bottom:9px;z-index:16;background:transparent;border:0;box-shadow:none;padding:0;}
+.desktop-content .bottombar button{min-width:190px;min-height:88px;}
 .desktop-content .corner-dock{bottom:calc(var(--desktop-bar-height) + 20px);}
 
 /* Sized to comfortably fit a ~1440px viewport without horizontal scroll (a 1280px window
@@ -535,7 +536,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
    (z-index:11) by having a bigger number of its own, since that comparison happens one
    level up, between 15 and 11, not between 20 and 11. Hovering a slot near the bottom of
    the bar was drawing the preview behind the ticker for exactly this reason. */
-.desktop-bar{position:fixed;bottom:0;left:0;right:0;z-index:15;height:var(--desktop-bar-height);box-sizing:border-box;background:var(--ink);border-top:2px solid var(--franchise);padding:10px 16px;display:flex;justify-content:center;align-items:stretch;overflow-x:auto;}
+.desktop-bar{position:fixed;bottom:0;left:0;right:0;z-index:15;height:var(--desktop-bar-height);box-sizing:border-box;background:var(--ink);border-top:2px solid var(--franchise);padding:10px 222px 10px 16px;display:flex;justify-content:flex-start;align-items:stretch;overflow-x:auto;}
 .db-section{display:flex;flex-direction:column;justify-content:center;padding:0 12px;}
 .db-section + .db-section{border-left:1px solid var(--ink-rule);}
 .db-slots-fixed{flex-shrink:0;}
