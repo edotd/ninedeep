@@ -9,11 +9,11 @@ const DEVELOPMENT_DEFINITIONS = [
 ];
 
 const GAMEPLAN_DEFINITIONS = [
-  { name: 'Run And Gun', description: '+8% team Offense.', target: 'self', contexts: ['playoff'], effects: { offPercent: 8 } },
-  { name: 'Pack The Paint', description: '+8% team Defense.', target: 'self', contexts: ['playoff'], effects: { defPercent: 8 } },
-  { name: 'Second Unit Focus', description: '+3 Bench Output.', target: 'self', contexts: ['playoff'], effects: { benchBonus: 3 } },
-  { name: 'Disrupt Rhythm', description: '-6% opponent Offense.', target: 'opponent', contexts: ['playoff'], effects: { offPercent: -6 } },
-  { name: 'Attack Their Scheme', description: '-6% opponent Defense.', target: 'opponent', contexts: ['playoff'], effects: { defPercent: -6 } },
+  { name: 'Run And Gun', description: '+8% team Offense.', target: 'self', contexts: ['season', 'playoff'], effects: { offPercent: 8 } },
+  { name: 'Pack The Paint', description: '+8% team Defense.', target: 'self', contexts: ['season', 'playoff'], effects: { defPercent: 8 } },
+  { name: 'Second Unit Focus', description: '+3 Bench Output.', target: 'self', contexts: ['season', 'playoff'], effects: { benchBonus: 3 } },
+  { name: 'Disrupt Rhythm', description: '-6% opponent Offense.', target: 'opponent', contexts: ['season', 'playoff'], effects: { offPercent: -6 } },
+  { name: 'Attack Their Scheme', description: '-6% opponent Defense.', target: 'opponent', contexts: ['season', 'playoff'], effects: { defPercent: -6 } },
   ...SEEDING_GAMEPLAN_TYPES,
 ];
 
@@ -81,10 +81,10 @@ export function playGameplanCard(state, teamIdx, cardId, context, targetTeamId) 
   const team = state.teams[teamIdx];
   const card = team?.gameplanCards?.find((c) => c.id === cardId);
   if (!card || card.used) return { ok: false, msg: 'That Gameplan card is no longer available.' };
+  if ((team.gameplanCards || []).some((c) => c.used)) return { ok: false, msg: 'Only one Gameplan card can be active at a time.' };
   if (!card.contexts.includes(context)) return { ok: false, msg: `That card cannot be used for a ${context} plan.` };
 
   if (context === 'season') {
-    if (!card.effects?.seedingPercent) return { ok: false, msg: 'Only seeding Gameplans can be used for the regular season.' };
     const seasonOpen = ['pullhand', 'pullmodifier', 'constructing', 'teamsummary'].includes(state.phase);
     if (!seasonOpen) return { ok: false, msg: 'The regular season has already been summed.' };
     const target = card.target === 'opponent' ? state.teams.find((t) => String(t.id) === String(targetTeamId)) : team;

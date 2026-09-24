@@ -8,6 +8,7 @@ import PlayerCard from './PlayerCard';
 import FrontOfficeCard from './FrontOfficeCard';
 import MatchupCard from './MatchupCard';
 import StrategyCard from './StrategyCard';
+import CardTypeMark from './CardTypeMark';
 
 // Full-width desktop persistent bar, per the brand handoff's "Component: Persistent Bar" —
 // web variant. Seven sections: starters, bench, front office, matchup, then the three
@@ -136,6 +137,7 @@ export default function DesktopBar({ state, myTeamId, actions, dealProgress }) {
 
   const activeIds = rawActiveIds;
   const coach = foCount >= 1 ? team.coach : null;
+  const activeGameplan = (team.gameplanCards || []).find((c) => c.used);
   const fanbaseArchetype = fanbaseDealt && foCount >= 2 ? team.fanbaseArchetype : null;
   const market = foCount >= (fanbaseDealt ? 3 : 2) ? team.market : null;
   const frontOfficeTeam = foCount >= 1 ? team : null;
@@ -260,7 +262,14 @@ export default function DesktopBar({ state, myTeamId, actions, dealProgress }) {
       <div className="db-section db-slots-fixed">
         <div className="db-heading">Front Office</div>
         <div className="db-slots">
-          <FrontOfficeSlot label="Coach" value={coach ? coach.modifier : null} kind="coach" team={frontOfficeTeam} onHover={handleHover} onLeave={handleLeave} />
+          <FrontOfficeSlot
+            label={<>Coach{coach && activeGameplan && <span className="persistent-bar-gameplan-active" title={`${activeGameplan.name} is active`}><CardTypeMark type="gameplan" size={11} color="var(--franchise)" /></span>}</>}
+            value={coach ? coach.modifier : null}
+            kind="coach"
+            team={frontOfficeTeam}
+            onHover={handleHover}
+            onLeave={handleLeave}
+          />
           {fanbaseDealt && <FrontOfficeSlot label="Fans" value={fanbaseArchetype ? fanbaseArchetype.name : null} tone={fanbaseArchetype && fanbaseArchetype.name === 'Die Hard' ? 'notable' : null} kind="fanbase" team={frontOfficeTeam} onHover={handleHover} onLeave={handleLeave} />}
           <FrontOfficeSlot label="GM" value={market ? (team.gmType || 'Neutral') : null} kind="market" team={frontOfficeTeam} onHover={handleHover} onLeave={handleLeave} />
         </div>

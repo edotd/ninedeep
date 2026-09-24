@@ -51,14 +51,14 @@ function StrategyAction({ card, team, state, actions, myTeamId, readOnly }) {
   const liveMatch = (state.playoff?.matches || []).find((match) => match.turn && !match.result && (match.a === team || match.b === team));
   const playoffReady = liveMatch?.turn && ['coinflip', 'coinflipped'].includes(liveMatch.turn.stage);
   const seasonOpen = ['pullhand', 'pullmodifier', 'constructing', 'teamsummary'].includes(state.phase);
-  const seasonEligible = !!card.effects?.seedingPercent;
-  const context = playoffReady ? 'playoff' : seasonOpen && seasonEligible ? 'season' : null;
+  const context = playoffReady && card.contexts.includes('playoff') ? 'playoff' : seasonOpen && card.contexts.includes('season') ? 'season' : null;
+  const alreadyActive = (team.gameplanCards || []).some((c) => c.used && c.id !== card.id);
   const opponents = state.teams.filter((candidate) => candidate.id !== team.id);
   const needsTarget = card.target === 'opponent' && context === 'season';
   return (
     <div className="strategy-card-action">
       {needsTarget && <select value={targetId} onChange={(event) => setTargetId(event.target.value)}><option value="">Choose opponent</option>{opponents.map((opponent) => <option key={opponent.id} value={opponent.id}>{opponent.name}</option>)}</select>}
-      <button className="secondary" disabled={!context || (needsTarget && !targetId)} onClick={() => actions.playGameplanCard(myTeamId, card.id, context, needsTarget ? targetId : null)}>{context === 'playoff' ? 'Use In Matchup' : context === 'season' ? 'Use This Season' : seasonOpen ? 'Playoff Only' : 'Unavailable'}</button>
+      <button className="secondary" disabled={!context || alreadyActive || (needsTarget && !targetId)} onClick={() => actions.playGameplanCard(myTeamId, card.id, context, needsTarget ? targetId : null)}>{alreadyActive ? 'Another Is Active' : context === 'playoff' ? 'Use In Matchup' : context === 'season' ? 'Use Now' : 'Unavailable'}</button>
     </div>
   );
 }
@@ -156,6 +156,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   const [viewMode, setViewMode] = useState('carousel');
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
   useEffect(() => { if (tab !== 'rotation') setViewMenuOpen(false); }, [tab]);
+  const [seasonIssuesOpen, setSeasonIssuesOpen] = useState(false);
   useEffect(() => { setSelectedId(null); setRotationIndex(0); }, [team.id, canEdit]);
   // Mobile's rotation carousel is one card per swipe (starters then bench, in that order —
   // see the JSX below) — this is how many pages it actually has, so the "more cards" chevron
@@ -321,6 +322,15 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   // competing with the horizontal card swipe (see ts-screen-lock in index.css). Only true in
   // the Carousel view — List is a plain scrolling stack, same as every other tab.
   const isRotationLocked = !isDesktop && tab === 'rotation' && viewMode === 'carousel';
+
+  // The Begin Season button always reads "Begin Season" now — what used to be separate button
+  // labels (Hire A Coach, Resolve Budget, ...) are collected here instead and surfaced as a
+  // list on click, so the button itself never changes shape.
+  const seasonIssues = [];
+  if (!team.coach) seasonIssues.push('Hire a coach');
+  if (team.hand.length !== 9) seasonIssues.push(`Resolve your roster (${team.hand.length}/9)`);
+  if (committed > cap) seasonIssues.push('Resolve team budget');
+  if (!team.lineupSet) seasonIssues.push('Set your lineup');
 
   return (
     <>
@@ -552,7 +562,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
 
           {team.market && showSection('office') && (
             <div className="ts-section" id="team-office">
-              <div className="ts-heading">Front Office</div>
+              <div className="ts-heading">Coach & GM</div>
               <div className="row-swipe-wrap">
               <div className={'fo-deal-row' + (foRow.scrolls ? ' row-scroll' : ' row-fit')} style={{ margin: 0 }} onScroll={foRow.scrolls ? foRow.onScroll : undefined}>
                 <div className="ts-fo-col" id="team-coach-card">
@@ -566,7 +576,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                         if (res && res.ok === false) alert(res.msg);
                       }}
                     >
-                      Fire Coach — {formatCoins(fireCoachDeadCap)} Dead Cap
+                      Fire Coach ({formatCoins(fireCoachDeadCap)})
                     </button>
                   )}
                 </div>
@@ -600,7 +610,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                         if (res && res.ok === false) alert(res.msg);
                       }}
                     >
-                      {team.gmChangeSeason === state.season ? 'GM Replaced This Season' : `Fire GM — ${formatCoins(Math.round((gmCost(team.gmType) / 2) * 100) / 100)} Dead Cap`}
+                      {team.gmChangeSeason === state.season ? 'GM Replaced This Season' : `Fire GM (${formatCoins(Math.round((gmCost(team.gmType) / 2) * 100) / 100)})`}
                     </button>
                   )}
                 </div>
@@ -612,7 +622,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
 
           {showStaffCards && (
             <div className="ts-section" id="team-gameplan-cards">
-              <div className="ts-heading">Development Cards</div>
+              <div className="ts-heading">Development</div>
               <div className="row-swipe-wrap">
               <div className={'strategy-deal-row' + (devRow.scrolls ? ' row-scroll' : ' row-fit')} onScroll={devRow.scrolls ? devRow.onScroll : undefined}>
                 {(team.developmentCards || []).map((card) => <div className="strategy-card-wrap" key={card.id}>{readOnly ? <CardBack /> : <><StrategyCard card={card} /><StrategyAction card={card} team={team} state={state} actions={actions} myTeamId={myTeamId} readOnly={readOnly} /></>}</div>)}
@@ -625,7 +635,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
 
           {showStaffCards && (
             <div className="ts-section">
-              <div className="ts-heading">Gameplan Cards</div>
+              <div className="ts-heading">Gameplan</div>
               <div className="row-swipe-wrap">
               <div className={'strategy-deal-row' + (gameplanRow.scrolls ? ' row-scroll' : ' row-fit')} onScroll={gameplanRow.scrolls ? gameplanRow.onScroll : undefined}>
                 {(team.gameplanCards || []).map((card) => <div className="strategy-card-wrap" key={card.id}>{readOnly ? <CardBack /> : <><StrategyCard card={card} /><StrategyAction card={card} team={team} state={state} actions={actions} myTeamId={myTeamId} readOnly={readOnly} /></>}</div>)}
@@ -638,7 +648,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
 
           {(team.matchupCards || []).length > 0 && showStaffCards && (
             <div className="ts-section" id="team-adjustment-cards">
-              <div className="ts-heading">Adjustment Cards</div>
+              <div className="ts-heading">Adjustments</div>
               <div className="row-swipe-wrap">
               <div className={'mu-deal-row' + (adjRow.scrolls ? ' row-scroll' : ' row-fit')} style={{ margin: 0 }} onScroll={adjRow.scrolls ? adjRow.onScroll : undefined}>
                 {team.matchupCards.map((c) => readOnly ? <CardBack key={c.id} shape="adjustment" /> : <MatchupCard key={c.id} card={c} />)}
@@ -689,23 +699,36 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
         {onBack ? (
           <button className="primary" onClick={onBack}>Back</button>
         ) : (
-          <button
-            className="primary"
-            disabled={team.lineupConfirmed}
-            onClick={() => {
-              if (!team.lineupSet) { setTab('chemistry'); setLineupScreenOpen(true); return; }
-              const res = actions.confirmLineup(myTeamId);
-              if (res && res.valid === false) alert(res.msg);
-            }}
-          >
-            {team.lineupConfirmed
-              ? (waitingOn.length > 0 ? `Waiting For ${waitingOn.length} User${waitingOn.length === 1 ? '' : 's'} To Continue` : 'Waiting…')
-              : !team.coach ? 'Hire A Coach'
-              : team.hand.length !== 9 ? `Resolve Roster · ${team.hand.length}/9`
-              : committed > cap ? 'Resolve Budget'
-              : !team.lineupSet ? 'Set Your Lineup'
-              : 'Begin Season'}
-          </button>
+          <div className="bottombar-action">
+            <button
+              className={'primary' + (!team.lineupConfirmed && seasonIssues.length > 0 ? ' needs-attention' : '')}
+              disabled={team.lineupConfirmed}
+              onClick={() => {
+                if (seasonIssues.length > 0) { setSeasonIssuesOpen((v) => !v); return; }
+                const res = actions.confirmLineup(myTeamId);
+                if (res && res.valid === false) alert(res.msg);
+              }}
+            >
+              {team.lineupConfirmed
+                ? (waitingOn.length > 0 ? `Waiting For ${waitingOn.length} User${waitingOn.length === 1 ? '' : 's'} To Continue` : 'Waiting…')
+                : 'Begin Season'}
+              {!team.lineupConfirmed && seasonIssues.length > 0 && <span className="bottombar-warn-icon" aria-hidden="true">!</span>}
+            </button>
+            {seasonIssuesOpen && seasonIssues.length > 0 && (
+              <div className="bottombar-issues">
+                <div className="bottombar-issues-head">Before you begin</div>
+                <ul>
+                  {seasonIssues.map((msg) => (
+                    <li key={msg}>
+                      {msg === 'Set your lineup' ? (
+                        <button type="button" onClick={() => { setSeasonIssuesOpen(false); setTab('chemistry'); setLineupScreenOpen(true); }}>{msg}</button>
+                      ) : msg}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
         )}
       </div>
     </>

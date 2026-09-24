@@ -8,6 +8,7 @@ export default function StrategyCard({ card, children, compact = false }) {
       <div className="strategy-card-description">{card.description}</div>
       {card.kind === 'development' && <div className="strategy-card-rule">One per player career</div>}
       {children && <div className="strategy-card-actions">{children}</div>}
+      {active && <div className="strategy-card-active-stamp" aria-hidden="true">Active</div>}
     </div>
   );
 }

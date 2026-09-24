@@ -34,15 +34,17 @@ test('a permanent Development card changes stats and a player can receive only o
   assert.deepEqual(saved.teams[0].hand[0].development.statChanges, { SCO: 2 });
 });
 
-test('only seeding Gameplan cards can be used for the regular season', () => {
+test('any Gameplan card can be used for the regular season, but only one is active at a time', () => {
   const { state, team, opponent } = fixture();
-  team.gameplanCards = [{ id: 'g1', kind: 'gameplan', name: 'Disrupt Rhythm', target: 'opponent', contexts: ['season', 'playoff'], effects: { offPercent: -6 }, used: false }];
-  assert.equal(playGameplanCard(state, 0, 'g1', 'season', opponent.id).ok, false);
-  assert.equal(team.gameplanCards[0].used, false);
-  team.gameplanCards.push({ id: 'g2', kind: 'gameplan', name: 'Late Season Push', target: 'self', contexts: ['season'], effects: { seedingPercent: 12 }, used: false });
-  assert.equal(playGameplanCard(state, 0, 'g2', 'season').ok, true);
-  assert.equal(team.seasonGameplanEffects.seedingPercent, 12);
+  team.gameplanCards = [
+    { id: 'g1', kind: 'gameplan', name: 'Disrupt Rhythm', target: 'opponent', contexts: ['season', 'playoff'], effects: { offPercent: -6 }, used: false },
+    { id: 'g2', kind: 'gameplan', name: 'Late Season Push', target: 'self', contexts: ['season'], effects: { seedingPercent: 12 }, used: false },
+  ];
+  assert.equal(playGameplanCard(state, 0, 'g1', 'season', opponent.id).ok, true);
+  assert.equal(opponent.seasonGameplanEffects.offPercent, -6);
+  // A second card can't go active while the first one already is, this season.
   assert.equal(playGameplanCard(state, 0, 'g2', 'season').ok, false);
+  assert.equal(team.gameplanCards[1].used, false);
   const old = rehydrateState({ teams: [{ id: 0 }] });
   assert.deepEqual(old.teams[0].developmentCards, []);
   assert.equal(old.teams[0].seasonGameplanEffects.seedingPercent, 0);

@@ -287,6 +287,19 @@ input.text-input.lobby-name-input{min-width:0;margin:0;padding:10px 12px;}
 .banner.bad{background:var(--form);border-color:var(--stamp);color:var(--stamp);}
 
 .bottombar{position:fixed;right:16px;bottom:calc(72px + 16px);z-index:12;background:var(--ink);border:1px solid var(--ink-rule);padding:10px;display:flex;gap:10px;width:auto;max-width:min(420px,calc(100vw - 32px));box-shadow:6px 6px 0 rgba(30,43,71,.16);}
+/* Begin Season always reads "Begin Season" — a blocking issue (no coach, roster incomplete,
+   over budget, lineup not set) shows as a muted button + warning badge instead of changing the
+   label, with the specific list of what's left revealed on click (see TeamSummaryScreen.jsx). */
+.bottombar-action{position:relative;flex:1;display:flex;}
+button.primary.needs-attention{background:var(--ink-rule);color:var(--file);}
+button.primary.needs-attention:hover:not(:disabled){background:var(--depth);}
+.bottombar-warn-icon{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;margin-left:8px;border-radius:50%;background:var(--stamp);color:var(--form);font-family:var(--font-label);font-size:11px;font-weight:700;vertical-align:middle;}
+.bottombar-issues{position:absolute;right:0;bottom:100%;width:max-content;min-width:220px;max-width:min(280px,calc(100vw - 32px));margin-bottom:8px;background:var(--ink-deep);border:1px solid var(--franchise);box-shadow:0 -10px 24px rgba(0,0,0,.4);padding:12px 14px;}
+.bottombar-issues-head{font-family:var(--font-label);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--franchise);margin-bottom:8px;}
+.bottombar-issues ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;}
+.bottombar-issues li{font-family:var(--font-mono);font-size:12px;color:var(--file);}
+.bottombar-issues li::before{content:'• ';color:var(--franchise);}
+.bottombar-issues li button{background:none;border:none;padding:0;color:var(--file);font:inherit;text-decoration:underline;cursor:pointer;}
 .bottombar button{flex:none;min-width:190px;}
 
 /* A corner-docked action button, used in place of the full-width .bottombar where the
@@ -321,6 +334,9 @@ input.text-input.lobby-name-input{min-width:0;margin:0;padding:10px 12px;}
 .persistent-card-count.adjustment{color:var(--stamp);}.persistent-card-count.adjustment b{color:var(--stamp);}
 .persistent-bar-coach{flex:1.35;text-align:left;text-transform:uppercase;overflow:hidden;}
 .persistent-bar-coach span,.persistent-bar-coach small{display:block;font:8px var(--font-mono);letter-spacing:.08em;color:var(--ink-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* A currently-active Gameplan card, flagged right on the Coach slot both bars share — see
+   PersistentBar.jsx / DesktopBar.jsx. */
+.persistent-bar-gameplan-active{display:inline-flex;vertical-align:middle;margin-left:4px;}
 .persistent-bar-coach b{display:block;margin:2px 0 1px;font:18px/1 var(--font-display);font-weight:400;color:var(--franchise);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 button{font-family:var(--font-label);letter-spacing:.05em;}
 button.primary{flex:1;background:var(--franchise);color:var(--ink);border:none;padding:14px;font-size:13px;font-weight:400;text-transform:uppercase;letter-spacing:.1em;transition:background 120ms ease-out;}
@@ -760,7 +776,12 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .ts-tab.active{color:var(--franchise);}
 /* A human must visit Set Lineup at least once each season (see SetLineupScreen.jsx /
    team.lineupSet) — this dot is the only hint of that on the tab bar itself. */
-.ts-tab-dot{display:inline-block;width:6px;height:6px;margin-left:5px;border-radius:50%;background:var(--stamp);vertical-align:middle;}
+.ts-tab-dot{display:inline-block;width:6px;height:6px;margin-left:5px;border-radius:50%;background:var(--stamp);vertical-align:middle;animation:ts-tab-dot-pulse 1.8s ease-in-out infinite;}
+@keyframes ts-tab-dot-pulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(181,67,31,.55);}
+  50%{box-shadow:0 0 4px 3px rgba(181,67,31,.35);}
+}
+@media (prefers-reduced-motion: reduce){.ts-tab-dot{animation:none;}}
 .ts-set-lineup-cta{display:flex;justify-content:flex-end;margin-bottom:-8px;}
 @media (min-width:1000px){.ts-tabbar{display:none;}}
 
@@ -853,8 +874,11 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .ts-metric-value{font-family:var(--font-display);font-size:32px;line-height:.86;color:var(--ink);}
 .ts-metric-value.accent{color:var(--stamp-text);}
 .strategy-deal-row{display:flex;gap:14px;overflow-x:auto;padding-bottom:6px;}
-.strategy-card{min-height:150px;box-sizing:border-box;padding:14px;background:var(--ink);border:2px solid var(--depth);color:var(--file);display:flex;flex-direction:column;}
+.strategy-card{position:relative;overflow:hidden;min-height:150px;box-sizing:border-box;padding:14px;background:var(--ink);border:2px solid var(--depth);color:var(--file);display:flex;flex-direction:column;}
 .strategy-card.development{border-color:var(--approved-file);}.strategy-card.gameplan{border-color:var(--franchise);}.strategy-card.used{opacity:.5;}.strategy-card.gameplan.active{box-shadow:inset 0 0 0 1px var(--franchise);}
+/* A played Gameplan card is "active" until next season's fresh deal resets it — this stamp is
+   the big, unmissable version of that state, on top of the kicker's own "· Active" text. */
+.strategy-card-active-stamp{position:absolute;top:38%;left:50%;transform:translate(-50%,-50%) rotate(-12deg);font-family:var(--font-label);font-size:30px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--approved-ink);border:4px solid var(--approved-ink);padding:4px 18px;white-space:nowrap;pointer-events:none;opacity:.85;}
 .strategy-card-kicker{font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-muted);}.strategy-card-name{font-family:var(--font-display);font-size:25px;line-height:1;margin:12px 0 8px;}.strategy-card-description{font-family:var(--font-mono);font-size:11px;line-height:1.45;}.strategy-card-rule{margin-top:auto;padding-top:12px;font-family:var(--font-mono);font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--approved-file);}
 .strategy-card-wrap{width:240px;flex:0 0 240px;}.strategy-card-action{display:flex;gap:6px;margin-top:8px;}.strategy-card-action select{min-width:0;flex:1;font-family:var(--font-mono);}.strategy-card-action button{padding:8px;white-space:nowrap;}.strategy-empty{font-family:var(--font-mono);font-size:11px;color:var(--file-muted);}
 
@@ -1975,31 +1999,31 @@ body:has(.entry-screen){padding-bottom:0;}
   .ts-player-carousel .ts-roto-grid{gap:0;width:100%;align-items:flex-start;}
   /* Each slot is narrower than the screen by exactly the next card's peek (design ref 5A/
      Screen 05 "The Hand") — scroll-snap still aligns every slot's LEFT edge to the viewport's,
-     so that 42px shortfall shows up as a sliver of the next card on the right, the same swipe
+     so that 30px shortfall shows up as a sliver of the next card on the right, the same swipe
      rule 02 describes. The card fills its slot's width (not a smaller, centered natural
      width) — the earlier "stretched" complaint turned out to be about height (a fixed-height
      frame with natural-height content floating inside it, or a non-uniform scaleY squashing
      it), both fixed separately below; at a fixed width there's nothing left to stretch. */
-  .ts-player-carousel .ts-roto-grid .ts-roto-slot{box-sizing:border-box;width:calc(100vw - 42px);flex:0 0 calc(100vw - 42px);display:flex;scroll-snap-align:start;scroll-snap-stop:always;}
+  .ts-player-carousel .ts-roto-grid .ts-roto-slot{box-sizing:border-box;width:calc(100vw - 30px);flex:0 0 calc(100vw - 30px);display:flex;scroll-snap-align:start;scroll-snap-stop:always;}
   .ts-player-carousel .ts-roto-grid .ts-roto-slot>*{width:100%;max-width:none;margin:0;}
-  /* The last card has no next card to peek at, so reserving 42px for one just leaves the
-     scroll container unable to reach flush-left on it (max scrollLeft caps 42px short of that
+  /* The last card has no next card to peek at, so reserving 30px for one just leaves the
+     scroll container unable to reach flush-left on it (max scrollLeft caps 30px short of that
      card's snap point) — a sliver of the second-to-last card shows instead. Give the last slot
      the full width back so it actually reaches the edge — but the CARD inside stays the same
      width as every other card and simply centers in that extra room, rather than stretching to
      fill it (which made the last card visibly bigger than the rest) or peeking at a next card
      that doesn't exist (the peek tab is gone entirely here too, see TeamSummaryScreen.jsx). */
   .ts-player-carousel .ts-roto-grid > .ts-roto-slot:last-child{width:100%;flex-basis:100%;justify-content:center;}
-  .ts-player-carousel .ts-roto-grid > .ts-roto-slot:last-child>*{width:calc(100vw - 42px);flex-shrink:0;}
+  .ts-player-carousel .ts-roto-grid > .ts-roto-slot:last-child>*{width:calc(100vw - 30px);flex-shrink:0;}
   /* The tab sitting on that peek — pinned to the true viewport edge and spanning the full
      height of the card area (not a small centered pill), matching the reference sketch:
      position:absolute against .ts-roto-viewport now that IT owns the full-bleed edge (see
      above), so top:0/bottom:0 tracks exactly the card area's own height with no viewport-math
      needed. Gone entirely on the last card (see TeamSummaryScreen.jsx) rather than switching to
      a "next tab" state — there's nothing left to peek at. */
-  .ts-hand-peek-tab{position:absolute;top:0;bottom:0;right:0;width:42px;box-sizing:border-box;padding:8px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:var(--ink-deep);border:1px solid var(--franchise);border-right:none;pointer-events:none;z-index:6;}
-  .ts-hand-peek-chevron{font-family:var(--font-display);font-size:20px;line-height:1;color:var(--franchise);}
-  .ts-hand-peek-count{font-family:var(--font-mono);font-size:11px;color:var(--file);}
+  .ts-hand-peek-tab{position:absolute;top:0;bottom:0;right:0;width:30px;box-sizing:border-box;padding:8px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:var(--ink-deep);border:1px solid var(--franchise);border-right:none;pointer-events:none;z-index:6;}
+  .ts-hand-peek-chevron{font-family:var(--font-display);font-size:28px;line-height:1;color:var(--franchise);}
+  .ts-hand-peek-count{font-family:var(--font-mono);font-size:14px;font-weight:600;color:var(--file);}
 
   /* While the Rotation tab is showing, the card IS the screen — no page scroll competing with
      the horizontal card-to-card swipe. The franchise header AND the persistent bar (with its

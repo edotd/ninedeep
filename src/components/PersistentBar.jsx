@@ -15,11 +15,12 @@ const PersistentBar = forwardRef(function PersistentBar({ state, myTeamId, onNav
   const fullyDealt = !inDeal || (dealProgress ?? 0) >= rawHand.length + foTotal + (team.matchupCards || []).length;
   const coachDealt = !inDeal || (dealProgress ?? 0) > rawHand.length;
   const available = (cards) => (fullyDealt ? (cards || []).filter((card) => !card.used).length : 0);
+  const activeGameplan = (team.gameplanCards || []).find((c) => c.used);
 
   return (
     <div className="persistent-bar" ref={ref}>
       <button className="persistent-bar-section persistent-bar-coach" onClick={() => onNavigate('office')}>
-        <span>Coach</span>
+        <span>Coach{activeGameplan && <span className="persistent-bar-gameplan-active" title={`${activeGameplan.name} is active`}><CardTypeMark type="gameplan" size={12} color="var(--franchise)" /></span>}</span>
         <b>{coachDealt ? team.coach?.archetype || 'Open Slot' : 'Pending'}</b>
         {coachDealt && team.coach && <small>{team.coach.modifier}</small>}
       </button>
