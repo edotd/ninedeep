@@ -22,6 +22,24 @@ function findPair(a, b) {
   return SKILLSET_PAIRS.find((p) => p.skills.includes(a.skillsetId) && p.skills.includes(b.skillsetId)) || null;
 }
 
+// team.activeIds has no slot concept at all — it's just an unordered array, and
+// promoteToStarter always appends to its end regardless of which visual court slot was
+// clicked. This reconciles a purely local, 5-entry "which id sits in which slot" array
+// against the real activeIds: ids that are still active keep their existing slot, ids no
+// longer active are cleared, and newly-active ids fill whatever slots are still open. Without
+// this, a card placed into slot 3 could visually land in slot 0 instead, wherever
+// activeIds.length happened to point.
+function reconcileSlots(prevSlots, ids) {
+  const next = prevSlots.map((id) => (id != null && ids.includes(id) ? id : null));
+  for (const id of ids) {
+    if (next.includes(id)) continue;
+    const openIndex = next.indexOf(null);
+    if (openIndex >= 0) next[openIndex] = id;
+  }
+  while (next.length < 5) next.push(null);
+  return next.slice(0, 5);
+}
+
 // A plain half-court diagram — baseline, key, free-throw circle, a corner-to-corner three
 // point arc, and the center line/circle at the far edge — decorative flavor rather than a
 // regulation-accurate court, drawn once at a fixed viewBox that matches .slf-court's own
@@ -81,8 +99,15 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
   }, []);
 
   const activeIds = team.activeIds || [];
-  const starters = activeIds.map((id) => team.hand.find((c) => c.id === id) || null);
-  while (starters.length < 5) starters.push(null);
+  const [slotOrder, setSlotOrder] = useState([null, null, null, null, null]);
+  // Reconcile whenever the actual SET of starters changes (order-independent key) — covers
+  // both this component's own actions and any external change (e.g. clearLineup on mount).
+  const activeIdsSetKey = activeIds.slice().sort().join(',');
+  useEffect(() => {
+    setSlotOrder((prev) => reconcileSlots(prev, activeIds));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeIdsSetKey]);
+  const starters = slotOrder.map((id) => (id ? team.hand.find((c) => c.id === id) || null : null));
   const bench = team.hand.filter((c) => !activeIds.includes(c.id));
   const [selectedId, setSelectedId] = useState(null);
 
@@ -130,35 +155,45 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
 
   // A five-only swapStarter can't place someone while a slot is genuinely empty (still being
   // built up from nothing) — fall back to demote-then-promote, the same two calls
-  // swapStarter itself would otherwise make atomically.
+  // swapStarter itself would otherwise make atomically. Returns whether it actually succeeded,
+  // so the caller only commits the visual slot change (see reconcileSlots above) once the real
+  // game state agrees.
   const placeIncoming = (incomingId, occupant) => {
     if (!occupant) {
       const res = actions.promoteToStarter(myTeamId, incomingId);
-      if (res && res.ok === false) alert(res.msg);
-      return;
+      if (res && res.ok === false) { alert(res.msg); return false; }
+      return true;
     }
     if (activeIds.length === 5) {
       const res = actions.swapStarter(myTeamId, occupant.id, incomingId);
-      if (res && res.ok === false) alert(res.msg);
-      return;
+      if (res && res.ok === false) { alert(res.msg); return false; }
+      return true;
     }
     actions.demoteStarter(myTeamId, occupant.id);
     actions.promoteToStarter(myTeamId, incomingId);
+    return true;
   };
 
   const placeOnSlot = (slotIndex) => {
     if (!canEdit || selectedId == null || activeIds.includes(selectedId)) { setSelectedId(null); return; }
     const incomingId = selectedId;
+    const occupant = starters[slotIndex];
     setSelectedId(null);
-    placeIncoming(incomingId, starters[slotIndex]);
+    if (placeIncoming(incomingId, occupant)) {
+      setSlotOrder((prev) => { const next = [...prev]; next[slotIndex] = incomingId; return next; });
+    }
   };
 
   const handleBenchClick = (card) => {
     if (!canEdit) return;
     if (selectedId != null && activeIds.includes(selectedId)) {
-      const outgoing = starters.find((c) => c?.id === selectedId);
+      const outgoingId = selectedId;
+      const outgoingIndex = slotOrder.indexOf(outgoingId);
+      const outgoing = starters[outgoingIndex];
       setSelectedId(null);
-      placeIncoming(card.id, outgoing);
+      if (placeIncoming(card.id, outgoing) && outgoingIndex >= 0) {
+        setSlotOrder((prev) => { const next = [...prev]; next[outgoingIndex] = card.id; return next; });
+      }
       return;
     }
     holdCard(card.id);
@@ -168,7 +203,9 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
     if (!canEdit) return;
     setSelectedId(null);
     const res = actions.demoteStarter(myTeamId, card.id);
-    if (res && res.ok === false) alert(res.msg);
+    if (res && res.ok === false) { alert(res.msg); return; }
+    const idx = slotOrder.indexOf(card.id);
+    if (idx >= 0) setSlotOrder((prev) => { const next = [...prev]; next[idx] = null; return next; });
   };
 
   const handleSave = () => {
