@@ -12,7 +12,7 @@ export default function WelcomeScreen({ onContinue }) {
         <div className="welcome-copy">
           <div className="welcome-label">Era Briefing</div>
           <h1>Welcome to Nine Deep.</h1>
-          <p>Use player, coach, GM, and other supplemental cards to build a cohesive unit compete for championships. The player with the most championships at the end of the era wins the game.</p>
+          <p>Use player, coach and GM cards to build a cohesive unit and compete for championships. Use Gameplan, Development and Adjustment cards to maximize your team's output in both the regular season and playoffs. The player with the most championships at the end of the era wins the game.</p>
           <button type="button" className="primary welcome-continue" onClick={onContinue}>Continue</button>
         </div>
       </section>
