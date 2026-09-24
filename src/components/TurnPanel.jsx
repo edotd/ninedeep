@@ -140,12 +140,12 @@ function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, gameplan
             {hasGameplan
               ? gameplanPlays.map((entry, i) => (
                 <div className="t2-gameplan-mini" key={`${entry.teamName}-${entry.cardName}-${i}`} title={entry.card ? `${entry.card.name} — ${entry.description}` : entry.cardName}>
-                  <CardTypeMark type="gameplan" size={20} />
+                  <CardTypeMark type="gameplan" size={60} />
                 </div>
               ))
               : (
                 <div className={'t2-gameplan-mini empty' + (gameplanCanPlay ? ' pulsing' : '')} aria-hidden="true">
-                  <CardTypeMark type="gameplan" size={14} />
+                  <CardTypeMark type="gameplan" size={42} />
                   <span className="t2-mini-plus">+</span>
                 </div>
               )}
@@ -154,7 +154,7 @@ function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, gameplan
             {hasAdjustment
               ? cardPlays.map((entry, i) => (
                 <div className="t2-adjustment-mini" key={`${entry.stepIndex}-${entry.teamName}-${entry.cardName}-${i}`} title={entry.card ? `${entry.card.name} — ${entry.description}` : entry.cardName}>
-                  <CardTypeMark type="adjustment" size={16} />
+                  <CardTypeMark type="adjustment" size={48} />
                 </div>
               ))
               : (
@@ -166,7 +166,7 @@ function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, gameplan
                   aria-label={adjustmentCanPlay ? 'Play an Adjustment card' : undefined}
                   aria-hidden={!adjustmentCanPlay}
                 >
-                  <CardTypeMark type="adjustment" size={12} />
+                  <CardTypeMark type="adjustment" size={36} />
                   <span className="t2-mini-plus">+</span>
                 </button>
               )}

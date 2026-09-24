@@ -1048,24 +1048,26 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .t2-team-role.defense{color:var(--file);background:transparent;border:2px solid var(--franchise);padding:3px 7px;}
 .t2-teamboard-status{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--ink-muted);text-transform:uppercase;}
 .t2-teamboard.active .t2-teamboard-status{color:var(--franchise);}
-.t2-gameplan-dock,.t2-adjustment-dock{display:flex;align-items:center;justify-content:center;gap:5px;max-width:100%;flex-wrap:wrap;animation:t2-dock-arrive 180ms ease-out both;}
+.t2-gameplan-dock,.t2-adjustment-dock{display:flex;align-items:center;justify-content:center;gap:8px;max-width:100%;flex-wrap:wrap;animation:t2-dock-arrive 180ms ease-out both;}
 /* Played Gameplan/Adjustment cards show as a plain icon badge (clipboard / X's-and-O's, see
    CardTypeMark) rather than an illegibly tiny scaled-down card — the point was always just "a
    card of this type got played here," and the icon says that in a fraction of the space, with
    the card's own name/effect available on hover via the native title tooltip. An empty slot
    (nothing played yet) shows the same icon dimmed with a "+" over it, and pulses when the
-   viewer's own team actually has an eligible card to play (see TurnPanel's *CanPlayFor). */
-.t2-adjustment-mini{width:26px;height:26px;box-sizing:border-box;position:relative;display:flex;align-items:center;justify-content:center;border:1px solid var(--franchise);background:var(--ink-deep);color:var(--franchise);padding:0;font:inherit;cursor:default;}
+   viewer's own team actually has an eligible card to play (see TurnPanel's *CanPlayFor). Sized
+   3x their original footprint (was 26px/30px) so they read as real, deliberate slots on the
+   board rather than a footnote next to the team name. */
+.t2-adjustment-mini{width:78px;height:78px;box-sizing:border-box;position:relative;display:flex;align-items:center;justify-content:center;border:2px solid var(--franchise);background:var(--ink-deep);color:var(--franchise);padding:0;font:inherit;cursor:default;}
 button.t2-adjustment-mini.empty.pulsing{cursor:pointer;}
 .t2-coach-dock{display:flex;align-items:center;gap:5px;min-width:0;max-width:100%;position:relative;z-index:5;}
 .t2-coach-dock .nd2-coach-slot{min-width:0;flex:1 1 160px;}
 .t2-teamboard.flip .t2-coach-dock{flex-direction:row-reverse;}
-.t2-gameplan-mini{width:30px;height:30px;box-sizing:border-box;position:relative;display:flex;align-items:center;justify-content:center;border:1px solid var(--franchise);background:var(--ink);color:var(--franchise);}
+.t2-gameplan-mini{width:90px;height:90px;box-sizing:border-box;position:relative;display:flex;align-items:center;justify-content:center;border:2px solid var(--franchise);background:var(--ink);color:var(--franchise);}
 .t2-gameplan-mini.empty,.t2-adjustment-mini.empty{border-style:dashed;border-color:var(--ink-rule);background:none;}
 .t2-gameplan-mini.empty svg,.t2-adjustment-mini.empty svg{opacity:.4;}
-.t2-mini-plus{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-label);font-size:14px;font-weight:700;color:var(--franchise);}
+.t2-mini-plus{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-label);font-size:42px;font-weight:700;color:var(--franchise);}
 .t2-gameplan-mini.empty.pulsing,.t2-adjustment-mini.empty.pulsing{border-style:solid;border-color:var(--franchise);animation:t2-mini-pulse 1.8s ease-in-out infinite;}
-@keyframes t2-mini-pulse{0%,100%{box-shadow:0 0 0 0 rgba(240,160,61,.6);}50%{box-shadow:0 0 0 6px rgba(240,160,61,0);}}
+@keyframes t2-mini-pulse{0%,100%{box-shadow:0 0 0 0 rgba(240,160,61,.6);}50%{box-shadow:0 0 0 16px rgba(240,160,61,0);}}
 @media(prefers-reduced-motion:reduce){.t2-gameplan-mini.empty.pulsing,.t2-adjustment-mini.empty.pulsing{animation:none;}}
 @keyframes t2-dock-arrive{from{opacity:0;transform:scale(1.35);}to{opacity:1;transform:scale(1);}}
 
@@ -2179,7 +2181,8 @@ body:has(.entry-screen){padding-bottom:0;}
   .mobile-shell:has(.t2-shell) .nd2-coach-head span:last-child,.mobile-shell:has(.t2-shell) .nd2-coach-desc,.mobile-shell:has(.t2-shell) .nd2-coach-foot{display:none;}
   .mobile-shell:has(.t2-shell) .nd2-coach-body{padding:6px;}
   .mobile-shell:has(.t2-shell) .nd2-coach-name{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .mobile-shell:has(.t2-shell) .t2-gameplan-mini{width:24px;height:24px;}
+  .mobile-shell:has(.t2-shell) .t2-card-docks{flex-wrap:wrap;row-gap:6px;}
+  .mobile-shell:has(.t2-shell) .t2-gameplan-mini{width:72px;height:72px;}
   .mobile-shell:has(.t2-shell) .t2-teamboard-name{gap:2px;}
   .mobile-shell:has(.t2-shell) .t2-teamboard-name-line{gap:6px;}
   /* Wraps instead of truncating — the flanking coach/gameplan columns leave the center column
@@ -2189,7 +2192,7 @@ body:has(.entry-screen){padding-bottom:0;}
   .mobile-shell:has(.t2-shell) .t2-team-role{font-size:11px;padding:4px 6px;}
   .mobile-shell:has(.t2-shell) .t2-teamboard-status{font-size:8px;}
   .mobile-shell:has(.t2-shell) .t2-hca-tag{font-size:7px;padding:2px 5px;}
-  .mobile-shell:has(.t2-shell) .t2-adjustment-mini{width:22px;height:22px;}
+  .mobile-shell:has(.t2-shell) .t2-adjustment-mini{width:66px;height:66px;}
   .mobile-shell:has(.t2-shell) .t2-rollzone{flex:1;min-height:0;padding:4px 8px;gap:4px;overflow:hidden;}
   .mobile-shell:has(.t2-shell) .t2-rollzone-dual{gap:4px;}
   .mobile-shell:has(.t2-shell) .t2-rollzone-caption{font-size:9px;line-height:1.15;}
