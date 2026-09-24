@@ -23,6 +23,7 @@ export const actionMap = {
   clearLineup: engine.clearLineup,
   swapStarter: engine.swapStarter,
   promoteToStarter: engine.promoteToStarter,
+  demoteStarter: engine.demoteStarter,
   beginPlayoffs: engine.beginPlayoffs,
   toggleAdvantage: engine.toggleAdvantage,
   rollCurrentMatchup: engine.rollCurrentMatchup,

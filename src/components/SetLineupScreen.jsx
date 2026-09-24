@@ -42,18 +42,21 @@ function CourtLines() {
   );
 }
 
-function MiniCard({ card, selected, onClick, dim }) {
+function MiniCard({ card, selected, onClick, onRemove, dim }) {
   if (!card) {
     return <button type="button" className="slf-card slf-card-empty" onClick={onClick} disabled={!onClick}><span>+</span></button>;
   }
   const skillset = skillsetFor(card);
   return (
-    <button type="button" className={'slf-card' + (selected ? ' selected' : '') + (dim ? ' dim' : '')} onClick={onClick} disabled={!onClick}>
-      <span className="slf-card-top"><span className="slf-card-pos">{card.position}</span><span className="slf-card-grade">{playerGrade(card)}</span></span>
-      <span className="slf-card-num">#{jerseyNumber(card)}</span>
-      <span className="slf-card-name">{card.archetype}</span>
-      <span className="slf-card-skill">{skillset?.name || 'No Skillset'}</span>
-    </button>
+    <div className="slf-card-wrap">
+      <button type="button" className={'slf-card' + (selected ? ' selected' : '') + (dim ? ' dim' : '')} onClick={onClick} disabled={!onClick}>
+        <span className="slf-card-top"><span className="slf-card-pos">{card.position}</span><span className="slf-card-grade">{playerGrade(card)}</span></span>
+        <span className="slf-card-num">#{jerseyNumber(card)}</span>
+        <span className="slf-card-name">{card.archetype}</span>
+        <span className="slf-card-skill">{skillset?.name || 'No Skillset'}</span>
+      </button>
+      {onRemove && <button type="button" className="slf-card-remove" onClick={onRemove} aria-label={`Remove ${card.archetype} from the lineup`}>−</button>}
+    </div>
   );
 }
 
@@ -116,28 +119,55 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
 
   const synergy = teamSynergy(team);
 
-  // Same select-then-place model as the Rotation tab: hold a card by tapping it, then tap
-  // either a court starter or a bench card to trade places with it. While the five is still
-  // being built up from empty, a bare tap on any bench card just fills the next open slot
-  // (promoteToStarter already handles activeIds under 5 one at a time) — so simply tapping
-  // hand cards in order is enough to build the five without a separate "pick a slot" step.
-  const handlePick = (card) => {
+  // Click to hold a card (bench or court), click again to release it, click a different card
+  // in the same group to switch which one is held. A held card is placed by clicking the
+  // OTHER group next — a bench card onto a court slot (empty or occupied), or a starter onto
+  // a bench card. Nothing happens instantly on a single click; placing always takes two.
+  const holdCard = (cardId) => {
     if (!canEdit) return;
-    const isStarter = activeIds.includes(card.id);
-    if (activeIds.length < 5 && !isStarter) {
-      setSelectedId(null);
-      const res = actions.promoteToStarter(myTeamId, card.id);
+    setSelectedId((cur) => (cur === cardId ? null : cardId));
+  };
+
+  // A five-only swapStarter can't place someone while a slot is genuinely empty (still being
+  // built up from nothing) — fall back to demote-then-promote, the same two calls
+  // swapStarter itself would otherwise make atomically.
+  const placeIncoming = (incomingId, occupant) => {
+    if (!occupant) {
+      const res = actions.promoteToStarter(myTeamId, incomingId);
       if (res && res.ok === false) alert(res.msg);
       return;
     }
-    if (selectedId == null) { setSelectedId(card.id); return; }
-    if (selectedId === card.id) { setSelectedId(null); return; }
-    const selectedIsStarter = activeIds.includes(selectedId);
-    if (selectedIsStarter === isStarter) { setSelectedId(card.id); return; }
-    const outgoingId = selectedIsStarter ? selectedId : card.id;
-    const incomingId = selectedIsStarter ? card.id : selectedId;
+    if (activeIds.length === 5) {
+      const res = actions.swapStarter(myTeamId, occupant.id, incomingId);
+      if (res && res.ok === false) alert(res.msg);
+      return;
+    }
+    actions.demoteStarter(myTeamId, occupant.id);
+    actions.promoteToStarter(myTeamId, incomingId);
+  };
+
+  const placeOnSlot = (slotIndex) => {
+    if (!canEdit || selectedId == null || activeIds.includes(selectedId)) { setSelectedId(null); return; }
+    const incomingId = selectedId;
     setSelectedId(null);
-    const res = actions.swapStarter(myTeamId, outgoingId, incomingId);
+    placeIncoming(incomingId, starters[slotIndex]);
+  };
+
+  const handleBenchClick = (card) => {
+    if (!canEdit) return;
+    if (selectedId != null && activeIds.includes(selectedId)) {
+      const outgoing = starters.find((c) => c?.id === selectedId);
+      setSelectedId(null);
+      placeIncoming(card.id, outgoing);
+      return;
+    }
+    holdCard(card.id);
+  };
+
+  const handleRemove = (card) => {
+    if (!canEdit) return;
+    setSelectedId(null);
+    const res = actions.demoteStarter(myTeamId, card.id);
     if (res && res.ok === false) alert(res.msg);
   };
 
@@ -148,46 +178,40 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
   };
 
   return (
-    <div className="tsx-overlay" role="dialog" aria-modal="true" aria-label="Set The Rotation">
+    <div className="tsx-overlay" role="dialog" aria-modal="true" aria-label="Your Lineup">
       <div className="slf-panel">
         <div className="slf-head">
-          <div>
-            <div className="slf-eyebrow">Set The Rotation</div>
-            <h2 className="slf-title">The Floor</h2>
-          </div>
+          <h2 className="slf-title">Your Lineup</h2>
           <div className="slf-synergy-totals">
-            <span className="off">OFF +{synergy.skillOffense}</span>
-            <span className="def">DEF +{synergy.skillDefense}</span>
+            <span className="off">Offense +{synergy.skillOffense}</span>
+            <span className="def">Defense +{synergy.skillDefense}</span>
           </div>
         </div>
 
         <p className="slf-note">{canEdit ? 'Set your lineup. Lines between players show how pairings affect your team’s offense and/or defense.' : 'Your lineup. Lines between players show how pairings affect your team’s offense and/or defense.'}</p>
 
         <div className="slf-columns">
-          <div className="slf-court" ref={courtRef}>
-            <CourtLines />
-            <svg className="slf-wire-svg">
-              {wires.map((w) => <line key={w.id} x1={w.x1} y1={w.y1} x2={w.x2} y2={w.y2} className={'slf-wire ' + w.pair.side} />)}
-            </svg>
-            {wires.map((w) => (
-              <div key={w.id} className={'slf-wire-badge ' + w.pair.side} style={{ left: (w.x1 + w.x2) / 2, top: (w.y1 + w.y2) / 2 }}>
-                {w.pair.name} +{w.pair.percent}% {w.pair.side === 'offense' ? 'OFF' : 'DEF'}
-              </div>
-            ))}
-            {COURT_SLOTS.map((pos, i) => (
-              <div className="slf-slot" style={{ left: pos.left, top: pos.top }} key={i} ref={(el) => { slotRefs.current[i] = el; }}>
-                <MiniCard card={starters[i]} selected={starters[i] && selectedId === starters[i].id} onClick={canEdit && starters[i] ? () => handlePick(starters[i]) : undefined} />
-              </div>
-            ))}
-          </div>
-
-          <div className="slf-sideline">
-            <div className="slf-bench">
-              <div className="slf-microlabel">Bench</div>
-              <div className="slf-bench-row">
-                {bench.map((c) => <MiniCard key={c.id} card={c} selected={selectedId === c.id} onClick={canEdit ? () => handlePick(c) : undefined} dim />)}
-                {bench.length === 0 && <span className="slf-bench-empty">No bench players.</span>}
-              </div>
+          <div className="slf-court-col">
+            <div className="slf-court" ref={courtRef}>
+              <CourtLines />
+              <svg className="slf-wire-svg">
+                {wires.map((w) => <line key={w.id} x1={w.x1} y1={w.y1} x2={w.x2} y2={w.y2} className={'slf-wire ' + w.pair.side} />)}
+              </svg>
+              {wires.map((w) => (
+                <div key={w.id} className={'slf-wire-badge ' + w.pair.side} style={{ left: (w.x1 + w.x2) / 2, top: (w.y1 + w.y2) / 2 }}>
+                  {w.pair.name} +{w.pair.percent}% {w.pair.side === 'offense' ? 'OFF' : 'DEF'}
+                </div>
+              ))}
+              {COURT_SLOTS.map((pos, i) => (
+                <div className="slf-slot" style={{ left: pos.left, top: pos.top }} key={i} ref={(el) => { slotRefs.current[i] = el; }}>
+                  <MiniCard
+                    card={starters[i]}
+                    selected={starters[i] && selectedId === starters[i].id}
+                    onClick={canEdit ? () => (starters[i] && selectedId == null ? holdCard(starters[i].id) : placeOnSlot(i)) : undefined}
+                    onRemove={canEdit && starters[i] ? () => handleRemove(starters[i]) : undefined}
+                  />
+                </div>
+              ))}
             </div>
             {team.coach && (
               <div className="slf-coach">
@@ -195,6 +219,16 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
                 <div className="slf-coach-name">{team.coach.archetype}</div>
               </div>
             )}
+          </div>
+
+          <div className="slf-sideline">
+            <div className="slf-bench">
+              <div className="slf-microlabel">Bench</div>
+              <div className="slf-bench-row">
+                {bench.map((c) => <MiniCard key={c.id} card={c} selected={selectedId === c.id} onClick={canEdit ? () => handleBenchClick(c) : undefined} dim />)}
+                {bench.length === 0 && <span className="slf-bench-empty">No bench players.</span>}
+              </div>
+            </div>
           </div>
         </div>
 

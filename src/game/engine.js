@@ -349,6 +349,20 @@ export function swapStarter(state, teamIdx, outgoingId, incomingId) {
   return { ok: true };
 }
 
+// Sends a starter back to the bench with no incoming replacement — the minus button on the
+// Set Lineup screen's court slots. Symmetrical to promoteToStarter below; together the two
+// let a slot go starter -> empty -> (a different) starter without ever needing a full five to
+// route through swapStarter.
+export function demoteStarter(state, teamIdx, outgoingId) {
+  const team = state.teams[teamIdx];
+  if (!team || !team.activeIds) return { ok: false, msg: 'Nothing to bench yet.' };
+  if (!team.activeIds.includes(outgoingId)) return { ok: false, msg: 'That player is not a starter.' };
+  const inLiveMatch = state.playoff && state.playoff.matches.some((m) => m.turn && !m.result && (m.a === team || m.b === team));
+  if (inLiveMatch) return { ok: false, msg: "Can't change your lineup mid-match." };
+  team.activeIds = team.activeIds.filter((id) => id !== outgoingId);
+  return { ok: true };
+}
+
 // Fills an open starting slot directly (no outgoing player) — the case swapStarter can't
 // handle, since it always trades one active id for one bench id and refuses to run at all
 // once activeIds.length !== 5. That gap opens up after releasePlayer cuts an active starter:
