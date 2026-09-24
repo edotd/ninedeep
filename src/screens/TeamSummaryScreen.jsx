@@ -156,7 +156,6 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   const [viewMode, setViewMode] = useState('carousel');
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
   useEffect(() => { if (tab !== 'rotation') setViewMenuOpen(false); }, [tab]);
-  const [seasonIssuesOpen, setSeasonIssuesOpen] = useState(false);
   useEffect(() => { setSelectedId(null); setRotationIndex(0); }, [team.id, canEdit]);
   // Mobile's rotation carousel is one card per swipe (starters then bench, in that order —
   // see the JSX below) — this is how many pages it actually has, so the "more cards" chevron
@@ -332,7 +331,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   if (!team.coach) seasonIssues.push('Hire a coach');
   if (team.hand.length !== 9) seasonIssues.push(`Resolve your roster (${team.hand.length}/9)`);
   if (committed > cap) seasonIssues.push('Resolve team budget');
-  if (!team.lineupSet) seasonIssues.push('Set your lineup');
+  if (!team.lineupSet || starters.length !== 5) seasonIssues.push('Set your lineup');
 
   return (
     <>
@@ -708,9 +707,8 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           <div className="bottombar-action">
             <button
               className={'primary' + (!team.lineupConfirmed && seasonIssues.length > 0 ? ' needs-attention' : '')}
-              disabled={team.lineupConfirmed}
+              disabled={team.lineupConfirmed || seasonIssues.length > 0}
               onClick={() => {
-                if (seasonIssues.length > 0) { setSeasonIssuesOpen((v) => !v); return; }
                 const res = actions.confirmLineup(myTeamId);
                 if (res && res.valid === false) alert(res.msg);
               }}
@@ -720,18 +718,18 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                 : 'Begin Season'}
               {!team.lineupConfirmed && seasonIssues.length > 0 && <span className="bottombar-warn-icon" aria-hidden="true">!</span>}
             </button>
-            {seasonIssuesOpen && seasonIssues.length > 0 && (
+            {!team.lineupConfirmed && seasonIssues.length > 0 && (
               <div className="bottombar-issues">
                 <div className="bottombar-issues-head">Before you begin</div>
                 <ul>
                   {seasonIssues.map((msg) => (
                     <li key={msg}>
                       {msg === 'Set your lineup' ? (
-                        <button type="button" onClick={() => { setSeasonIssuesOpen(false); setTab('chemistry'); setLineupScreenOpen(true); }}>{msg}</button>
+                        <button type="button" onClick={() => { setTab('chemistry'); setLineupScreenOpen(true); }}>{msg}</button>
                       ) : msg === 'Resolve team budget' ? (
-                        <button type="button" onClick={() => { setSeasonIssuesOpen(false); setTab('ledger'); }}>{msg}</button>
+                        <button type="button" onClick={() => setTab('ledger')}>{msg}</button>
                       ) : msg.startsWith('Resolve your roster') ? (
-                        <button type="button" onClick={() => { setSeasonIssuesOpen(false); onFreeAgency?.(); }}>{msg}</button>
+                        <button type="button" onClick={() => onFreeAgency?.()}>{msg}</button>
                       ) : msg}
                     </li>
                   ))}

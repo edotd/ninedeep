@@ -121,6 +121,20 @@ test('a team cannot re-sign a player it released until the following season', ()
   assert.equal(signFreeAgent(state, secondPlayer.id, team.id).ok, true);
 });
 
+test('releasing a starter reopens lineup review and blocks the season', () => {
+  const state = newEraState();
+  startEra(state, 'Test');
+  const team = state.teams[0];
+  team.seasonCap = 999;
+  assert.equal(markLineupSet(state, team.id).valid, true);
+  const starterId = team.activeIds[0];
+  assert.equal(releasePlayer(state, team.id, starterId).ok, true);
+  assert.equal(team.lineupSet, false);
+  assert.equal(team.lineupConfirmed, false);
+  assert.equal(team.activeIds.length, 4);
+  assert.match(confirmLineup(state, team.id).msg, /Resolve your roster/);
+});
+
 test('season start rejects partial and over-budget human rosters', () => {
   const state = newEraState();
   const cards = Array.from({ length: 9 }, (_, i) => ({ id: `p${i}`, position: ['Guard', 'Forward', 'Big'][i % 3], salary: 2 }));

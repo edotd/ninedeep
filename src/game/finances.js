@@ -100,6 +100,10 @@ export function releasePlayer(state, teamIdx, cardId) {
   const wasStarter = team.activeIds?.includes(cardId);
   team.hand.splice(idx, 1);
   if (team.activeIds) team.activeIds = team.activeIds.filter((id) => id !== cardId);
+  if (wasStarter) {
+    team.lineupSet = false;
+    team.lineupConfirmed = false;
+  }
   addDeadCap(team, card.salary / 2, card.contract, {
     kind: 'player',
     label: card.archetype,
