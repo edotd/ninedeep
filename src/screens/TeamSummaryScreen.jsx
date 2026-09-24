@@ -218,9 +218,8 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   // Swipe anywhere in the body to move between tabs, on any tab except Rotation (that one
   // already owns left/right for its own card-to-card carousel, including the hand-off into
   // Chemistry past the last card — see handleRotationTouchStart/End above). Bails out for a
-  // touch that starts inside .ts-roto-scroll (Rotation's own carousel, reachable here via
-  // bubbling since these handlers are always attached) or .development-picker (its card grid
-  // wraps rather than scrolls, so a drag there is easily misread as a tab swipe) — an earlier
+  // touch that starts inside a child modal or horizontal scroller (their gestures belong to
+  // that surface, even though they bubble through this body handler) — an earlier
   // version tried gating this by requiring the touch to START within ~32px of the screen edge
   // instead, which also blocked the ordinary case of swiping back to Rotation from the middle
   // of the Chemistry tab, where nothing actually conflicts.
@@ -248,7 +247,10 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, isDesktop, team.market]);
   const handleBodyTouchStart = (event) => {
-    if (event.target.closest('.ts-roto-scroll') || event.target.closest('.development-picker')) {
+    const ownsHorizontalGesture = event.target.closest(
+      '.ts-roto-scroll, .development-picker, .tsx-overlay, .row-scroll, .strategy-deal-row, .ts-cost-blocks',
+    );
+    if (ownsHorizontalGesture) {
       bodyTouchStartX.current = null;
       return;
     }
