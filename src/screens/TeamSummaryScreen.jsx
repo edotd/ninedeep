@@ -367,7 +367,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           {team.market && (
             <button className={'ts-tab' + (tab === 'office' ? ' active' : '')} onClick={() => setTab('office')}>Staff & Gameplan</button>
           )}
-          <button className={'ts-tab' + (tab === 'ledger' ? ' active' : '')} onClick={() => setTab('ledger')}>Ledger</button>
+          <button className={'ts-tab' + (tab === 'ledger' ? ' active' : '')} onClick={() => setTab('ledger')}>Budget</button>
           {!isDesktop && <span className="ts-tab-underline" ref={underlineRef} aria-hidden="true" />}
         </div>
 
@@ -501,7 +501,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           {showSection('ledger') && (
             <div className="ts-section ts-ledger">
               <div className="ts-ledger-topline">
-                <div><div className="ts-heading">Budget Ledger</div><strong>{formatCoins(committed)} / {formatCoins(cap)}</strong></div>
+                <div><div className="ts-heading">Budget</div><strong>{formatCoins(committed)} / {formatCoins(cap).replace('🪙', '')}</strong></div>
                 <div className={'ts-ledger-room' + (room < 0 ? ' bad' : '')}><span>Room Available</span><strong>{formatCoins(room)}</strong></div>
               </div>
               <div className="ts-budget-bar">
