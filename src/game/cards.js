@@ -76,7 +76,7 @@ export function makeCard(state, archName, position, tier, forcedCareerStage = nu
     stats[k] = v;
     total += v;
   });
-  const contract = Math.max(1, rollWithVariance(shaper.contract, 1));
+  const contract = Math.max(1, rollWithVariance(shaper.contract, shaper.contractVariance ?? 1));
   const contractDeviation = shaper.contract - contract; // positive = shorter than typical for this shaper
   let salary = statsToCoins(total) * (1 + contractDeviation * 0.15);
   salary = Math.max(MIN_PLAYER_SALARY, Math.round(salary * 4) / 4);

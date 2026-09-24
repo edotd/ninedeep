@@ -34,7 +34,7 @@ test('hands-off bonus follows coach and complete starting-five continuity', () =
 
 test('firing a GM draws type and market together, leaves one season of dead cap, and is once per season', () => {
   const team = { id: 0, gmType: 'Neutral', market: { name: 'Small', capAdj: 0.5 }, seasonCap: 20, attendance: 0.5, hand: [], coach: { salary: 0 } };
-  const state = { season: 2, teams: [team] };
+  const state = { season: 2, teams: [team], settings: { coachChangesEnabled: true } };
   const outgoingCost = gmCost(team.gmType);
   const result = fireGM(state, 0);
   assert.equal(result.ok, true);

@@ -5,6 +5,7 @@ export default function EraSettingsFields({ settings, actions }) {
   const winCondition = settings.winCondition || 'bar';
   const matchupCardsEnabled = settings.matchupCardsEnabled !== false;
   const fanbaseCardsEnabled = settings.fanbaseCardsEnabled !== false;
+  const coachChangesEnabled = settings.coachChangesEnabled === true;
   return (
     <>
       <div className="pull-slot">
@@ -70,6 +71,26 @@ export default function EraSettingsFields({ settings, actions }) {
           </button>
         </div>
         <div className="pull-extra">When on, every team gets a Fanbase archetype and seasonal mod affecting attendance and budget. Turning this off skips dealing them entirely — no Fanbase card in Front Office, no attendance effects.</div>
+      </div>
+      <div className="pull-slot">
+        <div className="pull-label">Coach &amp; GM Changes</div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            className={coachChangesEnabled ? 'primary' : 'secondary'}
+            style={{ flex: 1, padding: '10px 6px', fontSize: 13 }}
+            onClick={() => actions.updateSettings({ coachChangesEnabled: true })}
+          >
+            On
+          </button>
+          <button
+            className={!coachChangesEnabled ? 'primary' : 'secondary'}
+            style={{ flex: 1, padding: '10px 6px', fontSize: 13 }}
+            onClick={() => actions.updateSettings({ coachChangesEnabled: false })}
+          >
+            Off
+          </button>
+        </div>
+        <div className="pull-extra">When off (the default), nobody can fire a coach or GM and free-agent coaches never appear — every team keeps its opening-era coach and GM all era. Turn this on to allow firing and hiring coaches and GMs mid-era.</div>
       </div>
     </>
   );

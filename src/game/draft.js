@@ -4,28 +4,33 @@ import { makeCard, randomArch, randomArchForTier, cardTotal, neededPosition } fr
 import { autoSelectFive } from './roster';
 import { startNewSeasonRoster } from './season';
 import { recordFreeAgencyActivity } from './freeAgencyActivity';
+import { shuffle } from './rng';
 
 // Extra cards beyond the one selection per team, so there's real choice (and something
 // worth trading for) at the draft table.
 const DRAFT_POOL_PADDING = 5;
 
-function pickWeightedTier(pool) {
-  const total = pool.reduce((s, t) => s + t.count, 0);
-  let r = Math.random() * total;
-  for (const t of pool) {
-    if (r < t.count) return t;
-    r -= t.count;
-  }
-  return pool[pool.length - 1];
+// TIERS' `count` is each tier's actual quantity in a class, not a per-pick probability weight —
+// a fixed bag of exactly 7 Role Player / 4 Journeyman / 4 High IQ / 4 Hustler / 2 Generational
+// Talent (21 cards) shuffled and drawn from without replacement. Drawing each pick independently
+// with `count` as a weight (the previous approach) gave the same ~9.5% average odds per
+// Generational Talent slot, but with no cap — a class could occasionally draw three, four, or
+// more by chance, when the whole point of "2 Generational Talents" is that there are only ever
+// two to be had.
+function buildTierBag() {
+  const bag = TIERS.flatMap((tier) => Array(tier.count).fill(tier));
+  shuffle(bag);
+  return bag;
 }
 
 // Draft prospects use Player Modifiers only. Every prospect enters the league Young;
 // accolades are earned distinctions and never generated in the draft pool.
 export function buildDraftPool(state, count) {
-  const tierPool = TIERS;
   const cards = [];
+  let bag = buildTierBag();
   for (let i = 0; i < count; i++) {
-    const tier = pickWeightedTier(tierPool);
+    if (bag.length === 0) bag = buildTierBag();
+    const tier = bag.pop();
     const posPool = tier.allowedPositions || POSITIONS;
     const pos = posPool[Math.floor(Math.random() * posPool.length)];
     const card = makeCard(state, randomArchForTier(tier), pos, tier, 'Young');

@@ -29,7 +29,11 @@ export const TIERS = [
   { name: 'Hustler', uniform: 1.10, peak: 1.20, contract: 4, count: 4, forceStats: ['DEF', 'REB'] },
   { name: 'Generational Talent', uniform: 1.30, peak: 1.65, contract: 2, count: 2 },
 ];
-export const REPLACEMENT_TIER = { name: 'Undrafted', uniform: 1, peak: 1, contract: 6 };
+// contractVariance widens the ±1 every other tier gets (see cards.js's makeCard) — these
+// generic fillers are the initial roster's bench toppers (see dealHands), and a flat ±1 kept
+// every one of them locked into a 5-7 season deal, so a fresh bench was always long-contract
+// players. The wider spread mixes real short deals (as low as 3) into the same pool.
+export const REPLACEMENT_TIER = { name: 'Undrafted', uniform: 1, peak: 1, contract: 6, contractVariance: 3 };
 
 // Cheap, low-output fillers seeded into free agency at era start. dealHands doesn't check
 // budget, so some teams start over cap — these give every team an immediate, low-commitment
@@ -64,13 +68,18 @@ export const COACH_ARCHETYPES = {
   'Defensive Minded': { offBase: 2, defBase: 10 },
   'Balanced': { offBase: 6, defBase: 6 },
 };
+// Salary scales with how much a modifier actually boosts a coach, not just its draw weight —
+// Hot Headed's bigger die and Genius/Hall of Fame's big multipliers used to cost barely more
+// than Strategist's modest +30%, so an elite coach was nearly free relative to the cap. The
+// spread is now wide enough that landing one of the top modifiers is a real budget commitment,
+// not a strictly-better-for-free upgrade.
 export const COACH_MODIFIERS = [
   { name: 'Strategist', mult: 1.3, die: 6, weight: 30, salary: 0.5, ability: '' },
-  { name: 'Former Player', mult: 1.6, die: 6, weight: 25, salary: 1.0, ability: '' },
+  { name: 'Former Player', mult: 1.6, die: 6, weight: 25, salary: 1.25, ability: '' },
   { name: 'Collegiate Success', mult: 1.1, die: 6, weight: 25, salary: 0.5, ability: '+3% Off/Def and +1 die size for every consecutive season retained (stacks).' },
-  { name: 'Hot Headed', mult: 1.4, die: 7, weight: 12, salary: 0.5, ability: '' },
-  { name: 'Genius', mult: 1.5, die: 6, weight: 10, salary: 1.25, ability: '' },
-  { name: 'Hall of Fame', mult: 2.0, hofDie: true, weight: 8, salary: 1.5, ability: '' },
+  { name: 'Hot Headed', mult: 1.4, die: 7, weight: 12, salary: 1.0, ability: '' },
+  { name: 'Genius', mult: 1.5, die: 6, weight: 10, salary: 2.0, ability: '' },
+  { name: 'Hall of Fame', mult: 2.0, hofDie: true, weight: 8, salary: 3.0, ability: '' },
 ];
 // Fanbase archetype — drawn once per era, like Coach. Attendance itself is computed fresh
 // each season (see game/fanbase.js) from the archetype's formula, market floor, performance,

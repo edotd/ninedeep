@@ -526,11 +526,21 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
 
               <div className="ts-ledger-group">
                 <div className="ts-ledger-group-title">Committed</div>
-                <div className="ts-ledger-subtitle">Players</div>
+                <div className="ts-ledger-subtitle">Starters</div>
                 <div className="ts-ledger-list">
-                  {team.hand.map((card) => (
+                  {team.hand.filter((card) => activeSet.has(card.id)).map((card) => (
                     <div className={'ts-ledger-person' + (canEdit ? ' releasable' : '')} key={card.id}>
-                      <PlayerLedgerIdentity card={card} role={activeSet.has(card.id) ? 'Starter' : 'Bench'} />
+                      <PlayerLedgerIdentity card={card} />
+                      <CostBlocks turns={card.contract} amount={card.salary} />
+                      {canEdit && <button className="ts-ledger-release" onClick={() => handleRelease(card)}>Release</button>}
+                    </div>
+                  ))}
+                </div>
+                <div className="ts-ledger-subtitle">Bench</div>
+                <div className="ts-ledger-list">
+                  {team.hand.filter((card) => !activeSet.has(card.id)).map((card) => (
+                    <div className={'ts-ledger-person' + (canEdit ? ' releasable' : '')} key={card.id}>
+                      <PlayerLedgerIdentity card={card} />
                       <CostBlocks turns={card.contract} amount={card.salary} />
                       {canEdit && <button className="ts-ledger-release" onClick={() => handleRelease(card)}>Release</button>}
                     </div>
@@ -574,7 +584,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
               <div className={'fo-deal-row' + (foRow.scrolls ? ' row-scroll' : ' row-fit')} style={{ margin: 0 }} onScroll={foRow.scrolls ? foRow.onScroll : undefined}>
                 <div className="ts-fo-col" id="team-coach-card">
                   {team.coach ? <FrontOfficeCard kind="coach" team={team} /> : <div className="ts-empty-coach"><span>Coach</span><strong>Open Slot</strong><small>Choose a replacement in Free Agency.</small></div>}
-                  {!readOnly && team.coach && (
+                  {!readOnly && team.coach && state.settings.coachChangesEnabled && (
                     <button
                       className="secondary ts-fo-action"
                       style={{ width: '100%' }}
@@ -607,7 +617,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                 )}
                 <div className="ts-fo-col">
                   <FrontOfficeCard kind="market" team={team} />
-                  {!readOnly && (
+                  {!readOnly && state.settings.coachChangesEnabled && (
                     <button
                       className="secondary ts-fo-action"
                       style={{ width: '100%' }}

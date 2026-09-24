@@ -38,6 +38,7 @@ export function newEraState() {
       winCondition: 'outright', // 'bar' = must clear the championship bar; 'outright' = winning the Finals is enough
       matchupCardsEnabled: true,
       fanbaseCardsEnabled: false,
+      coachChangesEnabled: false,
     },
   };
 }
@@ -79,7 +80,7 @@ export function buildStarPool(state) {
   });
   shuffle(state.starPool);
   seedFreeAgentPool(state);
-  seedFreeAgentCoachPool(state);
+  if (state.settings?.coachChangesEnabled) seedFreeAgentCoachPool(state);
 }
 
 export function seedFreeAgentCoachPool(state) {

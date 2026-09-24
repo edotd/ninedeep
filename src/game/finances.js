@@ -25,6 +25,7 @@ function addDeadCap(team, amount, seasonsLeft, source = null) {
 
 export function fireCoach(state, teamIdx) {
   const team = state.teams[teamIdx];
+  if (!state.settings?.coachChangesEnabled) return { ok: false, msg: 'Coach & GM Changes is off — turn it on in Settings.' };
   if (!team.coach) return { ok: false, msg: 'No coach to fire.' };
   const firedCoach = team.coach;
   addDeadCap(team, firedCoach.salary / 2, 1, {
@@ -47,6 +48,7 @@ export function fireCoach(state, teamIdx) {
 
 export function hireFreeAgentCoach(state, teamIdx, coachId) {
   const team = state.teams[teamIdx];
+  if (!state.settings?.coachChangesEnabled) return { ok: false, msg: 'Coach & GM Changes is off — turn it on in Settings.' };
   const index = (state.freeAgentCoaches || []).findIndex((coach) => coach.id === coachId);
   if (!team || team.coach || index < 0) return { ok: false, msg: team?.coach ? 'Fire your current coach before hiring a replacement.' : 'Coach is not available.' };
   const coach = state.freeAgentCoaches[index];
@@ -69,6 +71,7 @@ export function hireFreeAgentCoach(state, teamIdx, coachId) {
 
 export function fireGM(state, teamIdx) {
   const team = state.teams[teamIdx];
+  if (!state.settings?.coachChangesEnabled) return { ok: false, msg: 'Coach & GM Changes is off — turn it on in Settings.' };
   if (!team?.market) return { ok: false, msg: 'No GM to fire.' };
   if (team.gmChangeSeason === state.season) return { ok: false, msg: 'GM already replaced this season.' };
   const next = drawGM(team.gmType || 'Neutral');

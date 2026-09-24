@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { newEraState, renewExpiredContract, signFreeAgent } from '../src/game/season.js';
 import { startDraft, draftPick } from '../src/game/draft.js';
 import { startEra, confirmLineup, markLineupSet } from '../src/game/engine.js';
-import { fireCoach, hireFreeAgentCoach, releasePlayer } from '../src/game/finances.js';
+import { fireCoach, fireGM, hireFreeAgentCoach, releasePlayer } from '../src/game/finances.js';
 import { LEAGUE_ACCOLADES, TIERS } from '../src/game/constants.js';
 import { rehydrateState } from '../src/game/rehydrate.js';
 
@@ -24,9 +24,23 @@ test('Journeyman replaces the legacy Bench Player tier in new and saved games', 
   assert.equal(state.teams[0].hand[0].tierName, 'Journeyman');
 });
 
+test('Coach & GM Changes defaults off: no coach firing/hiring, no GM firing, no free-agent coaches', () => {
+  const state = newEraState();
+  assert.equal(state.settings.coachChangesEnabled, false);
+  startEra(state, 'Test');
+  assert.equal(state.freeAgentCoaches.length, 0);
+  const team = state.teams[0];
+  team.seasonCap = 100;
+  const priorCoach = team.coach;
+  assert.equal(fireCoach(state, team.id).ok, false);
+  assert.equal(team.coach, priorCoach);
+  assert.equal(fireGM(state, team.id).ok, false);
+});
+
 test('free agency begins with two to four coaches and excludes Hall of Fame', () => {
   for (let run = 0; run < 30; run++) {
     const state = newEraState();
+    state.settings.coachChangesEnabled = true;
     startEra(state, 'Test');
     assert(state.freeAgentCoaches.length >= 2 && state.freeAgentCoaches.length <= 4);
     assert(state.freeAgentCoaches.every((coach) => coach.modifier !== 'Hall of Fame'));
@@ -35,6 +49,7 @@ test('free agency begins with two to four coaches and excludes Hall of Fame', ()
 
 test('a free agent coach can be hired and leaves the pool', () => {
   const state = newEraState();
+  state.settings.coachChangesEnabled = true;
   startEra(state, 'Test');
   const team = state.teams[0];
   const coach = state.freeAgentCoaches[0];
@@ -50,6 +65,7 @@ test('a free agent coach can be hired and leaves the pool', () => {
 
 test('a fired coach leaves a vacancy and cannot return to the same team that season', () => {
   const state = newEraState();
+  state.settings.coachChangesEnabled = true;
   startEra(state, 'Test');
   const team = state.teams[0];
   const fired = team.coach;
