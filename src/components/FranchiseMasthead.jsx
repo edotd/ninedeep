@@ -53,11 +53,15 @@ const METRIC_LABELS = { chemistry: 'Chemistry', output: 'Output', offense: 'Offe
 
 // Glow tally: whenever a hero metric's own value changes (a lineup swap, a coach hire, a
 // signed contract, anything that moves Chemistry/Output/Offense/Defense), the affected metric
-// pulses and a running +/- tally builds up next to it, so a change made two screens away is
-// still visible the next time this masthead is on screen. The tally is a plain sum of deltas
-// since resetKey (the viewed team) last changed — it isn't trying to reconstruct history, just
-// to say "this is net up/down N since you started looking at this file."
+// pulses and briefly shows the latest +/- delta. Keep this transient: an old delta should not
+// look like a fifth masthead value, and repeatedly summing decimal output changes produces
+// floating-point artifacts such as 0.0499999998.
 const PULSE_MS = 1000;
+const TALLY_MS = 3000;
+const cleanDelta = (value) => {
+  const rounded = Math.round(value * 100) / 100;
+  return Math.abs(rounded) < 0.01 ? 0 : rounded;
+};
 function useMetricTally(values, resetKey) {
   const prevRef = useRef(null);
   const timersRef = useRef({});
@@ -81,13 +85,19 @@ function useMetricTally(values, resetKey) {
     if (!changed.length) return;
     setTally((t) => {
       const next = { ...t };
-      changed.forEach((key) => { next[key] = (next[key] || 0) + (values[key] - prev[key]); });
+      changed.forEach((key) => { next[key] = cleanDelta(values[key] - prev[key]); });
       return next;
     });
     setPulsing((p) => ({ ...p, ...Object.fromEntries(changed.map((key) => [key, true])) }));
     changed.forEach((key) => {
-      clearTimeout(timersRef.current[key]);
-      timersRef.current[key] = setTimeout(() => setPulsing((p) => ({ ...p, [key]: false })), PULSE_MS);
+      clearTimeout(timersRef.current[`pulse-${key}`]);
+      clearTimeout(timersRef.current[`tally-${key}`]);
+      timersRef.current[`pulse-${key}`] = setTimeout(() => setPulsing((p) => ({ ...p, [key]: false })), PULSE_MS);
+      timersRef.current[`tally-${key}`] = setTimeout(() => setTally((t) => {
+        const next = { ...t };
+        delete next[key];
+        return next;
+      }), TALLY_MS);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signature]);
@@ -128,8 +138,8 @@ export default function FranchiseMasthead({ state, teamId }) {
   const outputs = state.teams.map((t) => (t.coach && t.activeIds?.length === 5 && t.lineupSet ? teamOutput(t) : null));
   const rankedCount = outputs.filter(Boolean).length;
   const rankFor = (key) => output ? outputs.filter((o) => o && o[key] > output[key]).length + 1 : null;
-  const tallyBadge = (key) => tally[key] ? (
-    <span className={'ts-hero-tally ' + (tally[key] > 0 ? 'up' : 'down')}>{tally[key] > 0 ? '+' : ''}{tally[key]}</span>
+  const tallyBadge = (key) => Number.isFinite(tally[key]) && tally[key] !== 0 ? (
+    <span className={'ts-hero-tally ' + (tally[key] > 0 ? 'up' : 'down')} title="Change from the previous value">{tally[key] > 0 ? '+' : ''}{tally[key]}</span>
   ) : null;
 
   const toggleMetric = (kind) => () => {
