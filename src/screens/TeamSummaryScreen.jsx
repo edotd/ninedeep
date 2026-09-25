@@ -552,7 +552,6 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                   return (
                     <div className="ts-hand-peek-tab" aria-hidden="true">
                       <span className="ts-hand-peek-chevron">›</span>
-                      <span className="ts-hand-peek-count">+{mobileCardCount - 1 - rotationIndex}</span>
                     </div>
                   );
                 })()}

@@ -2121,31 +2121,30 @@ body:has(.entry-screen){padding-bottom:0;}
   .ts-player-carousel .ts-roto-grid{gap:0;width:100%;align-items:flex-start;}
   /* Each slot is narrower than the screen by exactly the next card's peek (design ref 5A/
      Screen 05 "The Hand") — scroll-snap still aligns every slot's LEFT edge to the viewport's,
-     so that 30px shortfall shows up as a sliver of the next card on the right, the same swipe
+     so that 18px shortfall shows up as a sliver of the next card on the right, the same swipe
      rule 02 describes. The card fills its slot's width (not a smaller, centered natural
      width) — the earlier "stretched" complaint turned out to be about height (a fixed-height
      frame with natural-height content floating inside it, or a non-uniform scaleY squashing
      it), both fixed separately below; at a fixed width there's nothing left to stretch. */
-  .ts-player-carousel .ts-roto-grid .ts-roto-slot{box-sizing:border-box;width:calc(100vw - 30px);flex:0 0 calc(100vw - 30px);display:flex;scroll-snap-align:start;scroll-snap-stop:always;}
+  .ts-player-carousel .ts-roto-grid .ts-roto-slot{box-sizing:border-box;width:calc(100vw - 18px);flex:0 0 calc(100vw - 18px);display:flex;scroll-snap-align:start;scroll-snap-stop:always;}
   .ts-player-carousel .ts-roto-grid .ts-roto-slot>*{width:100%;max-width:none;margin:0;}
-  /* The last card has no next card to peek at, so reserving 30px for one just leaves the
-     scroll container unable to reach flush-left on it (max scrollLeft caps 30px short of that
+  /* The last card has no next card to peek at, so reserving 18px for one just leaves the
+     scroll container unable to reach flush-left on it (max scrollLeft caps 18px short of that
      card's snap point) — a sliver of the second-to-last card shows instead. Give the last slot
      the full width back so it actually reaches the edge — but the CARD inside stays the same
      width as every other card and simply centers in that extra room, rather than stretching to
      fill it (which made the last card visibly bigger than the rest) or peeking at a next card
      that doesn't exist (the peek tab is gone entirely here too, see TeamSummaryScreen.jsx). */
   .ts-player-carousel .ts-roto-grid > .ts-roto-slot:last-child{width:100%;flex-basis:100%;justify-content:center;}
-  .ts-player-carousel .ts-roto-grid > .ts-roto-slot:last-child>*{width:calc(100vw - 30px);flex-shrink:0;}
+  .ts-player-carousel .ts-roto-grid > .ts-roto-slot:last-child>*{width:calc(100vw - 18px);flex-shrink:0;}
   /* The tab sitting on that peek — pinned to the true viewport edge and spanning the full
      height of the card area (not a small centered pill), matching the reference sketch:
      position:absolute against .ts-roto-viewport now that IT owns the full-bleed edge (see
      above), so top:0/bottom:0 tracks exactly the card area's own height with no viewport-math
      needed. Gone entirely on the last card (see TeamSummaryScreen.jsx) rather than switching to
      a "next tab" state — there's nothing left to peek at. */
-  .ts-hand-peek-tab{position:absolute;top:28%;bottom:28%;right:0;width:30px;box-sizing:border-box;padding:8px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:var(--ink-deep);border:1px solid var(--franchise);border-right:none;pointer-events:none;z-index:6;animation:row-swipe-pulse 1.8s ease-in-out infinite;}
-  .ts-hand-peek-chevron{font-family:var(--font-display);font-size:32px;line-height:1;color:var(--franchise);}
-  .ts-hand-peek-count{font-family:var(--font-mono);font-size:14px;font-weight:600;color:var(--file);}
+  .ts-hand-peek-tab{position:absolute;top:28%;bottom:28%;right:0;width:18px;box-sizing:border-box;padding:4px 0;display:flex;align-items:center;justify-content:center;background:var(--ink-deep);border:1px solid var(--franchise);border-right:none;pointer-events:none;z-index:6;animation:row-swipe-pulse 1.8s ease-in-out infinite;}
+  .ts-hand-peek-chevron{font-family:var(--font-display);font-size:40px;line-height:1;color:var(--franchise);transform:translateX(-1px);}
   @media(prefers-reduced-motion:reduce){.ts-hand-peek-tab{animation:none;}}
 
   /* While the Rotation tab is showing, the card IS the screen — no page scroll competing with
@@ -2157,14 +2156,14 @@ body:has(.entry-screen){padding-bottom:0;}
   .mobile-shell:has(.ts-screen-lock){height:var(--app-vh,100dvh);overflow:hidden;}
   .ts-screen.ts-screen-lock{height:calc(var(--app-vh,100dvh) - var(--mobile-persistent-top-height,0px) - var(--mobile-persistent-bar-height,0px));box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;}
   .ts-screen-lock .ts-tabbar{position:static;box-shadow:none;}
-  .ts-screen-lock .ts-body{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;}
+  .ts-screen-lock .ts-body{flex:1;min-height:0;overflow:hidden;overscroll-behavior:none;touch-action:pan-x;display:flex;flex-direction:column;}
   .ts-screen-lock .ts-player-carousel{flex:1;min-height:0;display:flex;flex-direction:column;}
   .ts-screen-lock .ts-roto-viewport{flex:1;min-height:0;position:relative;}
   /* overflow-x:auto alone (set on .ts-player-carousel .ts-roto-scroll above) makes the UA
      compute overflow-y as auto too, per spec — which let the carousel scroll vertically
      whenever a card came out even a hair taller than the box. This is the one tab meant to own
      the screen with no scroll of its own but the horizontal swipe, so shut that axis off. */
-  .ts-screen-lock .ts-roto-scroll{height:100%;overflow-y:hidden;}
+  .ts-screen-lock .ts-roto-scroll{height:100%;overflow-y:hidden;overscroll-behavior:none;touch-action:pan-x;}
   .ts-screen-lock .ts-roto-grid{height:100%;}
   /* A card never stretches to fill its slot — it sizes to its own natural width/height (capped,
      centered) and, only when that natural height is actually taller than the space available,
