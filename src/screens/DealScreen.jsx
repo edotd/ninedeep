@@ -129,7 +129,7 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
           </div>
           <div className="deal-heading">Adjustment Cards</div>
           <div className="mu-deal-row">
-            {matchupCards.map((c) => <div key={c.id} className="card-deal-in"><MatchupCard card={c} /></div>)}
+            {matchupCards.map((c) => <div key={c.id} className="card-deal-in"><MatchupCard card={c} justDealt={c.rarity === 'Legendary'} /></div>)}
           </div>
         </div>
       </div>
