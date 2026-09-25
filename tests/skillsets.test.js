@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SKILLSETS, SKILLSET_PAIRS, rollSkillset, teamSynergy } from '../src/game/skillsets.js';
+import { SKILLSETS, SKILLSET_PAIRS, STAT_THRESHOLD_BONUSES, rollSkillset, teamSynergy } from '../src/game/skillsets.js';
 import { makeCard, drawCoachCard, drawMatchupModifierCard } from '../src/game/cards.js';
 import { REPLACEMENT_TIER } from '../src/game/constants.js';
 import { offenseModifier, defenseModifier } from '../src/game/roster.js';
@@ -36,6 +36,25 @@ test('duplicate combinations count once; missing partners and legacy players are
   assert.equal(teamSynergy(t,['p0','p1']).offense,1);
   assert.equal(teamSynergy(t,['p0','p1']).leadership,1);
   t.hand.forEach(p=>{delete p.skillsetId;});assert.equal(teamSynergy(t).leadership,0);assert.equal(teamSynergy(t).pairs.length,0);
+});
+test('stat-threshold bonuses unlock alongside Skillset pairs and fold into the same capped total',()=>{
+  const onslaught=STAT_THRESHOLD_BONUSES.find(b=>b.name==='Offensive Onslaught');
+  const t=team([9,10]); // Half-Court Clinic, +15% offense — leaves room to isolate the stat bonus
+  t.hand.forEach(p=>{p.stats={SCO:10,PLM:10,DEF:10,REB:10};});
+  assert.equal(teamSynergy(t).offense,15);
+  assert.equal(teamSynergy(t).statBonuses.length,0);
+  // Only one starter clears the threshold — not enough on its own.
+  t.hand[0].stats.SCO=onslaught.threshold;
+  assert.equal(teamSynergy(t).statBonuses.length,0);
+  // A second starter clears it too — Offensive Onslaught unlocks on top of the existing pair.
+  t.hand[1].stats.SCO=onslaught.threshold;
+  const s=teamSynergy(t);
+  assert.equal(s.statBonuses.length,1);
+  assert.equal(s.statBonuses[0].name,'Offensive Onslaught');
+  assert.equal(s.offense,15+onslaught.percent);
+  // Below the threshold no longer counts, even if only by one.
+  t.hand[1].stats.SCO=onslaught.threshold-1;
+  assert.equal(teamSynergy(t).statBonuses.length,0);
 });
 test('independent caps apply and injury lineup overrides remove inactive pairings',()=>{
   const t=team(SKILLSETS.map((_,i)=>i+1));const s=teamSynergy(t);

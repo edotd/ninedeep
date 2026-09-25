@@ -77,7 +77,7 @@ export default function TeamChemistry({ team, canEdit, onEditLineup }) {
       <div className="tc2-pairs-panel">
         <div className="tc2-pairs-head">
           <div className="ts-heading" style={{ marginBottom: 0 }}>Synergy</div>
-          <span className="tc2-pairs-count">{current.pairs.length} Live</span>
+          <span className="tc2-pairs-count">{current.pairs.length + current.statBonuses.length} Live</span>
         </div>
         <div className="tc2-synergy-total">
           <span className="tc2-synergy-total-value offense">+{current.skillOffense}% OFF</span>
@@ -87,7 +87,7 @@ export default function TeamChemistry({ team, canEdit, onEditLineup }) {
           {canEdit === false ? 'View Lineup' : team.lineupSet ? 'Edit Lineup' : 'Set Lineup'}
           {canEdit !== false && !team.lineupSet && <span className="tc2-lineup-dot" aria-label="Lineup not set" />}
         </button>
-        {current.pairs.length ? (
+        {(current.pairs.length || current.statBonuses.length) ? (
           <div className="tc2-pairs-grid">
             {current.pairs.map((pair) => (
               <div key={pair.skills.join(':')} className="tc2-pair-row">
@@ -95,8 +95,14 @@ export default function TeamChemistry({ team, canEdit, onEditLineup }) {
                 <span className={'tc2-pair-tag ' + pair.side}>{pair.name} +{pair.percent}% {pair.side === 'offense' ? 'OFF' : 'DEF'}</span>
               </div>
             ))}
+            {current.statBonuses.map((bonus) => (
+              <div key={bonus.name} className="tc2-pair-row">
+                <span className="tc2-pair-names">{bonus.minCount}+ starters with {bonus.stat} &ge; {bonus.threshold}</span>
+                <span className={'tc2-pair-tag ' + bonus.side}>{bonus.name} +{bonus.percent}% {bonus.side === 'offense' ? 'OFF' : 'DEF'}</span>
+              </div>
+            ))}
           </div>
-        ) : <p className="tc2-note">No active Skillset pairings in this starting five.</p>}
+        ) : <p className="tc2-note">No active Skillset pairings or stat-threshold bonuses in this starting five.</p>}
         {(current.rawOffense > SYNERGY_CAP || current.rawDefense > SYNERGY_CAP) && <p className="tc2-note">The +{SYNERGY_CAP}% Skillset cap is applied before adding tenure bonuses.</p>}
         {current.leadership > 0 && <p className="tc2-note">Wise Veteran adds +1% Offense and Defense from anywhere on the roster. Applies once.</p>}
       </div>

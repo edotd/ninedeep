@@ -113,17 +113,36 @@ export function findSkillPair(a, b) {
 // would have made the cap the only thing that mattered instead of which pairs you actually have.
 export const SYNERGY_CAP = 30;
 
+// A second, independent path to the same Offense/Defense synergy bonus SKILLSET_PAIRS grants —
+// keyed on raw STAT VALUES instead of skillset identity: 2+ starters each individually clearing
+// a stat's threshold unlock a themed bonus, still folded into the same rawOffense/rawDefense
+// totals and SYNERGY_CAP below (this is another way to earn the one bonus, not a second pool of
+// free bonus on top of it). Thresholds are calibrated to this game's real stat range, not a
+// round number — makeCard's math tops out a single stat around the low-to-mid 20s even for a
+// Generational Talent or MVP in their best-fit archetype and position, so 20 is already a
+// genuine, elite-only bar, not a formality.
+export const STAT_THRESHOLD_BONUSES = [
+  { name: 'Offensive Onslaught', stat: 'SCO', threshold: 20, minCount: 2, side: 'offense', percent: 15 },
+  { name: 'Pick-and-Roll Clinic', stat: 'PLM', threshold: 20, minCount: 2, side: 'offense', percent: 15 },
+  { name: 'Glass Control', stat: 'REB', threshold: 20, minCount: 2, side: 'defense', percent: 15 },
+  { name: 'Iron Wall', stat: 'DEF', threshold: 20, minCount: 2, side: 'defense', percent: 15 },
+];
+
 export function teamSynergy(team, ids = team.activeIds || []) {
   const active = new Set(ids);
-  const skills = new Set((team.hand || []).filter((p) => active.has(p.id)).map((p) => p.skillsetId));
+  const starters = (team.hand || []).filter((p) => active.has(p.id));
+  const skills = new Set(starters.map((p) => p.skillsetId));
   const pairs = SKILLSET_PAIRS.filter((rule) => rule.skills.every((id) => skills.has(id)));
-  const rawOffense = pairs.filter((p) => p.side === 'offense').reduce((n,p) => n+p.percent, 0);
-  const rawDefense = pairs.filter((p) => p.side === 'defense').reduce((n,p) => n+p.percent, 0);
+  const statBonuses = STAT_THRESHOLD_BONUSES.filter((rule) => starters.filter((p) => (p.stats?.[rule.stat] || 0) >= rule.threshold).length >= rule.minCount);
+  const rawOffense = pairs.filter((p) => p.side === 'offense').reduce((n,p) => n+p.percent, 0)
+    + statBonuses.filter((b) => b.side === 'offense').reduce((n,b) => n+b.percent, 0);
+  const rawDefense = pairs.filter((p) => p.side === 'defense').reduce((n,p) => n+p.percent, 0)
+    + statBonuses.filter((b) => b.side === 'defense').reduce((n,b) => n+b.percent, 0);
   const leadership = (team.hand || []).some((p) => p.skillsetId === 'skill-03') ? 1 : 0;
   const skillOffense = Math.min(SYNERGY_CAP, rawOffense);
   const skillDefense = Math.min(SYNERGY_CAP, rawDefense);
   const chemistry = chemistryDetails(team, ids, skillOffense, skillDefense, leadership);
-  return { pairs, rawOffense, rawDefense, skillOffense, skillDefense, leadership, ...chemistry,
+  return { pairs, statBonuses, rawOffense, rawDefense, skillOffense, skillDefense, leadership, ...chemistry,
     offense: skillOffense + chemistry.continuity + leadership, defense: skillDefense + chemistry.continuity + leadership };
 }
 
