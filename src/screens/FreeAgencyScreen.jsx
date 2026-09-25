@@ -48,7 +48,7 @@ export default function FreeAgencyScreen({ state, actions, myTeamId, onBack }) {
               <div key={card.id}>
                 <PlayerCard card={{ ...card, salary: price }} />
                 <button className="pcard-renew" disabled={!openSlots || releasedHere} onClick={sign}>
-                  {releasedHere ? 'Released This Season' : `Sign — ${formatCoins(price)}`}
+                  {releasedHere ? 'Released This Season' : `Offer — ${formatCoins(price)}`}
                 </button>
               </div>
             );

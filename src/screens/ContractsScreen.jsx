@@ -27,7 +27,7 @@ export default function ContractsScreen({ state, actions, myTeamId }) {
                       if (res && res.ok === false) alert(res.msg);
                     }}
                   >
-                    Renew — {formatCoins(price)}
+                    Negotiate — {formatCoins(price)}
                   </button>
                 </div>
               );
