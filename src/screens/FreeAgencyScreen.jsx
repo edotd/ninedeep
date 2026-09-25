@@ -16,11 +16,21 @@ export default function FreeAgencyScreen({ state, actions, myTeamId, onBack }) {
   // resolved auction splices the winning card out of freeAgents immediately, and the modal
   // still needs to render its own reveal screen for a beat after that.
   const [biddingCard, setBiddingCard] = useState(null);
+  const [confirmingClose, setConfirmingClose] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const [closeError, setCloseError] = useState(null);
 
-  const closeOut = () => {
-    if (!window.confirm('Are you sure? This will close out the free agency period for this turn and process all open bids. You will not be able to sign or release players until next season.')) return;
-    const res = actions.closeFreeAgency(myTeamId);
-    if (res && res.ok === false) alert(res.msg);
+  const closeOut = async () => {
+    setClosing(true);
+    setCloseError(null);
+    const res = await actions.closeFreeAgency(myTeamId);
+    if (res?.ok === false) {
+      setCloseError(res.msg);
+      setClosing(false);
+      return;
+    }
+    setConfirmingClose(false);
+    setClosing(false);
   };
 
   return (
@@ -29,7 +39,7 @@ export default function FreeAgencyScreen({ state, actions, myTeamId, onBack }) {
       <h1>Free Agency</h1>
       <p className="lede">Browse available players and coaches at any time. Signing is optional.</p>
       <div className="fa-close-panel">
-        <button className="primary" disabled={closed || overBudget} onClick={closeOut}>
+        <button type="button" className="primary" disabled={closed || overBudget} onClick={() => { setCloseError(null); setConfirmingClose(true); }}>
           {closed ? 'Closed For This Turn' : overBudget ? 'Over Budget — Fix Roster To Close' : 'Close Out Free Agency'}
         </button>
         {!closed && <p>Closing free agency locks signings and releases until next season.</p>}
@@ -83,6 +93,22 @@ export default function FreeAgencyScreen({ state, actions, myTeamId, onBack }) {
       <div className="bottombar"><button className="primary" onClick={onBack}>Back</button></div>
       {biddingCard && (
         <BiddingModal state={state} actions={actions} myTeamId={myTeamId} card={biddingCard} onClose={() => setBiddingCard(null)} />
+      )}
+      {confirmingClose && (
+        <div className="tsx-overlay" role="dialog" aria-modal="true" aria-label="Close out free agency">
+          <div className="neg-panel fa-close-dialog">
+            <div className="neg-head">
+              <button type="button" className="neg-close" disabled={closing} onClick={() => setConfirmingClose(false)} aria-label="Close">✕</button>
+              <div className="neg-head-title">CLOSE OUT FREE AGENCY</div>
+            </div>
+            <p>Are you sure? This will close out the free agency period for this turn and process all open bids. You will not be able to sign or release players until next season.</p>
+            {closeError && <div className="neg-error">{closeError}</div>}
+            <div className="fa-close-actions">
+              <button type="button" className="secondary" disabled={closing} onClick={() => setConfirmingClose(false)}>Keep Free Agency Open</button>
+              <button type="button" className="primary" disabled={closing} onClick={closeOut}>{closing ? 'Processing…' : 'Close Free Agency'}</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

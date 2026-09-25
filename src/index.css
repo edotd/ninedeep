@@ -2497,10 +2497,15 @@ body:has(.trans-screen){padding-bottom:0;}
 .fa-close-panel{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin:12px 0 24px;padding:14px;background:var(--ink);border:1px solid var(--ink-rule);}
 .fa-close-panel p{margin:0;max-width:520px;color:var(--file-muted);font-family:var(--font-mono);font-size:11px;line-height:1.45;}
 .fa-close-panel .fa-alert{flex-basis:100%;}
+.fa-close-dialog{max-width:520px;}
+.fa-close-dialog p{margin:0;color:var(--file);font-family:var(--font-mono);font-size:12px;line-height:1.6;}
+.fa-close-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;}
+.fa-close-actions button{width:100%;}
 @media(max-width:999px){
   .fa-close-panel{display:grid;grid-template-columns:1fr;margin:8px 0 18px;padding:10px;box-shadow:0 5px 14px rgba(8,18,38,.24);}
   .fa-close-panel .primary{display:block;width:100%;min-height:46px;font-size:12px;}
   .fa-close-panel p{font-size:10px;}
+  .fa-close-actions{grid-template-columns:1fr;}
 }
 .pcard-signing-note{font-size:12px;font-weight:700;color:var(--franchise);border:1px solid currentColor;padding:6px 8px;margin-top:5px;}
 .tie-roll-board .bid-board-head,.tie-roll-board .bid-board-row{grid-template-columns:2fr 1fr;}

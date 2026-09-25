@@ -87,7 +87,7 @@ export default function EntryScreen({ pendingJoinCode, joinOnly = false, soloSta
 
           {!joinOnly && tab === 'solo' && (
             <>
-              <div className="entry-version">v1.14</div>
+              <div className="entry-version">v1.15</div>
               <div className="entry-field-group">
                 <div className="entry-field-heading">
                   <span>Franchise Name</span>

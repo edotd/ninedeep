@@ -60,7 +60,9 @@ export function useRoomGame(roomCode, myUid) {
         // The next real snapshot (or the retry this prompts) replaces this optimistic guess,
         // but until then the local view still shows the action as having worked — flag it so
         // the screen can tell the player to retry instead of silently doing nothing.
-        setActionError('That didn\'t save — check your connection and try again.');
+        const msg = 'That didn\'t save — check your connection and try again.';
+        setActionError(msg);
+        return { ok: false, msg };
       });
     };
     return {
