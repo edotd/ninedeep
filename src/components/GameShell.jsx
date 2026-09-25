@@ -83,8 +83,17 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, roomCode
   const [teamFocus, setTeamFocus] = useState(null);
   const toggleOverlay = (name) => setOverlay((o) => (o === name ? null : name));
   // Navigating to 'team' via the sidebar/header (as opposed to jumping in from Standings)
-  // always means "show my own file" — reset any leftover viewTeamId from a prior jump.
-  const handleNav = (name) => { if (name === 'team') { setViewTeamId(null); setTeamFocus(null); } toggleOverlay(name); };
+  // always means "show my own file" — reset any leftover viewTeamId from a prior jump. If
+  // the base phase screen is already showing that same file (see onOwnTeamPage above), this
+  // is a no-op instead of re-navigating to a page the user is already looking at.
+  const handleNav = (name) => {
+    if (name === 'team') {
+      if (onOwnTeamPage) return;
+      setViewTeamId(null);
+      setTeamFocus(null);
+    }
+    toggleOverlay(name);
+  };
   const openTeamSection = (section) => {
     setViewTeamId(null);
     setTeamFocus({ section, request: Date.now() });
@@ -164,6 +173,16 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, roomCode
   useEffect(() => { if (state.phase !== 'pullhand') setPastDeal(false); }, [state.phase]);
   const effectivePhase = state.phase === 'pullhand' && pastDeal ? 'teamsummary' : state.phase;
 
+  // TeamSummaryScreen renders two ways: as the base phase screen once the flow reaches
+  // 'teamsummary' (overlay stays null the whole time), or as the 'team' overlay opened from
+  // the sidebar/header. Both are "the franchise page" to look at, but only the second sets
+  // `overlay`, so the nav item never highlighted — and clicking it while already on the base
+  // phase screen re-navigated to the exact same page via the overlay path instead of no-op'ing.
+  // navOverlay folds the base-phase case into 'team' for nav highlighting only; the real
+  // `overlay` state (and everything that opens/closes it) is untouched.
+  const onOwnTeamPage = overlay === null && viewTeamId == null && effectivePhase === 'teamsummary';
+  const navOverlay = onOwnTeamPage ? 'team' : overlay;
+
   const openTeamView = (teamId, fromOverlay) => {
     setReturnOverlay(fromOverlay);
     setViewTeamId(teamId);
@@ -179,7 +198,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, roomCode
   const headerProps = {
     state,
     myTeamId,
-    overlay,
+    overlay: navOverlay,
     onGlossary: () => toggleOverlay('glossary'),
     onStandings: () => toggleOverlay('standings'),
     onSettings: () => toggleOverlay('settings'),
@@ -216,7 +235,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, roomCode
   if (isDesktop && showChrome) {
     return (
       <div className="desktop-shell">
-        <Sidebar state={state} myTeamId={myTeamId} overlay={overlay} viewTeamId={viewTeamId} onNav={handleNav} onViewTeam={(id) => openTeamView(id, overlay)} onAcknowledgeNav={acknowledgeNav} roomCode={roomCode} />
+        <Sidebar state={state} myTeamId={myTeamId} overlay={navOverlay} viewTeamId={viewTeamId} onNav={handleNav} onViewTeam={(id) => openTeamView(id, overlay)} onAcknowledgeNav={acknowledgeNav} roomCode={roomCode} />
         <div className="desktop-content">
           <FranchiseMasthead state={state} teamId={mastheadTeamId} />
           {mainBody}
