@@ -9,6 +9,7 @@ export default function ContractsScreen({ state, actions, myTeamId }) {
   const team = state.teams[myTeamId];
   const expired = (state.lastExpiredPlayers || []).filter((c) => c.lastTeamId === team.id && state.freeAgents.some((fa) => fa.id === c.id));
   const filed = state.offseason?.contractsFiled?.[team.id];
+  const readyTeams = state.teams.filter((candidate) => candidate.human && state.offseason?.contractsFiled?.[candidate.id]);
   // Holds the actual card object, not just an id looked up live in state.freeAgents — a
   // successful negotiation splices the card out of freeAgents the instant it signs, and the
   // modal still needs to render its own SIGNED/WALKED result screen for a beat after that.
@@ -44,9 +45,17 @@ export default function ContractsScreen({ state, actions, myTeamId }) {
         ) : <p className="lede">No expired contracts this season.</p>}
       </OffseasonFile>
       <div className="bottombar">
-        <button className="primary" disabled={filed} onClick={() => actions.fileContracts(myTeamId)}>
-          {filed ? 'Filed · Waiting For Other Clubs' : 'Begin Draft'}
-        </button>
+        <div className="bottombar-action">
+          {readyTeams.length > 0 && (
+            <div className="season-ready-status" aria-live="polite">
+              <span className="season-ready-label">Ready</span>
+              <span className="season-ready-teams">{readyTeams.map((readyTeam) => readyTeam.tricode).join(' · ')}</span>
+            </div>
+          )}
+          <button className="primary" disabled={filed} onClick={() => actions.fileContracts(myTeamId)}>
+            {filed ? 'Filed · Waiting For Other Clubs' : 'Begin Draft'}
+          </button>
+        </div>
       </div>
       {negotiatingCard && (
         <NegotiationModal state={state} actions={actions} myTeamId={myTeamId} card={negotiatingCard} onClose={() => setNegotiatingCard(null)} />

@@ -175,6 +175,8 @@ test('human playoff series require participant access and two-human ready up', (
   assert.equal(openSeries(state,0,spectator.id).ok,false);
   const first=openSeries(state,0,match.a.id);assert.equal(first.waiting,true);assert.equal(state.playoff.activeMatchIndex,null);
   const second=openSeries(state,0,match.b.id);assert.equal(second.ok,true);assert.equal(state.playoff.activeMatchIndex,0);assert(match.turn);
+  const originalTurn=match.turn;
+  const joined=openSeries(state,0,spectator.id);assert.equal(joined.live,true);assert.equal(match.turn,originalTurn);
 });
 
 test('CPU playoff series can be started or simulated without a human participant', () => {
@@ -183,7 +185,10 @@ test('CPU playoff series can be started or simulated without a human participant
   const index=state.playoff.matches.indexOf(match);
   assert.equal(openSeries(state,index,0).ok,true);assert(match.turn);
   state.playoff.activeMatchIndex=null;delete match.turn;
+  state.playoff.activeMatchIndex=index === 0 ? 1 : 0;
+  const activeBefore=state.playoff.activeMatchIndex;
   assert.equal(simulateOneMatch(state,index,0).ok,true);assert(match.result);
+  assert.equal(state.playoff.activeMatchIndex,activeBefore);
 });
 
 test('cap hit preserves fractions for every chosen stat without changing salary or permanent stats', () => {

@@ -185,8 +185,15 @@ export function beginPlayoffs(state) {
 export function openSeries(state, matchIndex, teamIdx) {
   const match = state.playoff?.matches?.[matchIndex];
   if (!match || match.result || !isMatchUnlocked(state.playoff.matches, match)) {
-    if (match?.result) state.playoff.activeMatchIndex = matchIndex;
     return match?.result ? { ok: true, review: true } : { ok: false, msg: 'This series is not ready.' };
+  }
+  // A live series is shared game state, while choosing to watch it is local browser state.
+  // Anyone may join the board once it is underway; returning here avoids reinitializing its
+  // turn, injuries, or coin flip.
+  if (match.turn) return { ok: true, live: true };
+  const active = state.playoff.activeMatchIndex;
+  if (active !== null && active !== undefined && active !== matchIndex && state.playoff.matches[active]?.turn && !state.playoff.matches[active]?.result) {
+    return { ok: false, msg: 'Another series is currently live.' };
   }
   const { a, b } = matchTeams(state.playoff.matches, match);
   const humans = [a, b].filter((team) => team?.human);
@@ -219,8 +226,8 @@ export function toggleAdvantage(state, teamIdx) {
 // human-watched match plays out turn by turn instead (see game/turn.js's beginTurn/advanceTurn,
 // wired up in PlayoffSeriesScreen). Produces the same m.result shape either way, since
 // MatchupBox/ResultsScreen/SeasonRecapScreen read it without caring which path produced it.
-export function rollCurrentMatchup(state) {
-  const m = state.playoff.matches[state.playoff.activeMatchIndex];
+export function rollCurrentMatchup(state, matchIndex = state.playoff.activeMatchIndex) {
+  const m = state.playoff.matches[matchIndex];
   if (m.from) {
     m.a = state.playoff.matches[m.from[0]].result.winner;
     m.b = state.playoff.matches[m.from[1]].result.winner;
@@ -319,10 +326,8 @@ export function simulateAllPlayoffs(state) {
       return !a.human && !b.human;
     });
     if (idx < 0) break;
-    state.playoff.activeMatchIndex = idx;
-    rollCurrentMatchup(state);
+    rollCurrentMatchup(state, idx);
   }
-  state.playoff.activeMatchIndex = null;
 }
 
 // Same instant resolver as Simulate All, scoped to one match — for a bracket click that just
@@ -333,10 +338,7 @@ export function simulateOneMatch(state, index) {
   if (!m || m.result || !isMatchUnlocked(matches, m)) return { ok: false, msg: 'This match cannot be simulated right now.' };
   const { a, b } = matchTeams(matches, m);
   if (a.human && b.human) return { ok: false, msg: 'A series between two human players must be played.' };
-  const prevActive = state.playoff.activeMatchIndex;
-  state.playoff.activeMatchIndex = index;
-  rollCurrentMatchup(state);
-  state.playoff.activeMatchIndex = prevActive === index ? null : prevActive;
+  rollCurrentMatchup(state, index);
   return { ok: true };
 }
 

@@ -50,13 +50,14 @@ function TeamRow({ seed, team, isMine, output, result }) {
 // the whole card clickable (used by the overview to zoom into whichever cluster the clicked
 // series belongs to) — the action buttons stop that click from bubbling so Begin/Sim/Review
 // still just do their own thing.
-function BracketNode({ label, m, matches, index, myTeamId, actions, big, narrow, zoomed, onSelect }) {
+function BracketNode({ label, m, matches, index, myTeamId, actions, onOpenSeries, big, narrow, zoomed, onSelect }) {
   const { a, b } = matchTeams(matches, m);
   const unlocked = isMatchUnlocked(matches, m);
   const isFinal = m.label === 'Final';
   const humanTeams = [a, b].filter((team) => team?.human);
   const isParticipant = humanTeams.some((team) => team.id === myTeamId);
   const isReady = (m.readyTeamIds || []).includes(myTeamId);
+  const isLive = Boolean(m.turn && !m.result);
   const stop = (fn) => (e) => { e.stopPropagation(); fn(); };
   return (
     <div
@@ -65,7 +66,7 @@ function BracketNode({ label, m, matches, index, myTeamId, actions, big, narrow,
     >
       <div className="bracket-match-header">
         <span>{label}</span>
-        <span>{unlocked ? (m.result ? 'Filed' : 'Ready') : 'Pending'}</span>
+        <span>{unlocked ? (m.result ? 'Filed' : isLive ? 'Live' : 'Ready') : 'Pending'}</span>
       </div>
       {!unlocked ? (
         <div className="bracket-team-tbd">TBD</div>
@@ -77,20 +78,22 @@ function BracketNode({ label, m, matches, index, myTeamId, actions, big, narrow,
       )}
       {unlocked && (
         m.result ? (
-          <button className="secondary bracket-node-btn" onClick={stop(() => actions.openSeries(index, myTeamId))}>Review</button>
+          <button className="secondary bracket-node-btn" onClick={stop(() => onOpenSeries(index))}>Review</button>
+        ) : isLive ? (
+          <button className="primary bracket-node-btn" onClick={stop(() => onOpenSeries(index))}>Join Live Series</button>
         ) : humanTeams.length === 2 ? (
-          isParticipant ? <button className="primary bracket-node-btn" disabled={isReady} onClick={stop(() => actions.openSeries(index, myTeamId))}>{isReady ? 'Waiting For Opponent' : 'Ready Up'}</button>
+          isParticipant ? <button className="primary bracket-node-btn" disabled={isReady} onClick={stop(() => onOpenSeries(index))}>{isReady ? 'Waiting For Opponent' : 'Ready Up'}</button>
             : <div className="bracket-node-status">Players Must Ready Up</div>
         ) : humanTeams.length === 1 ? (
           isParticipant ? (
             <div className="bracket-node-btn-row">
-              <button className="primary bracket-node-btn" onClick={stop(() => actions.openSeries(index, myTeamId))}>{isFinal ? 'Begin The Final' : 'Begin'}</button>
+              <button className="primary bracket-node-btn" onClick={stop(() => onOpenSeries(index))}>{isFinal ? 'Begin The Final' : 'Begin'}</button>
               <button className="secondary bracket-node-btn" onClick={stop(() => actions.simulateOneMatch(index, myTeamId))}>Sim</button>
             </div>
           ) : <div className="bracket-node-status">Waiting For Player</div>
         ) : (
           <div className="bracket-node-btn-row">
-            <button className="primary bracket-node-btn" onClick={stop(() => actions.openSeries(index, myTeamId))}>{isFinal ? 'Begin The Final' : 'Begin'}</button>
+            <button className="primary bracket-node-btn" onClick={stop(() => onOpenSeries(index))}>{isFinal ? 'Begin The Final' : 'Begin'}</button>
             <button className="secondary bracket-node-btn" onClick={stop(() => actions.simulateOneMatch(index, myTeamId))}>Sim</button>
           </div>
         )
@@ -117,10 +120,10 @@ const SEGMENTS = [
 // a scrollbar-styled control that only ever snaps to one of its three segments rather than
 // scrolling freely (there's nothing to scroll: each segment is its own fixed layout, not a
 // window onto one continuous strip).
-function ZoomedBracket({ matches, myTeamId, actions, segment, onSegmentChange, onZoomOut, allDone }) {
+function ZoomedBracket({ matches, myTeamId, actions, onOpenSeries, segment, onSegmentChange, onZoomOut, allDone }) {
   const segIndex = SEGMENTS.findIndex((s) => s.key === segment);
   const node = (index, label, extra) => (
-    <BracketNode key={index} label={label} m={matches[index]} matches={matches} index={index} myTeamId={myTeamId} actions={actions} zoomed {...extra} />
+    <BracketNode key={index} label={label} m={matches[index]} matches={matches} index={index} myTeamId={myTeamId} actions={actions} onOpenSeries={onOpenSeries} zoomed {...extra} />
   );
 
   return (
@@ -201,7 +204,7 @@ const ROUNDS = [
 ];
 const LABELS = { 0: 'Quarterfinal 1', 1: 'Quarterfinal 2', 2: 'Quarterfinal 3', 3: 'Quarterfinal 4', 4: 'Semifinal 1', 5: 'Semifinal 2', 6: 'The Final' };
 
-function MobileBracket({ state, actions, myTeamId, matches, allDone, seasonNum }) {
+function MobileBracket({ state, actions, myTeamId, matches, allDone, seasonNum, onOpenSeries }) {
   const [round, setRound] = useState('first');
   const active = ROUNDS.find((r) => r.key === round);
   const roundDone = (r) => r.indices.every((i) => matches[i].result);
@@ -230,7 +233,7 @@ function MobileBracket({ state, actions, myTeamId, matches, allDone, seasonNum }
 
       <div className="bracket-round-list">
         {active.indices.map((i) => (
-          <BracketNode key={i} label={LABELS[i]} m={matches[i]} matches={matches} index={i} myTeamId={myTeamId} actions={actions} narrow />
+          <BracketNode key={i} label={LABELS[i]} m={matches[i]} matches={matches} index={i} myTeamId={myTeamId} actions={actions} onOpenSeries={onOpenSeries} narrow />
         ))}
       </div>
 
@@ -246,7 +249,7 @@ function MobileBracket({ state, actions, myTeamId, matches, allDone, seasonNum }
   );
 }
 
-export default function PlayoffBracketScreen({ state, actions, myTeamId }) {
+export default function PlayoffBracketScreen({ state, actions, myTeamId, onOpenSeries }) {
   const matches = state.playoff.matches;
   const allDone = matches.every((m) => m.result);
   const seasonNum = Math.min(state.season, ERA_LENGTH);
@@ -254,7 +257,7 @@ export default function PlayoffBracketScreen({ state, actions, myTeamId }) {
   const isDesktop = useIsDesktop();
 
   if (!isDesktop) {
-    return <MobileBracket state={state} actions={actions} myTeamId={myTeamId} matches={matches} allDone={allDone} seasonNum={seasonNum} />;
+    return <MobileBracket state={state} actions={actions} myTeamId={myTeamId} matches={matches} allDone={allDone} seasonNum={seasonNum} onOpenSeries={onOpenSeries} />;
   }
 
   if (zoom) {
@@ -263,6 +266,7 @@ export default function PlayoffBracketScreen({ state, actions, myTeamId }) {
         matches={matches}
         myTeamId={myTeamId}
         actions={actions}
+        onOpenSeries={onOpenSeries}
         segment={zoom}
         onSegmentChange={setZoom}
         onZoomOut={() => setZoom(null)}
@@ -299,35 +303,35 @@ export default function PlayoffBracketScreen({ state, actions, myTeamId }) {
           <div className="bracket-half">
             <div className="bracket-round quarter">
               <div className="bracket-round-item">
-                <BracketNode label="Quarterfinal 1" m={matches[0]} matches={matches} index={0} myTeamId={myTeamId} actions={actions} onSelect={zoomTo(0)} />
+                <BracketNode label="Quarterfinal 1" m={matches[0]} matches={matches} index={0} myTeamId={myTeamId} actions={actions} onOpenSeries={onOpenSeries} onSelect={zoomTo(0)} />
               </div>
               <div className="bracket-round-item">
-                <BracketNode label="Quarterfinal 2" m={matches[1]} matches={matches} index={1} myTeamId={myTeamId} actions={actions} onSelect={zoomTo(1)} />
+                <BracketNode label="Quarterfinal 2" m={matches[1]} matches={matches} index={1} myTeamId={myTeamId} actions={actions} onOpenSeries={onOpenSeries} onSelect={zoomTo(1)} />
               </div>
             </div>
             <div className="bracket-round semi">
               <div className="bracket-round-item">
-                <BracketNode label="SF 1" m={matches[4]} matches={matches} index={4} myTeamId={myTeamId} actions={actions} narrow onSelect={zoomTo(4)} />
+                <BracketNode label="SF 1" m={matches[4]} matches={matches} index={4} myTeamId={myTeamId} actions={actions} onOpenSeries={onOpenSeries} narrow onSelect={zoomTo(4)} />
               </div>
             </div>
           </div>
 
           <div className="bracket-centre">
-            <BracketNode label="The Final" m={matches[6]} matches={matches} index={6} myTeamId={myTeamId} actions={actions} big onSelect={zoomTo(6)} />
+            <BracketNode label="The Final" m={matches[6]} matches={matches} index={6} myTeamId={myTeamId} actions={actions} onOpenSeries={onOpenSeries} big onSelect={zoomTo(6)} />
           </div>
 
           <div className="bracket-half right">
             <div className="bracket-round quarter">
               <div className="bracket-round-item">
-                <BracketNode label="Quarterfinal 3" m={matches[2]} matches={matches} index={2} myTeamId={myTeamId} actions={actions} onSelect={zoomTo(2)} />
+                <BracketNode label="Quarterfinal 3" m={matches[2]} matches={matches} index={2} myTeamId={myTeamId} actions={actions} onOpenSeries={onOpenSeries} onSelect={zoomTo(2)} />
               </div>
               <div className="bracket-round-item">
-                <BracketNode label="Quarterfinal 4" m={matches[3]} matches={matches} index={3} myTeamId={myTeamId} actions={actions} onSelect={zoomTo(3)} />
+                <BracketNode label="Quarterfinal 4" m={matches[3]} matches={matches} index={3} myTeamId={myTeamId} actions={actions} onOpenSeries={onOpenSeries} onSelect={zoomTo(3)} />
               </div>
             </div>
             <div className="bracket-round semi">
               <div className="bracket-round-item">
-                <BracketNode label="SF 2" m={matches[5]} matches={matches} index={5} myTeamId={myTeamId} actions={actions} narrow onSelect={zoomTo(5)} />
+                <BracketNode label="SF 2" m={matches[5]} matches={matches} index={5} myTeamId={myTeamId} actions={actions} onOpenSeries={onOpenSeries} narrow onSelect={zoomTo(5)} />
               </div>
             </div>
           </div>

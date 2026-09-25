@@ -18,25 +18,25 @@ const CARD_TIMER_SECONDS = 12;
 // How long the coin spins before the flip actually resolves, and how long the result reads
 // on screen before auto-advancing into the first card window — both purely presentational
 // delays around the instant, synchronous advanceTurn() call.
-const COIN_SPIN_MS = 1300;
-const COIN_RESULT_MS = 1400;
+const COIN_SPIN_MS = 800;
+const COIN_RESULT_MS = 750;
 
 // The engine resolves both of an exchange's dice in one atomic step, but the roll zone plays
 // them back as a little sequence a click at a time — offense's die sits at rest until Roll is
 // clicked, spins for ROLL_DURATION_MS and reveals, then after a read pause defense's die does
 // the same. The first exchange pauses for a Start Next Possession click; the second continues
 // to the bench. All timing is presentational around already-final resolved numbers.
-const ROLL_REVEAL_MS = 700;
-const ROLL_BOTH_READ_MS = 1600;
-const ADJUSTMENT_REVEAL_MS = 2200;
+const ROLL_REVEAL_MS = 400;
+const ROLL_BOTH_READ_MS = 900;
+const ADJUSTMENT_REVEAL_MS = 1600;
 
 // The possession report reveals in three beats rather than all at once: the winner line sits
 // alone for REPORT_BEAT_MS, then Offense fades in and tallies up to its total over
 // REPORT_COUNT_MS, then after REPORT_HALF_BEAT_MS Defense does the same — mirroring the
 // "arrow settles, then each side's number builds" read a real box score gets.
-const REPORT_BEAT_MS = 1550;
-const REPORT_COUNT_MS = 550;
-const REPORT_HALF_BEAT_MS = 275;
+const REPORT_BEAT_MS = 800;
+const REPORT_COUNT_MS = 350;
+const REPORT_HALF_BEAT_MS = 150;
 
 // Rounds a mid-tally value to 2 decimals and drops trailing zeros, so the count-up reads
 // cleanly frame to frame (no floating-point noise) and lands on exactly the same string the
@@ -67,8 +67,8 @@ function useCountUp(target, durationMs, running) {
 
 // The bench stage reveals the same way: the coin-toss winner's bench figure first, a read
 // pause, then the other team's, then a final read pause before the result card appears.
-const BENCH_REVEAL_MS = 1300;
-const BENCH_RESULT_MS = 1300;
+const BENCH_REVEAL_MS = 700;
+const BENCH_RESULT_MS = 700;
 
 // A few phrasings per margin band so the final-result card doesn't read the same way every
 // turn — picked once when the result actually appears, not re-rolled on every render.
@@ -117,7 +117,7 @@ function readAutoProgress() {
 // name: below the home roster on the left, and above the away roster on the right. Gameplan
 // and Adjustment sit together on the side opposite the coach. Both always render, even with
 // nothing played yet, so the slot (and whether it is actionable) remains visible.
-function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, gameplanPlays, gameplanCanPlay, adjustmentCanPlay, onAdjustmentSlotClick, isActive, flip, contributing }) {
+function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, gameplanPlays, gameplanCanPlay, adjustmentCanPlay, onAdjustmentSlotClick, isActive, flip, contributing, timerPercent, benchContribution }) {
   const hand = team.hand || [];
   const activeIds = ids || team.activeIds || [];
   const starters = activeIds.map((id) => hand.find((c) => c.id === id)).filter(Boolean);
@@ -127,7 +127,8 @@ function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, gameplan
   const hasAdjustment = cardPlays?.length > 0;
   return (
     <div className={'t2-teamboard' + (isActive ? ' active' : '') + (flip ? ' flip' : '')}>
-      <div className="nd2-roster">
+      <div className={'nd2-roster' + (timerPercent !== null && timerPercent !== undefined ? ' timer-active' : '')}>
+        {timerPercent !== null && timerPercent !== undefined && <div className={'nd2-roster-timer' + (timerPercent <= 25 ? ' urgent' : '')} style={{ width: `${timerPercent}%` }} />}
         {chipSlots(starters, 5).map((c, i) => (c ? <CompactPlayerTile key={`s${i}`} card={c} isStarter edge={edge} contributing={contributing} /> : <div key={`s${i}`} className="nd2-tile empty" />))}
         {chipSlots(bench, 4).map((c, i) => (c ? <CompactPlayerTile key={`b${i}`} card={c} edge={edge} /> : <div key={`b${i}`} className="nd2-tile empty" />))}
       </div>
@@ -179,6 +180,7 @@ function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, gameplan
             <div className="t2-teamboard-name-text">{team.name}</div>
           </div>
           {statusLabel && <div className="t2-teamboard-status">{statusLabel}</div>}
+          {benchContribution !== null && benchContribution !== undefined && <div className="t2-teamboard-bench">Bench Contribution <strong>+{benchContribution}</strong></div>}
         </div>
       </div>
     </div>
@@ -505,6 +507,14 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
   const hcaOf = (side) => (side === 'a' ? turn.hcaA : turn.hcaB);
   const cardsOf = (side) => (side === 'a' ? settledTeamACards : settledTeamBCards);
   const gameplansOf = (side) => (side === 'a' ? teamAGameplans : teamBGameplans);
+  const benchOrder = turn.order && turn.order.length === 2 ? turn.order : [teamA, teamB];
+  const benchFor = (team) => (team === teamA ? turn.aBench : turn.bBench);
+  const benchVisibleFor = (team) => {
+    if (turn.stage !== 'bench') return null;
+    if (benchPhase === 'first' && team !== benchOrder[0]) return null;
+    return benchFor(team);
+  };
+  const timerFor = (team) => (myTurnToAct && actingTeam === team ? Math.max(0, Math.min(100, (timeLeft / CARD_TIMER_SECONDS) * 100)) : null);
   // Only the viewer's own empty slot ever pulses — you can't play the opponent's cards, so
   // there's nothing actionable to draw their eye to on that side. Gameplan mirrors
   // playGameplanCard's own 'playoff' eligibility window and its one-active-at-a-time rule;
@@ -737,22 +747,20 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
     }
     // Bench: reveals the coin-toss winner's contribution, then the other team's, then a final
     // result card naming the winner and a margin-flavored blurb — see the benchPhase effects.
-    const benchOrder = turn.order && turn.order.length === 2 ? turn.order : [teamA, teamB];
     const [firstTeam, secondTeam] = benchOrder;
-    const benchFor = (t) => (t === teamA ? turn.aBench : turn.bBench);
     if (benchPhase === 'first') {
       return (
         <div className="t2-rollzone-coin">
-          <div className="t2-coin"><div className="t2-coin-face">+{benchFor(firstTeam)}</div><div className="t2-coin-brand">Bench</div></div>
-          <div className="t2-rollzone-caption">{firstTeam.name} Bench Contributes<br /><span>+{benchFor(firstTeam)} points</span></div>
+          <div className="t2-coin"><div className="t2-coin-face">BENCH</div><div className="t2-coin-brand">Contribution</div></div>
+          <div className="t2-rollzone-caption">Adding {firstTeam.name}'s bench</div>
         </div>
       );
     }
     if (benchPhase === 'second') {
       return (
         <div className="t2-rollzone-coin t2-fade-in">
-          <div className="t2-coin"><div className="t2-coin-face">+{benchFor(secondTeam)}</div><div className="t2-coin-brand">Bench</div></div>
-          <div className="t2-rollzone-caption">{secondTeam.name} Bench Contributes<br /><span>+{benchFor(secondTeam)} points</span></div>
+          <div className="t2-coin"><div className="t2-coin-face">BENCH</div><div className="t2-coin-brand">Contribution</div></div>
+          <div className="t2-rollzone-caption">Adding {secondTeam.name}'s bench</div>
         </div>
       );
     }
@@ -808,6 +816,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
             gameplanCanPlay={gameplanCanPlayFor(teamOf(topSide))} adjustmentCanPlay={adjustmentCanPlayFor(teamOf(topSide))}
             onAdjustmentSlotClick={() => setAdjustmentPickerOpen(true)}
             isActive={offenseTeam === teamOf(topSide) || defenseTeam === teamOf(topSide)} contributing={rollingSide === teamOf(topSide)}
+            timerPercent={timerFor(teamOf(topSide))} benchContribution={benchVisibleFor(teamOf(topSide))}
           />
 
           <div className="t2-rollzone">
@@ -854,6 +863,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
             gameplanCanPlay={gameplanCanPlayFor(teamOf(bottomSide))} adjustmentCanPlay={adjustmentCanPlayFor(teamOf(bottomSide))}
             onAdjustmentSlotClick={() => setAdjustmentPickerOpen(true)}
             isActive={offenseTeam === teamOf(bottomSide) || defenseTeam === teamOf(bottomSide)} contributing={rollingSide === teamOf(bottomSide)}
+            timerPercent={timerFor(teamOf(bottomSide))} benchContribution={benchVisibleFor(teamOf(bottomSide))}
             flip
           />
         </div>

@@ -4,7 +4,7 @@ import TurnPanel from '../components/TurnPanel';
 import { matchTeams } from '../game/matchup';
 import { ACTION_LOG_SPEEDS } from '../game/constants';
 
-export default function PlayoffSeriesScreen({ state, actions, myTeamId }) {
+export default function PlayoffSeriesScreen({ state, actions, myTeamId, matchIndex, onClose }) {
   // This screen replaces the bracket outright (PlayoffsScreen swaps components rather than
   // routing), so it always mounts fresh when a series is opened — but .mobile-shell:has(.t2-
   // shell) only clips to the viewport height, it never resets scroll. Opening a series from
@@ -13,7 +13,7 @@ export default function PlayoffSeriesScreen({ state, actions, myTeamId }) {
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
   const p = state.playoff;
-  const idx = p.activeMatchIndex;
+  const idx = matchIndex;
   const m = p.matches[idx];
   const [revealIndex, setRevealIndex] = useState(m.result ? Infinity : 0);
   // A completed match opened from the bracket is a review. A match completed while this
@@ -74,7 +74,7 @@ export default function PlayoffSeriesScreen({ state, actions, myTeamId }) {
 
   return (
     <div className="screen">
-      {!showLiveBoard && <button className="reset-link" style={{ marginBottom: 12 }} onClick={actions.closeSeries}>← Back to Playoff Bracket</button>}
+      {!showLiveBoard && <button className="reset-link" style={{ marginBottom: 12 }} onClick={onClose}>← Back to Playoff Bracket</button>}
       {!showLiveBoard && (
         <>
           <h1>{m.label}</h1>
@@ -92,14 +92,14 @@ export default function PlayoffSeriesScreen({ state, actions, myTeamId }) {
             <button
               className="primary"
               style={{ width: '100%', padding: 16, margin: '16px 0' }}
-              onClick={actions.closeSeries}
+              onClick={onClose}
             >
               Back to Playoff Bracket
             </button>
           )}
         </>
       ) : m.turn ? (
-        <TurnPanel state={state} actions={actions} m={m} myTeamId={myTeamId} onBack={actions.closeSeries} />
+        <TurnPanel state={state} actions={actions} m={m} myTeamId={myTeamId} onBack={onClose} />
       ) : null}
     </div>
   );

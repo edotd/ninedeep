@@ -238,6 +238,8 @@ function finishTurn(state, m) {
   state.playoff.cardChoices[m.a.id] = { useAdvantage: false, selectedCardId: null, selectedTargetId: null, useInjuryPrevention: false };
   state.playoff.cardChoices[m.b.id] = { useAdvantage: false, selectedCardId: null, selectedTargetId: null, useInjuryPrevention: false };
   turn.stage = 'complete';
+  const matchIndex = state.playoff.matches.indexOf(m);
+  if (state.playoff.activeMatchIndex === matchIndex) state.playoff.activeMatchIndex = null;
 }
 
 export function advanceTurn(state, payload) {

@@ -1221,6 +1221,8 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .t2-team-role.defense{color:var(--file);background:transparent;border:2px solid var(--franchise);padding:3px 7px;}
 .t2-teamboard-status{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--ink-muted);text-transform:uppercase;}
 .t2-teamboard.active .t2-teamboard-status{color:var(--franchise);}
+.t2-teamboard-bench{font-family:var(--font-label);font-size:11px;letter-spacing:.08em;color:var(--file);text-transform:uppercase;animation:t2-fade-in 300ms ease-out both;}
+.t2-teamboard-bench strong{margin-left:6px;font-family:var(--font-display);font-size:20px;font-weight:400;color:var(--franchise);}
 .t2-gameplan-dock,.t2-adjustment-dock{display:flex;align-items:center;justify-content:center;gap:8px;max-width:100%;flex-wrap:wrap;animation:t2-dock-arrive 180ms ease-out both;}
 /* Played Gameplan/Adjustment cards show as a plain icon badge (clipboard / X's-and-O's, see
    CardTypeMark) rather than an illegibly tiny scaled-down card — the point was always just "a
@@ -1250,7 +1252,7 @@ button.t2-adjustment-mini.empty.pulsing{cursor:pointer;}
 /* Played Adjustment cards reveal above the entire match board, so they never alter the dice
    layout. After the shared display interval they disappear into the compact team-name dock. */
 .t2-adjustment-reveal{position:fixed;inset:0;z-index:120;display:flex;align-items:center;justify-content:center;gap:24px;padding:24px;background:rgba(11,17,30,.72);pointer-events:none;}
-.t2-adjustment-reveal-card{width:min(280px,40vw);display:flex;flex-direction:column;align-items:center;gap:10px;animation:t2-adjustment-reveal 2.2s ease-in-out both;}
+.t2-adjustment-reveal-card{width:min(280px,40vw);display:flex;flex-direction:column;align-items:center;gap:10px;animation:t2-adjustment-reveal 1.6s ease-in-out both;}
 .t2-adjustment-reveal-card>.mu2-wrap{width:100%;}
 .t2-adjustment-reveal-team{font-family:var(--font-label);font-size:13px;letter-spacing:.12em;color:var(--franchise);text-transform:uppercase;text-align:center;}
 @keyframes t2-adjustment-reveal-top{
@@ -1260,12 +1262,15 @@ button.t2-adjustment-mini.empty.pulsing{cursor:pointer;}
 }
 .t2-adjustment-reveal-card.settle-top{animation-name:t2-adjustment-reveal-top;}
 .t2-adjustment-reveal-card.settle-bottom{animation-name:t2-adjustment-reveal;}
-@media(prefers-reduced-motion:reduce){.t2-adjustment-reveal-card{animation:t2-adjustment-fade 2.2s linear both;}@keyframes t2-adjustment-fade{0%,85%{opacity:1;}100%{opacity:0;}}}
+@media(prefers-reduced-motion:reduce){.t2-adjustment-reveal-card{animation:t2-adjustment-fade 1.6s linear both;}@keyframes t2-adjustment-fade{0%,85%{opacity:1;}100%{opacity:0;}}}
 
 /* Rotation row: all nine tiles (starters, then bench) in one line — real content sizes each
    tile via flex:1, so the row holds at any board width down to wrapping on narrow screens. */
 .nd2-roster{position:relative;display:flex;gap:3px;flex-wrap:wrap;padding-bottom:2px;}
 .t2-teamboard.flip .nd2-roster{padding-bottom:0;padding-top:2px;}
+.nd2-roster-timer{position:absolute;inset:0 auto 0 0;z-index:0;background:rgba(240,160,61,.2);border-bottom:3px solid var(--franchise);transition:width 100ms linear,border-color 180ms ease,background 180ms ease;pointer-events:none;}
+.nd2-roster-timer.urgent{background:rgba(181,67,31,.2);border-color:var(--stamp);}
+.nd2-roster.timer-active .nd2-tile{position:relative;z-index:1;background-color:rgba(230,220,196,.9);}
 
 .nd2-tile{flex:1 1 78px;min-width:78px;box-sizing:border-box;background:var(--form);display:flex;flex-direction:column;transition:transform 200ms ease-out;}
 .nd2-tile.edge-bottom{border-bottom:4px solid var(--franchise);}
@@ -1362,7 +1367,7 @@ button.t2-adjustment-mini.empty.pulsing{cursor:pointer;}
 .t2-coin-brand{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--file-muted);text-transform:uppercase;}
 .t2-coin-start{width:130px;height:130px;border-radius:50%;background:none;border:none;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;padding:0;}
 .t2-coin-start.pulsing{animation:t2-coin-pulse 1.8s ease-in-out infinite;}
-.t2-coin-start.spinning{animation:t2-coin-flip 1.3s cubic-bezier(.2,.5,.3,1) both;cursor:default;}
+.t2-coin-start.spinning{animation:t2-coin-flip .8s cubic-bezier(.2,.5,.3,1) both;cursor:default;}
 @keyframes t2-coin-pulse{0%,100%{box-shadow:0 0 0 0 rgba(240,160,61,.55);}50%{box-shadow:0 0 0 14px rgba(240,160,61,0);}}
 /* A real flip, not a flat spin — rotateY tumbles the coin edge-on and back each half-turn,
    and the keyframe spacing itself decelerates (each step covers a smaller angle) so it visibly
