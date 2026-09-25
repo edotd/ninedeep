@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { newEraState, renewExpiredContract, signFreeAgent } from '../src/game/season.js';
-import { startDraft, draftPick } from '../src/game/draft.js';
+import { startDraft, draftPick, forfeitPick, forfeitBonusForPosition, overallPickPosition } from '../src/game/draft.js';
+import { FORFEIT_BONUS_MAX, FORFEIT_BONUS_MIN, LEAGUE_TEAM_COUNT } from '../src/game/constants.js';
 import { startEra, confirmLineup, markLineupSet } from '../src/game/engine.js';
 import { fireCoach, fireGM, hireFreeAgentCoach, releasePlayer } from '../src/game/finances.js';
 import { LEAGUE_ACCOLADES, TIERS } from '../src/game/constants.js';
@@ -76,6 +77,29 @@ test('a fired coach leaves a vacancy and cannot return to the same team that sea
   assert.equal(hireFreeAgentCoach(state, team.id, listed.id).ok, false);
   assert.equal(team.coach, null);
   assert.equal(team.deadCap.at(-1).kind, 'coach');
+});
+
+test('forfeit bonus scales down from the 1st overall pick to the last', () => {
+  assert.equal(forfeitBonusForPosition(1), FORFEIT_BONUS_MAX);
+  assert.equal(forfeitBonusForPosition(LEAGUE_TEAM_COUNT), FORFEIT_BONUS_MIN);
+  assert(forfeitBonusForPosition(1) > forfeitBonusForPosition(5));
+  assert(forfeitBonusForPosition(5) > forfeitBonusForPosition(LEAGUE_TEAM_COUNT));
+});
+
+test('forfeiting the 1st overall pick credits the max bonus before the rest of a solo draft auto-resolves', () => {
+  const state = newEraState();
+  startEra(state, 'Test');
+  state.season = 2;
+  // Reversing the natural team order before startDraft's own [...seeds].reverse() puts team 0
+  // back at the front — the human is on the clock immediately, at the 1st overall pick. In solo
+  // mode every other team is AI, so forfeiting here cascades all the way through the rest of the
+  // draft and into next season's cap finalization (which resets draftTradeBonus to 0 once
+  // applied) — so the position math is checked going in, not the post-cascade leftover value.
+  state.seeds = [...state.teams].reverse().map((t) => ({ t }));
+  startDraft(state);
+  assert.equal(state.draft.queue[0], state.teams[0]);
+  assert.equal(overallPickPosition(state), 1);
+  assert.equal(forfeitPick(state, 0).ok, true);
 });
 
 test('every team drafts a Young non-accolade player and resolves an oversized roster on Team', () => {

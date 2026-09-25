@@ -1,5 +1,5 @@
 import { acquireOffseasonPlayer } from './gm';
-import { TIERS, POSITIONS, REPLACEMENT_TIER, ERA_LENGTH } from './constants';
+import { TIERS, POSITIONS, REPLACEMENT_TIER, ERA_LENGTH, LEAGUE_TEAM_COUNT, FORFEIT_BONUS_MAX, FORFEIT_BONUS_MIN } from './constants';
 import { makeCard, randomArch, randomArchForTier, cardTotal, neededPosition } from './cards';
 import { autoSelectFive } from './roster';
 import { startNewSeasonRoster } from './season';
@@ -130,13 +130,31 @@ export function draftPick(state, teamIdx, cardId) {
   resolveAiPicksUntilHuman(state);
 }
 
-// Pass on this pick entirely for a flat cap bonus next season — reuses draftTradeBonus (see
-// economy.js, where it's applied once then reset to 0).
+// This is a single-round draft (buildPickQueue gives exactly one slot per team), so whoever is
+// on the clock right now sits at overall position (teams already through the queue) + 1 —
+// counting every queue slot consumed so far, forfeits included, not just draft.picks (which
+// only logs actual card picks).
+export function overallPickPosition(state) {
+  return LEAGUE_TEAM_COUNT - state.draft.queue.length + 1;
+}
+
+// Scales linearly from FORFEIT_BONUS_MAX at the 1st overall pick down to FORFEIT_BONUS_MIN at
+// the last — mirrors that an early pick (worst record, first choice of the pool) was worth more
+// than a late one, so giving it up should pay more too. Rounded to the same 0.25 granularity
+// salaries use.
+export function forfeitBonusForPosition(position) {
+  const span = LEAGUE_TEAM_COUNT - 1;
+  const raw = span <= 0 ? FORFEIT_BONUS_MAX : FORFEIT_BONUS_MAX - ((position - 1) * (FORFEIT_BONUS_MAX - FORFEIT_BONUS_MIN)) / span;
+  return Math.round(raw * 4) / 4;
+}
+
+// Pass on this pick entirely for a cap bonus next season, scaled by how valuable the forfeited
+// pick was — reuses draftTradeBonus (see economy.js, where it's applied once then reset to 0).
 export function forfeitPick(state, teamIdx) {
   if (state.phase !== 'draft') return { ok: false, msg: 'The draft is closed.' };
   const human = state.draft.queue[0];
   if (!human || !human.human || human.id !== state.teams[teamIdx].id) return;
-  human.draftTradeBonus = (human.draftTradeBonus || 0) + 1;
+  human.draftTradeBonus = (human.draftTradeBonus || 0) + forfeitBonusForPosition(overallPickPosition(state));
   state.draft.queue.shift();
   resolveAiPicksUntilHuman(state);
   return { ok: true };

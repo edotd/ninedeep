@@ -51,6 +51,13 @@ function breakdownRows(kind, team, synergy, output) {
 
 const METRIC_LABELS = { chemistry: 'Chemistry', output: 'Output', offense: 'Offense', defense: 'Defense' };
 
+// Only offense/defense breakdowns include an Expected Roll row — chemistry and output don't
+// roll a die at all, so there's nothing there to explain.
+const BREAKDOWN_NOTES = {
+  offense: 'Expected Roll is the statistical average of your offense die — (die size + 1) ÷ 2 — used here to project output before any match happens. A real roll can land higher or lower.',
+  defense: 'Expected Roll is the statistical average of your defense die — (die size + 1) ÷ 2 — used here to project output before any match happens. A real roll can land higher or lower.',
+};
+
 export default function FranchiseMasthead({ state, teamId }) {
   const team = state.teams[teamId];
   const [openMetric, setOpenMetric] = useState(null);
@@ -95,6 +102,7 @@ export default function FranchiseMasthead({ state, teamId }) {
           {rows.map(([label, value], i) => label === '__total'
             ? <div className="ts-masthead-breakdown-row total" key={i}><span>Total</span><span>{value}</span></div>
             : <div className="ts-masthead-breakdown-row" key={i}><span>{label}</span><span>{value}</span></div>)}
+          {BREAKDOWN_NOTES[openMetric] && <p className="ts-masthead-breakdown-note">{BREAKDOWN_NOTES[openMetric]}</p>}
         </div>
       )}
     </div>

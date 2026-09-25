@@ -815,6 +815,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .ts-masthead-breakdown-head{font-family:var(--font-label);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:6px;}
 .ts-masthead-breakdown-row{display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px solid var(--ink-rule);}
 .ts-masthead-breakdown-row.total{border-bottom:none;color:var(--franchise);font-family:var(--font-display);font-size:16px;padding-top:6px;}
+.ts-masthead-breakdown-note{margin:8px 0 0;font-size:10px;line-height:1.5;color:var(--ink-muted);}
 /* Mobile-only tab bar (per the brand handoff's mobile Team File) — desktop keeps every
    section stacked in one scroll (TeamSummaryScreen's showSection() ignores `tab` there), so
    this bar only needs to exist below the shell's own 1000px desktop breakpoint. */

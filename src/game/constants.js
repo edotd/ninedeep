@@ -5,6 +5,11 @@ export const POSITIONS = ['Guard', 'Forward', 'Big'];
 export const ERA_LENGTH = 9;
 export const LEAGUE_TEAM_COUNT = 9;
 
+// Forfeiting a pick's cap bonus scales from FORFEIT_BONUS_MAX (1st overall) down to
+// FORFEIT_BONUS_MIN (last) — see draft.js's forfeitBonusForPosition.
+export const FORFEIT_BONUS_MAX = 2;
+export const FORFEIT_BONUS_MIN = 0.5;
+
 export const ARCHETYPES = {
   'Pass-First': { base: { SCO: 4, PLM: 10, REB: 3, DEF: 5 }, peak: 'PLM' },
   'Scorer':     { base: { SCO: 10, PLM: 4, REB: 3, DEF: 4 }, peak: 'SCO' },

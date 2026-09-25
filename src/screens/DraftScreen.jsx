@@ -4,6 +4,7 @@ import { careerLevel } from '../game/aging';
 import { formatCoins } from '../game/economy';
 import OffseasonFile from '../components/OffseasonFile';
 import { offseasonPrice } from '../game/gm';
+import { forfeitBonusForPosition, overallPickPosition } from '../game/draft';
 
 // "Number + Grade + Career + Tier + Position" — the one full-identity line the draft order
 // table and this screen's Recent Picks list both use for a pick's card.
@@ -37,7 +38,7 @@ export default function DraftScreen({ state, actions, myTeamId }) {
             if (res && res.ok === false) alert(res.msg);
           }}
         >
-          Forfeit Pick — +{formatCoins(1)} Cap Next Season
+          Forfeit Pick — +{formatCoins(forfeitBonusForPosition(overallPickPosition(state)))} Cap Next Season
         </button>
       )}
 
