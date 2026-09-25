@@ -7,7 +7,6 @@ export default function WelcomeScreen({ onContinue }) {
       <section className="welcome-file">
         <div className="welcome-lockup" aria-label="Nine Deep">
           <BallMark size={54} variant="onInk" />
-          <span><b>NINE</b> <i>DEEP</i></span>
         </div>
         <div className="welcome-copy">
           <h1>Welcome to Nine Deep.</h1>

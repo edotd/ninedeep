@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import PlayerCard from '../components/PlayerCard';
 import FrontOfficeCard from '../components/FrontOfficeCard';
 import MatchupCard from '../components/MatchupCard';
+import BallMark from '../components/BallMark';
 import WelcomeScreen from './WelcomeScreen';
 
 const ALL_FO_KINDS = ['coach', 'fanbase', 'market'];
@@ -97,8 +98,10 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
         </div>
         <div className="deal-stage">
           <div className="deal-deck">
-            <div className="deal-deck-card" /><div className="deal-deck-card" /><div className="deal-deck-card" />
-            {tokens.map((t) => <div key={t.id} className="deal-token" />)}
+            <div className="deal-deck-card"><BallMark size={64} variant="onInk" /></div>
+            <div className="deal-deck-card"><BallMark size={64} variant="onInk" /></div>
+            <div className="deal-deck-card"><BallMark size={64} variant="onInk" /></div>
+            {tokens.map((t) => <div key={t.id} className="deal-token"><BallMark size={34} variant="onInk" /></div>)}
           </div>
           {phase === 'dealing' && <div className="deal-count">{dealt} / {total} dealt</div>}
         </div>

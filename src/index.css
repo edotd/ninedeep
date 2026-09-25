@@ -1789,8 +1789,8 @@ html[data-theme="dark"] .wordmark-ink{color:var(--file);}
 .deal-stage{flex:1;min-height:340px;background:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;box-sizing:border-box;padding:20px;}
 .deal-skip{display:block;margin:14px auto 0;}
 
-.deal-deck{position:relative;width:110px;height:154px;animation:deal-deck-in 260ms ease-out both;}
-.deal-deck-card{position:absolute;inset:0;border-radius:6px;background:var(--ink-deep);box-shadow:inset 0 0 0 2px var(--franchise);}
+.deal-deck{position:relative;width:160px;height:224px;animation:deal-deck-in 260ms ease-out both;}
+.deal-deck-card{position:absolute;inset:0;border-radius:8px;background:var(--ink-deep);box-shadow:inset 0 0 0 3px var(--franchise);display:grid;place-items:center;}
 .deal-deck-card:nth-child(1){transform:translate(-6px,-6px) rotate(-4deg);}
 .deal-deck-card:nth-child(2){transform:translate(3px,-2px) rotate(2deg);}
 .deal-deck-card:nth-child(3){transform:none;}
@@ -1800,7 +1800,7 @@ html[data-theme="dark"] .wordmark-ink{color:var(--file);}
    (fixed to the very bottom of the viewport in both shells), fading out just before it would
    reach the screen edge, right as that card's real slot in the bar lands via bar-fill. Purely
    decorative: the actual "card" is the bar slot itself. */
-.deal-token{position:absolute;inset:0;margin:auto;width:64px;height:90px;border-radius:5px;background:var(--franchise);box-shadow:inset 0 0 0 2px var(--ink);animation:deal-token-drop 480ms cubic-bezier(.4,0,.7,.3) both;}
+.deal-token{position:absolute;inset:0;margin:auto;width:90px;height:126px;border-radius:6px;background:var(--franchise);box-shadow:inset 0 0 0 2px var(--ink);display:grid;place-items:center;animation:deal-token-drop 480ms cubic-bezier(.4,0,.7,.3) both;}
 @keyframes deal-token-drop{from{opacity:1;transform:translateY(0) scale(1) rotate(0deg);}to{opacity:0;transform:translateY(340px) scale(.5) rotate(14deg);}}
 .deal-count{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-muted);}
 
