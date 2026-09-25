@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { teamSynergy } from '../game/skillsets';
 import { teamOutput } from '../game/matchup';
 import { modifierBreakdown, offenseDieSize, defenseDieSize } from '../game/roster';
@@ -51,6 +51,52 @@ function breakdownRows(kind, team, synergy, output) {
 
 const METRIC_LABELS = { chemistry: 'Chemistry', output: 'Output', offense: 'Offense', defense: 'Defense' };
 
+// Glow tally: whenever a hero metric's own value changes (a lineup swap, a coach hire, a
+// signed contract, anything that moves Chemistry/Output/Offense/Defense), the affected metric
+// pulses and a running +/- tally builds up next to it, so a change made two screens away is
+// still visible the next time this masthead is on screen. The tally is a plain sum of deltas
+// since resetKey (the viewed team) last changed — it isn't trying to reconstruct history, just
+// to say "this is net up/down N since you started looking at this file."
+const PULSE_MS = 1000;
+function useMetricTally(values, resetKey) {
+  const prevRef = useRef(null);
+  const timersRef = useRef({});
+  const [tally, setTally] = useState({});
+  const [pulsing, setPulsing] = useState({});
+
+  useEffect(() => {
+    prevRef.current = null;
+    Object.values(timersRef.current).forEach(clearTimeout);
+    timersRef.current = {};
+    setTally({});
+    setPulsing({});
+  }, [resetKey]);
+
+  const signature = JSON.stringify(values);
+  useEffect(() => {
+    const prev = prevRef.current;
+    prevRef.current = values;
+    if (!prev) return; // first paint since a reset — nothing to diff against yet
+    const changed = Object.keys(values).filter((key) => typeof prev[key] === 'number' && typeof values[key] === 'number' && prev[key] !== values[key]);
+    if (!changed.length) return;
+    setTally((t) => {
+      const next = { ...t };
+      changed.forEach((key) => { next[key] = (next[key] || 0) + (values[key] - prev[key]); });
+      return next;
+    });
+    setPulsing((p) => ({ ...p, ...Object.fromEntries(changed.map((key) => [key, true])) }));
+    changed.forEach((key) => {
+      clearTimeout(timersRef.current[key]);
+      timersRef.current[key] = setTimeout(() => setPulsing((p) => ({ ...p, [key]: false })), PULSE_MS);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signature]);
+
+  useEffect(() => () => Object.values(timersRef.current).forEach(clearTimeout), []);
+
+  return { tally, pulsing };
+}
+
 // Only offense/defense breakdowns include an Expected Roll row — chemistry and output don't
 // roll a die at all, so there's nothing there to explain.
 const BREAKDOWN_NOTES = {
@@ -62,18 +108,29 @@ export default function FranchiseMasthead({ state, teamId }) {
   const team = state.teams[teamId];
   const [openMetric, setOpenMetric] = useState(null);
   const [selectedRow, setSelectedRow] = useState(null);
-  if (!team) return null;
-  const seasonNum = Math.min(state.season, ERA_LENGTH);
   // A human team's chemistry/output/offense/defense are only meaningful once they've actually
   // reviewed a lineup on the Set Lineup screen — before that, the auto-selected five is a
   // placeholder, not a real projection. AI teams have no such review step (lineupSet is set
   // true for them the moment autoSelectFive runs), so they're never gated here.
-  const lineupReady = team.coach && team.activeIds?.length === 5 && team.lineupSet;
+  const lineupReady = team && team.coach && team.activeIds?.length === 5 && team.lineupSet;
   const synergy = lineupReady ? teamSynergy(team) : null;
   const output = lineupReady ? teamOutput(team) : null;
+  // Hooks must run unconditionally, so useMetricTally is called before the `!team` bailout
+  // below, even though there's nothing meaningful to tally until a team is actually resolved.
+  const { tally, pulsing } = useMetricTally({
+    chemistry: synergy ? synergy.score : null,
+    output: output ? output.total : null,
+    offense: output ? output.off : null,
+    defense: output ? output.def : null,
+  }, teamId);
+  if (!team) return null;
+  const seasonNum = Math.min(state.season, ERA_LENGTH);
   const outputs = state.teams.map((t) => (t.coach && t.activeIds?.length === 5 && t.lineupSet ? teamOutput(t) : null));
   const rankedCount = outputs.filter(Boolean).length;
   const rankFor = (key) => output ? outputs.filter((o) => o && o[key] > output[key]).length + 1 : null;
+  const tallyBadge = (key) => tally[key] ? (
+    <span className={'ts-hero-tally ' + (tally[key] > 0 ? 'up' : 'down')}>{tally[key] > 0 ? '+' : ''}{tally[key]}</span>
+  ) : null;
 
   const toggleMetric = (kind) => () => {
     setSelectedRow(null);
@@ -124,10 +181,10 @@ export default function FranchiseMasthead({ state, teamId }) {
         </div>
       </div>
       <div className="ts-masthead-right persistent">
-        <button type="button" className={'ts-hero-metric chemistry' + (openMetric === 'chemistry' ? ' open' : '')} onClick={synergy ? toggleMetric('chemistry') : undefined} disabled={!synergy}><div className="ts-proj-label">Chemistry</div><div className="ts-hero-value">{synergy ? synergy.grade : '—'}</div><div className="ts-proj-rank">{synergy ? synergy.score : '—'}</div></button>
-        <button type="button" className={'ts-hero-metric' + (openMetric === 'output' ? ' open' : '')} onClick={output ? toggleMetric('output') : undefined} disabled={!output}><div className="ts-proj-label">Output</div><div className="ts-hero-value accent">{output ? output.total : '—'}</div><div className="ts-proj-rank">{output ? `${ordinal(rankFor('total'))} of ${rankedCount}` : '—'}</div></button>
-        <button type="button" className={'ts-hero-metric' + (openMetric === 'offense' ? ' open' : '')} onClick={output ? toggleMetric('offense') : undefined} disabled={!output}><div className="ts-proj-label">Offense</div><div className="ts-hero-value">{output ? output.off : '—'}</div><div className="ts-proj-rank">{output ? ordinal(rankFor('off')) : '—'}</div></button>
-        <button type="button" className={'ts-hero-metric' + (openMetric === 'defense' ? ' open' : '')} onClick={output ? toggleMetric('defense') : undefined} disabled={!output}><div className="ts-proj-label">Defense</div><div className="ts-hero-value">{output ? output.def : '—'}</div><div className="ts-proj-rank">{output ? ordinal(rankFor('def')) : '—'}</div></button>
+        <button type="button" className={'ts-hero-metric chemistry' + (openMetric === 'chemistry' ? ' open' : '') + (pulsing.chemistry ? ' pulsing' : '')} onClick={synergy ? toggleMetric('chemistry') : undefined} disabled={!synergy}>{tallyBadge('chemistry')}<div className="ts-proj-label">Chemistry</div><div className="ts-hero-value">{synergy ? synergy.grade : '—'}</div><div className="ts-proj-rank">{synergy ? synergy.score : '—'}</div></button>
+        <button type="button" className={'ts-hero-metric' + (openMetric === 'output' ? ' open' : '') + (pulsing.output ? ' pulsing' : '')} onClick={output ? toggleMetric('output') : undefined} disabled={!output}>{tallyBadge('output')}<div className="ts-proj-label">Output</div><div className="ts-hero-value accent">{output ? output.total : '—'}</div><div className="ts-proj-rank">{output ? `${ordinal(rankFor('total'))} of ${rankedCount}` : '—'}</div></button>
+        <button type="button" className={'ts-hero-metric' + (openMetric === 'offense' ? ' open' : '') + (pulsing.offense ? ' pulsing' : '')} onClick={output ? toggleMetric('offense') : undefined} disabled={!output}>{tallyBadge('offense')}<div className="ts-proj-label">Offense</div><div className="ts-hero-value">{output ? output.off : '—'}</div><div className="ts-proj-rank">{output ? ordinal(rankFor('off')) : '—'}</div></button>
+        <button type="button" className={'ts-hero-metric' + (openMetric === 'defense' ? ' open' : '') + (pulsing.defense ? ' pulsing' : '')} onClick={output ? toggleMetric('defense') : undefined} disabled={!output}>{tallyBadge('defense')}<div className="ts-proj-label">Defense</div><div className="ts-hero-value">{output ? output.def : '—'}</div><div className="ts-proj-rank">{output ? ordinal(rankFor('def')) : '—'}</div></button>
       </div>
       {rows && (
         <div className="ts-masthead-breakdown">

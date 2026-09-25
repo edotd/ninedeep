@@ -866,7 +866,17 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .ts-titles{display:flex;align-items:baseline;gap:7px;}
 .ts-titles-label{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;color:var(--franchise);}
 .ts-titles-value{font-family:var(--font-display);font-size:34px;line-height:.86;color:var(--franchise);}
-.ts-hero-metric{display:flex;flex-direction:column;justify-content:flex-end;border:none;border-left:1px solid var(--ink-rule);padding:4px 18px 2px;background:none;font:inherit;text-align:left;cursor:pointer;color:inherit;}
+.ts-hero-metric{position:relative;display:flex;flex-direction:column;justify-content:flex-end;border:none;border-left:1px solid var(--ink-rule);padding:4px 18px 2px;background:none;font:inherit;text-align:left;cursor:pointer;color:inherit;}
+/* Glow tally — a metric pulses the instant its own value changes, and a running +/- badge
+   tracks the net change since this masthead started watching this team (see
+   FranchiseMasthead.jsx's useMetricTally). */
+.ts-hero-metric.pulsing{animation:ts-hero-pulse 1s ease-out;}
+@keyframes ts-hero-pulse{0%{background:rgba(240,160,61,.35);box-shadow:inset 0 0 0 1px var(--franchise);}100%{background:rgba(240,160,61,0);box-shadow:inset 0 0 0 1px rgba(240,160,61,0);}}
+@media (prefers-reduced-motion: reduce){.ts-hero-metric.pulsing{animation:none;background:rgba(240,160,61,.2);}}
+.ts-hero-tally{position:absolute;top:2px;right:4px;font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.02em;padding:1px 5px;border-radius:9px;animation:ts-hero-tally-in .25s ease-out;}
+.ts-hero-tally.up{color:var(--approved-ink);background:rgba(111,163,131,.18);}
+.ts-hero-tally.down{color:var(--stamp-ink);background:rgba(181,67,31,.18);}
+@keyframes ts-hero-tally-in{from{transform:scale(1.5);opacity:0;}to{transform:scale(1);opacity:1;}}
 .ts-hero-metric.chemistry{padding-left:0;border-left:0;}
 .ts-hero-metric:disabled{cursor:default;}
 .ts-hero-metric:not(:disabled):hover,.ts-hero-metric.open{background:rgba(255,255,255,.04);}
