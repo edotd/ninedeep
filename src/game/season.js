@@ -169,6 +169,27 @@ export function refreshAdvantage(team) {
 
 // Runs once, right after team setup and before hands are dealt. Coach, Fanbase, and GM are
 // pulled here for AI teams and kept for the whole era. Human teams pull their own via pullCoach etc.
+// dealHands can't check budget itself — it runs before any team has a coach, GM, or market, so
+// team.seasonCap doesn't exist yet (finalizeCap needs the GM's market and, with Fanbase on, the
+// attendance multiplier, both rolled in this same function). Once the real cap is known, swap
+// out the team's priciest hand card(s) for a cheap Undrafted filler until the roster fits — no
+// dead cap, since the outgoing player never actually held the roster spot for a season. Every
+// team starts at or under budget instead of relying on the cheap-filler free agents already
+// seeded into the pool as a fix a human has to notice and act on themselves.
+function enforceStartingBudget(state, team) {
+  let guard = 0;
+  while (rosterSalary(team) > team.seasonCap && team.hand.length && guard < 20) {
+    guard++;
+    const priciest = team.hand.reduce((worst, c) => (c.salary > worst.salary ? c : worst), team.hand[0]);
+    team.hand.splice(team.hand.indexOf(priciest), 1);
+    if (team.activeIds) team.activeIds = team.activeIds.filter((id) => id !== priciest.id);
+    state.freeAgents.push({ ...priciest, contract: priciest.maxContract, lastTeamId: team.id });
+    const need = neededPosition(team);
+    addToRoster(team, makeCard(state, randomArch(), need || POSITIONS[Math.floor(Math.random() * 3)], REPLACEMENT_TIER));
+  }
+  if (guard > 0) team.activeIds = autoSelectFive(team.hand);
+}
+
 export function initFrontOffice(state) {
   state.phase = 'pullcards';
   state.bar = undefined;
@@ -189,6 +210,7 @@ export function initFrontOffice(state) {
     if (fbEnabled) initAttendance(team);
     refreshAdvantage(team);
     finalizeCap(team);
+    enforceStartingBudget(state, team);
   });
 }
 

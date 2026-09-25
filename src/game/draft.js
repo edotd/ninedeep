@@ -17,8 +17,16 @@ const DRAFT_POOL_PADDING = 5;
 // Generational Talent slot, but with no cap — a class could occasionally draw three, four, or
 // more by chance, when the whole point of "2 Generational Talents" is that there are only ever
 // two to be had.
-function buildTierBag() {
-  const bag = TIERS.flatMap((tier) => Array(tier.count).fill(tier));
+//
+// Draft prospects never roll Journeyman — every prospect enters the league Young (see
+// buildDraftPool below), and "journeyman" describes a well-traveled veteran, not a rookie who
+// hasn't played a season yet. This bag drops those 4 slots entirely rather than redistributing
+// them, so the remaining tiers' own counts stay exactly what they are everywhere else — only the
+// total shrinks (21 -> 17).
+const ROOKIE_TIERS = TIERS.filter((tier) => tier.name !== 'Journeyman');
+
+function buildTierBag(tierPool = TIERS) {
+  const bag = tierPool.flatMap((tier) => Array(tier.count).fill(tier));
   shuffle(bag);
   return bag;
 }
@@ -27,9 +35,9 @@ function buildTierBag() {
 // accolades are earned distinctions and never generated in the draft pool.
 export function buildDraftPool(state, count) {
   const cards = [];
-  let bag = buildTierBag();
+  let bag = buildTierBag(ROOKIE_TIERS);
   for (let i = 0; i < count; i++) {
-    if (bag.length === 0) bag = buildTierBag();
+    if (bag.length === 0) bag = buildTierBag(ROOKIE_TIERS);
     const tier = bag.pop();
     const posPool = tier.allowedPositions || POSITIONS;
     const pos = posPool[Math.floor(Math.random() * posPool.length)];

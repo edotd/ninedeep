@@ -18,7 +18,7 @@ export default function ContractsScreen({ state, actions, myTeamId }) {
               const price = offseasonPrice(team, c.salary);
               return (
                 <div key={c.id}>
-                  <PlayerCard card={{ ...c, salary: price }} />
+                  <PlayerCard card={{ ...c, salary: price }} contractLabel="Requested Contract Duration" />
                   <button
                     className="pcard-renew"
                     disabled={filed || team.hand.length >= 9}

@@ -19,7 +19,7 @@ const LEGACY_DEVELOPMENT_CHANGES = {
 // that a normal card-select tap never trips it, short enough that it doesn't feel unresponsive.
 const LONG_PRESS_MS = 500;
 
-export default function PlayerCard({ card, onClick, selected, rosterLabel, compact, onRelease, onDevelop, alwaysShowOptions }) {
+export default function PlayerCard({ card, onClick, selected, rosterLabel, compact, onRelease, onDevelop, alwaysShowOptions, contractLabel }) {
   const pillLabel = rosterLabel || (selected ? 'Selected' : null);
   const tier = cardTier(card);
   const skillset = skillsetFor(card);
@@ -109,7 +109,7 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
       </div>
       {!compact && (
         <div className="pcard-contract pcard-years-row">
-          <span className="pcard-microlabel">Turns Remaining</span>
+          <span className="pcard-microlabel">{contractLabel || 'Turns Remaining'}</span>
           <div className="pcard-dots">
             {Array.from({ length: card.contract }, (_, i) => <div key={i} className="pcard-dot" />)}
           </div>

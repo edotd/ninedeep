@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { newEraState, renewExpiredContract, signFreeAgent } from '../src/game/season.js';
-import { startDraft, draftPick, forfeitPick, forfeitBonusForPosition, overallPickPosition } from '../src/game/draft.js';
+import { startDraft, draftPick, forfeitPick, forfeitBonusForPosition, overallPickPosition, buildDraftPool } from '../src/game/draft.js';
+import { rosterSalary } from '../src/game/economy.js';
 import { FORFEIT_BONUS_MAX, FORFEIT_BONUS_MIN, LEAGUE_TEAM_COUNT } from '../src/game/constants.js';
 import { startEra, confirmLineup, markLineupSet } from '../src/game/engine.js';
 import { fireCoach, fireGM, hireFreeAgentCoach, releasePlayer } from '../src/game/finances.js';
@@ -23,6 +24,26 @@ test('Journeyman replaces the legacy Bench Player tier in new and saved games', 
   });
   assert.equal(state.teams[0].hand[0].archetype, 'Journeyman');
   assert.equal(state.teams[0].hand[0].tierName, 'Journeyman');
+});
+
+test('draft prospects never roll Journeyman — every rookie is Young, and journeyman means veteran', () => {
+  const state = newEraState();
+  for (let i = 0; i < 20; i++) {
+    for (const card of buildDraftPool(state, 21)) {
+      assert.notEqual(card.tierName, 'Journeyman');
+      assert.equal(card.careerStage, 'Young');
+    }
+  }
+});
+
+test('every team starts the era at or under its own season cap', () => {
+  for (let i = 0; i < 10; i++) {
+    const state = newEraState();
+    startEra(state, 'Test');
+    for (const team of state.teams) {
+      assert(rosterSalary(team) <= team.seasonCap, `${team.name}: ${rosterSalary(team)} > ${team.seasonCap}`);
+    }
+  }
 });
 
 test('Coach & GM Changes defaults off: no coach firing/hiring, no GM firing, no free-agent coaches', () => {
