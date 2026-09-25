@@ -214,6 +214,19 @@ test('season start rejects a franchise with an open coach slot', () => {
   assert.match(confirmLineup(state, 0).msg, /Hire a coach/);
 });
 
+test('the upcoming draft class is set at era start and is exactly what startDraft uses', () => {
+  const state = newEraState();
+  startEra(state, 'Test');
+  assert.equal(state.upcomingDraftPool.length, LEAGUE_TEAM_COUNT + 5);
+  const previewIds = state.upcomingDraftPool.map((c) => c.id).sort();
+  state.season = 2;
+  state.seeds = state.teams.map((t) => ({ t }));
+  startDraft(state);
+  const poolAndPickedIds = [...state.draft.pool.map((c) => c.id), ...state.draft.picks.map((p) => p.card.id)].sort();
+  assert.deepEqual(poolAndPickedIds, previewIds);
+  assert.equal(state.upcomingDraftPool, null, 'consumed as the real pool, not duplicated');
+});
+
 test('the draft cannot begin until this team has closed out free agency', () => {
   const state = newEraState();
   state.phase = 'contracts';

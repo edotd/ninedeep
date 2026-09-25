@@ -15,6 +15,7 @@ const POST_SEED_PHASES = new Set(['simulating', 'standings', 'playoffs', 'result
 const PRIMARY_NAV_ITEMS = [
   { key: 'team', label: 'Franchise' },
   { key: 'freeagency', label: 'Free Agency' },
+  { key: 'draftclass', label: 'Draft Class' },
   { key: 'standings', label: 'Standings' },
   { key: 'cardtypes', label: 'Card Types' },
 ];

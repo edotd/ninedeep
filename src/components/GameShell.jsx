@@ -23,6 +23,7 @@ import SimulatingSeasonScreen from '../screens/SimulatingSeasonScreen';
 import SeasonTransitionScreen from '../screens/SeasonTransitionScreen';
 import ContractsScreen from '../screens/ContractsScreen';
 import FreeAgencyScreen from '../screens/FreeAgencyScreen';
+import DraftClassScreen from '../screens/DraftClassScreen';
 import FranchiseMasthead from './FranchiseMasthead';
 import { rosterSalary } from '../game/economy';
 import { hasPendingBidDecision } from '../game/bidding';
@@ -68,7 +69,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, roomCode
   const [mobileTopHeight, setMobileTopHeight] = useState(0);
   const persistentBarRef = useRef(null);
   const [persistentBarHeight, setPersistentBarHeight] = useState(0);
-  const [overlay, setOverlay] = useState(null); // null | 'glossary' | 'settings' | 'standings' | 'team' | 'freeagency' | 'cardtypes'
+  const [overlay, setOverlay] = useState(null); // null | 'glossary' | 'settings' | 'standings' | 'team' | 'freeagency' | 'draftclass' | 'cardtypes'
   const navAttentionKey = `nine-deep-nav-seen:${state.eraId || state.teamName || state.teams?.map((team) => team.name).join('|')}:${myTeamId}`;
   const [navNeedsAttention, setNavNeedsAttention] = useState(() => {
     try { return localStorage.getItem(navAttentionKey) !== '1'; } catch { return true; }
@@ -206,6 +207,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, roomCode
     onSettings: () => toggleOverlay('settings'),
     onTeam: () => handleNav('team'),
     onFreeAgency: () => toggleOverlay('freeagency'),
+    onDraftClass: () => toggleOverlay('draftclass'),
     freeAgencyAlert,
     navNeedsAttention,
     onAcknowledgeNav: acknowledgeNav,
@@ -231,6 +233,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, roomCode
   else if (overlay === 'standings') overlayBody = <LeagueScreen state={state} myTeamId={myTeamId} onBack={close} onViewTeam={(id) => openTeamView(id, 'standings')} />;
   else if (overlay === 'team') overlayBody = <TeamSummaryScreen key={teamFocus?.request || 'team'} state={state} actions={actions} myTeamId={myTeamId} viewTeamId={viewTeamId} onBack={closeTeamView} focusSection={teamFocus} onFreeAgency={() => setOverlay('freeagency')} />;
   else if (overlay === 'freeagency') overlayBody = <FreeAgencyScreen state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
+  else if (overlay === 'draftclass') overlayBody = <DraftClassScreen state={state} onBack={close} />;
   else if (overlay === 'cardtypes') overlayBody = <CardOverviewScreen state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
 
   const Screen = SCREENS[effectivePhase];

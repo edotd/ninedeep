@@ -47,19 +47,32 @@ export function buildDraftPool(state, count) {
   return cards;
 }
 
-// Every team receives one pick, even when that temporarily takes its roster above nine.
+// Every team receives one pick, even when that temporarily takes its roster above nine — so the
+// pool's real size (LEAGUE_TEAM_COUNT + padding) is knowable before the season's even played,
+// independent of who's actually still in the league or how they finish. That's what makes a
+// true preview possible: prepareDraftClass below generates the exact class startDraft will use
+// months before anyone's seed is known.
 function buildPickQueue(teams, order) {
   return order.filter((t) => teams.includes(t));
+}
+
+// Called once per season (initFrontOffice for season 1, startNewSeasonRoster after) — see
+// season.js. Lets the sidebar's Draft Class screen show this year's actual upcoming prospects
+// (not a throwaway guess) for as long as the season plays out, right up until startDraft
+// consumes it as the real pool.
+export function prepareDraftClass(state) {
+  state.upcomingDraftPool = buildDraftPool(state, LEAGUE_TEAM_COUNT + DRAFT_POOL_PADDING);
 }
 
 export function startDraft(state) {
   const order = [...state.seeds].reverse().map((s) => s.t); // worst record picks first
   const queue = buildPickQueue(state.teams, order);
   state.draft = {
-    pool: buildDraftPool(state, queue.length + DRAFT_POOL_PADDING),
+    pool: state.upcomingDraftPool && state.upcomingDraftPool.length ? state.upcomingDraftPool : buildDraftPool(state, queue.length + DRAFT_POOL_PADDING),
     queue,
     picks: [],
   };
+  state.upcomingDraftPool = null;
   state.phase = 'draft';
   resolveAiPicksUntilHuman(state);
 }

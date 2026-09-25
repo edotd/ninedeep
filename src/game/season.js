@@ -8,7 +8,7 @@ import { finalizeCap, rosterSalary } from './economy';
 import { autoSelectFive, effectiveRating, activeStatSum, validateLineup } from './roster';
 import { retentionBonus, relationshipBonus } from './cards';
 import { handsOffBonus } from './gm';
-import { startDraft } from './draft';
+import { startDraft, prepareDraftClass } from './draft';
 import { initAttendance, rollFanbaseMod, recomputeSeasonAttendance, applyPlayoffBerthMilestone, applyHomeCourtMilestone, applyChampionshipMilestone, fanbaseEnabled } from './fanbase';
 import { tricodeFor } from './names';
 import { simulateSeasonOutput, teamOutput } from './matchup';
@@ -22,6 +22,7 @@ export function newEraState() {
     season: 1,
     freeAgents: [],
     freeAgentCoaches: [],
+    upcomingDraftPool: [],
     teams: [],
     phase: 'setup',
     starPool: [],
@@ -217,6 +218,7 @@ export function initFrontOffice(state) {
     finalizeCap(team);
     enforceStartingBudget(state, team);
   });
+  prepareDraftClass(state);
 }
 
 export function initSeasonModifierCards(state) {
@@ -256,6 +258,7 @@ export function startNewSeasonRoster(state) {
     team.lineupSet = !team.human;
     team.financeBoostUsedThisSeason = false;
   });
+  prepareDraftClass(state);
   initSeasonModifierCards(state);
 }
 

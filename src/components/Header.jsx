@@ -13,7 +13,7 @@ import { ERA_LENGTH } from '../game/constants';
 // doubles as that row's menu trigger there (see .topbar-menu-btn / .topbar-nav in index.css,
 // scoped to the mobile breakpoint only); desktop keeps the row inline exactly as before, so
 // menuOpen never applies there.
-export default function Header({ state, myTeamId, overlay, onTeam, onFreeAgency, onGlossary, onStandings, onSettings, navNeedsAttention, onAcknowledgeNav, roomCode, freeAgencyAlert }) {
+export default function Header({ state, myTeamId, overlay, onTeam, onFreeAgency, onDraftClass, onGlossary, onStandings, onSettings, navNeedsAttention, onAcknowledgeNav, roomCode, freeAgencyAlert }) {
   const team = state.teams[myTeamId];
   const seasonNum = Math.min(state.season, ERA_LENGTH);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -48,6 +48,7 @@ export default function Header({ state, myTeamId, overlay, onTeam, onFreeAgency,
       <div className={'topbar-nav' + (menuOpen ? ' open' : '')}>
         <button className={'reset-link' + (overlay === 'team' ? ' active' : '')} onClick={navClick(onTeam)}>Franchise</button>
         <button className={'reset-link' + (overlay === 'freeagency' ? ' active' : '')} onClick={navClick(onFreeAgency)}>Free Agency{freeAgencyAlert && <span className="nav-badge-dot" />}</button>
+        <button className={'reset-link' + (overlay === 'draftclass' ? ' active' : '')} onClick={navClick(onDraftClass)}>Draft Class</button>
         <button className={'reset-link' + (overlay === 'standings' ? ' active' : '')} onClick={navClick(onStandings)}>Standings</button>
         <button className={'reset-link' + (overlay === 'glossary' ? ' active' : '')} onClick={navClick(onGlossary)}>Glossary</button>
         <button className={'reset-link' + (overlay === 'settings' ? ' active' : '')} onClick={navClick(onSettings)}>Settings</button>
