@@ -45,9 +45,15 @@ export function startEraOnline(state, hostUid) {
   state.eraId = Date.now();
   state.season = base.season;
   state.freeAgents = base.freeAgents;
+  state.freeAgentCoaches = base.freeAgentCoaches;
+  state.upcomingDraftPool = base.upcomingDraftPool;
   state.lastExpiredPlayers = base.lastExpiredPlayers;
   state.log = base.log;
+  state.freeAgencyActivity = base.freeAgencyActivity;
   state.cardCounter = base.cardCounter;
+  state.strategyCardCounter = base.strategyCardCounter;
+  state.freeAgentCoachCounter = base.freeAgentCoachCounter;
+  state.offseason = base.offseason;
   buildStarPool(state);
   buildTeams(state, seats);
   dealHands(state);

@@ -11,6 +11,15 @@ function migratePlayerTier(card) {
 
 export function rehydrateState(state) {
   if (!state || !state.teams) return state;
+  // Early multiplayer rooms were built from the lobby's smaller state shape and did not
+  // receive the offseason object that solo games get from newEraState(). Repair those active
+  // rooms as they are read so bidding and closeout work without requiring a new era.
+  state.offseason ||= { contractsFiled: {}, freeAgencyClosed: {}, negotiations: {}, bidding: {} };
+  state.offseason.contractsFiled ||= {};
+  state.offseason.freeAgencyClosed ||= {};
+  state.offseason.negotiations ||= {};
+  state.offseason.bidding ||= {};
+  state.freeAgencyActivity ||= [];
   state.strategyCardCounter ||= 0;
   state.freeAgentCoachCounter ||= 0;
   state.freeAgentCoaches ||= [];

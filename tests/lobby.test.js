@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { startEra } from '../src/game/engine.js';
 import { LEAGUE_TEAM_COUNT } from '../src/game/constants.js';
 import { claimSeat, startEraOnline } from '../src/game/lobby.js';
-import { newEraState } from '../src/game/season.js';
+import { closeFreeAgency, newEraState } from '../src/game/season.js';
+import { rehydrateState } from '../src/game/rehydrate.js';
 
 test('solo era cannot start without a franchise name', () => {
   const state = newEraState();
@@ -49,4 +50,30 @@ test('online era rejects a legacy claimed seat with no franchise name', () => {
   };
   startEraOnline(state, 'host');
   assert.equal(state.phase, 'lobby');
+});
+
+test('a new multiplayer era includes free agency closeout state', () => {
+  const state = {
+    phase: 'lobby',
+    hostUid: 'host',
+    seatCount: LEAGUE_TEAM_COUNT,
+    seats: Array.from({ length: LEAGUE_TEAM_COUNT }, (_, seatIndex) => ({
+      seatIndex,
+      ownerUid: seatIndex === 0 ? 'host' : null,
+      name: seatIndex === 0 ? 'Test Franchise' : '',
+    })),
+    settings: newEraState().settings,
+  };
+  startEraOnline(state, 'host');
+  assert.deepEqual(state.offseason, { contractsFiled: {}, freeAgencyClosed: {}, negotiations: {}, bidding: {} });
+  assert.deepEqual(state.freeAgencyActivity, []);
+});
+
+test('an active multiplayer era missing offseason state is repaired before closeout', () => {
+  const state = newEraState();
+  startEra(state, 'Legacy Room');
+  delete state.offseason;
+  rehydrateState(state);
+  assert.equal(closeFreeAgency(state, 0).ok, true);
+  assert.equal(state.offseason.freeAgencyClosed[0], true);
 });
