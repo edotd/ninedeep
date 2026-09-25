@@ -2258,7 +2258,10 @@ body:has(.entry-screen){padding-bottom:0;}
      guesses, so the screen just subtracts both known quantities. Other tabs (Chemistry/Ledger/
      Staff) go back to the normal scrolling page with all chrome visible the same way. */
   .mobile-shell:has(.ts-screen-lock){position:fixed;inset:0;width:100%;height:var(--app-vh,100dvh);overflow:hidden;}
-  .ts-screen.ts-screen-lock{height:calc(var(--app-vh,100dvh) - var(--mobile-persistent-top-height,0px) - var(--mobile-persistent-bar-height,0px));box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;}
+  /* Use the shell's content box rather than the raw viewport height. In standalone mode the
+     shell's top border already reserves the iOS status-bar inset, so using --app-vh here counted
+     that space a second time and let the carousel run underneath the bottom bar. */
+  .ts-screen.ts-screen-lock{height:calc(100% - var(--mobile-persistent-top-height,0px) - var(--mobile-persistent-bar-height,0px));box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;}
   .ts-screen-lock .ts-tabbar{position:static;box-shadow:none;}
   .ts-screen-lock .ts-body{flex:1;min-height:0;overflow:hidden;overscroll-behavior:none;touch-action:pan-x;display:flex;flex-direction:column;}
   .ts-screen-lock .ts-player-carousel{flex:1;min-height:0;display:flex;flex-direction:column;}
@@ -2314,7 +2317,9 @@ body:has(.entry-screen){padding-bottom:0;}
      notch/dynamic island at the top, or the home-indicator gesture bar at the bottom — without
      this, the top team's coach card renders under the former and the bottom team's roster (or
      the browser's own address bar chrome) crowds out the latter. */
-  .mobile-shell:has(.t2-shell)>.screen{height:var(--app-vh,100dvh);box-sizing:border-box;padding:var(--app-safe-top,env(safe-area-inset-top,0px)) 0 var(--app-safe-bottom,env(safe-area-inset-bottom,0px));overflow:hidden;}
+  /* The standalone shell border already owns the top safe area. Size the match against the
+     remaining content box so installed and browser runs receive the same usable board height. */
+  .mobile-shell:has(.t2-shell)>.screen{height:100%;box-sizing:border-box;padding:0 0 var(--app-safe-bottom,env(safe-area-inset-bottom,0px));overflow:hidden;}
   .mobile-shell:has(.t2-shell) .t2-shell{height:100%;box-sizing:border-box;margin:0;padding:4px;max-width:none;overflow:hidden;}
   .mobile-shell:has(.t2-shell) .t2-body{position:relative;height:100%;display:block;overflow:hidden;}
   /* Scrolls internally instead of clipping — the board's real content (two team boards plus
