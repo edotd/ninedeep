@@ -6,6 +6,7 @@ import { cardTier, jerseyNumber, playerGrade } from '../game/cards';
 import { LEAGUE_ACCOLADES, RARITY_CORNERS } from '../game/constants';
 import CardTypeMark from './CardTypeMark';
 import BallMark from './BallMark';
+import RarityBadge from './RarityBadge';
 
 const LEGACY_DEVELOPMENT_CHANGES = {
   'Shooting Lab': { SCO: 2 },
@@ -146,7 +147,7 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
           title tooltip. */}
       {!compact && (
         <div className="pcard-accolade-block">
-          <CardTypeMark type={rarity} size={22} className="rarity-icon-mark" />
+          <RarityBadge rarity={rarity} />
           <div className="pcard-accolade-head">
             <span className="pcard-microlabel">Accolades</span>
             {(pillLabel || card.development) && (
