@@ -443,7 +443,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   // list on click, so the button itself never changes shape.
   const seasonIssues = [];
   if (!team.coach) seasonIssues.push('Hire a coach');
-  if (team.hand.length !== 9) seasonIssues.push(`Resolve your roster (${team.hand.length}/9)`);
+  if (team.hand.length > 9) seasonIssues.push(`Resolve your roster (${team.hand.length}/9)`);
   if (committed > cap) seasonIssues.push('Resolve team budget');
   if (!team.lineupSet || starters.length !== 5) seasonIssues.push('Set your lineup');
   if (!state.offseason?.freeAgencyClosed?.[team.id]) seasonIssues.push('Close out free agency');
@@ -777,9 +777,9 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
         {/* Hidden while the Rotation carousel owns the screen — as a flex sibling of .ts-body
             these would eat into its flex:1 share of the available height, which is exactly the
             space the carousel needs every pixel of. They still show on every other tab. */}
-        {!isRotationLocked && preSeason && team.hand.length !== 9 && (
+        {!isRotationLocked && preSeason && team.hand.length > 9 && (
           <div className="statusline" style={{ marginTop: 16 }}>
-            Resolve your roster before the season begins: {team.hand.length > 9 ? `release ${team.hand.length - 9} player${team.hand.length - 9 === 1 ? '' : 's'}` : `sign ${9 - team.hand.length} player${9 - team.hand.length === 1 ? '' : 's'} from Free Agency`}.
+            Resolve your roster before the season begins: release {team.hand.length - 9} player{team.hand.length - 9 === 1 ? '' : 's'}.
           </div>
         )}
         {!isRotationLocked && preSeason && team.hand.length === 9 && committed > cap && (
@@ -824,6 +824,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                   setShowSeasonIssues(true);
                   return;
                 }
+                if (team.hand.length < 9 && !window.confirm(`Start the season with an incomplete roster (${team.hand.length}/9)? This will negatively affect your franchise's output`)) return;
                 const res = actions.confirmLineup(myTeamId);
                 if (res && res.valid === false) alert(res.msg);
               }}

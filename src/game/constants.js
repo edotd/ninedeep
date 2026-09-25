@@ -119,6 +119,7 @@ export const COACH_MODIFIERS = [
   { name: 'Collegiate Success', mult: 1.1, die: 6, weight: 25, salary: 0.5, ability: '+3% Off/Def and +1 die size for every consecutive season retained (stacks).', rarity: 'Prime' },
   { name: 'Hot Headed', mult: 1.4, die: 7, weight: 12, salary: 1.0, ability: '', rarity: 'Signature' },
   { name: 'On The Fly', mult: 1.15, die: 6, weight: 15, salary: 1.0, ability: `${Math.round(ON_THE_FLY_CHANCE * 100)}% chance to draw a new Adjustment card when possession changes during a matchup.`, rarity: 'Prime' },
+  { name: 'More with Less', mult: 1.2, die: 6, weight: 15, salary: 1.0, ability: 'Avoids Offense and Defense penalties for carrying fewer than nine players.', rarity: 'Prime' },
   { name: 'Genius', mult: 1.5, die: 6, weight: 10, salary: 2.0, ability: '', rarity: 'Signature' },
   { name: 'Hall of Fame', mult: 2.0, hofDie: true, weight: 8, salary: 3.0, ability: '', rarity: 'Legendary' },
 ];

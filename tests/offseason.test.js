@@ -182,7 +182,7 @@ test('a team cannot re-sign a player it released until the following season', ()
   assert.equal(signFreeAgent(state, secondPlayer.id, team.id).ok, true);
 });
 
-test('releasing a starter reopens lineup review and blocks the season', () => {
+test('releasing a starter reopens lineup review even though an incomplete roster is allowed', () => {
   const state = newEraState();
   startEra(state, 'Test');
   const team = state.teams[0];
@@ -193,17 +193,21 @@ test('releasing a starter reopens lineup review and blocks the season', () => {
   assert.equal(team.lineupSet, false);
   assert.equal(team.lineupConfirmed, false);
   assert.equal(team.activeIds.length, 4);
-  assert.match(confirmLineup(state, team.id).msg, /Resolve your roster/);
+  assert.match(confirmLineup(state, team.id).msg, /Set your lineup/);
 });
 
-test('season start rejects partial and over-budget human rosters', () => {
+test('season start permits fewer than nine players but rejects over-budget and oversized rosters', () => {
   const state = newEraState();
-  const cards = Array.from({ length: 9 }, (_, i) => ({ id: `p${i}`, position: ['Guard', 'Forward', 'Big'][i % 3], salary: 2 }));
-  const team = { id: 0, human: true, hand: cards.slice(0, 8), activeIds: cards.slice(0, 5).map((card) => card.id), seasonCap: 10, coach: { salary: 0 } };
+  const cards = Array.from({ length: 10 }, (_, i) => ({ id: `p${i}`, position: ['Guard', 'Forward', 'Big'][i % 3], salary: 2 }));
+  const team = { id: 0, human: true, hand: cards.slice(0, 8), activeIds: cards.slice(0, 5).map((card) => card.id), seasonCap: 20, coach: { salary: 0 }, lineupSet: true };
   state.teams = [team];
-  assert.match(confirmLineup(state, 0).msg, /8 of 9/);
-  team.hand = cards;
+  assert.match(confirmLineup(state, 0).msg, /Close out free agency/);
+  team.hand = cards.slice(0, 9);
+  team.seasonCap = 10;
   assert.match(confirmLineup(state, 0).msg, /under budget/);
+  team.hand = cards;
+  team.seasonCap = 999;
+  assert.match(confirmLineup(state, 0).msg, /10 of 9/);
   assert.equal(team.lineupConfirmed, undefined);
 });
 

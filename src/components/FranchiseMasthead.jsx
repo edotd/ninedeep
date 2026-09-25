@@ -43,6 +43,7 @@ function breakdownRows(kind, team, synergy, output) {
   if (b.gameplan !== 0) rows.push(['Gameplan', pct(b.gameplan)]);
   rows.push(['Roster Base', b.preSynergyBase]);
   if (b.synergyPct !== 0) rows.push(['Skillset Synergy', `${b.synergyPct >= 0 ? '+' : ''}${b.synergyPct}%`]);
+  if (b.incompleteRosterPenalty > 0) rows.push(['Incomplete Roster', `−${b.incompleteRosterPenalty}`]);
   rows.push(['Roster Mod', b.base]);
   rows.push(['Expected Roll', `+${dieAvg}`]);
   rows.push(['__total', isOff ? output.off : output.def]);
@@ -166,6 +167,7 @@ export default function FranchiseMasthead({ state, teamId }) {
       Gameplan: 'The active Gameplan card applies this temporary percentage change.',
       'Roster Base': 'The roster’s value after percentage modifiers and before skillset synergy.',
       'Skillset Synergy': 'The percentage added by compatible starter skillsets and chemistry effects.',
+      'Incomplete Roster': 'One point is deducted for every open roster spot. A More with Less coach avoids this penalty.',
       'Roster Mod': 'The final roster modifier applied before the die roll.',
       'Expected Roll': `The statistical average of the ${openMetric} die: (die size + 1) ÷ 2. Actual rolls can land higher or lower.`,
       Total: openMetric === 'output'

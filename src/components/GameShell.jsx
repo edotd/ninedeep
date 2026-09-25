@@ -23,6 +23,7 @@ import SimulatingSeasonScreen from '../screens/SimulatingSeasonScreen';
 import SeasonTransitionScreen from '../screens/SeasonTransitionScreen';
 import ContractsScreen from '../screens/ContractsScreen';
 import FreeAgencyScreen from '../screens/FreeAgencyScreen';
+import ScrollToTopButton from './ScrollToTopButton';
 import DraftClassScreen from '../screens/DraftClassScreen';
 import FranchiseMasthead from './FranchiseMasthead';
 import { rosterSalary } from '../game/economy';
@@ -257,6 +258,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, roomCode
           {mainBody}
         </div>
         {showBar && <DesktopBar state={state} myTeamId={myTeamId} actions={actions} dealProgress={dealProgress} />}
+        <ScrollToTopButton />
       </div>
     );
   }
@@ -274,6 +276,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, roomCode
       {showChrome && <div className="mobile-persistent-top" ref={mobileTopRef}><Header {...headerProps} /><FranchiseMasthead state={state} teamId={mastheadTeamId} /></div>}
       {mainBody}
       {showBar && <PersistentBar ref={persistentBarRef} state={state} myTeamId={myTeamId} overlay={overlay} onNavigate={openTeamSection} onFreeAgency={() => setOverlay('freeagency')} dealProgress={dealProgress} />}
+      <ScrollToTopButton />
     </div>
   );
 }

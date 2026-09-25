@@ -99,8 +99,9 @@ export function modifierBreakdown(team, idsOverride, kind) {
   const gameplan = (team.seasonGameplanEffects?.[off ? 'offPercent' : 'defPercent'] || 0) / 100;
   const preSynergyBase = Math.round((statSum * (1 + coachBonus + retention + relationship + handsOff + gameplan)) / 20);
   const synergyPct = teamSynergy(team, idsOverride)[kind];
-  const base = applySynergy(preSynergyBase, team, idsOverride, kind);
-  return { statSum, coachBonus, retention, relationship, handsOff, gameplan, preSynergyBase, synergyPct, base };
+  const incompleteRosterPenalty = team.coach?.modifier === 'More with Less' ? 0 : Math.max(0, 9 - team.hand.length);
+  const base = applySynergy(preSynergyBase, team, idsOverride, kind) - incompleteRosterPenalty;
+  return { statSum, coachBonus, retention, relationship, handsOff, gameplan, preSynergyBase, synergyPct, incompleteRosterPenalty, base };
 }
 export function offenseModifier(team, idsOverride) {
   return modifierBreakdown(team, idsOverride, 'offense').base;

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { SKILLSETS, SKILLSET_PAIRS, STAT_THRESHOLD_BONUSES, rollSkillset, teamSynergy } from '../src/game/skillsets.js';
 import { careerMultiplier } from '../src/game/aging.js';
 import { makeCard, drawCoachCard, drawMatchupModifierCard } from '../src/game/cards.js';
-import { REPLACEMENT_TIER } from '../src/game/constants.js';
+import { REPLACEMENT_TIER, COACH_MODIFIERS } from '../src/game/constants.js';
 import { offenseModifier, defenseModifier } from '../src/game/roster.js';
 import { playMatchup, teamOutput, simulateSeasonOutput } from '../src/game/matchup.js';
 import { beginTurn, advanceTurn } from '../src/game/turn.js';
@@ -82,7 +82,9 @@ test('skillset persists in generated player JSON; only player cards roll skillse
   assert.equal(drawCoachCard().skillsetId,undefined);assert.equal(drawMatchupModifierCard(state).skillsetId,undefined);
 });
 test('fractional synergy and Wise Veteran percentages appear in scoring and projections',()=>{
-  const t=team([6,1,10,9,2]);const plain=structuredClone(t);plain.hand.forEach(p=>{delete p.skillsetId;});
+  const t=team([6,1,10,9,2]);
+  while(t.hand.length<9)t.hand.push({...t.hand[0],id:`bench-${t.hand.length}`,skillsetId:null});
+  const plain=structuredClone(t);plain.hand.forEach(p=>{delete p.skillsetId;});
   const base=offenseModifier(plain);assert.equal(offenseModifier(t),Math.round(base*1.30*100)/100);
   assert.equal(defenseModifier(t),defenseModifier(plain));
   t.hand.push({...t.hand[0],id:'bench',skillsetId:sid(3)});
@@ -92,6 +94,15 @@ test('fractional synergy and Wise Veteran percentages appear in scoring and proj
   const result=playMatchup(t,plain,false,false,t.activeIds,plain.activeIds);
   assert.equal(result.aOffMod,offenseModifier(t));
   assert(Number.isFinite(simulateSeasonOutput(t).off));
+});
+test('each open roster spot costs one Offense and Defense unless the coach has More with Less',()=>{
+  assert(COACH_MODIFIERS.some((modifier)=>modifier.name==='More with Less'));
+  const short=team([6,1,10,9,2]);
+  const exempt=structuredClone(short);exempt.coach.modifier='More with Less';
+  assert.equal(offenseModifier(exempt)-offenseModifier(short),4);
+  assert.equal(defenseModifier(exempt)-defenseModifier(short),4);
+  assert.equal(teamOutput(exempt).off-teamOutput(short).off,4);
+  assert.equal(teamOutput(exempt).def-teamOutput(short).def,4);
 });
 // Subs are no longer phase/lock-gated — the persistent bar lets a player substitute any time
 // (see engine.js's swapStarter), same as "slot drag reorders within a group and moves players
