@@ -5,6 +5,7 @@ import { careerLevel } from '../game/aging';
 import { cardTier, jerseyNumber, playerGrade } from '../game/cards';
 import { LEAGUE_ACCOLADES, RARITY_CORNERS } from '../game/constants';
 import CardTypeMark from './CardTypeMark';
+import BallMark from './BallMark';
 
 const LEGACY_DEVELOPMENT_CHANGES = {
   'Shooting Lab': { SCO: 2 },
@@ -78,6 +79,11 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
         className="pcard-watermark"
         color={tier === 'EXP' ? 'var(--ink-rule)' : 'var(--depth-nontext)'}
       />
+      {!compact && (
+        <div className="pcard-logo-mark">
+          <BallMark size={44} variant={tier === 'EXP' ? 'onInk' : 'monoOutline'} />
+        </div>
+      )}
       <div className="pcard-header">
         {compact ? (
           <span className="pcard-header-pos">{card.position}</span>

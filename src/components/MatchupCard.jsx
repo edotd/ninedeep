@@ -1,4 +1,5 @@
 import CardTypeMark from './CardTypeMark';
+import BallMark from './BallMark';
 import { RARITY_CORNERS } from '../game/constants';
 
 // Adjustment card, per the brand handoff's "Components: Front Office & Adjustment Cards" — square,
@@ -51,6 +52,7 @@ export default function MatchupCard({ card, playoff, justDealt }) {
       <div className="mu2-wrap">
         <div className={'mu2-card' + (playoff ? ' playoff' : '') + dealCls} data-rarity={rarity}>
           {legendary && <div className={'mu2-glow' + dealCls} />}
+          <div className="mu2-logo-mark"><BallMark size={40} variant={legendary ? 'onInk' : 'monoOutline'} /></div>
           <div className="mu2-header"><span className="mu2-kind-group"><CardTypeMark type="matchup" size={16} />{card.category}</span><span>{card.rarity}</span></div>
           <div className="mu2-name">{card.name}</div>
           <p className="mu2-statement">{card.description}</p>
@@ -77,6 +79,7 @@ export default function MatchupCard({ card, playoff, justDealt }) {
     <div className="mu2-wrap">
       <div className={'mu2-card' + (playoff ? ' playoff' : '')}>
         <CardTypeMark type="matchup" className="mu2-watermark" color={playoff ? 'var(--ink-rule)' : 'var(--file-rule)'} size={170} />
+        <div className="mu2-logo-mark"><BallMark size={40} variant={playoff ? 'onInk' : 'monoOutline'} /></div>
         <div className="mu2-header">
           <span className="mu2-kind-group"><CardTypeMark type="matchup" size={16} />Matchup</span>
           <span>One Game</span>

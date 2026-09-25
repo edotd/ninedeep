@@ -84,29 +84,31 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body,#root{margin:0;padding:0;background:var(--file);color:var(--ink);font-family:var(--font-mono);}
 body{min-height:100vh;padding-bottom:138px;}
-/* The ball under the hand (design ref 5b) — a fine pebble grain across the cream ground,
-   plus a basketball's black channel lines running behind everything. Lives on #root, the
-   actual full-height painted surface (body itself is just as tall as #root's content, and
-   the dark-theme override just below already re-targets #root for the same reason) — not any
-   individual screen or card, since .screen and most panels carry no background of their own
-   (see .screen above), so the texture only ever becomes visible in the gaps between opaque
-   surfaces (margins, gutters, card-stack peeks), exactly where 5b's own caption puts it.
-   Grain is five differently-sized dot layers so it doesn't read as an obvious repeating tile;
-   channels are two thin lines (one vertical, one horizontal, repeating down the page) rather
-   than 5c's full leather-ball treatment. Dark mode inverts to a navy ground where a "ball on
-   leather" texture no longer reads, so it's switched off entirely below.*/
-#root{
-  background-color:var(--file);
+/* The ball under the hand (design ref 5B, "PEBBLE + CHANNELS") — a true basketball-leather
+   grain (two dot layers per 5px tile, offset in a brick pattern so each pebble gets its own
+   light highlight + dark shadow, exactly the reference's own recipe) plus the court's channel
+   lines showing through: a center line, a division line, and a ring poking in from each edge
+   (a stand-in for the two circles at the reference's own scale — hoop/circle arcs, not meant
+   to line up with any specific on-screen element). Lives on #root, the actual full-height
+   painted surface, AND on .ts-body — the Team File's own content pane paints its own opaque
+   fill on top of #root, which papered over the texture entirely even though the two colors
+   matched, so it needs the same background itself rather than relying on #root to bleed
+   through. Dark mode inverts to a navy ground where a "ball on leather" texture no longer
+   reads, so both are switched off entirely below (see the html[data-theme="dark"] rule). */
+#root,.ts-body{
+  background-color:#E3D8BD;
   background-image:
-    radial-gradient(circle at 15% 25%, rgba(30,43,71,.07) .6px, transparent .6px),
-    radial-gradient(circle at 55% 65%, rgba(30,43,71,.06) .6px, transparent .6px),
-    radial-gradient(circle at 80% 15%, rgba(30,43,71,.07) .6px, transparent .6px),
-    radial-gradient(circle at 35% 85%, rgba(30,43,71,.05) .6px, transparent .6px),
-    radial-gradient(circle at 90% 55%, rgba(30,43,71,.05) .6px, transparent .6px),
-    linear-gradient(90deg, transparent calc(41% - 1px), rgba(30,43,71,.15) calc(41% - 1px), rgba(30,43,71,.15) calc(41% + 1px), transparent calc(41% + 1px)),
-    linear-gradient(180deg, transparent calc(58% - 1px), rgba(30,43,71,.12) calc(58% - 1px), rgba(30,43,71,.12) calc(58% + 1px), transparent calc(58% + 1px));
-  background-size:6px 6px,9px 9px,11px 11px,8px 8px,13px 13px,100% 100%,100% 100vh;
-  background-repeat:repeat,repeat,repeat,repeat,repeat,no-repeat,repeat-y;
+    radial-gradient(circle at 2px 2px, rgba(255,251,240,.7) .9px, transparent 1.5px),
+    radial-gradient(circle at 2.7px 2.9px, rgba(30,43,71,.17) 1.1px, transparent 1.7px),
+    radial-gradient(circle at 2px 2px, rgba(255,251,240,.7) .9px, transparent 1.5px),
+    radial-gradient(circle at 2.7px 2.9px, rgba(30,43,71,.17) 1.1px, transparent 1.7px),
+    linear-gradient(90deg, transparent calc(52% - 1.5px), rgba(30,43,71,.34) calc(52% - 1.5px), rgba(30,43,71,.34) calc(52% + 1.5px), transparent calc(52% + 1.5px)),
+    linear-gradient(180deg, transparent calc(48% - 1.5px), rgba(30,43,71,.34) calc(48% - 1.5px), rgba(30,43,71,.34) calc(48% + 1.5px), transparent calc(48% + 1.5px)),
+    radial-gradient(circle at center, transparent 277px, rgba(30,43,71,.34) 277px, rgba(30,43,71,.34) 280px, transparent 280px),
+    radial-gradient(circle at center, transparent 277px, rgba(30,43,71,.34) 277px, rgba(30,43,71,.34) 280px, transparent 280px);
+  background-size:5px 5px,5px 5px,5px 5px,5px 5px,100% 100%,100% 100vh,560px 560px,560px 560px;
+  background-position:0 0,0 0,2.5px 2.5px,2.5px 2.5px,0 0,0 0,left -470px center,right -470px center;
+  background-repeat:repeat,repeat,repeat,repeat,no-repeat,repeat-y,no-repeat,no-repeat;
 }
 /* html[data-theme="dark"] #root further down already overrides `background` (the shorthand,
    which resets background-image to none along with the color) — nothing extra needed here. */
@@ -383,7 +385,10 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 }
 
 /* ---------- Player Card (see brand handoff, "Component: Player Card") ---------- */
-.pcard{position:relative;overflow:hidden;background:var(--form);border:2px solid var(--ink);width:100%;max-width:264px;margin:0 auto 14px;cursor:pointer;font-family:var(--font-mono);}
+/* Frame shape (design handoff's "Frame shape" options) — rounded corners for a player card,
+   square for a coach/office card, independent of rarity: this is the card's own silhouette,
+   rarity is only ever the border/corner-bracket treatment layered on top of it. */
+.pcard{position:relative;overflow:hidden;background:var(--form);border:2px solid var(--ink);border-radius:12px;width:100%;max-width:264px;margin:0 auto 14px;cursor:pointer;font-family:var(--font-mono);}
 /* The type mark, ghosted large in a bottom corner — per the brand handoff's "Pre-deal
    landing (3A)", the same watermark treatment behind each card-type section, brought onto
    the cards themselves. z-index:-1 keeps it behind every in-flow child without needing to
@@ -393,6 +398,11 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
    background of their own, so the mark actually shows through there. */
 .pcard-watermark{position:absolute;right:-22px;top:140px;z-index:-1;opacity:.16;pointer-events:none;}
 .pcard-compact .pcard-watermark{top:auto;bottom:-10px;right:-14px;}
+/* The Nine Deep mark itself, mirrored to the opposite side from the type-shape watermark above
+   at the same height (not the top corner — the header band above is opaque and would hide it
+   entirely) — every card carries the logo somewhere on its face, not just the shape that tells
+   player/office/matchup apart. */
+.pcard-logo-mark{position:absolute;left:-22px;top:140px;z-index:-1;opacity:.16;pointer-events:none;}
 .pcard.selected{outline:3px solid var(--franchise);outline-offset:2px;}
 .pcard-header{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:var(--ink);color:var(--file);}
 /* Career Stage + Tier stack on the left in two small lines; Position sits to their right,
@@ -472,14 +482,18 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
    Beyond color/weight, Prime+ also get corner brackets (.rarity-corner, rendered by
    PlayerCard.jsx/FrontOfficeCard.jsx from RARITY_CORNERS — real elements rather than
    ::before/::after since Signature/Legendary need all four corners and a pseudo-element only
-   gives two), Signature gets a clipped top-right corner, and Legendary gets a second inset
-   frame — the same shaped-frame language .mu2-card already carries, not just a plain border.
-   --rarity-accent feeds both the border and the corner brackets from one value per rarity. */
+   gives two) and Legendary gets a second inset frame, concentric with the card's own rounded
+   corners (12px outer - 4px inset ≈ 8px inner, matching the handoff's own
+   radI = size - frameWidth formula) — the same shaped-frame language .mu2-card carries, minus
+   its clipped-corner cut, which reads as a mismatched diagonal notch against a rounded (or
+   square-but-otherwise-plain) player/coach card rather than the coherent look it has on
+   .mu2-card's own always-square base shape. --rarity-accent feeds both the border and the
+   corner brackets from one value per rarity. */
 .pcard.rarity-Core{--rarity-accent:#C4715A;border-color:var(--rarity-accent);border-width:2px;}
 .pcard.rarity-Prime{--rarity-accent:var(--stamp);border-color:var(--rarity-accent);border-width:3px;}
-.pcard.rarity-Signature{--rarity-accent:var(--stamp-text);border-color:var(--rarity-accent);border-width:4px;clip-path:polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);}
+.pcard.rarity-Signature{--rarity-accent:var(--stamp-text);border-color:var(--rarity-accent);border-width:4px;}
 .pcard.rarity-Legendary{--rarity-accent:var(--franchise);border-color:var(--rarity-accent);border-width:5px;box-shadow:0 0 16px rgba(240,160,61,.4);}
-.pcard.rarity-Legendary::after{content:'';position:absolute;inset:4px;border:2px solid var(--rarity-accent);pointer-events:none;z-index:2;}
+.pcard.rarity-Legendary::after{content:'';position:absolute;inset:4px;border:2px solid var(--rarity-accent);border-radius:8px;pointer-events:none;z-index:2;}
 .rarity-corner{position:absolute;width:13px;height:13px;pointer-events:none;box-sizing:border-box;border-color:var(--rarity-accent);z-index:2;}
 .rarity-corner.tl{top:4px;left:4px;border-top:2px solid;border-left:2px solid;}
 .rarity-corner.tr{top:4px;right:4px;border-top:2px solid;border-right:2px solid;}
@@ -710,17 +724,18 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 
 /* ================= Front Office card (see brand handoff, "Components: Front Office &
    Matchup Cards") — landscape, ink ground, distinct silhouette from the player card. ============= */
-.fo2-card{position:relative;overflow:hidden;background:var(--ink);border:2px solid var(--ink);width:100%;max-width:340px;margin:0 auto 14px;font-family:var(--font-mono);display:flex;flex-direction:column;}
+.fo2-card{position:relative;overflow:hidden;background:var(--ink);border:2px solid var(--ink);border-radius:0;width:100%;max-width:340px;margin:0 auto 14px;font-family:var(--font-mono);display:flex;flex-direction:column;}
 /* Coach card rarity — same Core/Prime/Signature/Legendary tokens and shaped-frame treatment
-   (.rarity-corner, the Signature clip and Legendary inset frame) .pcard's rarity classes use —
-   see the comment there. Only ever applied when kind==='coach' (see FrontOfficeCard.jsx) —
-   Fanbase/GM cards have no rarity concept. */
+   (.rarity-corner and the Legendary inset frame) .pcard's rarity classes use — see the comment
+   there. Only ever applied when kind==='coach' (see FrontOfficeCard.jsx) — Fanbase/GM cards
+   have no rarity concept. */
 .fo2-card.rarity-Core{--rarity-accent:#C4715A;border-color:var(--rarity-accent);border-width:2px;}
 .fo2-card.rarity-Prime{--rarity-accent:var(--stamp);border-color:var(--rarity-accent);border-width:3px;}
-.fo2-card.rarity-Signature{--rarity-accent:var(--stamp-text);border-color:var(--rarity-accent);border-width:4px;clip-path:polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);}
+.fo2-card.rarity-Signature{--rarity-accent:var(--stamp-text);border-color:var(--rarity-accent);border-width:4px;}
 .fo2-card.rarity-Legendary{--rarity-accent:var(--franchise);border-color:var(--rarity-accent);border-width:5px;box-shadow:0 0 16px rgba(240,160,61,.4);}
 .fo2-card.rarity-Legendary::after{content:'';position:absolute;inset:4px;border:2px solid var(--rarity-accent);pointer-events:none;z-index:2;}
 .fo2-watermark{position:absolute;right:-20px;bottom:-18px;z-index:-1;opacity:.16;pointer-events:none;}
+.fo2-logo-mark{position:absolute;left:-20px;bottom:-18px;z-index:-1;opacity:.18;pointer-events:none;}
 .fo2-header{display:flex;justify-content:space-between;align-items:center;padding:10px 13px;border-bottom:1px solid var(--ink-rule);}
 .fo2-kind-group{display:inline-flex;align-items:center;gap:8px;color:var(--file);}
 .fo2-kind-label{font-family:var(--font-display);font-size:26px;line-height:1;letter-spacing:.02em;text-transform:uppercase;color:var(--file);}
@@ -748,6 +763,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 /* ================= Matchup card — square, form ground, torn stamp edge. ================= */
 .mu2-card{position:relative;overflow:hidden;background:var(--form);border:3px solid var(--stamp);width:100%;max-width:280px;margin:0 auto 14px;display:flex;flex-direction:column;font-family:var(--font-mono);}
 .mu2-watermark{position:absolute;right:-18px;bottom:-14px;z-index:-1;opacity:.14;pointer-events:none;}
+.mu2-logo-mark{position:absolute;left:-18px;bottom:-14px;z-index:-1;opacity:.16;pointer-events:none;}
 .mu2-header{display:flex;justify-content:space-between;align-items:center;padding:7px 12px;background:var(--stamp);}
 .mu2-header span:first-child,.mu2-kind-group{font-family:var(--font-label);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--form);}
 .mu2-kind-group{display:inline-flex;align-items:center;gap:6px;}
@@ -795,7 +811,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
    didn't divide evenly into the container, e.g. 3 mu2-cards at 280px each not fitting a
    ~700px content pane. A 3-column grid with the card wrappers set to fill their column
    guarantees all 3 sit in one row down to the tablet breakpoint. */
-.fo-deal-row,.mu-deal-row{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1080px;margin:0 auto 20px;}
+.fo-deal-row,.mu-deal-row{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1180px;margin:0 auto 20px;}
 .fo-deal-row .fo2-wrap,.mu-deal-row .mu2-wrap{width:100%;max-width:none;}
 .fo-deal-row .card-deal-in,.mu-deal-row .card-deal-in{display:flex;height:100%;}
 .fo-deal-row .fo2-wrap,.mu-deal-row .mu2-wrap{display:flex;flex-direction:column;height:100%;}
@@ -906,7 +922,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .ts-roto-actions{display:flex;gap:6px;justify-content:flex-end;}
 .ts-roto-actions button{background:none;border:1px solid var(--depth-nontext);padding:3px 7px;font-family:var(--font-mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--file-muted);cursor:pointer;}
 
-.ts-body{background:var(--file);padding:22px 24px;display:flex;flex-direction:column;gap:20px;}
+.ts-body{padding:22px 24px;display:flex;flex-direction:column;gap:20px;}
 .ts-section[id]{scroll-margin-top:150px;}
 .ts-heading{font-family:var(--font-label);font-size:11px;letter-spacing:.14em;color:var(--ink);text-transform:uppercase;margin-bottom:9px;}
 /* Starters render as real, full-size PlayerCards now — see TeamSummaryScreen.jsx — matching
@@ -1618,7 +1634,7 @@ button.t2-adjustment-mini.empty.pulsing{cursor:pointer;}
 html[data-theme="dark"]{color-scheme:dark;}
 html[data-theme="dark"],
 html[data-theme="dark"] body,
-html[data-theme="dark"] #root{background:var(--ink);color:var(--file);}
+html[data-theme="dark"] #root,html[data-theme="dark"] .ts-body{background:var(--ink);color:var(--file);}
 html[data-theme="dark"] h1{color:var(--file);}
 html[data-theme="dark"] h2{color:var(--ink-muted);}
 html[data-theme="dark"] p.lede{color:var(--playoff-statement);}
@@ -1741,10 +1757,14 @@ html[data-theme="dark"] .wordmark-ink{color:var(--file);}
 
 /* Hand screen — now that the window isn't capped at 900px, starters (5) and bench (4) each
    deal into a single row instead of the 3-column fa-grid wrapping to a second line. */
-.deal-row-5{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;max-width:1200px;margin:0 auto;}
-.deal-row-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;max-width:1000px;margin:0 auto;}
+.deal-row-5{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;max-width:1320px;margin:0 auto;}
+.deal-row-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;max-width:1100px;margin:0 auto;}
 .deal-row-5 .card-deal-in,.deal-row-4 .card-deal-in{display:flex;height:100%;}
-.deal-row-5 .pcard,.deal-row-4 .pcard{height:100%;margin-bottom:0;}
+/* max-width:none lets the card fill its grid column (bounded only by the row's own max-width
+   above) instead of capping out at the global .pcard max-width — matches how Front Office and
+   Matchup cards already size themselves in the same deal rows (see .fo-deal-row/.mu-deal-row's
+   own max-width:none below). */
+.deal-row-5 .pcard,.deal-row-4 .pcard{height:100%;max-width:none;margin-bottom:0;}
 @media (max-width:900px){.deal-row-5{grid-template-columns:repeat(3,1fr);}.deal-row-4{grid-template-columns:repeat(2,1fr);}}
 @media (max-width:520px){.deal-row-5,.deal-row-4{grid-template-columns:1fr;}}
 .deal-heading{font-family:var(--font-display);font-size:28px;line-height:.86;color:var(--ink);letter-spacing:.01em;text-transform:none;margin:0 0 12px;}

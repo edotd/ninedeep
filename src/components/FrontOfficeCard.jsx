@@ -1,6 +1,7 @@
 import { formatCoins, gmCost } from '../game/economy';
 import { retentionBonus, relationshipBonus } from '../game/cards';
 import CardTypeMark from './CardTypeMark';
+import BallMark from './BallMark';
 import { GM_BONUS_RATE, HANDS_OFF_BONUS_CAP } from '../game/constants';
 import { handsOffBonus } from '../game/gm';
 import { offenseDieSize, defenseDieSize } from '../game/roster';
@@ -94,6 +95,7 @@ export default function FrontOfficeCard({ kind, team }) {
       <div className={'fo2-card' + (coachRarity ? ` rarity-${coachRarity}` : '')}>
         {coachRarity && (RARITY_CORNERS[coachRarity] || []).map((c) => <span key={c} className={'rarity-corner ' + c} />)}
         <CardTypeMark type="frontoffice" className="fo2-watermark" color="var(--ink-rule)" size={190} />
+        <div className="fo2-logo-mark"><BallMark size={44} variant="onInk" /></div>
         <div className="fo2-header">
           <span className="fo2-kind-group">
             <CardTypeMark type="frontoffice" size={16} />
