@@ -18,15 +18,19 @@ const tabForSection = (section) => ['gameplan', 'adjustment'].includes(section) 
 // row of same-kind cards on mobile. Two or fewer fit the screen outright (no scrolling needed,
 // so no hint either) — more than that scrolls, with the same peek-style chevron hint used
 // elsewhere in the Team File so it's clear there's more to swipe to. atEnd starts true for a
-// row that never needed scrolling in the first place (count <= 2).
-function useRowEnd(count) {
-  const [atEnd, setAtEnd] = useState(count <= 2);
-  useEffect(() => { setAtEnd(count <= 2); }, [count]);
+// row that never needed scrolling in the first place. threshold defaults to 2 (Front Office's
+// three-distinct-kind row, which stretches to fit 1-2 cards evenly and only scrolls past that);
+// Development/Gameplan/Adjustments pass 1 instead, since those rows are always one-card-at-a-
+// time now (see ts-swipe-row) — any more than a single card of the same kind means there's
+// something to swipe to.
+function useRowEnd(count, threshold = 2) {
+  const [atEnd, setAtEnd] = useState(count <= threshold);
+  useEffect(() => { setAtEnd(count <= threshold); }, [count, threshold]);
   const onScroll = (event) => {
     const el = event.currentTarget;
     setAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 4);
   };
-  return { atEnd, onScroll, scrolls: count > 2 };
+  return { atEnd, onScroll, scrolls: count > threshold };
 }
 
 function RowSwipeHint({ row }) {
@@ -217,9 +221,9 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   const showStaffCards = isDesktop || tab === 'office';
   const foItemCount = 2 + (state.settings.fanbaseCardsEnabled !== false ? 1 : 0); // coach + market, plus fanbase when on
   const foRow = useRowEnd(foItemCount);
-  const devRow = useRowEnd((team.developmentCards || []).length);
-  const gameplanRow = useRowEnd((team.gameplanCards || []).length);
-  const adjRow = useRowEnd((team.matchupCards || []).length);
+  const devRow = useRowEnd((team.developmentCards || []).length, 1);
+  const gameplanRow = useRowEnd((team.gameplanCards || []).length, 1);
+  const adjRow = useRowEnd((team.matchupCards || []).length, 1);
   useEffect(() => {
     if (!focusSection) return;
     setTab(tabForSection(focusSection.section));
@@ -477,7 +481,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                   </button>
                 </div>
               )}
-              <TeamChemistry team={team} />
+              <TeamChemistry team={team} canEdit={canEdit} onEditLineup={() => setLineupScreenOpen(true)} />
             </>
           )}
 
@@ -717,7 +721,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             <div className="ts-section" id="team-gameplan-cards">
               <div className="ts-heading">Development</div>
               <div className="row-swipe-wrap">
-              <div className={'strategy-deal-row' + (devRow.scrolls ? ' row-scroll' : ' row-fit')} onScroll={devRow.scrolls ? devRow.onScroll : undefined}>
+              <div className={'strategy-deal-row ts-swipe-row' + (devRow.scrolls ? ' row-scroll' : ' row-fit')} onScroll={devRow.scrolls ? devRow.onScroll : undefined}>
                 {(team.developmentCards || []).map((card) => <div className="strategy-card-wrap" key={card.id}>{readOnly ? <CardBack /> : <><StrategyCard card={card} /><StrategyAction card={card} team={team} state={state} actions={actions} myTeamId={myTeamId} readOnly={readOnly} /></>}</div>)}
                 {(team.developmentCards || []).length === 0 && <div className="strategy-empty">New cards are dealt at the start of each season.</div>}
               </div>
@@ -730,7 +734,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             <div className="ts-section">
               <div className="ts-heading">Gameplan</div>
               <div className="row-swipe-wrap">
-              <div className={'strategy-deal-row' + (gameplanRow.scrolls ? ' row-scroll' : ' row-fit')} onScroll={gameplanRow.scrolls ? gameplanRow.onScroll : undefined}>
+              <div className={'strategy-deal-row ts-swipe-row' + (gameplanRow.scrolls ? ' row-scroll' : ' row-fit')} onScroll={gameplanRow.scrolls ? gameplanRow.onScroll : undefined}>
                 {(team.gameplanCards || []).map((card) => <div className="strategy-card-wrap" key={card.id}>{readOnly ? <CardBack /> : <><StrategyCard card={card} /><StrategyAction card={card} team={team} state={state} actions={actions} myTeamId={myTeamId} readOnly={readOnly} /></>}</div>)}
                 {(team.gameplanCards || []).length === 0 && <div className="strategy-empty">New cards are dealt at the start of each season.</div>}
               </div>
@@ -743,7 +747,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             <div className="ts-section" id="team-adjustment-cards">
               <div className="ts-heading">Adjustments</div>
               <div className="row-swipe-wrap">
-              <div className={'mu-deal-row' + (adjRow.scrolls ? ' row-scroll' : ' row-fit')} style={{ margin: 0 }} onScroll={adjRow.scrolls ? adjRow.onScroll : undefined}>
+              <div className={'mu-deal-row ts-swipe-row' + (adjRow.scrolls ? ' row-scroll' : ' row-fit')} style={{ margin: 0 }} onScroll={adjRow.scrolls ? adjRow.onScroll : undefined}>
                 {team.matchupCards.map((c) => readOnly ? <CardBack key={c.id} shape="adjustment" /> : <MatchupCard key={c.id} card={c} />)}
               </div>
               <RowSwipeHint row={adjRow} />

@@ -1,9 +1,7 @@
-import { useState } from 'react';
 import { SKILLSETS, SYNERGY_CAP, teamSynergy } from '../game/skillsets';
 import { teamExperience } from '../game/aging';
 import { relationshipBonus, retentionBonus } from '../game/cards';
 import { teamOutput } from '../game/matchup';
-import TeamSynergyModal from './TeamSynergyModal';
 
 const nameFor = (id) => SKILLSETS.find((s) => s.id === id)?.name || id;
 const bonusValue = (n) => n > 0 ? `+${n}%` : 'N/A';
@@ -41,9 +39,8 @@ function teamProfile(team, chemistry, experience, coachOffense, coachDefense) {
   return { strengths: strengths.slice(0, 4), weaknesses: weaknesses.slice(0, 4) };
 }
 
-export default function TeamChemistry({ team }) {
+export default function TeamChemistry({ team, canEdit, onEditLineup }) {
   const current = teamSynergy(team);
-  const [synergyOpen, setSynergyOpen] = useState(false);
   const experience = team.coach ? teamExperience(team) : null;
   const coachOffense = team.coach ? Math.round((team.coach.offBonus + retentionBonus(team) + relationshipBonus(team)) * 100) : 0;
   const coachDefense = team.coach ? Math.round((team.coach.defBonus + retentionBonus(team) + relationshipBonus(team)) * 100) : 0;
@@ -86,7 +83,10 @@ export default function TeamChemistry({ team }) {
           <span className="tc2-synergy-total-value offense">+{current.skillOffense}% OFF</span>
           <span className="tc2-synergy-total-value defense">+{current.skillDefense}% DEF</span>
         </div>
-        <button className="tc2-synergy-btn" onClick={() => setSynergyOpen(true)}>Synergy</button>
+        <button className="tc2-synergy-btn" onClick={onEditLineup}>
+          {canEdit === false ? 'View Lineup' : team.lineupSet ? 'Edit Lineup' : 'Set Lineup'}
+          {canEdit !== false && !team.lineupSet && <span className="tc2-lineup-dot" aria-label="Lineup not set" />}
+        </button>
         {current.pairs.length ? (
           <div className="tc2-pairs-grid">
             {current.pairs.map((pair) => (
@@ -111,8 +111,6 @@ export default function TeamChemistry({ team }) {
           <ul>{profile.weaknesses.map((item) => <li key={item}>{item}</li>)}</ul>
         </div>
       </div>
-
-      {synergyOpen && <TeamSynergyModal team={team} onClose={() => setSynergyOpen(false)} />}
     </section>
   );
 }

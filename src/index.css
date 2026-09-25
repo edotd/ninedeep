@@ -151,9 +151,9 @@ p.lede{color:var(--file-body);font-size:14px;line-height:1.5;margin:0 0 14px;}
 .reset-link.active{color:var(--ink);background:var(--file);}
 .topbar-menu-btn{background:none;border:1px solid transparent;padding:2px;line-height:0;cursor:pointer;}
 .nav-attention{position:relative;animation:nav-attention-pulse .8s ease-in-out infinite alternate;}
-.nav-attention::after{content:'!';position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--stamp);color:#fff;border:2px solid var(--file);font:700 13px/1 var(--font-label);box-shadow:0 0 14px 5px rgba(205,71,39,.75);}
-@keyframes nav-attention-pulse{from{filter:drop-shadow(0 0 2px rgba(255,154,31,.5));transform:scale(1);}to{filter:drop-shadow(0 0 13px rgba(255,154,31,1));transform:scale(1.08);}}
-@media(prefers-reduced-motion:reduce){.nav-attention{animation:none;filter:drop-shadow(0 0 8px rgba(255,154,31,.9));}}
+.nav-attention::after{content:'!';position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--stamp);color:#fff;border:2px solid var(--file);font:700 13px/1 var(--font-label);}
+@keyframes nav-attention-pulse{from{transform:scale(1);}to{transform:scale(1.08);}}
+@media(prefers-reduced-motion:reduce){.nav-attention{animation:none;}}
 
 /* On mobile the logo doubles as the Team/Free Agency/Standings/Glossary/Settings menu's
    trigger instead of that row sitting permanently under the era bar — real vertical space
@@ -954,25 +954,28 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .strategy-card-kicker{font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-muted);}.strategy-card-name{font-family:var(--font-display);font-size:25px;line-height:1;margin:12px 0 8px;}.strategy-card-description{font-family:var(--font-mono);font-size:11px;line-height:1.45;}.strategy-card-rule{margin-top:auto;padding-top:12px;font-family:var(--font-mono);font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--approved-file);}
 .strategy-card-wrap{width:240px;flex:0 0 240px;}.strategy-card-action{display:flex;gap:6px;margin-top:8px;}.strategy-card-action select{min-width:0;flex:1;font-family:var(--font-mono);}.strategy-card-action button{padding:8px;white-space:nowrap;}.strategy-empty{font-family:var(--font-mono);font-size:11px;color:var(--file-muted);}
 
-/* Front Office / Development / Gameplan / Adjustment each render as one same-kind-card row
-   (Team File, mobile). row-fit (<=2 cards) stretches them to share the screen evenly, no
-   scrolling; row-scroll (>2) makes the row a native horizontal scroller with a peek of the
-   next card, plus the chevron hint below (RowSwipeHint in TeamSummaryScreen.jsx) so a user
-   who hasn't scrolled yet knows there's more — desktop keeps its existing grid, untouched. */
+/* Front Office (Team File, mobile): row-fit (<=2 cards) stretches them to share the screen
+   evenly, no scrolling; row-scroll (>2) makes the row a native horizontal scroller with a peek
+   of the next card — desktop keeps its existing grid, untouched.
+   Development / Gameplan / Adjustments (.ts-swipe-row) instead always show exactly one card at
+   a time — readability suffers when several full-size cards of the same kind share a cramped
+   phone-width row — with a mandatory scroll-snap so a swipe always lands cleanly on the next
+   card, not a partial peek of two. row-fit only ever applies to a 0-1 card row there, where
+   there's nothing to swipe to anyway. */
 .row-swipe-wrap{position:relative;}
 .row-swipe-hint{position:absolute;top:0;bottom:6px;right:0;width:22px;display:flex;align-items:center;justify-content:center;background:var(--ink-deep);border:1px solid var(--franchise);border-right:none;pointer-events:none;z-index:3;}
 .row-swipe-hint-chevron{font-family:var(--font-display);font-size:16px;color:var(--franchise);}
 @media(max-width:999px){
-  .fo-deal-row.row-scroll,.mu-deal-row.row-scroll{display:flex;grid-template-columns:none;overflow-x:auto;gap:14px;scroll-snap-type:x proximity;scrollbar-width:none;}
-  .fo-deal-row.row-scroll::-webkit-scrollbar,.mu-deal-row.row-scroll::-webkit-scrollbar{display:none;}
+  .fo-deal-row.row-scroll{display:flex;grid-template-columns:none;overflow-x:auto;gap:14px;scroll-snap-type:x proximity;scrollbar-width:none;}
+  .fo-deal-row.row-scroll::-webkit-scrollbar{display:none;}
   .fo-deal-row.row-scroll>.ts-fo-col{flex:0 0 min(300px,calc(100vw - 48px));scroll-snap-align:start;}
-  .mu-deal-row.row-scroll>.mu2-wrap{flex:0 0 200px;scroll-snap-align:start;}
-  .fo-deal-row.row-fit,.mu-deal-row.row-fit{display:flex;grid-template-columns:none;overflow-x:visible;gap:14px;}
-  .fo-deal-row.row-fit>.ts-fo-col,.mu-deal-row.row-fit>.mu2-wrap{flex:1 1 0;min-width:0;}
-  .strategy-deal-row.row-scroll{scroll-snap-type:x proximity;}
-  .strategy-deal-row.row-scroll .strategy-card-wrap{scroll-snap-align:start;}
-  .strategy-deal-row.row-fit{overflow-x:visible;}
-  .strategy-deal-row.row-fit .strategy-card-wrap{width:auto;flex:1 1 0;min-width:0;}
+  .fo-deal-row.row-fit{display:flex;grid-template-columns:none;overflow-x:visible;gap:14px;}
+  .fo-deal-row.row-fit>.ts-fo-col{flex:1 1 0;min-width:0;}
+  .ts-swipe-row.row-scroll{display:flex;grid-template-columns:none;overflow-x:auto;gap:14px;scroll-snap-type:x mandatory;scrollbar-width:none;}
+  .ts-swipe-row.row-scroll::-webkit-scrollbar{display:none;}
+  .ts-swipe-row.row-scroll>.mu2-wrap,.ts-swipe-row.row-scroll>.strategy-card-wrap{flex:0 0 100%;width:100%;scroll-snap-align:center;}
+  .ts-swipe-row.row-fit{display:flex;grid-template-columns:none;overflow-x:visible;gap:14px;}
+  .ts-swipe-row.row-fit>.mu2-wrap,.ts-swipe-row.row-fit>.strategy-card-wrap{flex:1 1 0;width:auto;min-width:0;}
 }
 .nd-card-back{box-sizing:border-box;min-height:150px;width:100%;background:var(--ink);border:2px solid var(--franchise);color:var(--franchise);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;overflow:hidden;}
 .nd-card-back span{font:20px/1 var(--font-display);letter-spacing:.08em;text-transform:uppercase;color:var(--file);}
@@ -1948,6 +1951,8 @@ body:has(.entry-screen){padding-bottom:0;}
 .tc2-synergy-total-value.defense{color:var(--approved-ink);}
 .tc2-synergy-btn{display:block;width:100%;background:none;border:1px solid var(--franchise);color:var(--franchise);font-family:var(--font-label);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:11px 14px;margin-bottom:12px;cursor:pointer;}
 .tc2-synergy-btn:hover{background:var(--franchise);color:var(--ink);}
+.tc2-lineup-dot{display:inline-block;width:6px;height:6px;margin-left:6px;border-radius:50%;background:var(--stamp);vertical-align:middle;animation:ts-tab-dot-pulse 1.8s ease-in-out infinite;}
+@media (prefers-reduced-motion: reduce){.tc2-lineup-dot{animation:none;}}
 .tc2-pairs-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
 .tc2-pair-row{background:var(--ink-deep);padding:8px 10px;display:flex;flex-direction:column;align-items:flex-start;gap:3px;}
 .tc2-pair-names{font-family:var(--font-mono);font-size:11px;color:var(--file);}
@@ -1961,53 +1966,11 @@ body:has(.entry-screen){padding-bottom:0;}
 .tc2-profile-column li{font-family:var(--font-mono);font-size:11px;line-height:1.5;color:var(--file);padding-left:2px;}
 .tc2-profile-column.strengths li::marker{color:var(--approved-ink);}.tc2-profile-column.weaknesses li::marker{color:var(--stamp);}
 
-/* Team Synergy modal — a blocking full-viewport overlay (see TeamSynergyModal.jsx), not a
-   popover, so it sits well above the persistent bar (z-index 15) and every other in-flow
-   overlay in the app. No backdrop-click dismiss on purpose: it's meant to be closed
-   deliberately via the button or Escape, not brushed away by an accidental click. */
+/* Shared full-viewport modal backdrop (Set Lineup, and formerly the retired Team Synergy
+   modal) — sits well above the persistent bar (z-index 15) and every other in-flow overlay in
+   the app. No backdrop-click dismiss on purpose: it's meant to be closed deliberately via the
+   button or Escape, not brushed away by an accidental click. */
 .tsx-overlay{position:fixed;inset:0;z-index:500;background:rgba(11,17,30,.82);display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto;}
-.tsx-panel{background:var(--ink);color:var(--file);width:100%;max-width:1040px;max-height:100%;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.55);}
-.tsx-panel-head{display:flex;justify-content:space-between;align-items:flex-start;padding:20px 24px;border-bottom:2px solid var(--franchise);position:sticky;top:0;background:var(--ink);z-index:1;}
-.tsx-eyebrow{font-family:var(--font-label);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--franchise);}
-.tsx-title{font-family:var(--font-display);font-size:26px;line-height:1.1;color:var(--file);text-transform:uppercase;margin-top:2px;}
-.tsx-close{background:none;border:1px solid var(--ink-rule);color:var(--file);font-family:var(--font-label);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:9px 14px;cursor:pointer;}
-.tsx-close:hover{border-color:var(--franchise);color:var(--franchise);}
-.tsx-note{font-family:var(--font-mono);font-size:11px;line-height:1.5;color:var(--ink-muted);margin:0 0 14px;padding:0 24px;}
-.tsx-table-wrap{padding-top:20px;}
-.tsx-grid{display:grid;gap:2px;padding:0 24px 20px;}
-.tsx-corner{background:var(--ink);}
-.tsx-head-cell{background:var(--ink-deep);padding:8px 10px;display:flex;flex-direction:column;gap:2px;min-width:0;}
-.tsx-head-top{display:flex;justify-content:space-between;align-items:baseline;gap:6px;}
-.tsx-head-jersey{font-family:var(--font-display);font-size:18px;line-height:1;color:var(--franchise);}
-.tsx-head-meta{font-family:var(--font-mono);font-size:9px;color:var(--ink-muted);text-transform:uppercase;white-space:nowrap;}
-.tsx-head-archetype{font-family:var(--font-label);font-size:11px;letter-spacing:.03em;text-transform:uppercase;color:var(--file);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.tsx-head-skillset{font-family:var(--font-mono);font-size:9px;color:var(--approved-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.tsx-cell,.tsx-cell-blank{min-height:78px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;padding:6px;}
-.tsx-cell-blank{background:transparent;}
-.tsx-cell.inert{background:var(--ink-deep);}
-.tsx-cell-dot{color:var(--ink-rule);font-size:16px;}
-.tsx-cell.live{box-shadow:inset 0 0 0 2px var(--franchise);background:var(--ink-deep);}
-.tsx-cell.live.defense{box-shadow:inset 0 0 0 2px var(--approved-ink);}
-.tsx-cell-live{font-family:var(--font-label);font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--franchise);}
-.tsx-cell.live.defense .tsx-cell-live{color:var(--approved-ink);}
-.tsx-cell-name{font-family:var(--font-label);font-size:11px;letter-spacing:.02em;text-transform:uppercase;color:var(--file);}
-.tsx-cell-value{font-family:var(--font-mono);font-size:11px;color:var(--franchise);}
-.tsx-cell.live.defense .tsx-cell-value{color:var(--approved-ink);}
-.tsx-dormant-list{margin:0 24px 20px;background:var(--ink-deep);padding:12px 16px;display:flex;flex-direction:column;gap:8px;}
-.tsx-dormant-head{font-family:var(--font-label);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-muted);}
-.tsx-dormant-row{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px 14px;font-family:var(--font-mono);font-size:11px;color:var(--file);border-top:1px solid var(--ink-rule);padding-top:8px;}
-.tsx-dormant-row:first-of-type{border-top:none;padding-top:0;}
-.tsx-dormant-value{font-weight:500;}
-.tsx-dormant-value.offense{color:var(--franchise);}
-.tsx-dormant-value.defense{color:var(--approved-ink);}
-.tsx-legend{display:flex;flex-wrap:wrap;gap:16px;padding:14px 24px;border-top:1px solid var(--ink-rule);font-family:var(--font-mono);font-size:10px;color:var(--ink-muted);align-items:center;}
-.tsx-swatch{display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:middle;box-shadow:inset 0 0 0 2px var(--franchise);}
-.tsx-swatch.defense{box-shadow:inset 0 0 0 2px var(--approved-ink);}
-@media(max-width:720px){
-  .tsx-table-wrap{overflow-x:auto;}
-  .tsx-grid{grid-template-columns:92px repeat(4,92px)!important;width:max-content;min-width:508px;}
-  .tsx-head-skillset,.tsx-head-meta{display:none;}
-}
 
 /* Set Lineup screen ("The Floor", design ref 1a) — a light panel inside the same dark
    .tsx-overlay backdrop TeamSynergyModal uses. Five court slots at fixed, purely cosmetic

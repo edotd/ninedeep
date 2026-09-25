@@ -4,7 +4,7 @@ import { jerseyNumber, playerGrade } from '../game/cards';
 
 // "The Floor" (design ref 1a) — the starting five placed on a half-court diagram, wired
 // together wherever two of them share a live Skillset pairing (game/skillsets.js's
-// SKILLSET_PAIRS — the same bonus TeamSynergyModal's cross-table shows, just drawn here
+// SKILLSET_PAIRS — the same bonus the Lineup & Chemistry tab's pairs list shows, just drawn here
 // instead of tabulated). The five court positions below are a fixed, purely cosmetic layout
 // (this game only tracks Guard/Forward/Big, not five true positions) so a starter can occupy
 // any of the five spots — nothing here enforces which slot a given position "belongs" in
