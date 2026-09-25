@@ -53,6 +53,7 @@ export default function MatchupCard({ card, playoff, justDealt }) {
         <div className={'mu2-card' + (playoff ? ' playoff' : '') + dealCls} data-rarity={rarity}>
           {legendary && <div className={'mu2-glow' + dealCls} />}
           <div className="mu2-logo-mark"><BallMark size={40} variant={legendary ? 'onInk' : 'monoOutline'} /></div>
+          <CardTypeMark type={rarity} size={20} className="rarity-icon-mark" />
           <div className="mu2-header"><span className="mu2-kind-group"><CardTypeMark type="matchup" size={16} />{card.category}</span><span>{card.rarity}</span></div>
           <div className="mu2-name">{card.name}</div>
           <p className="mu2-statement">{card.description}</p>

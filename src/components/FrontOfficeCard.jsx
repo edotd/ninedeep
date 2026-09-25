@@ -96,6 +96,7 @@ export default function FrontOfficeCard({ kind, team }) {
         {coachRarity && (RARITY_CORNERS[coachRarity] || []).map((c) => <span key={c} className={'rarity-corner ' + c} />)}
         <CardTypeMark type="frontoffice" className="fo2-watermark" color="var(--ink-rule)" size={190} />
         <div className="fo2-logo-mark"><BallMark size={44} variant="onInk" /></div>
+        {coachRarity && <CardTypeMark type={coachRarity} size={22} className="rarity-icon-mark" />}
         <div className="fo2-header">
           <span className="fo2-kind-group">
             <CardTypeMark type="frontoffice" size={16} />

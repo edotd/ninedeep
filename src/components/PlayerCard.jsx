@@ -141,6 +141,7 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
           title tooltip. */}
       {!compact && (
         <div className="pcard-accolade-block">
+          <CardTypeMark type={rarity} size={22} className="rarity-icon-mark" />
           <div className="pcard-accolade-head">
             <span className="pcard-microlabel">Accolades</span>
             {(pillLabel || card.development) && (

@@ -503,6 +503,14 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .rarity-corner.tr{top:4px;right:4px;border-top:2px solid;border-right:2px solid;}
 .rarity-corner.bl{bottom:4px;left:4px;border-bottom:2px solid;border-left:2px solid;}
 .rarity-corner.br{bottom:4px;right:4px;border-bottom:2px solid;border-right:2px solid;}
+/* A dedicated rarity glyph (CardTypeMark's Core/Prime/Signature/Legendary marks), low-opacity in
+   a card's lower-right corner, alongside — not instead of — the frame's own border color/weight
+   and corner brackets, so rarity still reads even at a size too small to notice those. On
+   PlayerCard it sits inside .pcard-accolade-block (already position:relative) rather than
+   directly on .pcard, since the card's own bottom edge can be covered by an opaque Release/
+   Develop button there; Front Office and Matchup cards have nothing opaque in that corner, so
+   it sits directly on the card. */
+.rarity-icon-mark{position:absolute;right:6px;bottom:6px;z-index:2;opacity:.35;color:var(--rarity-accent);pointer-events:none;}
 
 /* Position is the card header's primary visual code across every player tier. */
 .pcard.position-guard .pcard-header{background:var(--file);color:var(--ink);border-bottom:1px solid var(--file-rule);}

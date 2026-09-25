@@ -91,6 +91,27 @@ const PATHS = {
       <path d="M10 46h40" strokeWidth="2.5" />
     </>
   ),
+  // Card rarity (game/constants.js's RARITIES) — one mark per tier, shown at low opacity in a
+  // card's lower-right corner (see .rarity-icon-mark) alongside the frame's own border
+  // color/weight and corner brackets, so rarity still reads even at a size too small for those.
+  Core: <circle cx="30" cy="30" r="16" strokeWidth="2.5" />,
+  Prime: <path d="M30 10L50 30L30 50L10 30Z" strokeWidth="2.5" strokeLinejoin="round" />,
+  Signature: (
+    <path
+      d="M30 8L35.29 22.72L50.92 23.20L38.56 32.78L42.93 47.80L30 39L17.07 47.80L21.44 32.78L9.08 23.20L24.71 22.72Z"
+      strokeWidth="2.5"
+      strokeLinejoin="round"
+    />
+  ),
+  Legendary: (
+    <>
+      <path d="M12 40V26l8 8 10-18 10 18 8-8v14z" strokeWidth="2.5" strokeLinejoin="round" />
+      <rect x="12" y="40" width="36" height="8" strokeWidth="2.5" />
+      <circle cx="12" cy="26" r="2" fill="currentColor" stroke="none" />
+      <circle cx="30" cy="16" r="2.5" fill="currentColor" stroke="none" />
+      <circle cx="48" cy="26" r="2" fill="currentColor" stroke="none" />
+    </>
+  ),
 };
 // Adjustment cards are this game's matchup cards — same mark, clearer name at the call site.
 PATHS.adjustment = PATHS.matchup;
