@@ -1,15 +1,12 @@
 import PlayerCard from '../components/PlayerCard';
-import { cardTotal, jerseyNumber, playerGrade } from '../game/cards';
-import { careerLevel } from '../game/aging';
+import { cardTotal, playerGrade } from '../game/cards';
 import { formatCoins } from '../game/economy';
 import OffseasonFile from '../components/OffseasonFile';
 import { offseasonPrice } from '../game/gm';
 import { forfeitBonusForPosition, overallPickPosition } from '../game/draft';
 
-// "Number + Grade + Career + Tier + Position" — the one full-identity line the draft order
-// table and this screen's Recent Picks list both use for a pick's card.
 function pickLine(card) {
-  return `#${jerseyNumber(card)} · ${playerGrade(card)} · ${careerLevel(card)} · ${card.tierName} · ${card.position}`;
+  return `${playerGrade(card)} | ${card.archetype} | ${card.position}`;
 }
 
 // Matches the border colors PlayerCard's own .pcard.rarity-* classes use (see index.css) — a
@@ -60,7 +57,7 @@ export default function DraftScreen({ state, actions, myTeamId }) {
           {[...draft.picks].reverse().map((p, i) => (
             <div key={'picked-' + p.card.id} className={'standing-row' + (p.teamId === myTeamId ? ' you' : '')}>
               <span>#{i + 1} {p.teamName}</span>
-              <span className="standing-row-pick"><PickSwatch card={p.card} />{p.card.archetype} — {pickLine(p.card)}</span>
+              <span className="standing-row-pick"><PickSwatch card={p.card} />{pickLine(p.card)}</span>
             </div>
           ))}
           {draft.queue.map((t, i) => (

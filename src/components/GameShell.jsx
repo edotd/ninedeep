@@ -17,6 +17,7 @@ import PlayoffsScreen from '../screens/PlayoffsScreen';
 import ResultsScreen from '../screens/ResultsScreen';
 import SeasonRecapScreen from '../screens/SeasonRecapScreen';
 import DraftScreen from '../screens/DraftScreen';
+import DraftTransitionScreen from '../screens/DraftTransitionScreen';
 import EraEndScreen from '../screens/EraEndScreen';
 import ConstructingScreen from '../screens/ConstructingScreen';
 import SimulatingSeasonScreen from '../screens/SimulatingSeasonScreen';
@@ -43,6 +44,7 @@ const SCREENS = {
   seasonrecap: SeasonRecapScreen,
   contracts: ContractsScreen,
   draft: DraftScreen,
+  drafttransition: DraftTransitionScreen,
   simulating: SimulatingSeasonScreen,
   era_end: EraEndScreen,
 };
@@ -53,7 +55,7 @@ const SCREENS = {
 // animation's payoff rather than something hidden until Team Summary. It's still hidden during
 // the Simulating Season loading beat and the season transition — full-screen loading treatment,
 // same as Constructing.
-const HIDE_BAR_PHASES = new Set(['simulating', 'seasontransition']);
+const HIDE_BAR_PHASES = new Set(['simulating', 'seasontransition', 'drafttransition']);
 
 const PAGE_LABELS = {
   cardoverview: 'Card Types',
@@ -69,6 +71,7 @@ const PAGE_LABELS = {
   seasonrecap: 'Season Recap',
   contracts: 'Contracts',
   draft: 'Draft',
+  drafttransition: 'Loading Season',
   simulating: 'Simulating Season',
   era_end: 'Era Recap',
   team: 'Franchise',

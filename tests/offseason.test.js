@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { newEraState, renewExpiredContract, signFreeAgent, fileContracts, closeFreeAgency } from '../src/game/season.js';
-import { startDraft, draftPick, forfeitPick, forfeitBonusForPosition, overallPickPosition, buildDraftPool } from '../src/game/draft.js';
+import { startDraft, draftPick, forfeitPick, forfeitBonusForPosition, overallPickPosition, buildDraftPool, finishDraftTransition } from '../src/game/draft.js';
 import { rosterSalary } from '../src/game/economy.js';
 import { FORFEIT_BONUS_MAX, FORFEIT_BONUS_MIN, LEAGUE_TEAM_COUNT } from '../src/game/constants.js';
 import { startEra, confirmLineup, markLineupSet } from '../src/game/engine.js';
@@ -136,8 +136,10 @@ test('every team drafts a Young non-accolade player and resolves an oversized ro
   assert(state.draft.pool.every((card) => card.skillsetId !== 'skill-03'));
   assert(state.draft.pool.every((card) => !accoladeNames.has(card.tierName)));
   draftPick(state, 0, state.draft.pool[0].id);
-  assert.equal(state.phase, 'teamsummary');
+  assert.equal(state.phase, 'drafttransition');
   assert.equal(state.season, 3);
+  finishDraftTransition(state);
+  assert.equal(state.phase, 'teamsummary');
   assert.equal(team.hand.length, 10);
   assert.equal(team.activeIds.length, 5);
   const releasedCard = team.hand[9];

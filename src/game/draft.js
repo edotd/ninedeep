@@ -126,9 +126,14 @@ function finishDraftIfDone(state) {
     if (state.season > ERA_LENGTH) state.phase = 'era_end';
     else {
       startNewSeasonRoster(state);
-      state.phase = 'teamsummary';
+      state.phase = 'drafttransition';
     }
   }
+}
+
+export function finishDraftTransition(state) {
+  if (state.phase !== 'drafttransition') return;
+  state.phase = 'teamsummary';
 }
 
 function resolveAiPicksUntilHuman(state) {

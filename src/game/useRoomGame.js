@@ -9,7 +9,7 @@ const lobbyActionMap = { claimSeat, leaveSeat, startEraOnline, resetRoomToLobby 
 // can let an older Firestore snapshot briefly restore the previous phase, remounting a loading
 // transition or series screen. Wait for the ordered server snapshot for these actions instead.
 const NON_OPTIMISTIC_ACTIONS = new Set([
-  'confirmLineup', 'finishConstruction', 'finishSeasonSimulation', 'openSeries', 'closeSeries',
+  'confirmLineup', 'finishConstruction', 'finishSeasonSimulation', 'finishDraftTransition', 'openSeries', 'closeSeries',
   'beginTurn', 'simulateOneMatch', 'simulateAllPlayoffs', 'beginPlayoffs', 'finishPlayoffs',
   // Each of these rolls dice (or can resolve someone else's dangling bid) inside the mutator
   // itself — an optimistic local roll would show a result the real transaction's own roll can

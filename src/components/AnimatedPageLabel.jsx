@@ -9,7 +9,7 @@ export default function AnimatedPageLabel({ page }) {
     let restoreTimer;
     const brandTimer = window.setInterval(() => {
       setShowBrand(true);
-      restoreTimer = window.setTimeout(() => setShowBrand(false), 1000);
+      restoreTimer = window.setTimeout(() => setShowBrand(false), 2000);
     }, 10000);
 
     return () => {
