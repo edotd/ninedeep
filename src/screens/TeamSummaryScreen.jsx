@@ -446,6 +446,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   if (team.hand.length !== 9) seasonIssues.push(`Resolve your roster (${team.hand.length}/9)`);
   if (committed > cap) seasonIssues.push('Resolve team budget');
   if (!team.lineupSet || starters.length !== 5) seasonIssues.push('Set your lineup');
+  if (!state.offseason?.freeAgencyClosed?.[team.id]) seasonIssues.push('Close out free agency');
 
   return (
     <>
@@ -844,6 +845,8 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                         <button type="button" onClick={() => { setShowSeasonIssues(false); setTab('ledger'); }}>Budget</button>
                       ) : msg.startsWith('Resolve your roster') ? (
                         <button type="button" onClick={() => { setShowSeasonIssues(false); onFreeAgency?.(); }}>{msg}</button>
+                      ) : msg === 'Close out free agency' ? (
+                        <button type="button" onClick={() => { setShowSeasonIssues(false); onFreeAgency?.(); }}>Free Agency</button>
                       ) : msg}
                     </li>
                   ))}

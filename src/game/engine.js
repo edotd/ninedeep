@@ -134,6 +134,7 @@ export function confirmLineup(state, teamIdx) {
   if (!team.lineupSet) return { valid: false, msg: 'Set your lineup before the season begins.' };
   const v = validateLineup(team);
   if (!v.valid) return v;
+  if (!state.offseason?.freeAgencyClosed?.[team.id]) return { valid: false, msg: 'Close out free agency before the season begins.' };
   team.lineupConfirmed = true;
   if (allHumansReady(state, (t) => t.lineupConfirmed)) {
     state.teams.filter((t) => !t.human).forEach((t) => { t.activeIds = autoSelectFive(t.hand); t.lineupSet = true; });

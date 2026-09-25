@@ -33,27 +33,31 @@ export default function FreeAgencyScreen({ state, actions, myTeamId, onBack }) {
         </button>
         {pendingDecision && !closed && <div className="fa-alert">You have an open bid waiting on your raise or stand pat.</div>}
       </div>
-      <h2>Coaches</h2>
-      {(state.freeAgentCoaches || []).length ? (
-        <div className="fa-coach-grid">
-          {state.freeAgentCoaches.map((coach) => {
-            const firedHere = coach.firedByTeamId === team.id && coach.firedSeason === state.season;
-            const hasCoach = Boolean(team.coach);
-            const hire = () => {
-              const result = actions.hireFreeAgentCoach(myTeamId, coach.id);
-              if (result && result.ok === false) alert(result.msg);
-            };
-            return (
-              <div key={coach.id}>
-                <FrontOfficeCard kind="coach" team={{ ...team, coach, retainedStreak: 0 }} />
-                <button className="pcard-renew" disabled={hasCoach || firedHere || closed} onClick={hire}>
-                  {firedHere ? 'Fired This Season' : hasCoach ? 'Fire Coach To Hire' : `Hire — ${formatCoins(coach.salary)}`}
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      ) : <p className="lede">No coaches are currently available.</p>}
+      {state.settings?.coachChangesEnabled && (
+        <>
+          <h2>Coaches</h2>
+          {(state.freeAgentCoaches || []).length ? (
+            <div className="fa-coach-grid">
+              {state.freeAgentCoaches.map((coach) => {
+                const firedHere = coach.firedByTeamId === team.id && coach.firedSeason === state.season;
+                const hasCoach = Boolean(team.coach);
+                const hire = () => {
+                  const result = actions.hireFreeAgentCoach(myTeamId, coach.id);
+                  if (result && result.ok === false) alert(result.msg);
+                };
+                return (
+                  <div key={coach.id}>
+                    <FrontOfficeCard kind="coach" team={{ ...team, coach, retainedStreak: 0 }} />
+                    <button className="pcard-renew" disabled={hasCoach || firedHere || closed} onClick={hire}>
+                      {firedHere ? 'Fired This Season' : hasCoach ? 'Fire Coach To Hire' : `Hire — ${formatCoins(coach.salary)}`}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          ) : <p className="lede">No coaches are currently available.</p>}
+        </>
+      )}
       <h2>Players</h2>
       <div className="statusline">Roster {team.hand.length}/9 · {openSlots ? `${openSlots} open spot${openSlots === 1 ? '' : 's'}` : 'No open roster spots'}</div>
       {state.freeAgents.length ? (
@@ -64,7 +68,7 @@ export default function FreeAgencyScreen({ state, actions, myTeamId, onBack }) {
             const sign = () => setBiddingCard(card);
             return (
               <div key={card.id}>
-                <PlayerCard card={card} signingNote={`Rolls for ${freeAgentPriority(card)} · min ${card.contract} yr${card.contract === 1 ? '' : 's'}`} />
+                <PlayerCard card={card} contractLabel="Requested Contract Length" signingNote={`Rolls for ${freeAgentPriority(card)} · min ${card.contract} yr${card.contract === 1 ? '' : 's'}`} />
                 <button className="pcard-renew" disabled={(!openSlots && !bid) || releasedHere || closed} onClick={sign}>
                   {releasedHere ? 'Released This Season' : bid ? `Bidding — ${formatCoins(bid.salary)}` : `Offer — ${formatCoins(card.salary)}`}
                 </button>

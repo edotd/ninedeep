@@ -266,6 +266,28 @@ test('confirmLineup requires a reviewed lineup; markLineupSet unlocks it', () =>
   assert.equal(team.lineupConfirmed, undefined);
   assert.equal(markLineupSet(state, 0).valid, true);
   assert.equal(team.lineupSet, true);
+  state.offseason.freeAgencyClosed[team.id] = true;
   assert.equal(confirmLineup(state, 0).valid, true);
   assert.equal(team.lineupConfirmed, true);
+});
+
+test('every human must close out free agency before the season can begin', () => {
+  const state = newEraState();
+  startEra(state, 'Test');
+  const first = state.teams[0];
+  const second = state.teams[1];
+  second.human = true;
+  first.seasonCap = 999;
+  second.seasonCap = 999;
+  first.lineupSet = true;
+  second.lineupSet = true;
+  state.offseason.freeAgencyClosed[first.id] = true;
+
+  assert.equal(confirmLineup(state, first.id).valid, true);
+  assert.match(confirmLineup(state, second.id).msg, /Close out free agency/);
+  assert.equal(state.phase, 'pullhand');
+
+  state.offseason.freeAgencyClosed[second.id] = true;
+  assert.equal(confirmLineup(state, second.id).valid, true);
+  assert.equal(state.phase, 'simulating');
 });
