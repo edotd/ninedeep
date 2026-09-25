@@ -7,6 +7,21 @@ export default class ErrorBoundary extends Component {
     return { error };
   }
 
+  reloadLatest = async () => {
+    try {
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map((registration) => registration.unregister()));
+      }
+      if ('caches' in window) {
+        const names = await caches.keys();
+        await Promise.all(names.map((name) => caches.delete(name)));
+      }
+    } finally {
+      window.location.reload();
+    }
+  };
+
   render() {
     if (this.state.error) {
       const err = this.state.error;
@@ -19,8 +34,8 @@ export default class ErrorBoundary extends Component {
               {err.stack}
             </pre>
           )}
-          <button className="secondary" style={{ width: '100%', marginTop: 14 }} onClick={() => window.location.reload()}>
-            Reload
+          <button className="secondary" style={{ width: '100%', marginTop: 14 }} onClick={this.reloadLatest}>
+            Reload latest version
           </button>
         </div>
       );

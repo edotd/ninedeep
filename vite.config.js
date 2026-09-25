@@ -7,7 +7,12 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // Nine Deep always needs a live connection for room state. Keeping an app shell in a
+      // service-worker cache can strand installed iOS copies on an old hashed JS bundle after
+      // a deployment, which presents as a blank screen. Publish a one-time cleanup worker so
+      // existing installs discard those caches and then load directly from Vercel.
+      selfDestroying: true,
+      injectRegister: false,
       includeAssets: ['favicon.svg'],
       manifest: {
         name: 'Nine Deep',
