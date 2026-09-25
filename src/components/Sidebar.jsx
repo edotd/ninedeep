@@ -13,7 +13,7 @@ function outputFor(team) {
 const POST_SEED_PHASES = new Set(['simulating', 'standings', 'playoffs', 'results', 'seasonrecap', 'contracts', 'draft', 'era_end']);
 
 const PRIMARY_NAV_ITEMS = [
-  { key: 'team', label: 'Your Franchise' },
+  { key: 'team', label: 'Franchise' },
   { key: 'freeagency', label: 'Free Agency' },
   { key: 'standings', label: 'Standings' },
   { key: 'cardtypes', label: 'Card Types' },

@@ -61,6 +61,7 @@ const BREAKDOWN_NOTES = {
 export default function FranchiseMasthead({ state, teamId }) {
   const team = state.teams[teamId];
   const [openMetric, setOpenMetric] = useState(null);
+  const [selectedRow, setSelectedRow] = useState(null);
   if (!team) return null;
   const seasonNum = Math.min(state.season, ERA_LENGTH);
   // A human team's chemistry/output/offense/defense are only meaningful once they've actually
@@ -74,8 +75,40 @@ export default function FranchiseMasthead({ state, teamId }) {
   const rankedCount = outputs.filter(Boolean).length;
   const rankFor = (key) => output ? outputs.filter((o) => o && o[key] > output[key]).length + 1 : null;
 
-  const toggleMetric = (kind) => () => setOpenMetric((v) => (v === kind ? null : kind));
+  const toggleMetric = (kind) => () => {
+    setSelectedRow(null);
+    setOpenMetric((v) => (v === kind ? null : kind));
+  };
   const rows = openMetric && lineupReady ? breakdownRows(openMetric, team, synergy, output) : null;
+
+  const rowExplanation = (label) => {
+    const explanations = {
+      Base: 'Every franchise begins with 50 chemistry points before roster fit, continuity, and leadership are counted.',
+      'Skillset Fit': 'Points created by complementary skillsets in the starting five.',
+      Continuity: 'Chemistry earned by keeping players together across seasons.',
+      Leadership: 'Chemistry supplied by veteran leadership effects on the roster.',
+      Offense: 'The offense portion of projected output, including player stats, bonuses, and the expected offense roll.',
+      Defense: 'The defense portion of projected output, including player stats, bonuses, and the expected defense roll.',
+      Bench: 'The fixed contribution supplied by the four players outside the starting five.',
+      'SCO + PLM': 'The starting five’s scoring and playmaking stats form the raw offense foundation.',
+      'DEF + REB': 'The starting five’s defense and rebounding stats form the raw defense foundation.',
+      'Coach Bonus': `The coach’s ${openMetric} specialty changes the roster’s base value by this percentage.`,
+      Retention: 'A continuity bonus earned by retaining the coach or starting five.',
+      Relationships: 'Bonuses and penalties created by player relationships and roster effects.',
+      'GM Approach': 'The active GM type changes this side of the team through its continuity rules.',
+      Gameplan: 'The active Gameplan card applies this temporary percentage change.',
+      'Roster Base': 'The roster’s value after percentage modifiers and before skillset synergy.',
+      'Skillset Synergy': 'The percentage added by compatible starter skillsets and chemistry effects.',
+      'Roster Mod': 'The final roster modifier applied before the die roll.',
+      'Expected Roll': `The statistical average of the ${openMetric} die: (die size + 1) ÷ 2. Actual rolls can land higher or lower.`,
+      Total: openMetric === 'output'
+        ? 'Projected Output is the sum of offense, defense, and bench contribution.'
+        : openMetric === 'chemistry'
+          ? 'The final chemistry score determines the displayed letter grade.'
+          : `The final projected ${openMetric} value combines the roster modifier and expected die roll.`,
+    };
+    return explanations[label];
+  };
 
   return (
     <div className="ts-masthead persistent-franchise-masthead">
@@ -99,10 +132,11 @@ export default function FranchiseMasthead({ state, teamId }) {
       {rows && (
         <div className="ts-masthead-breakdown">
           <div className="ts-masthead-breakdown-head">{team.name} — {METRIC_LABELS[openMetric]}</div>
-          {rows.map(([label, value], i) => label === '__total'
-            ? <div className="ts-masthead-breakdown-row total" key={i}><span>Total</span><span>{value}</span></div>
-            : <div className="ts-masthead-breakdown-row" key={i}><span>{label}</span><span>{value}</span></div>)}
-          {BREAKDOWN_NOTES[openMetric] && <p className="ts-masthead-breakdown-note">{BREAKDOWN_NOTES[openMetric]}</p>}
+          {rows.map(([rawLabel, value], i) => {
+            const label = rawLabel === '__total' ? 'Total' : rawLabel;
+            return <button type="button" className={'ts-masthead-breakdown-row' + (rawLabel === '__total' ? ' total' : '') + (selectedRow === label ? ' selected' : '')} key={i} onClick={() => setSelectedRow(label)}><span>{label}</span><span>{value}</span></button>;
+          })}
+          <p className="ts-masthead-breakdown-note">{selectedRow ? rowExplanation(selectedRow) : (BREAKDOWN_NOTES[openMetric] || 'Select a row to learn how it contributes to this total.')}</p>
         </div>
       )}
     </div>

@@ -227,6 +227,11 @@ p.lede{color:var(--file-body);font-size:14px;line-height:1.5;margin:0 0 14px;}
 .standing-row{display:flex;justify-content:space-between;padding:9px 10px;border-bottom:1px solid var(--form-rule);font-size:14px;font-family:var(--font-mono);}
 .standing-row.you{color:var(--stamp);font-weight:500;}
 .standing-row:hover{background:var(--form-rule);}
+.league-standings-table{margin-top:18px;border-top:2px solid var(--ink);}
+.league-standings-row{width:100%;display:grid;grid-template-columns:minmax(180px,2fr) repeat(4,minmax(100px,1fr));align-items:center;padding:12px 10px;border:0;border-bottom:1px solid var(--form-rule);background:transparent;color:var(--ink);font:13px var(--font-mono);text-align:right;cursor:pointer;}
+.league-standings-row.head{font:10px var(--font-label);letter-spacing:.09em;text-transform:uppercase;color:var(--file-muted);cursor:default;}
+.league-standings-row span:first-child{text-align:left;}.league-standings-row:not(.head):hover{background:var(--form-rule);}.league-standings-row.you{color:var(--stamp-text);}.league-standings-row:disabled{cursor:default;}
+.league-team{display:flex;align-items:center;gap:10px;min-width:0;}.league-team i{width:20px;color:var(--file-muted);font-style:normal;font-size:11px;}.league-team b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}.league-output{font-weight:700;color:var(--stamp-text);}
 .lobby-seat-row{align-items:center;gap:12px;}
 .lobby-seat-row.unavailable-to-you{opacity:.38;background:var(--form-rule);}
 .lobby-seat-row.unavailable-to-you:hover{background:var(--form-rule);}
@@ -839,7 +844,8 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
    than a popover per tile, so it never has to worry about overflowing a narrow tile's edge. */
 .ts-masthead-breakdown{width:100%;margin-top:14px;padding-top:14px;border-top:1px solid var(--ink-rule);font-family:var(--font-mono);font-size:12px;color:var(--file);}
 .ts-masthead-breakdown-head{font-family:var(--font-label);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:6px;}
-.ts-masthead-breakdown-row{display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px solid var(--ink-rule);}
+.ts-masthead-breakdown-row{width:100%;display:flex;justify-content:space-between;gap:10px;padding:5px 4px;border:0;border-bottom:1px solid var(--ink-rule);background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer;}
+.ts-masthead-breakdown-row:hover,.ts-masthead-breakdown-row.selected{background:rgba(240,166,35,.12);color:var(--franchise);}
 .ts-masthead-breakdown-row.total{border-bottom:none;color:var(--franchise);font-family:var(--font-display);font-size:16px;padding-top:6px;}
 .ts-masthead-breakdown-note{margin:8px 0 0;font-size:10px;line-height:1.5;color:var(--ink-muted);}
 /* Mobile-only tab bar (per the brand handoff's mobile Team File) — desktop keeps every
@@ -869,7 +875,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .ts-tab-players{display:flex;align-items:center;justify-content:center;position:relative;padding:0;}
 .ts-tab-main{flex:1;background:none;border:none;padding:12px 2px 12px 6px;font:inherit;color:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer;}
 .ts-tab-caret{flex-shrink:0;background:none;border:none;padding:12px 6px 12px 0;color:inherit;cursor:pointer;display:flex;align-items:center;}
-.ts-tab-caret-icon{font-size:9px;display:inline-block;transition:transform 120ms ease;}
+.ts-tab-caret-icon{font-size:16px;line-height:1;display:inline-block;transition:transform 120ms ease;}
 .ts-tab-caret-icon.open{transform:rotate(180deg);}
 .ts-view-menu-backdrop{position:fixed;inset:0;z-index:29;}
 .ts-view-menu{position:absolute;top:100%;left:0;z-index:30;display:flex;flex-direction:column;background:var(--ink);border:1px solid var(--ink-rule);box-shadow:0 10px 20px rgba(0,0,0,.4);min-width:130px;margin-top:1px;}
@@ -990,8 +996,10 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
    card, not a partial peek of two. row-fit only ever applies to a 0-1 card row there, where
    there's nothing to swipe to anyway. */
 .row-swipe-wrap{position:relative;}
-.row-swipe-hint{position:absolute;top:0;bottom:6px;right:0;width:22px;display:flex;align-items:center;justify-content:center;background:var(--ink-deep);border:1px solid var(--franchise);border-right:none;pointer-events:none;z-index:3;}
-.row-swipe-hint-chevron{font-family:var(--font-display);font-size:16px;color:var(--franchise);}
+.row-swipe-hint{position:absolute;top:28%;bottom:28%;right:0;width:26px;display:flex;align-items:center;justify-content:center;background:var(--ink-deep);border:1px solid var(--franchise);border-right:none;pointer-events:none;z-index:3;animation:row-swipe-pulse 1.8s ease-in-out infinite;}
+.row-swipe-hint-chevron{font-family:var(--font-display);font-size:28px;line-height:1;color:var(--franchise);}
+@keyframes row-swipe-pulse{0%,100%{opacity:.62;box-shadow:0 0 0 rgba(240,166,35,0)}50%{opacity:1;box-shadow:0 0 12px rgba(240,166,35,.42)}}
+@media(prefers-reduced-motion:reduce){.row-swipe-hint{animation:none;}}
 @media(max-width:999px){
   .fo-deal-row.row-scroll{display:flex;grid-template-columns:none;overflow-x:auto;gap:14px;scroll-snap-type:x proximity;scrollbar-width:none;}
   .fo-deal-row.row-scroll::-webkit-scrollbar{display:none;}
@@ -1000,9 +1008,14 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
   .fo-deal-row.row-fit>.ts-fo-col{flex:1 1 0;min-width:0;}
   .ts-swipe-row.row-scroll{display:flex;grid-template-columns:none;overflow-x:auto;gap:14px;scroll-snap-type:x mandatory;scrollbar-width:none;}
   .ts-swipe-row.row-scroll::-webkit-scrollbar{display:none;}
-  .ts-swipe-row.row-scroll>.mu2-wrap,.ts-swipe-row.row-scroll>.strategy-card-wrap{flex:0 0 100%;width:100%;scroll-snap-align:center;}
+  .ts-swipe-row.row-scroll>.strategy-card-wrap{flex:0 0 240px;width:240px;scroll-snap-align:start;}
+  .ts-swipe-row.row-scroll>.mu2-wrap{flex:0 0 280px;width:280px;scroll-snap-align:start;}
   .ts-swipe-row.row-fit{display:flex;grid-template-columns:none;overflow-x:visible;gap:14px;}
   .ts-swipe-row.row-fit>.mu2-wrap,.ts-swipe-row.row-fit>.strategy-card-wrap{flex:1 1 0;width:auto;min-width:0;}
+}
+@media(max-width:700px){
+  .league-standings-table{overflow-x:auto;}
+  .league-standings-row{min-width:630px;grid-template-columns:minmax(170px,2fr) repeat(4,minmax(95px,1fr));}
 }
 .nd-card-back{box-sizing:border-box;min-height:150px;width:100%;background:var(--ink);border:2px solid var(--franchise);color:var(--franchise);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;overflow:hidden;}
 .nd-card-back span{font:20px/1 var(--font-display);letter-spacing:.08em;text-transform:uppercase;color:var(--file);}

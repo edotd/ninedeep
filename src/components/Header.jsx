@@ -46,7 +46,7 @@ export default function Header({ state, myTeamId, overlay, onTeam, onFreeAgency,
       </div>
       {menuOpen && <div className="topbar-menu-backdrop" onClick={() => setMenuOpen(false)} />}
       <div className={'topbar-nav' + (menuOpen ? ' open' : '')}>
-        <button className={'reset-link' + (overlay === 'team' ? ' active' : '')} onClick={navClick(onTeam)}>Team</button>
+        <button className={'reset-link' + (overlay === 'team' ? ' active' : '')} onClick={navClick(onTeam)}>Franchise</button>
         <button className={'reset-link' + (overlay === 'freeagency' ? ' active' : '')} onClick={navClick(onFreeAgency)}>Free Agency</button>
         <button className={'reset-link' + (overlay === 'standings' ? ' active' : '')} onClick={navClick(onStandings)}>Standings</button>
         <button className={'reset-link' + (overlay === 'glossary' ? ' active' : '')} onClick={navClick(onGlossary)}>Glossary</button>
