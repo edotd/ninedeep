@@ -414,6 +414,10 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   };
 
   const handleRelease = (card) => {
+    if (card.freeAgentSignedSeason === state.season) {
+      alert('You cannot release a free agent you signed this season.');
+      return;
+    }
     const years = card.contract;
     const deadCapCharge = Math.round((card.salary / 2) * 100) / 100;
     const msg = years <= 0

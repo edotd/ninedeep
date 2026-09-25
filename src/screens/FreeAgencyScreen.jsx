@@ -61,7 +61,7 @@ export default function FreeAgencyScreen({ state, actions, myTeamId, onBack }) {
         </>
       )}
       <h2>Players</h2>
-      <div className="statusline">Roster {team.hand.length}/9 · {openSlots ? `${openSlots} open spot${openSlots === 1 ? '' : 's'}` : 'No open roster spots'}</div>
+      <div className="statusline">Roster {team.hand.length}/9 · {openSlots ? `${openSlots} open spot${openSlots === 1 ? '' : 's'}` : team.hand.length > 9 ? `${team.hand.length - 9} over the season limit` : 'Bids allowed — resolve any overflow before the season'}</div>
       {state.freeAgents.length ? (
         <div className="fa-grid">
           {state.freeAgents.map((card) => {
@@ -72,7 +72,7 @@ export default function FreeAgencyScreen({ state, actions, myTeamId, onBack }) {
             return (
               <div key={card.id}>
                 <PlayerCard card={card} contractLabel="Requested Contract Length" signingNote={`VALUES ${freeAgentPriority(card).toUpperCase()} · ${offerCount ? `${offerCount} OFFER${offerCount === 1 ? '' : 'S'} MADE` : 'NO OFFERS'}`} />
-                <button className="pcard-renew" disabled={(!openSlots && !bid) || releasedHere || closed} onClick={sign}>
+                <button className="pcard-renew" disabled={releasedHere || closed} onClick={sign}>
                   {releasedHere ? 'Released This Season' : bid ? `Bidding — ${formatCoins(bid.salary)}` : `Offer — ${formatCoins(card.salary)}`}
                 </button>
               </div>

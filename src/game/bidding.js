@@ -72,7 +72,6 @@ function validateBid(state, team, session, salary, years) {
   years = Math.max(1, Math.min(7, Math.round(years)));
   if (salary < session.minSalary) return { ok: false, msg: `Minimum bid is ${session.minSalary}.` };
   if (years < session.minYears) return { ok: false, msg: `Minimum contract is ${session.minYears} year${session.minYears === 1 ? '' : 's'}.` };
-  if (team.hand.length + pendingBidCount(state, team, session.cardId) >= 9) return { ok: false, msg: 'You have no uncommitted roster spots.' };
   const room = remainingCap(team) - pendingFaHoldTotal(state, team, session.cardId);
   if (salary > room) return { ok: false, msg: 'That bid would put you over the cap.' };
   return { ok: true, salary, years };
@@ -115,7 +114,7 @@ export function resolveFreeAgentBidding(state, session) {
   const bids = Object.entries(session.bids).map(([teamId, bid]) => {
     const team = state.teams.find((candidate) => candidate.id === Number(teamId));
     return team ? { ...bid, winningValue: winningValue(team), team, teamId: team.id, teamName: team.name, stage: 'final' } : null;
-  }).filter((bid) => bid && bid.team.hand.length < 9 && bid.salary <= remainingCap(bid.team) - pendingFaHoldTotal(state, bid.team, session.cardId));
+  }).filter((bid) => bid && bid.salary <= remainingCap(bid.team) - pendingFaHoldTotal(state, bid.team, session.cardId));
   if (!bids.length) return (session.result = { unsigned: true });
 
   const sorted = [...bids].sort((a, b) => priorityComparison(session.priority, a, b));
@@ -135,7 +134,7 @@ export function resolveFreeAgentBidding(state, session) {
   }
 
   const [rawCard] = state.freeAgents.splice(cardIdx, 1);
-  const signed = acquireOffseasonPlayer(winner.team, { ...rawCard, salary: winner.salary, contract: winner.years, maxContract: winner.years });
+  const signed = acquireOffseasonPlayer(winner.team, { ...rawCard, salary: winner.salary, contract: winner.years, maxContract: winner.years, freeAgentSignedSeason: state.season });
   recordFreeAgencyActivity(state, 'signed', signed, winner.team);
   return (session.result = {
     winnerTeamId: winner.teamId, winnerTeamName: winner.teamName, salary: winner.salary, years: winner.years,

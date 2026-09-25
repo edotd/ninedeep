@@ -182,6 +182,24 @@ test('a team cannot re-sign a player it released until the following season', ()
   assert.equal(signFreeAgent(state, secondPlayer.id, team.id).ok, true);
 });
 
+test('a newly signed free agent cannot be released in the same season', () => {
+  const state = newEraState();
+  startEra(state, 'Test');
+  const team = state.teams[0];
+  team.seasonCap = 999;
+  const freeAgent = state.freeAgents[0];
+  assert.equal(signFreeAgent(state, freeAgent.id, team.id).ok, true);
+  assert.equal(team.hand.length, 10);
+  assert.match(releasePlayer(state, team.id, freeAgent.id).msg, /signed this season/);
+  state.offseason.freeAgencyClosed[team.id] = true;
+  assert.equal(releasePlayer(state, team.id, team.hand.find((card) => card.id !== freeAgent.id).id).ok, true);
+  assert.equal(team.hand.length, 9);
+  assert.match(releasePlayer(state, team.id, freeAgent.id).msg, /closed out free agency/);
+  state.season += 1;
+  state.offseason.freeAgencyClosed[team.id] = false;
+  assert.equal(releasePlayer(state, team.id, freeAgent.id).ok, true);
+});
+
 test('releasing a starter reopens lineup review even though an incomplete roster is allowed', () => {
   const state = newEraState();
   startEra(state, 'Test');

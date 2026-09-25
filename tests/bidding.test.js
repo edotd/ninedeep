@@ -157,6 +157,16 @@ test('a lone bidder is uncontested even though the free agent was already reacha
   assert.equal(result.winnerTeamId, 2);
 });
 
+test('a full human roster can bid and carry the winner as a tenth player', () => {
+  const state = baseState();
+  state.teams[0].hand = fullHand().map((card) => ({ ...card, salary: 0 }));
+  assert.equal(openFreeAgentBid(state, 0, 'p1', 5, 2).ok, true);
+  standPatFreeAgentBid(state, 0, 'p1');
+  resolveAllFreeAgentBidding(state);
+  assert.equal(state.teams[0].hand.length, 10);
+  assert.equal(state.teams[0].hand.find((card) => card.id === 'p1').freeAgentSignedSeason, 1);
+});
+
 test('a team cannot double-count cap room across two simultaneous open bids', () => {
   const state = baseState();
   state.freeAgents.push({ id: 'p2', salary: 15, contract: 2, maxContract: 2, archetype: 'Second', position: 'Forward' });

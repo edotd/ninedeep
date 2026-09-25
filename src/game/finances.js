@@ -98,10 +98,11 @@ export function fireGM(state, teamIdx) {
 // at all unless activeIds.length === 5.
 export function releasePlayer(state, teamIdx, cardId) {
   const team = state.teams[teamIdx];
-  if (state.offseason?.freeAgencyClosed?.[team.id]) return { ok: false, msg: 'You have closed out free agency this turn.' };
+  if (state.offseason?.freeAgencyClosed?.[team.id] && team.hand.length <= 9) return { ok: false, msg: 'You have closed out free agency this turn.' };
   const idx = team.hand.findIndex((c) => c.id === cardId);
   if (idx < 0) return { ok: false, msg: 'Player not found on this roster.' };
   const card = team.hand[idx];
+  if (card.freeAgentSignedSeason === state.season) return { ok: false, msg: 'You cannot release a free agent you signed this season.' };
   const wasStarter = team.activeIds?.includes(cardId);
   team.hand.splice(idx, 1);
   if (team.activeIds) team.activeIds = team.activeIds.filter((id) => id !== cardId);

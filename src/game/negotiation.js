@@ -48,7 +48,7 @@ function findNegotiableCard(state, team, cardId) {
 function signCard(state, team, cardId, salary, years) {
   const idx = state.freeAgents.findIndex((c) => c.id === cardId);
   const [card] = state.freeAgents.splice(idx, 1);
-  const signed = acquireOffseasonPlayer(team, { ...card, salary, contract: years, maxContract: years });
+  const signed = acquireOffseasonPlayer(team, { ...card, salary, contract: years, maxContract: years, freeAgentSignedSeason: state.season });
   recordFreeAgencyActivity(state, 'signed', signed, team);
   return signed;
 }
