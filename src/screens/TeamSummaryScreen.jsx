@@ -606,7 +606,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                 ))}
               </div>
               <div className="ts-budget-legend">
-                {budgetSources.map((source) => <span key={source.key} className={source.key}><i />{source.label} {formatCoins(source.amount).replace('🪙', '')}</span>)}
+                {budgetSources.map((source) => <span key={source.key} className={source.key}><i />{source.label} {formatCoins(source.amount)}</span>)}
               </div>
 
               <div className="ts-ledger-group">

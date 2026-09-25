@@ -17,15 +17,11 @@ export function PlayerLedgerIdentity({ card, role }) {
 }
 
 export function CostBlocks({ turns, amount }) {
-  const count = Math.max(0, turns || 0);
   return (
-    <div className="ts-cost-blocks-wrap">
-      <div className="ts-cost-blocks" aria-label={`${turns} turns remaining at ${formatCoins(amount)} each`}>
-        {Array.from({ length: count }, (_, index) => (
-          <div className="ts-cost-block" key={index}><span>{formatCoins(amount)}</span><small>T{index + 1}</small></div>
-        ))}
-      </div>
-      {count > 1 && <div className="ts-cost-swipe-hint" aria-hidden="true">›</div>}
+    <div className="ts-cost-blocks" aria-label={`${turns} turns remaining at ${formatCoins(amount)} each`}>
+      {Array.from({ length: Math.max(0, turns || 0) }, (_, index) => (
+        <div className="ts-cost-block" key={index}><span>{formatCoins(amount)}</span><small>T{index + 1}</small></div>
+      ))}
     </div>
   );
 }
