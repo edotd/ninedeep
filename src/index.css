@@ -135,9 +135,9 @@ p.lede{color:var(--file-body);font-size:14px;line-height:1.5;margin:0 0 14px;}
 .topbar-lockup{display:flex;align-items:center;gap:12px;padding:10px 16px 8px;}
 .topbar-title{font-family:var(--font-display);font-size:20px;letter-spacing:.015em;flex:1;text-align:right;color:var(--file);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .topbar-tricode{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;color:var(--franchise);}
-.topbar-wordmark{display:inline-block;min-width:0;max-width:190px;overflow:hidden;font-family:var(--font-display);font-size:22px;letter-spacing:.015em;white-space:nowrap;vertical-align:middle;}
-.topbar-wordmark-swap{display:block;overflow:hidden;text-overflow:ellipsis;animation:wordmark-swap .32s ease both;}
-@keyframes wordmark-swap{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:translateY(0);}}
+.topbar-wordmark{display:inline-block;min-width:0;max-width:190px;overflow:hidden;font-family:var(--font-display);font-size:22px;letter-spacing:.015em;white-space:nowrap;vertical-align:middle;perspective:240px;}
+.topbar-wordmark-swap{display:block;overflow:hidden;text-overflow:ellipsis;transform-origin:center;animation:wordmark-swap .5s cubic-bezier(.2,.7,.25,1) both;}
+@keyframes wordmark-swap{from{opacity:0;filter:blur(7px);transform:rotateY(-100deg) scale(.82);}70%{filter:blur(1px);}to{opacity:1;filter:blur(0);transform:rotateY(0) scale(1);}}
 @media(prefers-reduced-motion:reduce){.topbar-wordmark-swap{animation:none;}}
 .topbar-wordmark b{color:var(--file);font-weight:400;}
 .topbar-wordmark i{color:var(--franchise);font-style:normal;font-weight:400;}
