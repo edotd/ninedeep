@@ -18,7 +18,7 @@ export default function FreeAgencyScreen({ state, actions, myTeamId, onBack }) {
   const [biddingCard, setBiddingCard] = useState(null);
 
   const closeOut = () => {
-    if (!window.confirm('Are you sure? This will close out the free agency period this turn. You will not be re-open it, sign or release players until next season.')) return;
+    if (!window.confirm('Are you sure? This will close out the free agency period for this turn and process all open bids. You will not be able to sign or release players until next season.')) return;
     const res = actions.closeFreeAgency(myTeamId);
     if (res && res.ok === false) alert(res.msg);
   };
