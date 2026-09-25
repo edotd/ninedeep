@@ -13,10 +13,18 @@ service cloud.firestore {
     // they shouldn't via devtools. Fine for a trusted group of friends; don't rely on it for
     // anything adversarial.
     match /rooms/{roomCode} {
-      allow read, write: if request.auth != null;
+      allow read, create, update: if request.auth != null;
+      allow delete: if request.auth != null && (
+        resource.data.hostUid == request.auth.uid
+        || resource.data.expiresAt <= request.time
+      );
 
       match /game/{doc} {
-        allow read, write: if request.auth != null;
+        allow read, create, update: if request.auth != null;
+        allow delete: if request.auth != null && (
+          get(/databases/$(database)/documents/rooms/$(roomCode)).data.hostUid == request.auth.uid
+          || get(/databases/$(database)/documents/rooms/$(roomCode)).data.expiresAt <= request.time
+        );
       }
     }
   }

@@ -8,7 +8,7 @@ const ACTION_LOG_SPEED_OPTIONS = [
   { value: 'instant', label: 'Instant' },
 ];
 
-export default function SettingsScreen({ state, actions, onBack, onNewEra }) {
+export default function SettingsScreen({ state, actions, onBack, onNewEra, onDeleteRoom }) {
   const s = state.settings;
   const winCondition = s.winCondition || 'bar';
   const { darkMode, setDarkMode } = useDarkMode();
@@ -94,6 +94,19 @@ export default function SettingsScreen({ state, actions, onBack, onNewEra }) {
               New Era
             </button>
             <div className="pull-extra">Resets the era for everyone. Current progress will be lost.</div>
+          </div>
+        )}
+        {onDeleteRoom && (
+          <div className="pull-slot">
+            <div className="pull-label">End Game</div>
+            <button
+              className="secondary"
+              style={{ width: '100%' }}
+              onClick={() => { if (confirm('End this game and delete the room? Everyone will be disconnected and the game cannot be recovered.')) onDeleteRoom(); }}
+            >
+              End Game &amp; Delete Room
+            </button>
+            <div className="pull-extra">Permanently deletes this room and its saved game for everyone.</div>
           </div>
         )}
       </div>

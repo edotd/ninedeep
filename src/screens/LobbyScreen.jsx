@@ -2,7 +2,7 @@ import { useState } from 'react';
 import EraSettingsFields from '../components/EraSettingsFields';
 import { randomFranchiseName } from '../game/names';
 
-export default function LobbyScreen({ state, actions, roomCode, myUid, onExit, actionError }) {
+export default function LobbyScreen({ state, actions, roomCode, myUid, onExit, onDeleteRoom, actionError }) {
   const [seatNames, setSeatNames] = useState({});
   const isHost = state.hostUid === myUid;
   const claimedCount = state.seats.filter((s) => s.ownerUid).length;
@@ -68,6 +68,18 @@ export default function LobbyScreen({ state, actions, roomCode, myUid, onExit, a
           >
             Start Era ({claimedCount} human{claimedCount === 1 ? '' : 's'}, {state.seatCount - claimedCount} AI)
           </button>
+          {onDeleteRoom && (
+            <div className="pull-slot" style={{ marginTop: 20 }}>
+              <div className="pull-label">Danger Zone</div>
+              <button
+                className="secondary"
+                style={{ width: '100%' }}
+                onClick={() => { if (confirm('Delete this room? Everyone will be disconnected and the room cannot be recovered.')) onDeleteRoom(); }}
+              >
+                Delete Room
+              </button>
+            </div>
+          )}
         </>
       ) : (
         <p className="lede" style={{ marginTop: 16 }}>Waiting for the host to start the game…</p>

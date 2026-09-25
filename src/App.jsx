@@ -16,6 +16,10 @@ function AppInner() {
   // actions.startEra — no separate SetupScreen step, and no second game-state object to
   // reconcile once `mode` flips to 'solo'.
   const localGame = useLocalGame();
+  const exitRoom = () => {
+    window.history.replaceState({}, '', window.location.pathname);
+    setMode(null);
+  };
 
   if (mode === 'solo') {
     // Resets the local game state AND returns to the entry/setup screen — GameShell has no
@@ -26,7 +30,7 @@ function AppInner() {
     return <GameShell state={localGame.state} actions={localGame.actions} myTeamId={localGame.myTeamId} onNewEra={onNewEra} />;
   }
   if (mode && mode.roomCode) {
-    return <OnlineGame roomCode={mode.roomCode} myUid={mode.uid} onExit={() => setMode(null)} />;
+    return <OnlineGame roomCode={mode.roomCode} myUid={mode.uid} onExit={exitRoom} />;
   }
 
   return (

@@ -92,7 +92,7 @@ const PAGE_LABELS = {
 // shell changes at the desktop breakpoint: a Sidebar + full-width persistent bar per the
 // brand handoff, instead of the phone-width top bar + collapsed bottom bar. Same
 // `overlay`/`Screen` resolution feeds both shells so the two never drift out of sync.
-export default function GameShell({ state, actions, myTeamId, onNewEra, roomCode }) {
+export default function GameShell({ state, actions, myTeamId, onNewEra, onDeleteRoom, roomCode }) {
   const mobileTopRef = useRef(null);
   const [mobileTopHeight, setMobileTopHeight] = useState(0);
   const persistentBarRef = useRef(null);
@@ -260,7 +260,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, roomCode
   const close = () => setOverlay(null);
   let overlayBody = null;
   if (overlay === 'glossary') overlayBody = <GlossaryScreen state={state} onBack={close} />;
-  else if (overlay === 'settings') overlayBody = <SettingsScreen state={state} actions={actions} onBack={close} onNewEra={onNewEra} />;
+  else if (overlay === 'settings') overlayBody = <SettingsScreen state={state} actions={actions} onBack={close} onNewEra={onNewEra} onDeleteRoom={onDeleteRoom} />;
   else if (overlay === 'standings') overlayBody = <LeagueScreen state={state} myTeamId={myTeamId} onBack={close} onViewTeam={(id) => openTeamView(id, 'standings')} />;
   else if (overlay === 'team') overlayBody = <TeamSummaryScreen key={teamFocus?.request || 'team'} state={state} actions={actions} myTeamId={myTeamId} viewTeamId={viewTeamId} onBack={closeTeamView} focusSection={teamFocus} onFreeAgency={() => setOverlay('freeagency')} />;
   else if (overlay === 'freeagency') overlayBody = <FreeAgencyScreen state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;

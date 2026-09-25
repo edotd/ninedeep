@@ -24,7 +24,7 @@ const NON_OPTIMISTIC_ACTIONS = new Set([
 // background; the onSnapshot listener's update (server truth, or another player's action)
 // still wins whenever it arrives and replaces the optimistic guess.
 export function useRoomGame(roomCode, myUid) {
-  const [state, setState] = useState(null);
+  const [state, setState] = useState(undefined);
   const stateRef = useRef(null);
   // Surfaced so the UI can actually tell a player their click didn't land — the optimistic
   // apply below makes every action look instantly successful even when the real Firestore

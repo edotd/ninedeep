@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { createRoom, joinRoom } from '../firebase/rooms';
+import { cleanupExpiredRooms, createRoom, joinRoom } from '../firebase/rooms';
 import { firebaseReady } from '../firebase/config';
 import BallMark from '../components/BallMark';
 import SettingsScreen from './SettingsScreen';
@@ -15,6 +15,10 @@ export default function EntryScreen({ pendingJoinCode, joinOnly = false, soloSta
   const [joinCode, setJoinCode] = useState(pendingJoinCode || '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    cleanupExpiredRooms().catch((cleanupError) => console.warn('[nine-deep] expired room cleanup failed:', cleanupError));
+  }, []);
 
   // Keep the join form aligned if a room invitation changes without remounting this screen.
   useEffect(() => {
@@ -87,7 +91,7 @@ export default function EntryScreen({ pendingJoinCode, joinOnly = false, soloSta
 
           {!joinOnly && tab === 'solo' && (
             <>
-              <div className="entry-version">v1.19</div>
+              <div className="entry-version">v1.20</div>
               <div className="entry-field-group">
                 <div className="entry-field-heading">
                   <span>Franchise Name</span>

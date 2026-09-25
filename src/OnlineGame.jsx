@@ -1,11 +1,12 @@
 import { useRoomGame } from './game/useRoomGame';
 import LobbyScreen from './screens/LobbyScreen';
 import GameShell from './components/GameShell';
+import { deleteRoom } from './firebase/rooms';
 
 export default function OnlineGame({ roomCode, myUid, onExit }) {
   const { state, actions, myTeamId, actionError } = useRoomGame(roomCode, myUid);
 
-  if (!state) {
+  if (state === undefined) {
     return (
       <div className="screen">
         <h1>Connecting…</h1>
@@ -14,8 +15,24 @@ export default function OnlineGame({ roomCode, myUid, onExit }) {
     );
   }
 
+  if (state === null) {
+    return (
+      <div className="screen">
+        <h1>Room Ended</h1>
+        <p className="lede">This room was deleted by its host or expired after 72 hours without activity.</p>
+        {onExit && <button className="primary" onClick={onExit}>Return to Start</button>}
+      </div>
+    );
+  }
+
+  const isHost = state.hostUid === myUid;
+  const handleDeleteRoom = isHost ? async () => {
+    await deleteRoom(roomCode, myUid);
+    onExit?.();
+  } : null;
+
   if (state.phase === 'lobby') {
-    return <LobbyScreen state={state} actions={actions} roomCode={roomCode} myUid={myUid} onExit={onExit} actionError={actionError} />;
+    return <LobbyScreen state={state} actions={actions} roomCode={roomCode} myUid={myUid} onExit={onExit} onDeleteRoom={handleDeleteRoom} actionError={actionError} />;
   }
 
   // The era already started without you (joined late, or your seat was reassigned) —
@@ -30,5 +47,5 @@ export default function OnlineGame({ roomCode, myUid, onExit }) {
     );
   }
 
-  return <GameShell state={state} actions={actions} myTeamId={myTeamId} roomCode={roomCode} onNewEra={() => actions.resetRoomToLobby(myUid)} />;
+  return <GameShell state={state} actions={actions} myTeamId={myTeamId} roomCode={roomCode} onNewEra={isHost ? () => actions.resetRoomToLobby(myUid) : null} onDeleteRoom={handleDeleteRoom} />;
 }
