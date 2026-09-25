@@ -425,7 +425,18 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .pcard-accolade-block{position:relative;background:var(--file);padding:11px 12px 12px;border-bottom:1px solid var(--form-rule);}
 .pcard-accolade-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
 .pcard-accolade-value{display:flex;align-items:center;min-height:26px;}
-.pcard-accolade{display:inline-flex;color:var(--franchise);}
+.pcard-accolade{display:inline-flex;color:var(--franchise);background:none;border:none;padding:0;cursor:pointer;}
+/* Clicking an accolade badge shows what it actually does (LEAGUE_ACCOLADES' description) — a
+   small anchored popover rather than a full modal, since it's answering one quick question
+   ("what is this icon"), not asking for a decision. Backdrop is a full-viewport transparent
+   catcher so any outside click or tap dismisses it, same pattern as other lightweight pickers
+   in this app (e.g. .ts-view-menu-backdrop). */
+.pcard-accolade-info-backdrop{position:fixed;inset:0;z-index:59;}
+.pcard-accolade-info{position:absolute;left:12px;right:12px;bottom:100%;margin-bottom:8px;z-index:60;background:var(--ink);color:var(--file);border:1px solid var(--franchise);padding:12px 14px;box-shadow:0 10px 24px rgba(0,0,0,.4);}
+.pcard-accolade-info-name{font-family:var(--font-label);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--franchise);margin-bottom:6px;}
+.pcard-accolade-info-desc{font-family:var(--font-mono);font-size:11px;line-height:1.5;color:var(--file);margin:0 0 10px;}
+.pcard-accolade-info-close{width:100%;background:none;border:1px solid var(--ink-rule);color:var(--file);font-family:var(--font-label);font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:7px;cursor:pointer;}
+.pcard-accolade-info-close:hover{border-color:var(--franchise);color:var(--franchise);}
 .pcard.tier-EXP .pcard-accolade-block{background:#162034;border-color:var(--ink-rule);}
 .pcard.tier-EXP .pcard-accolade{color:var(--file);}
 .pcard-accolade-none{font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--file-muted);}

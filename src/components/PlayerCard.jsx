@@ -3,6 +3,7 @@ import { skillsetFor } from '../game/skillsets';
 import { formatCoins } from '../game/economy';
 import { careerLevel } from '../game/aging';
 import { cardTier, jerseyNumber, playerGrade } from '../game/cards';
+import { LEAGUE_ACCOLADES } from '../game/constants';
 import CardTypeMark from './CardTypeMark';
 
 const LEGACY_DEVELOPMENT_CHANGES = {
@@ -41,6 +42,8 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
   // of the two actions (a read-only or compact context never gets any of this).
   const hasOptions = !compact && (onRelease || onDevelop);
   const [expanded, setExpanded] = useState(false);
+  const [accoladeInfoOpen, setAccoladeInfoOpen] = useState(false);
+  const accoladeDef = accolade ? LEAGUE_ACCOLADES.find((a) => a.name === accolade) : null;
   const pressTimer = useRef(null);
   const longPressFired = useRef(false);
 
@@ -140,9 +143,28 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
           </div>
           <div className="pcard-accolade-value">
             {accolade
-              ? <span className="pcard-accolade" title={accolade}><CardTypeMark type={accolade} size={26} /></span>
+              ? (
+                <button
+                  type="button"
+                  className="pcard-accolade"
+                  title={accolade}
+                  onClick={(event) => { event.stopPropagation(); setAccoladeInfoOpen((v) => !v); }}
+                >
+                  <CardTypeMark type={accolade} size={26} />
+                </button>
+              )
               : <span className="pcard-accolade-none">None</span>}
           </div>
+          {accoladeInfoOpen && accoladeDef && (
+            <>
+              <div className="pcard-accolade-info-backdrop" onClick={(event) => { event.stopPropagation(); setAccoladeInfoOpen(false); }} />
+              <div className="pcard-accolade-info" onClick={(event) => event.stopPropagation()}>
+                <div className="pcard-accolade-info-name">{accoladeDef.name}</div>
+                <p className="pcard-accolade-info-desc">{accoladeDef.description}</p>
+                <button type="button" className="pcard-accolade-info-close" onClick={() => setAccoladeInfoOpen(false)}>Close</button>
+              </div>
+            </>
+          )}
         </div>
       )}
       {hasOptions && alwaysShowOptions && (

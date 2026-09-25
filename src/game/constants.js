@@ -65,17 +65,28 @@ export const MIN_PLAYER_SALARY = 0.25;
 export const MIN_GM_COST = 0.5;
 
 // League Accolades — elite, statistical-distinction tiers. These only roll on players in
-// the Prime career stage and never appear in the draft.
+// the Prime career stage and never appear in the draft. `description` is shown to the user
+// when they click an accolade badge on a player card (see PlayerCard.jsx) — plain-language
+// framing of what the honor actually means, since uniform/peak alone don't read as a bonus.
 export const LEAGUE_ACCOLADES = [
-  { name: 'All-Star', uniform: 1.10, peak: 1.20, contract: 4, count: 4, accolade: true, rarity: 'Prime' },
-  { name: 'All-League Defensive Team', uniform: 1.10, peak: 1.30, contract: 4, count: 3, forceStat: 'DEF', accolade: true, rarity: 'Prime' },
-  { name: 'All-League 2nd Team', uniform: 1.15, peak: 1.30, contract: 4, count: 4, accolade: true, rarity: 'Prime' },
-  { name: 'All-League 1st Team', uniform: 1.20, peak: 1.40, contract: 3, count: 3, accolade: true, rarity: 'Signature' },
-  { name: 'Defensive Player of the Year', uniform: 1.15, peak: 1.50, contract: 2, count: 2, forceStat: 'DEF', accolade: true, rarity: 'Signature' },
-  { name: 'Scoring Champion', uniform: 1.15, peak: 1.50, contract: 2, count: 2, forceStat: 'SCO', accolade: true, rarity: 'Signature' },
-  { name: 'Rebounding Champion', uniform: 1.15, peak: 1.50, contract: 2, count: 2, forceStat: 'REB', allowedPositions: ['Forward', 'Big'], accolade: true, rarity: 'Signature' },
-  { name: 'Assist Leader', uniform: 1.15, peak: 1.50, contract: 2, count: 2, forceStat: 'PLM', accolade: true, rarity: 'Signature' },
-  { name: 'Most Valuable Player', uniform: 1.25, peak: 1.55, contract: 2, count: 3, accolade: true, rarity: 'Legendary' },
+  { name: 'All-Star', uniform: 1.10, peak: 1.20, contract: 4, count: 4, accolade: true, rarity: 'Prime',
+    description: 'Recognized among the league’s best. +10% to every stat, plus a further +20% on the player’s peak stat.' },
+  { name: 'All-League Defensive Team', uniform: 1.10, peak: 1.30, contract: 4, count: 3, forceStat: 'DEF', accolade: true, rarity: 'Prime',
+    description: 'Honored for elite defense. +10% to every stat, plus a further +30% Defense.' },
+  { name: 'All-League 2nd Team', uniform: 1.15, peak: 1.30, contract: 4, count: 4, accolade: true, rarity: 'Prime',
+    description: 'One of the league’s top players outside the 1st Team. +15% to every stat, plus a further +30% on the player’s peak stat.' },
+  { name: 'All-League 1st Team', uniform: 1.20, peak: 1.40, contract: 3, count: 3, accolade: true, rarity: 'Signature',
+    description: 'One of the league’s very best. +20% to every stat, plus a further +40% on the player’s peak stat.' },
+  { name: 'Defensive Player of the Year', uniform: 1.15, peak: 1.50, contract: 2, count: 2, forceStat: 'DEF', accolade: true, rarity: 'Signature',
+    description: 'The league’s premier defender this season. +15% to every stat, plus a further +50% Defense.' },
+  { name: 'Scoring Champion', uniform: 1.15, peak: 1.50, contract: 2, count: 2, forceStat: 'SCO', accolade: true, rarity: 'Signature',
+    description: 'Led the league in scoring. +15% to every stat, plus a further +50% Scoring.' },
+  { name: 'Rebounding Champion', uniform: 1.15, peak: 1.50, contract: 2, count: 2, forceStat: 'REB', allowedPositions: ['Forward', 'Big'], accolade: true, rarity: 'Signature',
+    description: 'Led the league on the glass. +15% to every stat, plus a further +50% Rebounding.' },
+  { name: 'Assist Leader', uniform: 1.15, peak: 1.50, contract: 2, count: 2, forceStat: 'PLM', accolade: true, rarity: 'Signature',
+    description: 'Led the league in playmaking. +15% to every stat, plus a further +50% Playmaking.' },
+  { name: 'Most Valuable Player', uniform: 1.25, peak: 1.55, contract: 2, count: 3, accolade: true, rarity: 'Legendary',
+    description: 'The league’s single most valuable player this season — the rarest honor in the game. +25% to every stat, plus a further +55% on the player’s peak stat.' },
 ];
 
 export const COACH_ARCHETYPES = {
