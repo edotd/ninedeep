@@ -229,6 +229,10 @@ p.lede{color:var(--file-body);font-size:14px;line-height:1.5;margin:0 0 14px;}
 .standing-row{display:flex;justify-content:space-between;padding:9px 10px;border-bottom:1px solid var(--form-rule);font-size:14px;font-family:var(--font-mono);}
 .standing-row.you{color:var(--stamp);font-weight:500;}
 .standing-row:hover{background:var(--form-rule);}
+.standing-row-pick{display:flex;align-items:center;gap:7px;}
+/* An ultra-compact player-card stand-in (see DraftScreen.jsx's PickSwatch) — just the card's
+   own rounded silhouette at a fraction of size, outlined in its rarity color. */
+.draft-pick-swatch{display:inline-block;flex-shrink:0;width:12px;height:16px;border:2px solid;border-radius:3px;background:var(--form);}
 .league-standings-table{margin-top:18px;border-top:2px solid var(--ink);}
 .league-standings-row{width:100%;display:grid;grid-template-columns:minmax(180px,2fr) repeat(4,minmax(100px,1fr));align-items:center;padding:12px 10px;border:0;border-bottom:1px solid var(--form-rule);background:transparent;color:var(--ink);font:13px var(--font-mono);text-align:right;cursor:pointer;}
 .league-standings-row.head{font:10px var(--font-label);letter-spacing:.09em;text-transform:uppercase;color:var(--file-muted);cursor:default;}

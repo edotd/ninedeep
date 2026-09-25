@@ -12,6 +12,18 @@ function pickLine(card) {
   return `#${jerseyNumber(card)} · ${playerGrade(card)} · ${careerLevel(card)} · ${card.tierName} · ${card.position}`;
 }
 
+// Matches the border colors PlayerCard's own .pcard.rarity-* classes use (see index.css) — a
+// standalone map since this ultra-compact swatch isn't a real .pcard and can't just add the
+// rarity-* class to inherit --rarity-accent from there.
+const RARITY_SWATCH_COLOR = { Core: '#C4715A', Prime: 'var(--stamp)', Signature: 'var(--stamp-text)', Legendary: 'var(--franchise)' };
+
+// An ultra-compact stand-in for a full player card next to a pick's name in Draft Order — just
+// the card's own rounded-corner silhouette, outlined in that card's rarity color, so a rarity
+// at a glance is available without rendering (or fitting) a real PlayerCard in a list row.
+function PickSwatch({ card }) {
+  return <span className="draft-pick-swatch" style={{ borderColor: RARITY_SWATCH_COLOR[card.rarity || 'Core'] }} aria-hidden="true" />;
+}
+
 export default function DraftScreen({ state, actions, myTeamId }) {
   const draft = state.draft;
   const myTeam = state.teams[myTeamId];
@@ -48,7 +60,7 @@ export default function DraftScreen({ state, actions, myTeamId }) {
           {[...draft.picks].reverse().map((p, i) => (
             <div key={'picked-' + p.card.id} className={'standing-row' + (p.teamId === myTeamId ? ' you' : '')}>
               <span>#{i + 1} {p.teamName}</span>
-              <span>{p.card.archetype} — {pickLine(p.card)}</span>
+              <span className="standing-row-pick"><PickSwatch card={p.card} />{p.card.archetype} — {pickLine(p.card)}</span>
             </div>
           ))}
           {draft.queue.map((t, i) => (
