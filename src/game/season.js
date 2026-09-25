@@ -467,7 +467,6 @@ const allHumanFiled = (state, key) => state.teams.filter((t) => t.human).every((
 export function fileContracts(state, teamIdx) {
   const team = state.teams[teamIdx];
   if (state.phase !== 'contracts' || !team?.human) return { ok: false, msg: 'Contracts are not open.' };
-  if (!state.offseason.freeAgencyClosed?.[team.id]) return { ok: false, msg: 'Close out free agency before starting the draft.' };
   state.offseason.contractsFiled[team.id] = true;
   if (allHumanFiled(state, 'contractsFiled')) startDraft(state);
   return { ok: true };
@@ -477,9 +476,9 @@ export function fileContracts(state, teamIdx) {
 // can begin the season") — once closed, this team can no longer sign, bid on, or release
 // players until next turn (see the freeAgencyClosed guards on signFreeAgent below and on
 // releasePlayer/hireFreeAgentCoach in finances.js, and openFreeAgentBid/raiseFreeAgentBid in
-// bidding.js). fileContracts (the "Begin Draft" button) won't let this team's franchise into
-// the draft until this is true. Blocked while over budget so a team can't lock in an invalid
-// roster and get stuck once the draft starts.
+// bidding.js). Contract renewals and the draft remain available while free agency is open;
+// the closeout is enforced only when the user starts the season. Blocked while over budget so
+// a team cannot close an invalid cap sheet.
 export function closeFreeAgency(state, teamIdx) {
   const team = state.teams[teamIdx];
   if (!team?.human) return { ok: false, msg: 'Only a human GM closes out free agency.' };

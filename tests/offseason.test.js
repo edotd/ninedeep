@@ -249,17 +249,15 @@ test('the upcoming draft class is set at era start and is exactly what startDraf
   assert.equal(state.upcomingDraftPool, null, 'consumed as the real pool, not duplicated');
 });
 
-test('the draft cannot begin until this team has closed out free agency', () => {
+test('contract filing and the draft do not require free agency to be closed', () => {
   const state = newEraState();
   state.phase = 'contracts';
   // A second, not-yet-filed human keeps allHumanFiled false so filing here doesn't cascade into
   // startDraft, which needs state.seeds (only real once lockSeasonAndSeed has actually run).
   state.teams = [{ id: 0, human: true, hand: [], seasonCap: 20 }, { id: 1, human: true, hand: [], seasonCap: 20 }];
-  const blocked = fileContracts(state, 0);
-  assert.equal(blocked.ok, false);
-  assert.equal(state.offseason.contractsFiled[0], undefined);
-  assert.equal(closeFreeAgency(state, 0).ok, true);
   assert.equal(fileContracts(state, 0).ok, true);
+  assert.equal(state.offseason.contractsFiled[0], true);
+  assert.equal(state.offseason.freeAgencyClosed[0], undefined);
 });
 
 test('closing out free agency is refused while over the salary cap', () => {
