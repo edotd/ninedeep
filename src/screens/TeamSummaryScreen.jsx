@@ -484,30 +484,21 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           </div>
           <button className={'ts-tab' + (tab === 'chemistry' ? ' active' : '')} onClick={() => setTab('chemistry')}>
             Lineup & Chemistry
-            {!readOnly && !team.lineupSet && <span className="ts-tab-dot" aria-label="Lineup not set" />}
+            {!readOnly && !team.lineupSet && <span className="alert-badge" aria-label="Lineup not set">!</span>}
           </button>
           {team.market && (
             <button className={'ts-tab' + (tab === 'office' ? ' active' : '')} onClick={() => setTab('office')}>Gameplan</button>
           )}
           <button className={'ts-tab' + (tab === 'ledger' ? ' active' : '')} onClick={() => setTab('ledger')}>
             Budget
-            {!readOnly && preSeason && committed > cap && <span className="ts-tab-dot" aria-label="Team is over budget" />}
+            {!readOnly && preSeason && committed > cap && <span className="alert-badge" aria-label="Team is over budget">!</span>}
           </button>
           {!isDesktop && <span className="ts-tab-underline" ref={underlineRef} aria-hidden="true" />}
         </div>
 
         <div className="ts-body" onTouchStart={!isDesktop ? handleBodyTouchStart : undefined} onTouchMove={!isDesktop ? handleBodyTouchMove : undefined} onTouchEnd={!isDesktop ? handleBodyTouchEnd : undefined}>
           {showSection('chemistry') && (
-            <>
-              {!readOnly && (
-                <div className="ts-set-lineup-cta">
-                  <button className="secondary" onClick={() => setLineupScreenOpen(true)}>
-                    {!canEdit ? 'View Lineup' : team.lineupSet ? 'Edit Lineup' : 'Set Lineup'}
-                  </button>
-                </div>
-              )}
-              <TeamChemistry team={team} canEdit={canEdit} onEditLineup={() => setLineupScreenOpen(true)} />
-            </>
+            <TeamChemistry team={team} canEdit={canEdit} onEditLineup={() => setLineupScreenOpen(true)} />
           )}
 
           {showSection('rotation') && !isDesktop && viewMode === 'list' && (
@@ -548,6 +539,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                         <PlayerCard
                           card={c}
                           selected={selectedId === c.id}
+                          rosterLabel="Starter"
                           onClick={canEdit ? () => handleCardClick(c) : undefined}
                           onRelease={canEdit ? handleRelease : undefined}
                           onDevelop={!readOnly && !c.development ? setDevelopPlayer : undefined}

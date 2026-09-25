@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { teamSynergy } from '../game/skillsets';
 import { teamOutput } from '../game/matchup';
 import { modifierBreakdown, offenseDieSize, defenseDieSize } from '../game/roster';
 import { ERA_LENGTH } from '../game/constants';
+import { useMetricTally } from '../hooks/useMetricTally';
 function ordinal(n) {
   const s = ['th', 'st', 'nd', 'rd'];
   const v = n % 100;
@@ -51,62 +52,6 @@ function breakdownRows(kind, team, synergy, output) {
 }
 
 const METRIC_LABELS = { chemistry: 'Chemistry', output: 'Output', offense: 'Offense', defense: 'Defense' };
-
-// Glow tally: whenever a hero metric's own value changes (a lineup swap, a coach hire, a
-// signed contract, anything that moves Chemistry/Output/Offense/Defense), the affected metric
-// pulses and briefly shows the latest +/- delta. Keep this transient: an old delta should not
-// look like a fifth masthead value, and repeatedly summing decimal output changes produces
-// floating-point artifacts such as 0.0499999998.
-const PULSE_MS = 1000;
-const TALLY_MS = 3000;
-const cleanDelta = (value) => {
-  const rounded = Math.round(value * 100) / 100;
-  return Math.abs(rounded) < 0.01 ? 0 : rounded;
-};
-function useMetricTally(values, resetKey) {
-  const prevRef = useRef(null);
-  const timersRef = useRef({});
-  const [tally, setTally] = useState({});
-  const [pulsing, setPulsing] = useState({});
-
-  useEffect(() => {
-    prevRef.current = null;
-    Object.values(timersRef.current).forEach(clearTimeout);
-    timersRef.current = {};
-    setTally({});
-    setPulsing({});
-  }, [resetKey]);
-
-  const signature = JSON.stringify(values);
-  useEffect(() => {
-    const prev = prevRef.current;
-    prevRef.current = values;
-    if (!prev) return; // first paint since a reset — nothing to diff against yet
-    const changed = Object.keys(values).filter((key) => typeof prev[key] === 'number' && typeof values[key] === 'number' && prev[key] !== values[key]);
-    if (!changed.length) return;
-    setTally((t) => {
-      const next = { ...t };
-      changed.forEach((key) => { next[key] = cleanDelta(values[key] - prev[key]); });
-      return next;
-    });
-    setPulsing((p) => ({ ...p, ...Object.fromEntries(changed.map((key) => [key, true])) }));
-    changed.forEach((key) => {
-      clearTimeout(timersRef.current[`pulse-${key}`]);
-      clearTimeout(timersRef.current[`tally-${key}`]);
-      timersRef.current[`pulse-${key}`] = setTimeout(() => setPulsing((p) => ({ ...p, [key]: false })), PULSE_MS);
-      timersRef.current[`tally-${key}`] = setTimeout(() => setTally((t) => {
-        const next = { ...t };
-        delete next[key];
-        return next;
-      }), TALLY_MS);
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [signature]);
-
-  useEffect(() => () => Object.values(timersRef.current).forEach(clearTimeout), []);
-
-  return { tally, pulsing };
-}
 
 // Only offense/defense breakdowns include an Expected Roll row — chemistry and output don't
 // roll a die at all, so there's nothing there to explain.
@@ -183,7 +128,7 @@ export default function FranchiseMasthead({ state, teamId }) {
     <div className="ts-masthead persistent-franchise-masthead">
       <div className="ts-masthead-left">
         <div className="ts-masthead-label">FRANCHISE FILE{team.market ? ` · ${team.market.name.toUpperCase()}` : ''}</div>
-        <div className="ts-masthead-name">{team.name}</div>
+        <div className="ts-masthead-name">{team.name}{team.tricode && <span className="ts-masthead-tricode">{team.tricode}</span>}</div>
         <div className="ts-franchise-history">
           <div className="ts-era">
             <div className="ts-era-label">ERA 01 · YR {seasonNum} OF {ERA_LENGTH}</div>

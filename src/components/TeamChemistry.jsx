@@ -67,25 +67,13 @@ export default function TeamChemistry({ team, canEdit, onEditLineup }) {
             <div className="tc2-bonus-label">Defensive Bonus</div>
             <div className="tc2-bonus-value">{bonusValue(current.defense + coachDefense)}</div>
           </div>
-          <div className="tc2-experience-inline">
-            <div className="tc2-bonus-label">Experience</div>
-            <div className="tc2-exp-value">{experience ?? '—'}<span className="tc2-exp-total"> / 10</span></div>
-          </div>
         </div>
       </div>
 
       <div className="tc2-pairs-panel">
-        <div className="tc2-pairs-head">
-          <div className="ts-heading" style={{ marginBottom: 0 }}>Synergy</div>
-          <span className="tc2-pairs-count">{current.pairs.length + current.statBonuses.length} Live</span>
-        </div>
-        <div className="tc2-synergy-total">
-          <span className="tc2-synergy-total-value offense">+{current.skillOffense}% OFF</span>
-          <span className="tc2-synergy-total-value defense">+{current.skillDefense}% DEF</span>
-        </div>
         <button className="tc2-synergy-btn" onClick={onEditLineup}>
           {canEdit === false ? 'View Lineup' : team.lineupSet ? 'Edit Lineup' : 'Set Lineup'}
-          {canEdit !== false && !team.lineupSet && <span className="tc2-lineup-dot" aria-label="Lineup not set" />}
+          {canEdit !== false && !team.lineupSet && <span className="alert-badge" aria-label="Lineup not set">!</span>}
         </button>
         {(current.pairs.length || current.statBonuses.length) ? (
           <div className="tc2-pairs-grid">

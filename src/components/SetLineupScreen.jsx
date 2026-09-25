@@ -2,6 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { findSkillPair, skillsetFor, teamSynergy } from '../game/skillsets';
 import { jerseyNumber, playerGrade } from '../game/cards';
 import { autoValidFive, validateLineup } from '../game/roster';
+import { teamOutput } from '../game/matchup';
+import { useMetricTally } from '../hooks/useMetricTally';
+import { useIsDesktop } from '../hooks/useIsDesktop';
+import PlayerCard from './PlayerCard';
+
+// Shown once per browser — the first time anyone opens this editor, not once per team/era, so
+// re-explaining after a fresh solo game or a new room would be redundant.
+const LINEUP_INTRO_KEY = 'nine-deep-lineup-intro-seen';
 
 // "The Floor" (design ref 1a) — the starting five placed on a half-court diagram, wired
 // together wherever two of them share a live Skillset pairing (game/skillsets.js's
@@ -56,14 +64,21 @@ function CourtLines() {
   );
 }
 
-function MiniCard({ card, selected, onClick, onRemove, dim }) {
+function MiniCard({ card, selected, onClick, onRemove, dim, onHoverStart, onHoverEnd }) {
   if (!card) {
     return <button type="button" className="slf-card slf-card-empty" onClick={onClick} disabled={!onClick}><span>+</span></button>;
   }
   const skillset = skillsetFor(card);
   return (
     <div className="slf-card-wrap">
-      <button type="button" className={'slf-card' + (selected ? ' selected' : '') + (dim ? ' dim' : '')} onClick={onClick} disabled={!onClick}>
+      <button
+        type="button"
+        className={'slf-card' + (selected ? ' selected' : '') + (dim ? ' dim' : '')}
+        onClick={onClick}
+        disabled={!onClick}
+        onMouseEnter={() => onHoverStart?.(card.id)}
+        onMouseLeave={() => onHoverEnd?.(card.id)}
+      >
         <span className="slf-card-top"><span className="slf-card-pos">{card.position}</span><span className="slf-card-grade">{playerGrade(card)}</span></span>
         <span className="slf-card-num">#{jerseyNumber(card)}</span>
         <span className="slf-card-name">{card.archetype}</span>
@@ -75,6 +90,7 @@ function MiniCard({ card, selected, onClick, onRemove, dim }) {
 }
 
 export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onClose }) {
+  const isDesktop = useIsDesktop();
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
@@ -82,6 +98,16 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
     document.body.style.overflow = 'hidden';
     return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = prevOverflow; };
   }, [onClose]);
+
+  // A one-time explainer, the first time anyone on this browser opens this editor — not
+  // gated per-team/era, so a new solo game or room never re-shows it.
+  const [showIntro, setShowIntro] = useState(() => {
+    try { return localStorage.getItem(LINEUP_INTRO_KEY) !== '1'; } catch { return false; }
+  });
+  const dismissIntro = () => {
+    setShowIntro(false);
+    try { localStorage.setItem(LINEUP_INTRO_KEY, '1'); } catch { /* storage can be unavailable */ }
+  };
 
   // Everything in this editor is a local draft. The shared team — and therefore the
   // Franchise page underneath this modal — is changed exactly once, by Save Lineup. A fresh
@@ -95,6 +121,30 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
   const starters = slotOrder.map((id) => (id ? team.hand.find((c) => c.id === id) || null : null));
   const bench = team.hand.filter((c) => !activeIds.includes(c.id));
   const [selectedId, setSelectedId] = useState(null);
+
+  // A card is "held" the moment it's selected for placement (the existing tap-to-hold
+  // mechanic, which is also mobile's only way to hold a card) or, on desktop only, moused
+  // over — either way, show the full player card so its stats are readable without leaving
+  // this screen. Non-interactive: it never intercepts the click that actually places a card.
+  const [hoveredId, setHoveredId] = useState(null);
+  const handleHoverStart = (cardId) => setHoveredId(cardId);
+  const handleHoverEnd = (cardId) => setHoveredId((cur) => (cur === cardId ? null : cur));
+  const previewId = hoveredId ?? selectedId;
+  const previewCard = previewId != null ? team.hand.find((c) => c.id === previewId) || null : null;
+
+  // Live projection against the DRAFT five, not the team's last-saved activeIds — this is what
+  // makes the persistent bar (and its glow tally) react to every swap before Save Lineup ever
+  // runs. modifierBreakdown/offenseModifier already tolerate fewer than 5 active ids (see the
+  // Incomplete Roster penalty in FranchiseMasthead's breakdown), so this stays sane mid-edit.
+  const liveOutput = team.coach ? teamOutput({ ...team, activeIds }) : null;
+  const { tally: liveTally, pulsing: livePulsing } = useMetricTally({
+    offense: liveOutput ? liveOutput.off : null,
+    defense: liveOutput ? liveOutput.def : null,
+    bench: liveOutput ? liveOutput.bench : null,
+  }, myTeamId);
+  const liveTallyBadge = (key) => Number.isFinite(liveTally[key]) && liveTally[key] !== 0 ? (
+    <span className={'ts-hero-tally ' + (liveTally[key] > 0 ? 'up' : 'down')}>{liveTally[key] > 0 ? '+' : ''}{liveTally[key]}</span>
+  ) : null;
 
   const courtRef = useRef(null);
   const slotRefs = useRef([]);
@@ -193,20 +243,45 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
   return (
     <div className="tsx-overlay" role="dialog" aria-modal="true" aria-label="Your Lineup">
       <div className="slf-panel">
+        {!isDesktop && liveOutput && (
+          <div className="slf-live-bar">
+            <div className={'slf-live-metric' + (livePulsing.offense ? ' pulsing' : '')}>
+              {liveTallyBadge('offense')}
+              <span className="slf-live-label">Offense</span>
+              <span className="slf-live-value">{liveOutput.off}</span>
+            </div>
+            <div className={'slf-live-metric' + (livePulsing.defense ? ' pulsing' : '')}>
+              {liveTallyBadge('defense')}
+              <span className="slf-live-label">Defense</span>
+              <span className="slf-live-value">{liveOutput.def}</span>
+            </div>
+            <div className={'slf-live-metric' + (livePulsing.bench ? ' pulsing' : '')}>
+              {liveTallyBadge('bench')}
+              <span className="slf-live-label">Bench</span>
+              <span className="slf-live-value">{liveOutput.bench}</span>
+            </div>
+          </div>
+        )}
+
         <div className="slf-head">
           <h2 className="slf-title">Your Lineup</h2>
           <div className="slf-synergy-totals">
             <span className="off">Offense +{synergy.skillOffense}</span>
             <span className="def">Defense +{synergy.skillDefense}</span>
           </div>
-          <button type="button" className="slf-auto-set" disabled={!canEdit} onClick={handleAutoSet}><span aria-hidden="true">↻</span> Auto Set Lineup</button>
+          {canEdit && (
+            <div className="slf-head-actions">
+              <button type="button" className="slf-auto-set" onClick={handleAutoSet}><span aria-hidden="true">↻</span> Auto Set Lineup</button>
+              <button type="button" className="slf-save-btn" onClick={handleSave}>Save Lineup</button>
+            </div>
+          )}
         </div>
 
         <p className="slf-note">{canEdit ? 'Set your lineup. Lines between players show how pairings affect your team’s offense and/or defense.' : 'Your lineup. Lines between players show how pairings affect your team’s offense and/or defense.'}</p>
 
         {wires.length > 0 && (
           <div className="slf-pairings">
-            <div className="slf-microlabel">Active Pairings</div>
+            <div className="slf-microlabel">Lineup Fit</div>
             {wires.map((w, i) => (
               <div key={w.id} className="slf-pairing-row">
                 <span className={'slf-pairing-num ' + w.pair.side}>{i + 1}</span>
@@ -236,6 +311,8 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
                     selected={starters[i] && selectedId === starters[i].id}
                     onClick={canEdit ? () => (starters[i] && selectedId == null ? holdCard(starters[i].id) : placeOnSlot(i)) : undefined}
                     onRemove={canEdit && starters[i] ? () => handleRemove(starters[i]) : undefined}
+                    onHoverStart={handleHoverStart}
+                    onHoverEnd={handleHoverEnd}
                   />
                 </div>
               ))}
@@ -252,7 +329,17 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
             <div className="slf-bench">
               <div className="slf-microlabel">Bench</div>
               <div className="slf-bench-row">
-                {bench.map((c) => <MiniCard key={c.id} card={c} selected={selectedId === c.id} onClick={canEdit ? () => handleBenchClick(c) : undefined} dim />)}
+                {bench.map((c) => (
+                  <MiniCard
+                    key={c.id}
+                    card={c}
+                    selected={selectedId === c.id}
+                    onClick={canEdit ? () => handleBenchClick(c) : undefined}
+                    onHoverStart={handleHoverStart}
+                    onHoverEnd={handleHoverEnd}
+                    dim
+                  />
+                ))}
                 {bench.length === 0 && <span className="slf-bench-empty">No bench players.</span>}
               </div>
             </div>
@@ -260,13 +347,25 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
         </div>
 
         <div className="slf-footer">
-          {canEdit ? (
-            <button type="button" className="primary" onClick={handleSave}>Save Lineup</button>
-          ) : (
-            <button type="button" className="secondary" onClick={onClose}>Close</button>
-          )}
+          <button type="button" className={canEdit ? 'secondary' : 'primary'} onClick={onClose}>Back</button>
         </div>
       </div>
+
+      {previewCard && (
+        <div className="slf-preview" aria-hidden="true">
+          <PlayerCard card={previewCard} />
+        </div>
+      )}
+
+      {showIntro && (
+        <div className="slf-intro-backdrop" onClick={dismissIntro}>
+          <div className="slf-intro" onClick={(e) => e.stopPropagation()}>
+            <h3>Set Your Lineup</h3>
+            <p>Pair specific skillsets for offensive/defensive bonuses. Hold a card to view the full player card.</p>
+            <button type="button" className="primary" onClick={dismissIntro}>Got It</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

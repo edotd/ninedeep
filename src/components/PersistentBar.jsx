@@ -10,18 +10,18 @@ import { formatCoins, remainingCap } from '../game/economy';
 // one place those numbers change.
 const CAP_FOCUSED_PHASES = new Set(['contracts', 'draft']);
 
-const PersistentBar = forwardRef(function PersistentBar({ state, myTeamId, overlay, onNavigate, onFreeAgency, dealProgress }, ref) {
+const PersistentBar = forwardRef(function PersistentBar({ state, myTeamId, overlay, onNavigate, onFreeAgency, freeAgencyLocked, dealProgress }, ref) {
   const team = state.teams[myTeamId];
   const capFocused = CAP_FOCUSED_PHASES.has(state.phase) || overlay === 'freeagency';
   if (capFocused) {
     const room = remainingCap(team);
     return (
       <div className="persistent-bar persistent-bar-capfocus" ref={ref}>
-        <button type="button" className={'persistent-bar-section persistent-bar-budget' + (room < 0 ? ' over' : '')} onClick={onFreeAgency}>
+        <button type="button" className={'persistent-bar-section persistent-bar-budget' + (room < 0 ? ' over' : '')} onClick={onFreeAgency} disabled={freeAgencyLocked}>
           <span>Room Available</span>
           <b>{formatCoins(room)}</b>
         </button>
-        <button type="button" className="persistent-bar-section persistent-bar-budget" onClick={onFreeAgency}>
+        <button type="button" className="persistent-bar-section persistent-bar-budget" onClick={onFreeAgency} disabled={freeAgencyLocked}>
           <span>Total Budget</span>
           <b>{formatCoins(team.seasonCap || 0)}</b>
         </button>

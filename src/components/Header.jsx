@@ -14,7 +14,7 @@ import { ERA_LENGTH } from '../game/constants';
 // doubles as that row's menu trigger there (see .topbar-menu-btn / .topbar-nav in index.css,
 // scoped to the mobile breakpoint only); desktop keeps the row inline exactly as before, so
 // menuOpen never applies there.
-export default function Header({ state, myTeamId, overlay, pageLabel, onTeam, onFreeAgency, onDraftClass, onGlossary, onStandings, onSettings, navNeedsAttention, onAcknowledgeNav, roomCode, freeAgencyAlert }) {
+export default function Header({ state, myTeamId, overlay, pageLabel, onTeam, onFreeAgency, onDraftClass, onGlossary, onStandings, onSettings, navNeedsAttention, onAcknowledgeNav, roomCode, freeAgencyAlert, freeAgencyLocked }) {
   const team = state.teams[myTeamId];
   const seasonNum = Math.min(state.season, ERA_LENGTH);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -48,7 +48,9 @@ export default function Header({ state, myTeamId, overlay, pageLabel, onTeam, on
       {menuOpen && <div className="topbar-menu-backdrop" onClick={() => setMenuOpen(false)} />}
       <div className={'topbar-nav' + (menuOpen ? ' open' : '')}>
         <button className={'reset-link' + (overlay === 'team' ? ' active' : '')} onClick={navClick(onTeam)}>Franchise</button>
-        <button className={'reset-link' + (overlay === 'freeagency' ? ' active' : '')} onClick={navClick(onFreeAgency)}>Free Agency{freeAgencyAlert && <span className="nav-badge-dot" />}</button>
+        <button className={'reset-link' + (overlay === 'freeagency' ? ' active' : '') + (freeAgencyLocked ? ' locked' : '')} onClick={navClick(onFreeAgency)} disabled={freeAgencyLocked} title={freeAgencyLocked ? 'Free Agency reopens next season' : undefined}>
+          Free Agency{freeAgencyLocked ? <span className="nav-lock-icon" aria-label="Locked">🔒</span> : freeAgencyAlert && <span className="alert-badge" aria-label="Needs attention">!</span>}
+        </button>
         <button className={'reset-link' + (overlay === 'draftclass' ? ' active' : '')} onClick={navClick(onDraftClass)}>Draft Class</button>
         <button className={'reset-link' + (overlay === 'standings' ? ' active' : '')} onClick={navClick(onStandings)}>Standings</button>
         <button className={'reset-link' + (overlay === 'glossary' ? ' active' : '')} onClick={navClick(onGlossary)}>Glossary</button>

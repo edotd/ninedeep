@@ -8,7 +8,6 @@ import { freeAgentPriority, hasPendingBidDecision } from '../game/bidding';
 
 export default function FreeAgencyScreen({ state, actions, myTeamId, onBack }) {
   const team = state.teams[myTeamId];
-  const openSlots = Math.max(0, 9 - team.hand.length);
   const closed = state.offseason?.freeAgencyClosed?.[team.id];
   const overBudget = rosterSalary(team) > team.seasonCap;
   const pendingDecision = hasPendingBidDecision(state, team);
@@ -37,13 +36,19 @@ export default function FreeAgencyScreen({ state, actions, myTeamId, onBack }) {
     <div className="screen">
       <div className="screen-kicker">League Personnel Wire</div>
       <h1>Free Agency</h1>
-      <p className="lede">Browse available players and coaches at any time. Signing is optional.</p>
+      <p className="lede">Free agency stays open through the draft. Review offers, sign or bid on players, then close it out before you confirm your lineup for the season.</p>
       <div className="fa-close-panel">
-        <button type="button" className="primary" disabled={closed || overBudget} onClick={() => { setCloseError(null); setConfirmingClose(true); }}>
+        {!closed && <div className="fa-close-warning"><span className="alert-badge" aria-label="Action required">!</span> Action required before the season can begin</div>}
+        <button
+          type="button"
+          className={'primary' + (!closed && !overBudget ? ' fa-close-btn-pulse' : '')}
+          disabled={closed || overBudget}
+          onClick={() => { setCloseError(null); setConfirmingClose(true); }}
+        >
           {closed ? 'Closed For This Turn' : overBudget ? 'Over Budget — Fix Roster To Close' : 'Close Out Free Agency'}
         </button>
-        {!closed && <p>Closing free agency locks signings and releases until next season.</p>}
-        {pendingDecision && !closed && <div className="fa-alert">You have an open bid waiting on your raise or stand pat.</div>}
+        {!closed && <p>Closing out free agency locks signings and releases until next season. All users must close out free agency before the season begins.</p>}
+        {pendingDecision && !closed && <div className="fa-alert"><span className="alert-badge" aria-label="Action required">!</span> You have an open bid waiting on your raise or stand pat.</div>}
       </div>
       {state.settings?.coachChangesEnabled && (
         <>
@@ -71,7 +76,6 @@ export default function FreeAgencyScreen({ state, actions, myTeamId, onBack }) {
         </>
       )}
       <h2>Players</h2>
-      <div className="statusline">Roster {team.hand.length}/9 · {openSlots ? `${openSlots} open spot${openSlots === 1 ? '' : 's'}` : team.hand.length > 9 ? `${team.hand.length - 9} over the season limit` : 'Bids allowed — resolve any overflow before the season'}</div>
       {state.freeAgents.length ? (
         <div className="fa-grid">
           {state.freeAgents.map((card) => {

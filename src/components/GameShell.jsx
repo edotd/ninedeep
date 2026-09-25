@@ -93,6 +93,7 @@ const PAGE_LABELS = {
 // brand handoff, instead of the phone-width top bar + collapsed bottom bar. Same
 // `overlay`/`Screen` resolution feeds both shells so the two never drift out of sync.
 export default function GameShell({ state, actions, myTeamId, onNewEra, onDeleteRoom, hostNotifications, roomCode }) {
+  const myTeam = myTeamId != null ? state.teams?.[myTeamId] : null;
   const mobileTopRef = useRef(null);
   const [mobileTopHeight, setMobileTopHeight] = useState(0);
   const persistentBarRef = useRef(null);
@@ -113,6 +114,17 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
   const [returnOverlay, setReturnOverlay] = useState(null);
   const [teamFocus, setTeamFocus] = useState(null);
   const toggleOverlay = (name) => setOverlay((o) => (o === name ? null : name));
+  // Free agency stays open through Contracts, the Draft, and right up until this team actually
+  // confirms their lineup for the season (confirmLineup itself requires freeAgencyClosed first
+  // — see engine.js) — that's the real "season begins" moment, not any particular state.phase.
+  // Once confirmed, it locks until proceedFromResults resets lineupConfirmed next season.
+  const freeAgencyLocked = Boolean(myTeam?.lineupConfirmed);
+  const openFreeAgency = () => { if (!freeAgencyLocked) toggleOverlay('freeagency'); };
+  // If lineup confirmation lands while a player still has Free Agency open, don't leave them
+  // stranded on a now-locked screen.
+  useEffect(() => {
+    if (freeAgencyLocked && overlay === 'freeagency') setOverlay(null);
+  }, [freeAgencyLocked, overlay]);
   // Navigating to 'team' via the sidebar/header (as opposed to jumping in from Standings)
   // always means "show my own file" — reset any leftover viewTeamId from a prior jump. If
   // the base phase screen is already showing that same file (see onOwnTeamPage above), this
@@ -123,6 +135,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
       setViewTeamId(null);
       setTeamFocus(null);
     }
+    if (name === 'freeagency') { openFreeAgency(); return; }
     toggleOverlay(name);
   };
   const openTeamSection = (section) => {
@@ -242,9 +255,8 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
   // Free Agency needs a visit before the draft/season can start (see closeFreeAgency,
   // game/season.js) — flag the nav item while it's still open for this team, this team is over
   // budget, or a bid this team placed is waiting on its own raise/stand-pat decision.
-  const myTeam = myTeamId != null ? state.teams?.[myTeamId] : null;
-  const freeAgencyAlert = Boolean(myTeam && showChrome && (
-    (state.phase === 'contracts' && !state.offseason?.freeAgencyClosed?.[myTeam.id])
+  const freeAgencyAlert = Boolean(myTeam && showChrome && !freeAgencyLocked && (
+    !state.offseason?.freeAgencyClosed?.[myTeam.id]
     || rosterSalary(myTeam) > (myTeam.seasonCap || 0)
     || hasPendingBidDecision(state, myTeam)
   ));
@@ -257,9 +269,10 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
     onStandings: () => toggleOverlay('standings'),
     onSettings: () => toggleOverlay('settings'),
     onTeam: () => handleNav('team'),
-    onFreeAgency: () => toggleOverlay('freeagency'),
+    onFreeAgency: openFreeAgency,
     onDraftClass: () => toggleOverlay('draftclass'),
     freeAgencyAlert,
+    freeAgencyLocked,
     navNeedsAttention,
     onAcknowledgeNav: acknowledgeNav,
     roomCode,
@@ -273,14 +286,14 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
   if (overlay === 'glossary') overlayBody = <GlossaryScreen key={screenKey} state={state} onBack={close} />;
   else if (overlay === 'settings') overlayBody = <SettingsScreen key={screenKey} state={state} actions={actions} onBack={close} onNewEra={onNewEra} onDeleteRoom={onDeleteRoom} hostNotifications={hostNotifications} />;
   else if (overlay === 'standings') overlayBody = <LeagueScreen key={screenKey} state={state} myTeamId={myTeamId} onBack={close} onViewTeam={(id) => openTeamView(id, 'standings')} />;
-  else if (overlay === 'team') overlayBody = <TeamSummaryScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} viewTeamId={viewTeamId} onBack={closeTeamView} focusSection={teamFocus} onFreeAgency={() => setOverlay('freeagency')} />;
+  else if (overlay === 'team') overlayBody = <TeamSummaryScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} viewTeamId={viewTeamId} onBack={closeTeamView} focusSection={teamFocus} onFreeAgency={openFreeAgency} />;
   else if (overlay === 'freeagency') overlayBody = <FreeAgencyScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
   else if (overlay === 'draftclass') overlayBody = <DraftClassScreen key={screenKey} state={state} onBack={close} />;
   else if (overlay === 'cardtypes') overlayBody = <CardOverviewScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
 
   const Screen = SCREENS[effectivePhase];
   const mainBody = overlayBody || (Screen
-    ? <Screen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onViewTeam={(id) => openTeamView(id, null)} onFreeAgency={() => setOverlay('freeagency')} onEndGame={onNewEra} dealProgress={dealProgress} onDealProgress={setDealProgress} onDealDone={() => setPastDeal(true)} />
+    ? <Screen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onViewTeam={(id) => openTeamView(id, null)} onFreeAgency={openFreeAgency} onEndGame={onNewEra} dealProgress={dealProgress} onDealProgress={setDealProgress} onDealDone={() => setPastDeal(true)} />
     : (
       <div className="screen">
         <h1>Something broke</h1>
@@ -292,7 +305,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
   if (isDesktop && showChrome) {
     return (
       <div className="desktop-shell">
-        <Sidebar state={state} myTeamId={myTeamId} overlay={navOverlay} pageLabel={pageLabel} viewTeamId={viewTeamId} onNav={handleNav} onViewTeam={(id) => openTeamView(id, overlay)} onAcknowledgeNav={acknowledgeNav} roomCode={roomCode} freeAgencyAlert={freeAgencyAlert} />
+        <Sidebar state={state} myTeamId={myTeamId} overlay={navOverlay} pageLabel={pageLabel} viewTeamId={viewTeamId} onNav={handleNav} onViewTeam={(id) => openTeamView(id, overlay)} onAcknowledgeNav={acknowledgeNav} roomCode={roomCode} freeAgencyAlert={freeAgencyAlert} freeAgencyLocked={freeAgencyLocked} />
         <div className="desktop-content">
           <FranchiseMasthead state={state} teamId={mastheadTeamId} />
           {mainBody}
@@ -315,7 +328,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
     }}>
       {showChrome && <div className="mobile-persistent-top" ref={mobileTopRef}><Header {...headerProps} /><FranchiseMasthead state={state} teamId={mastheadTeamId} /></div>}
       {mainBody}
-      {showBar && <PersistentBar ref={persistentBarRef} state={state} myTeamId={myTeamId} overlay={overlay} onNavigate={openTeamSection} onFreeAgency={() => setOverlay('freeagency')} dealProgress={dealProgress} />}
+      {showBar && <PersistentBar ref={persistentBarRef} state={state} myTeamId={myTeamId} overlay={overlay} onNavigate={openTeamSection} onFreeAgency={openFreeAgency} freeAgencyLocked={freeAgencyLocked} dealProgress={dealProgress} />}
       <ScrollToTopButton />
     </div>
   );

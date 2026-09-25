@@ -34,7 +34,7 @@ const SUPPORT_NAV_ITEMS = [
 // into the sidebar's vertical list. Team was dropped for a while when the persistent bar
 // alone covered the roster/front-office/matchup view, but it's the only way to reach the
 // front-office moves (fire coach or GM, invest in fanbase), so it's back.
-export default function Sidebar({ state, myTeamId, overlay, pageLabel, viewTeamId, onNav, onViewTeam, onAcknowledgeNav, roomCode, freeAgencyAlert }) {
+export default function Sidebar({ state, myTeamId, overlay, pageLabel, viewTeamId, onNav, onViewTeam, onAcknowledgeNav, roomCode, freeAgencyAlert, freeAgencyLocked }) {
   const team = state.teams[myTeamId];
   const seasonNum = Math.min(state.season, ERA_LENGTH);
   // The Team overlay is showing someone else's file (opened from a standings row) when
@@ -70,15 +70,22 @@ export default function Sidebar({ state, myTeamId, overlay, pageLabel, viewTeamI
       <div className="sidebar-team">{team.name}</div>
       {roomCode && <div className="sidebar-room-code" title="Share this code so others can join this room">Room {roomCode}</div>}
       <nav className="sidebar-nav">
-        {PRIMARY_NAV_ITEMS.map((item) => (
-          <button
-            key={item.key}
-            className={'sidebar-nav-item' + (overlay === item.key && !(item.key === 'team' && viewingOther) ? ' active' : '')}
-            onClick={() => onNav(item.key)}
-          >
-            {item.label}{item.key === 'freeagency' && freeAgencyAlert && <span className="nav-badge-dot" />}
-          </button>
-        ))}
+        {PRIMARY_NAV_ITEMS.map((item) => {
+          const locked = item.key === 'freeagency' && freeAgencyLocked;
+          return (
+            <button
+              key={item.key}
+              className={'sidebar-nav-item' + (overlay === item.key && !(item.key === 'team' && viewingOther) ? ' active' : '') + (locked ? ' locked' : '')}
+              onClick={() => onNav(item.key)}
+              disabled={locked}
+              title={locked ? 'Free Agency reopens next season' : undefined}
+            >
+              {item.label}
+              {locked && <span className="nav-lock-icon" aria-label="Locked">🔒</span>}
+              {item.key === 'freeagency' && !locked && freeAgencyAlert && <span className="alert-badge" aria-label="Needs attention">!</span>}
+            </button>
+          );
+        })}
       </nav>
       <div className="sidebar-standings">
         <div className="sidebar-standings-heading">{seeded ? 'Live Standings' : 'Projected Output'}</div>
@@ -95,7 +102,7 @@ export default function Sidebar({ state, myTeamId, overlay, pageLabel, viewTeamI
             style={{ cursor: onViewTeam ? 'pointer' : undefined }}
           >
             <span className="sidebar-standings-rank">{seeded ? t.seed : i + 1}</span>
-            <span className="sidebar-standings-tri">{t.tricode}</span>
+            <span className="sidebar-standings-tri">{t.tricode}{t.lineupConfirmed && <span className="sidebar-standings-lock" title="Lineup locked in for the season" aria-label="Locked">🔒</span>}</span>
             <span className="sidebar-standings-val">{output ? output.total.toFixed(2) : '—'}</span>
           </div>
         ))}

@@ -21,7 +21,9 @@ const LEGACY_DEVELOPMENT_CHANGES = {
 const LONG_PRESS_MS = 500;
 
 export default function PlayerCard({ card, onClick, selected, rosterLabel, compact, onRelease, onDevelop, alwaysShowOptions, contractLabel, signingNote }) {
-  const pillLabel = rosterLabel || (selected ? 'Selected' : null);
+  // Selected (a transient "you're holding this one" state) always wins over a static roster
+  // label like Starter — the more urgent, currently-relevant fact belongs in that one slot.
+  const pillLabel = selected ? 'Selected' : rosterLabel;
   const tier = cardTier(card);
   const skillset = skillsetFor(card);
   const level = careerLevel(card);
@@ -152,7 +154,7 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
             <span className="pcard-microlabel">Accolades</span>
             {(pillLabel || card.development) && (
               <div className="pcard-accolade-tags">
-                {pillLabel && <span className="pcard-stamp">{pillLabel}</span>}
+                {pillLabel && <span className={'pcard-stamp' + (pillLabel === 'Selected' ? ' pcard-stamp-selected' : '')}>{pillLabel}</span>}
                 {card.development && <span className="pcard-development" title={`Developed · ${card.development.cardName}`}>Developed</span>}
               </div>
             )}
