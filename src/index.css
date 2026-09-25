@@ -1008,8 +1008,8 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
   .fo-deal-row.row-fit>.ts-fo-col{flex:1 1 0;min-width:0;}
   .ts-swipe-row.row-scroll{display:flex;grid-template-columns:none;overflow-x:auto;gap:14px;scroll-snap-type:x mandatory;scrollbar-width:none;}
   .ts-swipe-row.row-scroll::-webkit-scrollbar{display:none;}
-  .ts-swipe-row.row-scroll>.strategy-card-wrap{flex:0 0 240px;width:240px;scroll-snap-align:start;}
-  .ts-swipe-row.row-scroll>.mu2-wrap{flex:0 0 280px;width:280px;scroll-snap-align:start;}
+  .ts-swipe-row.row-scroll>.strategy-card-wrap{flex:0 0 min(340px,calc(100vw - 52px));width:min(340px,calc(100vw - 52px));scroll-snap-align:start;}
+  .ts-swipe-row.row-scroll>.mu2-wrap{flex:0 0 min(360px,calc(100vw - 52px));width:min(360px,calc(100vw - 52px));scroll-snap-align:start;}
   .ts-swipe-row.row-fit{display:flex;grid-template-columns:none;overflow-x:visible;gap:14px;}
   .ts-swipe-row.row-fit>.mu2-wrap,.ts-swipe-row.row-fit>.strategy-card-wrap{flex:1 1 0;width:auto;min-width:0;}
 }
@@ -2143,9 +2143,10 @@ body:has(.entry-screen){padding-bottom:0;}
      above), so top:0/bottom:0 tracks exactly the card area's own height with no viewport-math
      needed. Gone entirely on the last card (see TeamSummaryScreen.jsx) rather than switching to
      a "next tab" state — there's nothing left to peek at. */
-  .ts-hand-peek-tab{position:absolute;top:0;bottom:0;right:0;width:30px;box-sizing:border-box;padding:8px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:var(--ink-deep);border:1px solid var(--franchise);border-right:none;pointer-events:none;z-index:6;}
-  .ts-hand-peek-chevron{font-family:var(--font-display);font-size:28px;line-height:1;color:var(--franchise);}
+  .ts-hand-peek-tab{position:absolute;top:28%;bottom:28%;right:0;width:30px;box-sizing:border-box;padding:8px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:var(--ink-deep);border:1px solid var(--franchise);border-right:none;pointer-events:none;z-index:6;animation:row-swipe-pulse 1.8s ease-in-out infinite;}
+  .ts-hand-peek-chevron{font-family:var(--font-display);font-size:32px;line-height:1;color:var(--franchise);}
   .ts-hand-peek-count{font-family:var(--font-mono);font-size:14px;font-weight:600;color:var(--file);}
+  @media(prefers-reduced-motion:reduce){.ts-hand-peek-tab{animation:none;}}
 
   /* While the Rotation tab is showing, the card IS the screen — no page scroll competing with
      the horizontal card-to-card swipe. The franchise header AND the persistent bar (with its
