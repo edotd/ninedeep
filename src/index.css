@@ -2153,7 +2153,7 @@ body:has(.entry-screen){padding-bottom:0;}
      (--mobile-persistent-top-height / --mobile-persistent-bar-height, set in GameShell), not
      guesses, so the screen just subtracts both known quantities. Other tabs (Chemistry/Ledger/
      Staff) go back to the normal scrolling page with all chrome visible the same way. */
-  .mobile-shell:has(.ts-screen-lock){height:var(--app-vh,100dvh);overflow:hidden;}
+  .mobile-shell:has(.ts-screen-lock){position:fixed;inset:0;width:100%;height:var(--app-vh,100dvh);overflow:hidden;}
   .ts-screen.ts-screen-lock{height:calc(var(--app-vh,100dvh) - var(--mobile-persistent-top-height,0px) - var(--mobile-persistent-bar-height,0px));box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;}
   .ts-screen-lock .ts-tabbar{position:static;box-shadow:none;}
   .ts-screen-lock .ts-body{flex:1;min-height:0;overflow:hidden;overscroll-behavior:none;touch-action:pan-x;display:flex;flex-direction:column;}
