@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import PlayerCard from '../components/PlayerCard';
 import FrontOfficeCard from '../components/FrontOfficeCard';
 import MatchupCard from '../components/MatchupCard';
@@ -51,6 +51,12 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
   const [tokens, setTokens] = useState([]); // transient flying-card visuals, purely decorative
   const timersRef = useRef([]);
   const tokenIdRef = useRef(0);
+
+  // The lobby can scroll (the host notification control sits near its bottom), while the deal
+  // replaces it inside the same app shell. iOS preserves that document offset across the swap,
+  // which makes the newly shown deal look shifted upward. Reset before paint so every player's
+  // deal starts at the true top regardless of where the preceding screen was left.
+  useLayoutEffect(() => { window.scrollTo(0, 0); }, []);
 
   const clearTimers = () => { timersRef.current.forEach(clearTimeout); timersRef.current = []; };
 
