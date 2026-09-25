@@ -76,6 +76,20 @@ test('three Adjustment cards per team contain no seeding effects; disabling card
   assert(state.teams.every(t=>t.matchupCards.length===0)); assert.equal(state.phase,'constructing');
 });
 
+test('season seeding saves a player-facing breakdown for every team', () => {
+  const state = game();
+  state.teams[0].seasonGameplanEffects.seedingPercent = 12;
+  lockSeasonAndSeed(state);
+  assert.equal(state.seasonBreakdown.length, state.teams.length);
+  assert.deepEqual(state.seasonBreakdown.map((row) => row.teamId), state.seeds.map((seed) => seed.t.id));
+  assert.deepEqual(state.seasonBreakdown.map((row) => row.seed), state.seeds.map((_, index) => index + 1));
+  const mine = state.seasonBreakdown.find((row) => row.teamId === state.teams[0].id);
+  assert.equal(mine.gameplanSeedingPct, 12);
+  assert(mine.seasonRollPct >= -10 && mine.seasonRollPct <= 10);
+  assert(Number.isFinite(mine.baseRating));
+  assert(Number.isFinite(mine.finalRating));
+});
+
 test('extra draw and discard work when the Adjustment deck is exhausted', () => {
   const state=game(), [a,b]=state.teams;
   state.matchupDeck=[card('Biased Officiating').definitionId];

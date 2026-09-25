@@ -304,6 +304,21 @@ export function lockSeasonAndSeed(state) {
       const favorableSchedule = (t.matchupCards || []).some((c) => !c.effectType && c.name === 'Favorable Schedule' && !c.used);
       if (favorableSchedule) val *= 1.10;
       const output = t.coach && t.activeIds && t.activeIds.length > 0 ? teamOutput(t) : null;
+      const breakdown = {
+        teamId: t.id,
+        teamName: t.name,
+        rawStatSum: raw,
+        staffPct: t.coach ? Math.round(bonus * 1000) / 10 : null,
+        synergyOffensePct: synergy?.offense ?? null,
+        synergyDefensePct: synergy?.defense ?? null,
+        baseRating: Math.round(base * 10) / 10,
+        seasonRollPct: Math.round((randomMult - 1) * 1000) / 10,
+        gameplanSeedingPct: t.seasonGameplanEffects?.seedingPercent || 0,
+        seedingCardPct,
+        favorableSchedulePct: favorableSchedule ? 10 : 0,
+        finalRating: Math.round(val),
+        projectedOutput: output?.total ?? null,
+      };
       seedLog.push({
         Team: t.name,
         'Raw 4-Stat Sum': raw,
@@ -317,13 +332,14 @@ export function lockSeasonAndSeed(state) {
         'Proj Defense': output ? output.def : '—',
         'Bench Output': output ? output.bench : '—',
       });
-      return { t, val };
+      return { t, val, breakdown };
     })
     .sort((a, b) => b.val - a.val);
   seeds.forEach((s, rank) => { s.t.seed = rank + 1; });
   seedLog.sort((a, b) => b['Final Seeding Rating'] - a['Final Seeding Rating']);
   console.log(`%c🏀 Season ${state.season} — Seeding Breakdown`, 'font-weight:bold;font-size:13px;');
   console.table(seedLog);
+  state.seasonBreakdown = seeds.map(({ breakdown }, rank) => ({ ...breakdown, seed: rank + 1 }));
   state.seeds = seeds;
   state.playoffTeams = seeds.slice(0, 8).map((s) => s.t);
   state.playoffTeams.forEach((t) => {
