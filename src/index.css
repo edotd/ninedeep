@@ -2460,7 +2460,11 @@ body:has(.trans-screen){padding-bottom:0;}
 
 /* Free Agency turn-milestone chrome — the close-out button and the "come back" alert (design
    ask: a warning to get the user to visit the page before the season can start). */
-.fa-close-bar{flex-direction:column;align-items:stretch;gap:8px;}
+.fa-close-panel{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0 24px;padding:14px;background:var(--ink);border:1px solid var(--ink-rule);}
+.fa-close-panel p{margin:0;max-width:520px;color:var(--file-muted);font-family:var(--font-mono);font-size:11px;line-height:1.45;}
+.fa-close-panel .fa-alert{flex-basis:100%;}
+.pcard-signing-note{font-size:12px;font-weight:700;color:var(--franchise);border:1px solid currentColor;padding:6px 8px;margin-top:5px;}
+.tie-roll-board .bid-board-head,.tie-roll-board .bid-board-row{grid-template-columns:2fr 1fr;}
 .fa-alert{font-family:var(--font-mono);font-size:11px;color:var(--stamp-text);text-align:center;}
 .pcard-signing-note{font-family:var(--font-mono);font-size:9px;letter-spacing:.04em;color:var(--file-muted);margin-top:2px;}
 

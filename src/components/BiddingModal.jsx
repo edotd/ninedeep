@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { jerseyNumber } from '../game/cards';
 import { formatCoins, remainingCap } from '../game/economy';
-import { pendingFaHoldTotal } from '../game/bidding';
+import { freeAgentPriority, pendingFaHoldTotal, winningValue } from '../game/bidding';
 
 const YEAR_OPTIONS = [1, 2, 3, 4, 5, 6, 7];
 const BONUS_LABEL = {
@@ -19,7 +19,7 @@ export default function BiddingModal({ state, actions, myTeamId, card, onClose }
   const myBid = session?.bids?.[team.id];
   const minSalary = session?.minSalary ?? card.salary;
   const minYears = session?.minYears ?? card.contract;
-  const priority = session?.priority;
+  const priority = session?.priority ?? freeAgentPriority(card);
   const [offer, setOffer] = useState({ salary: myBid?.salary ?? minSalary, years: myBid?.years ?? minYears });
   const [error, setError] = useState(null);
 
@@ -67,16 +67,36 @@ export default function BiddingModal({ state, actions, myTeamId, card, onClose }
           </div>
         )}
 
+        {!resolved && session && Object.keys(session.bids || {}).length > 0 && (
+          <div className="bid-board">
+            <div className="bid-board-head"><span>Team</span><span>Salary</span><span>Yrs</span><span>Value</span><span>Status</span></div>
+            {Object.entries(session.bids).map(([tid, bid]) => {
+              const bidder = state.teams.find((candidate) => candidate.id === Number(tid));
+              const mine = Number(tid) === team.id;
+              return (
+                <div key={tid} className="bid-board-row">
+                  <span>{bidder?.name}{mine ? ' · You' : ''}</span>
+                  <span>{mine ? formatCoins(bid.salary) : 'Private'}</span>
+                  <span>{mine ? bid.years : '—'}</span>
+                  <span>{mine ? (priority === 'Winning' ? winningValue(team) : `+${bid.bonus}`) : '—'}</span>
+                  <span>{bid.stage === 'final' ? 'Final offer' : 'Offer made'}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         {!resolved && !myBid && (
           <>
-            <div className="bid-bonus-table">
-              {[0, 1, 2, 3].map((tier) => (
-                <div key={tier} className="bid-bonus-row">
-                  <span>+{tier}</span>
-                  <span>{priority ? BONUS_LABEL[priority](priority === 'Contract' ? minYears : minSalary, tier) : '—'}</span>
-                </div>
-              ))}
-            </div>
+            {priority === 'Winning' ? (
+              <div className="neg-note">Winning value: {winningValue(team)} · current projected output{team.seasonHistory?.length ? ' plus your prior-season finish' : ''}.</div>
+            ) : (
+              <div className="bid-bonus-table">
+                {[0, 1, 2, 3].map((tier) => (
+                  <div key={tier} className="bid-bonus-row"><span>+{tier}</span><span>{BONUS_LABEL[priority](priority === 'Contract' ? minYears : minSalary, tier)}</span></div>
+                ))}
+              </div>
+            )}
             <div className="neg-stepper-row">
               <span className="neg-microlabel">Salary / Season</span>
               <div className="neg-stepper">
@@ -101,21 +121,6 @@ export default function BiddingModal({ state, actions, myTeamId, card, onClose }
 
         {!resolved && myBid && myBid.stage === 'opening' && (
           <>
-            <div className="bid-board">
-              <div className="bid-board-head"><span>Team</span><span>Salary</span><span>Yrs</span><span>Bonus</span><span>Status</span></div>
-              {Object.entries(session.bids).map(([tid, bid]) => {
-                const t = state.teams.find((x) => x.id === Number(tid));
-                return (
-                  <div key={tid} className="bid-board-row">
-                    <span>{t?.name}{Number(tid) === team.id ? ' · You' : ''}</span>
-                    <span>{formatCoins(bid.salary)}</span>
-                    <span>{bid.years}</span>
-                    <span>+{bid.bonus}</span>
-                    <span>{bid.stage === 'final' ? 'Final' : 'Opening'}</span>
-                  </div>
-                );
-              })}
-            </div>
             <div className="neg-band-split"><span>One raise · salary, years, or both · neither can drop</span></div>
             <div className="neg-stepper-row">
               <span className="neg-microlabel">Salary / Season · was {formatCoins(floor.salary)}</span>
@@ -142,7 +147,7 @@ export default function BiddingModal({ state, actions, myTeamId, card, onClose }
         )}
 
         {!resolved && myBid && myBid.stage === 'final' && (
-          <div className="neg-note">Your bid is final — waiting on the rest of the board before this rolls off.</div>
+          <div className="neg-note">Your offer is final. Bidding resolves after every human GM closes free agency.</div>
         )}
 
         {resolved && result && (
@@ -155,22 +160,17 @@ export default function BiddingModal({ state, actions, myTeamId, card, onClose }
                 <div className="neg-figure big">{formatCoins(result.salary)} × {result.years} yrs</div>
                 {result.uncontested && <p className="neg-note">No one else bid — signed at their own terms, no roll.</p>}
                 {!result.uncontested && result.rolls?.length > 0 && (
-                  <div className="bid-board">
-                    <div className="bid-board-head"><span>Team</span><span>Roll</span><span>Bonus</span><span>Total</span></div>
-                    {[...result.rolls].sort((a, b) => b.total - a.total).map((r) => (
+                  <div className="bid-board tie-roll-board">
+                    <div className="bid-board-head"><span>Team</span><span>Tiebreak Roll</span></div>
+                    {[...result.rolls].sort((a, b) => b.roll - a.roll).map((r) => (
                       <div key={r.teamId} className="bid-board-row">
                         <span>{r.teamName}{r.teamId === result.winnerTeamId ? ' · Won' : ''}</span>
                         <span>{r.roll}</span>
-                        <span>+{r.bonus}</span>
-                        <span>{r.total}</span>
                       </div>
                     ))}
                   </div>
                 )}
-                {result.tiebreak && <p className="neg-note">{result.tiebreak}</p>}
-                {result.cut?.length > 0 && (
-                  <div className="neg-note">{result.cut.map((c) => c.reason).join(' ')}</div>
-                )}
+                {!result.uncontested && !result.tied && <p className="neg-note">Best final offer for this player's {String(result.priority).toLowerCase()} priority.</p>}
               </>
             )}
             <button type="button" className="primary" onClick={onClose}>Back to Free Agency</button>

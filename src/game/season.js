@@ -15,7 +15,7 @@ import { simulateSeasonOutput, teamOutput } from './matchup';
 import { teamSynergy } from './skillsets';
 import { recordFreeAgencyActivity } from './freeAgencyActivity';
 import { autoPlaySeasonGameplans, dealStrategyCards } from './strategyCards';
-import { forceFinalizeTeamBids } from './bidding';
+import { forceFinalizeTeamBids, resolveAllFreeAgentBidding } from './bidding';
 
 export function newEraState() {
   return {
@@ -471,6 +471,9 @@ export function closeFreeAgency(state, teamIdx) {
   forceFinalizeTeamBids(state, team);
   state.offseason.freeAgencyClosed ||= {};
   state.offseason.freeAgencyClosed[team.id] = true;
+  // Offers stay live for the whole market. The final close is the single server-side
+  // resolution point, so every client receives the same winners and tie rolls.
+  if (allHumanFiled(state, 'freeAgencyClosed')) resolveAllFreeAgentBidding(state);
   return { ok: true };
 }
 

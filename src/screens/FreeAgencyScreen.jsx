@@ -18,6 +18,7 @@ export default function FreeAgencyScreen({ state, actions, myTeamId, onBack }) {
   const [biddingCard, setBiddingCard] = useState(null);
 
   const closeOut = () => {
+    if (!window.confirm('Close free agency? You will not be able to sign or release players again until next season.')) return;
     const res = actions.closeFreeAgency(myTeamId);
     if (res && res.ok === false) alert(res.msg);
   };
@@ -27,10 +28,11 @@ export default function FreeAgencyScreen({ state, actions, myTeamId, onBack }) {
       <div className="screen-kicker">League Personnel Wire</div>
       <h1>Free Agency</h1>
       <p className="lede">Browse available players and coaches at any time. Signing is optional.</p>
-      <div className="bottombar fa-close-bar">
+      <div className="fa-close-panel">
         <button className="primary" disabled={closed || overBudget} onClick={closeOut}>
           {closed ? 'Closed For This Turn' : overBudget ? 'Over Budget — Fix Roster To Close' : 'Close Out Free Agency'}
         </button>
+        {!closed && <p>Closing free agency locks signings and releases until next season.</p>}
         {pendingDecision && !closed && <div className="fa-alert">You have an open bid waiting on your raise or stand pat.</div>}
       </div>
       {state.settings?.coachChangesEnabled && (
@@ -65,10 +67,11 @@ export default function FreeAgencyScreen({ state, actions, myTeamId, onBack }) {
           {state.freeAgents.map((card) => {
             const releasedHere = wasReleasedByTeamThisSeason(card, team, state.season);
             const bid = state.offseason?.bidding?.[card.id]?.bids?.[team.id];
+            const offerCount = Object.keys(state.offseason?.bidding?.[card.id]?.bids || {}).length;
             const sign = () => setBiddingCard(card);
             return (
               <div key={card.id}>
-                <PlayerCard card={card} contractLabel="Requested Contract Length" signingNote={`Rolls for ${freeAgentPriority(card)} · min ${card.contract} yr${card.contract === 1 ? '' : 's'}`} />
+                <PlayerCard card={card} contractLabel="Requested Contract Length" signingNote={`VALUES ${freeAgentPriority(card).toUpperCase()} · ${offerCount ? `${offerCount} OFFER${offerCount === 1 ? '' : 'S'} MADE` : 'NO OFFERS'}`} />
                 <button className="pcard-renew" disabled={(!openSlots && !bid) || releasedHere || closed} onClick={sign}>
                   {releasedHere ? 'Released This Season' : bid ? `Bidding — ${formatCoins(bid.salary)}` : `Offer — ${formatCoins(card.salary)}`}
                 </button>

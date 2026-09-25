@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   freeAgentPriority, bonusForPriority, openFreeAgentBid, raiseFreeAgentBid, standPatFreeAgentBid,
-  resolveFreeAgentBidding, forceFinalizeTeamBids, hasPendingBidDecision, pendingFaHoldTotal,
+  resolveFreeAgentBidding, resolveAllFreeAgentBidding, forceFinalizeTeamBids, hasPendingBidDecision, pendingFaHoldTotal, winningValue,
 } from '../src/game/bidding.js';
 
 // Nine full bench slots so aiWantsCard's early "roster full" check keeps every AI team out of
@@ -60,17 +60,34 @@ test('bonusForPriority matches the design doc\'s 0-3 category table', () => {
   assert.equal(bonusForPriority('Winning', champion, 5, 2, 5, 2), 3);
 });
 
-test('a single opening bid, once stood pat, signs uncontested with no roll', () => {
+test('Winning value uses current projected output and adds the prior-season result after year one', () => {
+  const hand = Array.from({ length: 9 }, (_, i) => ({
+    id: `p${i}`, position: ['Guard', 'Forward', 'Big'][i % 3], stats: { SCO: 10, PLM: 10, REB: 10, DEF: 10 },
+    salary: 1, careerStage: 'Prime', skillsetId: null,
+  }));
+  const team = {
+    id: 0, hand, activeIds: hand.slice(0, 5).map((card) => card.id),
+    coach: { offBonus: 0, defBonus: 0, offDie: 6, defDie: 6 },
+    matchupCards: [], seasonGameplanEffects: {}, retainedStreak: 0, seasonHistory: [],
+  };
+  const firstSeasonValue = winningValue(team);
+  assert(firstSeasonValue > 0);
+  team.seasonHistory.push({ result: 'TITLE' });
+  assert.equal(winningValue(team), firstSeasonValue + 3);
+});
+
+test('a final bid remains open until the league closes free agency', () => {
   const state = baseState();
   const open = openFreeAgentBid(state, 0, 'p1', 5, 2);
   assert.equal(open.ok, true);
-  assert.equal(open.resolved, false, 'still waiting on this GM\'s own raise/stand-pat decision');
+  assert.equal(open.resolved, false);
   const res = standPatFreeAgentBid(state, 0, 'p1');
-  assert.equal(res.resolved, true);
-  assert.equal(res.result.uncontested, true);
-  assert.equal(res.result.winnerTeamId, 0);
+  assert.equal(res.resolved, false);
+  assert.equal(state.freeAgents.length, 1);
+  resolveAllFreeAgentBidding(state);
+  assert.equal(state.offseason.bidding.p1.result.uncontested, true);
+  assert.equal(state.offseason.bidding.p1.result.winnerTeamId, 0);
   assert.equal(state.teams[0].hand.length, 1);
-  assert.equal(state.teams[0].hand[0].salary, 5);
   assert.equal(state.freeAgents.length, 0);
 });
 
@@ -81,10 +98,11 @@ test('a raise must improve at least one term and cannot lower either', () => {
   assert.equal(raiseFreeAgentBid(state, 0, 'p1', 4.5, 3).ok, false);
   const res = raiseFreeAgentBid(state, 0, 'p1', 5.5, 2);
   assert.equal(res.ok, true);
-  assert.equal(res.resolved, true, 'sole bidder resolves the moment they finalize');
+  assert.equal(res.resolved, false);
+  assert.equal(state.offseason.bidding.p1.bids[0].stage, 'final');
 });
 
-test('doc worked example: a 0-bonus finalist can beat a +2-bonus finalist on a friendlier roll', () => {
+test('the best salary offer wins without a roll', () => {
   const state = baseState();
   const session = {
     cardId: 'p1', priority: 'Salary', minSalary: 5, minYears: 2, status: 'open',
@@ -94,19 +112,16 @@ test('doc worked example: a 0-bonus finalist can beat a +2-bonus finalist on a f
       3: { salary: 6, years: 2, bonus: 2, stage: 'final' },
     },
   };
-  // Finalists sort by bonus desc: team3 (+2), team2 (+1), team0 (+0) — rolls assigned in that
-  // order, so [5, 6, 9] gives totals 7, 7, 9: the 5-cap, 0-bonus bidder wins the upset.
-  const result = mockRolls([5, 6, 9], () => resolveFreeAgentBidding(state, session));
-  assert.equal(result.winnerTeamId, 0);
-  assert.equal(result.salary, 5);
-  assert.equal(state.teams[0].hand.some((c) => c.id === 'p1'), true);
-  assert.equal(state.freeAgents.length, 0);
+  const result = resolveFreeAgentBidding(state, session);
+  assert.equal(result.winnerTeamId, 3);
+  assert.equal(result.salary, 6);
+  assert.equal(result.rolls.length, 0);
 });
 
-test('a fourth bid is cut for the top three, released, and given a reason', () => {
+test('contract-first players prefer years, then salary', () => {
   const state = baseState();
   const session = {
-    cardId: 'p1', priority: 'Salary', minSalary: 5, minYears: 2, status: 'open',
+    cardId: 'p1', priority: 'Contract', minSalary: 5, minYears: 2, status: 'open',
     bids: {
       0: { salary: 6, years: 2, bonus: 2, stage: 'final' },
       1: { salary: 5.5, years: 2, bonus: 1, stage: 'final' },
@@ -114,28 +129,24 @@ test('a fourth bid is cut for the top three, released, and given a reason', () =
       3: { salary: 5, years: 2, bonus: 0, stage: 'final' },
     },
   };
-  const result = mockRolls([5, 5, 5], () => resolveFreeAgentBidding(state, session));
-  assert.equal(result.finalists.length, 3);
-  assert.equal(result.cut.length, 1);
-  assert.equal(result.cut[0].teamId, 3, 'shorter contract at the same bonus/salary loses the last spot');
-  assert.match(result.cut[0].reason, /contract/i);
+  const result = resolveFreeAgentBidding(state, session);
+  assert.equal(result.winnerTeamId, 2);
+  assert.equal(result.years, 3);
 });
 
-test('a tied top roll is broken by bonus, then salary, then years, then league order — no reroll', () => {
+test('exactly tied best offers roll a d10 and the high roll wins', () => {
   const state = baseState();
   const session = {
     cardId: 'p1', priority: 'Salary', minSalary: 5, minYears: 2, status: 'open',
     bids: {
       0: { salary: 6, years: 2, bonus: 2, stage: 'final' },
-      1: { salary: 5.5, years: 2, bonus: 1, stage: 'final' },
+      2: { salary: 6, years: 2, bonus: 2, stage: 'final' },
     },
   };
-  const result = mockRolls([6, 7], () => resolveFreeAgentBidding(state, session));
+  const result = mockRolls([4, 9], () => resolveFreeAgentBidding(state, session));
   assert.equal(result.rolls.length, 2);
-  const totals = result.rolls.map((r) => r.total);
-  assert.deepEqual(totals.sort(), [8, 8]);
-  assert.equal(result.winnerTeamId, 0, 'higher bonus wins the exact tie');
-  assert(result.tiebreak);
+  assert.equal(result.winnerTeamId, 2);
+  assert.equal(result.tied, true);
 });
 
 test('a lone bidder is uncontested even though the free agent was already reachable to everyone', () => {
@@ -156,13 +167,14 @@ test('a team cannot double-count cap room across two simultaneous open bids', ()
   assert.equal(res.ok, false, 'p1\'s held 5 plus this 12 would exceed the 16 cap');
 });
 
-test('closeFreeAgency\'s force-finalize resolves a dangling opening bid instead of blocking forever', () => {
+test('closing a team finalizes its opening bid without resolving the league early', () => {
   const state = baseState();
   openFreeAgentBid(state, 0, 'p1', 5, 2);
   assert.equal(hasPendingBidDecision(state, state.teams[0]), true);
   forceFinalizeTeamBids(state, state.teams[0]);
   assert.equal(hasPendingBidDecision(state, state.teams[0]), false);
-  assert.equal(state.teams[0].hand.some((c) => c.id === 'p1'), true);
+  assert.equal(state.teams[0].hand.some((c) => c.id === 'p1'), false);
+  assert.equal(state.offseason.bidding.p1.status, 'open');
 });
 
 test('bidding on a card is blocked once this team has closed out free agency', () => {

@@ -97,6 +97,9 @@ export function makeCard(state, archName, position, tier, forcedCareerStage = nu
     careerStage,
     stageYears: 0,
     careerRoll: Math.random(),
+    // Rolled once with the player and later printed prominently when the card reaches free
+    // agency. Older saves receive a stable fallback in bidding.js.
+    freeAgentPriority: ['Salary', 'Contract', 'Winning'][Math.floor(Math.random() * 3)],
   };
 }
 
