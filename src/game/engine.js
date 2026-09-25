@@ -249,7 +249,7 @@ export function rollCurrentMatchup(state) {
     if (team.human) continue;
     const plan = (team.gameplanCards || []).find((card) => !card.used && card.contexts?.includes('playoff'));
     if (!plan) continue;
-    applyGameplanToTurn(planTurn, side, plan);
+    applyGameplanToTurn(planTurn, side, plan, team);
     plan.used = true;
     plan.playedContext = 'playoff';
     plan.targetTeamId = plan.target === 'opponent' ? (side === 'a' ? m.b.id : m.a.id) : team.id;

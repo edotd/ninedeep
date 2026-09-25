@@ -1,4 +1,5 @@
-import { SEEDING_GAMEPLAN_TYPES } from './supplementalCards';
+import { SEEDING_GAMEPLAN_TYPES, POSITION_GAMEPLAN_TYPES } from './supplementalCards';
+import { POSITIONS } from './constants';
 
 const DEVELOPMENT_DEFINITIONS = [
   { name: 'Shooting Lab', description: '+2 SCO permanently.', statChanges: { SCO: 2 } },
@@ -14,8 +15,34 @@ const GAMEPLAN_DEFINITIONS = [
   { name: 'Second Unit Focus', description: '+3 Bench Output.', target: 'self', contexts: ['season', 'playoff'], effects: { benchBonus: 3 } },
   { name: 'Disrupt Rhythm', description: '-6% opponent Offense.', target: 'opponent', contexts: ['season', 'playoff'], effects: { offPercent: -6 } },
   { name: 'Attack Their Scheme', description: '-6% opponent Defense.', target: 'opponent', contexts: ['season', 'playoff'], effects: { defPercent: -6 } },
+  // Reward 3+ starters sharing a position, regardless of which one — a generic complement to
+  // POSITION_GAMEPLAN_TYPES' per-position, per-count cards below.
+  { name: 'Numbers Advantage', description: '+12% team Offense if 3 or more starters share a position.', target: 'self', contexts: ['season', 'playoff'], dynamicEffect: { type: 'positionThreshold', minCount: 3, bonusPercent: 12, ability: 'offense' } },
+  { name: 'United Front', description: '+12% team Defense if 3 or more starters share a position.', target: 'self', contexts: ['season', 'playoff'], dynamicEffect: { type: 'positionThreshold', minCount: 3, bonusPercent: 12, ability: 'defense' } },
   ...SEEDING_GAMEPLAN_TYPES,
+  ...POSITION_GAMEPLAN_TYPES,
 ];
+
+// Some Gameplan cards (see POSITION_GAMEPLAN_TYPES and the two positionThreshold cards above)
+// can't carry a fixed `effects` object at definition time — their value depends on the team's
+// actual starting lineup, which is only known once the card is played. Resolved against
+// team.activeIds at play time in playGameplanCard, then written onto card.effects so every
+// downstream reader (turn.gameplanNotes, the played-card "Active" stamp, autoPlaySeasonGameplans)
+// sees a normal, already-resolved effects object exactly like every static card has.
+function resolveDynamicEffects(team, dynamicEffect) {
+  const activeIds = new Set(team.activeIds || []);
+  const starters = team.hand.filter((p) => activeIds.has(p.id));
+  const key = dynamicEffect.ability === 'offense' ? 'offPercent' : 'defPercent';
+  if (dynamicEffect.type === 'positionCount') {
+    const count = starters.filter((p) => p.position === dynamicEffect.position).length;
+    return { [key]: dynamicEffect.perCount * count };
+  }
+  if (dynamicEffect.type === 'positionThreshold') {
+    const maxCount = Math.max(0, ...POSITIONS.map((position) => starters.filter((p) => p.position === position).length));
+    return { [key]: maxCount >= dynamicEffect.minCount ? dynamicEffect.bonusPercent : 0 };
+  }
+  return { [key]: 0 };
+}
 
 function nextId(state, prefix) {
   state.strategyCardCounter = (state.strategyCardCounter || 0) + 1;
@@ -68,7 +95,13 @@ function addEffects(target, effects) {
   target.seedingPercent = (target.seedingPercent || 0) + (effects.seedingPercent || 0);
 }
 
-export function applyGameplanToTurn(turn, side, card) {
+// `team` is the card's OWNER (whoever played it) — needed here, not just in playGameplanCard,
+// because AI teams' gameplan cards get applied straight through this function (see turn.js's
+// beginTurn and engine.js's rollCurrentMatchup, which auto-play an AI's unused card without
+// ever calling playGameplanCard), so a dynamicEffect card must resolve here too or its
+// card.effects is still unset when addEffects reads it.
+export function applyGameplanToTurn(turn, side, card, team) {
+  if (card.dynamicEffect) card.effects = resolveDynamicEffects(team, card.dynamicEffect);
   const own = side === 'a' ? turn.extraA : turn.extraB;
   const opponent = side === 'a' ? turn.extraB : turn.extraA;
   const target = card.target === 'opponent' ? opponent : own;
@@ -90,6 +123,7 @@ export function playGameplanCard(state, teamIdx, cardId, context, targetTeamId) 
     const target = card.target === 'opponent' ? state.teams.find((t) => String(t.id) === String(targetTeamId)) : team;
     if (!target || (card.target === 'opponent' && target === team)) return { ok: false, msg: 'Choose an opponent.' };
     target.seasonGameplanEffects ||= { offPercent: 0, defPercent: 0, benchBonus: 0, seedingPercent: 0 };
+    if (card.dynamicEffect) card.effects = resolveDynamicEffects(team, card.dynamicEffect);
     addEffects(target.seasonGameplanEffects, card.effects);
     card.used = true;
     card.playedContext = 'season';
@@ -101,7 +135,7 @@ export function playGameplanCard(state, teamIdx, cardId, context, targetTeamId) 
   if (!match?.turn || match.result || !['coinflip', 'coinflipped'].includes(match.turn.stage)) return { ok: false, msg: 'Gameplans must be played before the matchup begins.' };
   const side = match.a === team ? 'a' : match.b === team ? 'b' : null;
   if (!side) return { ok: false, msg: 'Your team is not in this matchup.' };
-  applyGameplanToTurn(match.turn, side, card);
+  applyGameplanToTurn(match.turn, side, card, team);
   card.used = true;
   card.playedContext = 'playoff';
   card.targetTeamId = card.target === 'opponent' ? (side === 'a' ? match.b.id : match.a.id) : team.id;

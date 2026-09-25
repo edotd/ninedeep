@@ -672,7 +672,22 @@ export const SEEDING_GAMEPLAN_TYPES = DEFINITIONS.filter((card) => card.effectTy
   effects: { seedingPercent: card.value },
 }));
 
-export const MATCHUP_MODIFIER_TYPES = DEFINITIONS.filter((card) => card.effectType !== 'SEEDING_PERCENT').map((card) => ({
+// POSITION_PERCENT ("+5% Off/Def per starting Guard/Forward/Big") rewards how you BUILT your
+// lineup, not a live in-match read — that fits Gameplan's season/pre-matchup scope far better
+// than a reactive Adjustment card, so these migrate out the same way SEEDING_PERCENT did above.
+// The starter count can't be baked into a fixed `effects` value at definition time the way
+// seedingPercent's flat value could — it depends on team.activeIds at the moment the card is
+// played — so these carry a `dynamicEffect` descriptor instead; playGameplanCard resolves it
+// into a real `effects` object against the team's actual lineup when the card is played.
+export const POSITION_GAMEPLAN_TYPES = DEFINITIONS.filter((card) => card.effectType === 'POSITION_PERCENT').map((card) => ({
+  name: card.name,
+  description: card.description,
+  target: 'self',
+  contexts: ['season', 'playoff'],
+  dynamicEffect: { type: 'positionCount', position: card.position, perCount: card.value, ability: card.ability },
+}));
+
+export const MATCHUP_MODIFIER_TYPES = DEFINITIONS.filter((card) => !['SEEDING_PERCENT', 'POSITION_PERCENT'].includes(card.effectType)).map((card) => ({
   ...card, weight: 1, flavor: card.description,
   target: card.value < 0 || card.effectType === 'DISADVANTAGE' ? 'opponent' : 'self',
   playable: true,

@@ -49,3 +49,43 @@ test('any Gameplan card can be used for the regular season, but only one is acti
   assert.deepEqual(old.teams[0].developmentCards, []);
   assert.equal(old.teams[0].seasonGameplanEffects.seedingPercent, 0);
 });
+
+test('position-based Gameplan cards resolve against the lineup at play time', () => {
+  const { state, team } = fixture();
+  team.hand = [
+    { id: 'p1', position: 'Guard', stats: { SCO: 10, PLM: 10, REB: 10, DEF: 10 } },
+    { id: 'p2', position: 'Guard', stats: { SCO: 10, PLM: 10, REB: 10, DEF: 10 } },
+    { id: 'p3', position: 'Guard', stats: { SCO: 10, PLM: 10, REB: 10, DEF: 10 } },
+    { id: 'p4', position: 'Forward', stats: { SCO: 10, PLM: 10, REB: 10, DEF: 10 } },
+    { id: 'p5', position: 'Big', stats: { SCO: 10, PLM: 10, REB: 10, DEF: 10 } },
+  ];
+  team.activeIds = ['p1', 'p2', 'p3', 'p4', 'p5'];
+  team.gameplanCards = [
+    { id: 'g1', kind: 'gameplan', name: 'Three-Guard Attack', target: 'self', contexts: ['season', 'playoff'], dynamicEffect: { type: 'positionCount', position: 'Guard', perCount: 5, ability: 'offense' }, used: false },
+  ];
+  assert.equal(playGameplanCard(state, 0, 'g1', 'season').ok, true);
+  assert.equal(team.seasonGameplanEffects.offPercent, 15);
+  assert.equal(team.gameplanCards[0].effects.offPercent, 15);
+
+  const { state: state2, team: team2 } = fixture();
+  team2.hand = team.hand.map((p) => ({ ...p }));
+  team2.activeIds = ['p1', 'p2', 'p3', 'p4', 'p5'];
+  team2.gameplanCards = [
+    { id: 'g2', kind: 'gameplan', name: 'Numbers Advantage', target: 'self', contexts: ['season', 'playoff'], dynamicEffect: { type: 'positionThreshold', minCount: 3, bonusPercent: 12, ability: 'offense' }, used: false },
+  ];
+  assert.equal(playGameplanCard(state2, 0, 'g2', 'season').ok, true);
+  assert.equal(team2.seasonGameplanEffects.offPercent, 12);
+
+  const { state: state3, team: team3 } = fixture();
+  team3.hand = [
+    { id: 'p1', position: 'Guard', stats: { SCO: 10, PLM: 10, REB: 10, DEF: 10 } },
+    { id: 'p2', position: 'Forward', stats: { SCO: 10, PLM: 10, REB: 10, DEF: 10 } },
+    { id: 'p3', position: 'Big', stats: { SCO: 10, PLM: 10, REB: 10, DEF: 10 } },
+  ];
+  team3.activeIds = ['p1', 'p2', 'p3'];
+  team3.gameplanCards = [
+    { id: 'g3', kind: 'gameplan', name: 'Numbers Advantage', target: 'self', contexts: ['season', 'playoff'], dynamicEffect: { type: 'positionThreshold', minCount: 3, bonusPercent: 12, ability: 'offense' }, used: false },
+  ];
+  assert.equal(playGameplanCard(state3, 0, 'g3', 'season').ok, true);
+  assert.equal(team3.seasonGameplanEffects.offPercent, 0);
+});

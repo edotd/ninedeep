@@ -17,10 +17,13 @@ function game() {
 }
 const extra = () => ({ offDelta: 0, defDelta: 0, leagueMod: 0 });
 
-test('Adjustment definitions exclude seeding cards and draw without replacement', () => {
-  assert.equal(deck.length, 62); assert.equal(new Set(deck.map(c => c.name)).size, 62);
+test('Adjustment definitions exclude seeding and per-position cards, and draw without replacement', () => {
+  // 62 minus the 4 POSITION_PERCENT cards (Three-Guard Attack, Switchable Wings, Own the Paint,
+  // Interior Pressure) migrated to Gameplan — see POSITION_GAMEPLAN_TYPES in supplementalCards.js.
+  assert.equal(deck.length, 58); assert.equal(new Set(deck.map(c => c.name)).size, 58);
   assert.equal(SEEDING_GAMEPLAN_TYPES.length, 10);
   assert.equal(deck.some(c => c.effectType === 'SEEDING_PERCENT'), false);
+  assert.equal(deck.some(c => c.effectType === 'POSITION_PERCENT'), false);
   let state = {}; const drawn = [];
   for (let i = 0; i < deck.length; i++) { drawn.push(drawMatchupModifierCard(state)); state = JSON.parse(JSON.stringify(state)); }
   assert.equal(new Set(drawn.map(c => c.definitionId)).size, deck.length);
@@ -160,30 +163,27 @@ test('cap hit preserves fractions for every chosen stat without changing salary 
   assert.equal(effects.statChanges[0].value,0);
 });
 
-test('position effects count only matchup starters and stack with flat bonuses', () => {
+test('position coverage effects count only matchup starters and stack with flat bonuses', () => {
   const state=game(), [a,b]=state.teams;
   const starters=a.activeIds.map(id=>a.hand.find(p=>p.id===id));
   ['Guard','Guard','Guard','Forward','Big'].forEach((pos,i)=>{starters[i].position=pos;});
   a.hand.filter(p=>!a.activeIds.includes(p.id)).forEach(p=>{p.position='Guard';});
-  for (const [name,key,expected] of [
-    ['Three-Guard Attack','offPercent',15],['Switchable Wings','defPercent',5],
-    ['Own the Paint','defPercent',5],['Interior Pressure','offPercent',5],
-    ['Positionless Basketball','offPercent',10],
-  ]) {
-    const effects=extra();
-    applySupplementalCard(state,a,b,card(name),effects,extra(),a.activeIds,b.activeIds);
-    assert.equal(effects[key],expected,name);
-  }
   const effects=extra();
-  applySupplementalCard(state,a,b,card('Three-Guard Attack'),effects,extra(),a.activeIds,b.activeIds);
+  applySupplementalCard(state,a,b,card('Positionless Basketball'),effects,extra(),a.activeIds,b.activeIds);
+  assert.equal(effects.offPercent,10);
   applySupplementalCard(state,a,b,card('Offensive Avalanche'),effects,extra(),a.activeIds,b.activeIds);
-  assert.equal(effects.offPercent,40);
+  assert.equal(effects.offPercent,35);
   const fewer=a.activeIds.slice(0,4), missing=extra();
   applySupplementalCard(state,a,b,card('Positionless Basketball'),missing,extra(),fewer,b.activeIds);
   assert.equal(missing.offPercent,0);
-  const noGuards=extra();
-  applySupplementalCard(state,a,b,card('Three-Guard Attack'),noGuards,extra(),a.activeIds.slice(3),b.activeIds);
-  assert.equal(noGuards.offPercent,0);
+});
+
+test('per-position and 3-of-a-kind bonuses moved from Adjustment to Gameplan cards, no longer in the matchup deck', () => {
+  assert.equal(deck.some((c) => c.name === 'Three-Guard Attack'), false);
+  assert.equal(deck.some((c) => c.name === 'Switchable Wings'), false);
+  assert.equal(deck.some((c) => c.name === 'Own the Paint'), false);
+  assert.equal(deck.some((c) => c.name === 'Interior Pressure'), false);
+  assert(deck.some((c) => c.name === 'Positionless Basketball'), 'position coverage stays an Adjustment card');
 });
 
 test('Bargain Production rejects expensive starters and bench players; AI finds eligible starter', () => {

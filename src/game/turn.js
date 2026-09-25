@@ -69,7 +69,7 @@ export function beginTurn(state) {
     if (team.human) continue;
     for (const card of team.gameplanCards || []) {
       if (card.used || !card.contexts?.includes('playoff')) continue;
-      applyGameplanToTurn(m.turn, side, card);
+      applyGameplanToTurn(m.turn, side, card, team);
       card.used = true;
       card.playedContext = 'playoff';
       card.targetTeamId = card.target === 'opponent' ? (side === 'a' ? m.b.id : m.a.id) : team.id;
