@@ -269,7 +269,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, roomCode
     }}>
       {showChrome && <div className="mobile-persistent-top" ref={mobileTopRef}><Header {...headerProps} /><FranchiseMasthead state={state} teamId={mastheadTeamId} /></div>}
       {mainBody}
-      {showBar && <PersistentBar ref={persistentBarRef} state={state} myTeamId={myTeamId} onNavigate={openTeamSection} dealProgress={dealProgress} />}
+      {showBar && <PersistentBar ref={persistentBarRef} state={state} myTeamId={myTeamId} overlay={overlay} onNavigate={openTeamSection} onFreeAgency={() => setOverlay('freeagency')} dealProgress={dealProgress} />}
     </div>
   );
 }

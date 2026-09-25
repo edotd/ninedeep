@@ -1,9 +1,34 @@
 // Compact mobile card tray. Team metrics live in the persistent franchise masthead.
 import { forwardRef } from 'react';
 import CardTypeMark from './CardTypeMark';
+import BallMark from './BallMark';
+import { formatCoins, remainingCap } from '../game/economy';
 
-const PersistentBar = forwardRef(function PersistentBar({ state, myTeamId, onNavigate, dealProgress }, ref) {
+// Coach/Gameplan/Adjustment only mean something while there's a live season roster to manage —
+// during Contracts/Draft (and whenever the Free Agency overlay is open, regardless of the
+// underlying phase), the cap is the number that actually matters, so the bar's own right-hand
+// slot swaps to it instead, with the Nine Deep mark filling the space the coach card normally
+// takes. Tapping the budget jumps straight to Free Agency, the one place that number changes.
+const CAP_FOCUSED_PHASES = new Set(['contracts', 'draft']);
+
+const PersistentBar = forwardRef(function PersistentBar({ state, myTeamId, overlay, onNavigate, onFreeAgency, dealProgress }, ref) {
   const team = state.teams[myTeamId];
+  const capFocused = CAP_FOCUSED_PHASES.has(state.phase) || overlay === 'freeagency';
+  if (capFocused) {
+    const room = remainingCap(team);
+    return (
+      <div className="persistent-bar persistent-bar-capfocus" ref={ref}>
+        <div className="persistent-bar-section persistent-bar-brand">
+          <BallMark size={22} variant="monoOutline" />
+          <span>Nine Deep</span>
+        </div>
+        <button type="button" className={'persistent-bar-section persistent-bar-budget' + (room < 0 ? ' over' : '')} onClick={onFreeAgency}>
+          <span>Budget</span>
+          <b>{formatCoins(room)}</b>
+        </button>
+      </div>
+    );
+  }
   const inDeal = state.phase === 'pullhand';
   const rawHand = team.hand || [];
   // Front Office deals in a fixed [coach, fanbase, market] order, but fanbase is skipped
