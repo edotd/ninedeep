@@ -811,14 +811,14 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             </button>
             {!team.lineupConfirmed && seasonIssues.length > 0 && (
               <div className="bottombar-issues">
-                <div className="bottombar-issues-head">Before you begin</div>
+                <div className="bottombar-issues-head">Before you begin you must resolve:</div>
                 <ul>
                   {seasonIssues.map((msg) => (
                     <li key={msg}>
                       {msg === 'Set your lineup' ? (
-                        <button type="button" onClick={() => { setTab('chemistry'); setLineupScreenOpen(true); }}>{msg}</button>
+                        <button type="button" onClick={() => { setTab('chemistry'); setLineupScreenOpen(true); }}>Lineup</button>
                       ) : msg === 'Resolve team budget' ? (
-                        <button type="button" onClick={() => setTab('ledger')}>{msg}</button>
+                        <button type="button" onClick={() => setTab('ledger')}>Budget</button>
                       ) : msg.startsWith('Resolve your roster') ? (
                         <button type="button" onClick={() => onFreeAgency?.()}>{msg}</button>
                       ) : msg}
