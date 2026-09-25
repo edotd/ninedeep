@@ -10,9 +10,10 @@ import { applySupplementalCard, supplementalRoll } from './supplementalEffects';
 // Defense's total always counts, win or lose. Bench, Home Court, matchup-card effects, and
 // Advantage/Disadvantage all work exactly as before — only how the offense/defense numbers get
 // produced, and who rolls against whom, has changed.
-import { HOME_COURT_BONUS } from './constants';
+import { HOME_COURT_BONUS, ON_THE_FLY_CHANCE } from './constants';
 import { rollDie } from './rng';
 import { offenseDieSize, defenseDieSize } from './roster';
+import { drawMatchupModifierCard } from './cards';
 import {
   checkInjury, playCardEffect, playableCards,
   benchScore, hasHomeCourt, applyLiveFanbaseMod, wantsAdvantage,
@@ -27,6 +28,20 @@ export const EXCHANGE_PLAN = [
 
 function pushLog(turn, tag, text) {
   turn.log.unshift({ tag, text, stepIndex: turn.exchangeIndex });
+}
+
+// On The Fly (see COACH_MODIFIERS) — a match is exactly two possessions, so "when possession
+// changes" is this one moment: exchange 1 resolving into exchange 2. Draws from the same
+// shared matchupDeck a played MATCHUP_CARD_MOD card draws from.
+function triggerOnTheFly(state, team, turn) {
+  if (team.coach?.modifier !== 'On The Fly' || Math.random() >= ON_THE_FLY_CHANCE) return;
+  const drawn = drawMatchupModifierCard(state, true);
+  if (!drawn) return;
+  team.matchupCards ||= [];
+  team.matchupCards.push(drawn);
+  const note = `${team.name}'s coaching staff calls in a new Adjustment card at the changeover: ${drawn.name}.`;
+  turn.cardNotes.push({ text: note, cardName: drawn.name });
+  pushLog(turn, 'action', note);
 }
 
 export function beginTurn(state) {
@@ -259,6 +274,8 @@ export function advanceTurn(state, payload) {
 
   if (turn.stage === 'resolved') {
     if (turn.exchangeIndex === 0) {
+      triggerOnTheFly(state, m.a, turn);
+      triggerOnTheFly(state, m.b, turn);
       turn.exchangeIndex = 1;
       startExchange(m);
     } else {

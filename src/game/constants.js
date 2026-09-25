@@ -73,11 +73,16 @@ export const COACH_ARCHETYPES = {
 // than Strategist's modest +30%, so an elite coach was nearly free relative to the cap. The
 // spread is now wide enough that landing one of the top modifiers is a real budget commitment,
 // not a strictly-better-for-free upgrade.
+// Rolled once per team per possession change (see turn.js's triggerOnTheFly) — a match is
+// exactly two possessions, so this fires at most once per matchup, at the exchange 1 -> 2
+// changeover.
+export const ON_THE_FLY_CHANCE = 0.3;
 export const COACH_MODIFIERS = [
   { name: 'Strategist', mult: 1.3, die: 6, weight: 30, salary: 0.5, ability: '' },
   { name: 'Former Player', mult: 1.6, die: 6, weight: 25, salary: 1.25, ability: '' },
   { name: 'Collegiate Success', mult: 1.1, die: 6, weight: 25, salary: 0.5, ability: '+3% Off/Def and +1 die size for every consecutive season retained (stacks).' },
   { name: 'Hot Headed', mult: 1.4, die: 7, weight: 12, salary: 1.0, ability: '' },
+  { name: 'On The Fly', mult: 1.15, die: 6, weight: 15, salary: 1.0, ability: `${Math.round(ON_THE_FLY_CHANCE * 100)}% chance to draw a new Adjustment card when possession changes during a matchup.` },
   { name: 'Genius', mult: 1.5, die: 6, weight: 10, salary: 2.0, ability: '' },
   { name: 'Hall of Fame', mult: 2.0, hofDie: true, weight: 8, salary: 3.0, ability: '' },
 ];

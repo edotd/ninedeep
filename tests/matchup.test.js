@@ -114,6 +114,24 @@ test('a card played during defense\'s blind window still cuts that same exchange
   assert.equal(m.turn.boardActions[0].card.name,'Scouted Tendencies');
 });
 
+test('On The Fly coach mod can draw a new Adjustment card at the possession-change moment', () => {
+  let state=game(); lockSeasonAndSeed(state); startPlayoffs(state); state.playoff.activeMatchIndex=0;
+  let m=state.playoff.matches[0]; m.a.matchupCards=[];m.b.matchupCards=[];m.a.human=true;m.b.human=true;
+  m.a.coach={...m.a.coach, modifier:'On The Fly'};
+  beginTurn(state); advanceTurn(state); advanceTurn(state);
+  m=state.playoff.matches[0];
+  advanceTurn(state,{pass:true});
+  advanceTurn(state,{pass:true});
+  m=state.playoff.matches[0];
+  assert.equal(m.turn.stage,'resolved');
+  const before=m.a.matchupCards.length;
+  const originalRandom=Math.random; Math.random=() => 0;
+  try { advanceTurn(state); } finally { Math.random=originalRandom; }
+  assert.equal(m.a.matchupCards.length, before+1);
+  assert(m.turn.cardNotes.some((n) => n.text.includes('coaching staff calls in a new Adjustment card')));
+  assert.equal(m.turn.exchangeIndex,1);
+});
+
 test('instant simulation executes new effects and finishes', () => {
   const state=game(); lockSeasonAndSeed(state);startPlayoffs(state);state.playoff.activeMatchIndex=0;
   const m=state.playoff.matches[0];m.a.human=false;m.b.human=false;
