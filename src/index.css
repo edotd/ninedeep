@@ -831,10 +831,28 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .ts-view-menu button.active{color:var(--franchise);}
 .ts-view-menu button:hover{background:var(--ink-rule);}
 
-/* List view — a plain vertical stack of full cards, same width rule as a bare .pcard gets
-   anywhere outside the carousel's own .ts-roto-grid (max-width:264px, centered). */
-.ts-roto-list{display:flex;flex-direction:column;gap:14px;}
-.ts-roto-list .ts-bench-open{width:100%;max-width:264px;margin:0 auto;box-sizing:border-box;}
+/* List view — a dense, sortable table (see PlayerRosterTable in TeamSummaryScreen.jsx) so a
+   full nine-man roster can be scanned and compared at a glance, instead of a stack of full
+   cards. Horizontally scrollable as a safety net at very narrow widths, but the column set is
+   kept tight enough to fit a phone screen without scrolling in practice. */
+.ts-roto-table-wrap{overflow-x:auto;}
+.ts-roto-table{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:11px;}
+.ts-roto-table th,.ts-roto-table td{padding:7px 6px;text-align:center;white-space:nowrap;}
+.ts-roto-table th:first-child,.ts-roto-table td:first-child{text-align:left;padding-left:2px;}
+.ts-roto-table thead tr{border-bottom:1px solid var(--depth-nontext);}
+.ts-roto-sort{background:none;border:none;padding:0;font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--file-muted);display:inline-flex;align-items:center;gap:3px;cursor:pointer;}
+.ts-roto-sort.active{color:var(--ink);}
+.ts-roto-sort-arrow{font-size:8px;}
+.ts-roto-row{border-bottom:1px solid var(--ink-rule);}
+.ts-roto-row.selected{background:var(--ink-rule);}
+.ts-roto-row.open{color:var(--file-muted);font-style:italic;}
+.ts-roto-row.open td:not(:first-child){text-align:left;}
+.ts-roto-role{font-size:9px;letter-spacing:.08em;text-transform:uppercase;}
+.ts-roto-role.starter{color:var(--franchise);}
+.ts-roto-role.bench{color:var(--file-muted);}
+.ts-roto-actions-head{text-align:right;}
+.ts-roto-actions{display:flex;gap:6px;justify-content:flex-end;}
+.ts-roto-actions button{background:none;border:1px solid var(--depth-nontext);padding:3px 7px;font-family:var(--font-mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--file-muted);cursor:pointer;}
 
 .ts-body{background:var(--file);padding:22px 24px;display:flex;flex-direction:column;gap:20px;}
 .ts-section[id]{scroll-margin-top:150px;}

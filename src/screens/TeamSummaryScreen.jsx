@@ -6,6 +6,7 @@ import PlayerCard from '../components/PlayerCard';
 import FrontOfficeCard from '../components/FrontOfficeCard';
 import { PlayerLedgerIdentity, CostBlocks } from '../components/LedgerRow';
 import { formatCoins, rosterSalary, gmCost } from '../game/economy';
+import { jerseyNumber, playerGrade, rawOverall } from '../game/cards';
 import { FANBASE_BOOST_COST } from '../game/constants';
 import MatchupCard from '../components/MatchupCard';
 import StrategyCard from '../components/StrategyCard';
@@ -31,6 +32,97 @@ function useRowEnd(count) {
 function RowSwipeHint({ row }) {
   if (!row.scrolls || row.atEnd) return null;
   return <div className="row-swipe-hint" aria-hidden="true"><span className="row-swipe-hint-chevron">›</span></div>;
+}
+
+const ROSTER_TABLE_COLUMNS = [
+  { key: 'role', label: 'Role' },
+  { key: 'position', label: 'Pos' },
+  { key: 'number', label: '#' },
+  { key: 'grade', label: 'Grd' },
+  { key: 'SCO', label: 'SCO' },
+  { key: 'PLM', label: 'PLM' },
+  { key: 'REB', label: 'REB' },
+  { key: 'DEF', label: 'DEF' },
+  { key: 'cost', label: 'Cost' },
+];
+
+// Mobile's "List" view for the Players tab — a dense, sortable table instead of a stack of
+// full player cards, so a whole nine-man roster can be scanned and compared at a glance.
+// Sort is client-local UI state, not game state — it never affects the underlying activeIds
+// order. Open roster slots always render last, unsorted, same placement as before this became
+// a table.
+function PlayerRosterTable({ starters, bench, starterOpenSlots, benchOpenSlots, selectedId, canEdit, readOnly, onCardClick, onRelease, onDevelop }) {
+  const [sortKey, setSortKey] = useState('role');
+  const [sortDir, setSortDir] = useState('asc');
+
+  const rows = [...starters.map((card) => ({ card, role: 'Starter' })), ...bench.map((card) => ({ card, role: 'Bench' }))];
+  const valueFor = (row, key) => {
+    switch (key) {
+      case 'role': return row.role === 'Starter' ? 0 : 1;
+      case 'position': return row.card.position;
+      case 'number': return jerseyNumber(row.card);
+      case 'grade': return rawOverall(row.card);
+      case 'cost': return row.card.salary;
+      default: return row.card.stats[key];
+    }
+  };
+  const sorted = rows.slice().sort((a, b) => {
+    const av = valueFor(a, sortKey), bv = valueFor(b, sortKey);
+    const cmp = typeof av === 'string' ? av.localeCompare(bv) : av - bv;
+    return sortDir === 'asc' ? cmp : -cmp;
+  });
+
+  const onSort = (key) => {
+    if (key === sortKey) { setSortDir((d) => (d === 'asc' ? 'desc' : 'asc')); return; }
+    setSortKey(key);
+    setSortDir('asc');
+  };
+
+  return (
+    <div className="ts-roto-table-wrap">
+      <table className="ts-roto-table">
+        <thead>
+          <tr>
+            {ROSTER_TABLE_COLUMNS.map((col) => (
+              <th key={col.key}>
+                <button type="button" className={'ts-roto-sort' + (sortKey === col.key ? ' active' : '')} onClick={() => onSort(col.key)}>
+                  {col.label}{sortKey === col.key && <span className="ts-roto-sort-arrow">{sortDir === 'asc' ? '▲' : '▼'}</span>}
+                </button>
+              </th>
+            ))}
+            {!readOnly && <th className="ts-roto-actions-head">Actions</th>}
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map(({ card, role }) => (
+            <tr key={card.id} className={'ts-roto-row' + (selectedId === card.id ? ' selected' : '')} onClick={canEdit ? () => onCardClick(card) : undefined}>
+              <td className={'ts-roto-role ' + role.toLowerCase()}>{role}</td>
+              <td>{card.position[0]}</td>
+              <td>{jerseyNumber(card)}</td>
+              <td>{playerGrade(card)}</td>
+              <td>{card.stats.SCO}</td>
+              <td>{card.stats.PLM}</td>
+              <td>{card.stats.REB}</td>
+              <td>{card.stats.DEF}</td>
+              <td>{formatCoins(card.salary)}</td>
+              {!readOnly && (
+                <td className="ts-roto-actions">
+                  {canEdit && <button type="button" onClick={(e) => { e.stopPropagation(); onRelease(card); }}>Release</button>}
+                  {!card.development && <button type="button" onClick={(e) => { e.stopPropagation(); onDevelop(card); }}>Dev</button>}
+                </td>
+              )}
+            </tr>
+          ))}
+          {Array.from({ length: starterOpenSlots }, (_, i) => (
+            <tr className="ts-roto-row open" key={'starter-open-' + i}><td className="ts-roto-role starter">Starter</td><td colSpan={ROSTER_TABLE_COLUMNS.length - 1 + (readOnly ? 0 : 1)}>OPEN</td></tr>
+          ))}
+          {Array.from({ length: benchOpenSlots }, (_, i) => (
+            <tr className="ts-roto-row open" key={'bench-open-' + i}><td className="ts-roto-role bench">Bench</td><td colSpan={ROSTER_TABLE_COLUMNS.length - 1 + (readOnly ? 0 : 1)}>OPEN</td></tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
 function StrategyAction({ card, team, state, actions, myTeamId, readOnly }) {
@@ -392,34 +484,18 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           {showSection('rotation') && !isDesktop && viewMode === 'list' && (
             <div className="ts-section" id="team-rotation">
               <div className="ts-heading">Players</div>
-              <div className="ts-roto-list">
-                {starters.map((c) => (
-                  <PlayerCard
-                    key={c.id}
-                    card={c}
-                    rosterLabel="Starter"
-                    selected={selectedId === c.id}
-                    onClick={canEdit ? () => handleCardClick(c) : undefined}
-                    onRelease={canEdit ? handleRelease : undefined}
-                    onDevelop={!readOnly && !c.development ? setDevelopPlayer : undefined}
-                    alwaysShowOptions
-                  />
-                ))}
-                {Array.from({ length: starterOpenSlots }, (_, i) => <div className="ts-bench-open starter" key={'starter-open-' + i}>OPEN STARTER</div>)}
-                {bench.map((c) => (
-                  <PlayerCard
-                    key={c.id}
-                    card={c}
-                    rosterLabel="Bench"
-                    selected={selectedId === c.id}
-                    onClick={canEdit ? () => handleCardClick(c) : undefined}
-                    onRelease={canEdit ? handleRelease : undefined}
-                    onDevelop={!readOnly && !c.development ? setDevelopPlayer : undefined}
-                    alwaysShowOptions
-                  />
-                ))}
-                {Array.from({ length: benchOpenSlots }, (_, i) => <div className="ts-bench-open" key={'open-' + i}>OPEN</div>)}
-              </div>
+              <PlayerRosterTable
+                starters={starters}
+                bench={bench}
+                starterOpenSlots={starterOpenSlots}
+                benchOpenSlots={benchOpenSlots}
+                selectedId={selectedId}
+                canEdit={canEdit}
+                readOnly={readOnly}
+                onCardClick={handleCardClick}
+                onRelease={handleRelease}
+                onDevelop={setDevelopPlayer}
+              />
             </div>
           )}
 
