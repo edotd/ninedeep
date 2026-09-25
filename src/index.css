@@ -320,7 +320,10 @@ input.text-input.lobby-name-input{min-width:0;margin:0;padding:10px 12px;}
 /* Begin Season always reads "Begin Season" — a blocking issue (no coach, roster incomplete,
    over budget, lineup not set) shows as a muted button + warning badge instead of changing the
    label, with the specific list of what's left revealed on click (see TeamSummaryScreen.jsx). */
-.bottombar-action{position:relative;flex:1;display:flex;}
+.bottombar-action{position:relative;flex:1;display:flex;flex-direction:column;align-items:flex-end;gap:7px;}
+.season-ready-status{display:flex;align-items:center;justify-content:flex-end;gap:8px;width:100%;font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--file);}
+.season-ready-label{color:var(--approved);font-family:var(--font-label);font-weight:700;}
+.season-ready-teams{font-weight:600;}
 button.primary.needs-attention{background:var(--ink-rule);color:var(--file);}
 button.primary.needs-attention:hover:not(:disabled){background:var(--depth);}
 .bottombar-warn-icon{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;margin-left:8px;border-radius:50%;background:var(--stamp);color:var(--form);font-family:var(--font-label);font-size:11px;font-weight:700;vertical-align:middle;}

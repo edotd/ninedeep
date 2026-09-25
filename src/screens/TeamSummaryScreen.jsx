@@ -189,6 +189,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   const benchOpenSlots = Math.max(0, 4 - bench.length);
   const otherHumans = state.teams.filter((t) => t.human && t.id !== team.id);
   const waitingOn = otherHumans.filter((t) => !t.lineupConfirmed);
+  const readyHumans = state.teams.filter((t) => t.human && t.lineupConfirmed);
 
   const committed = rosterSalary(team);
   const cap = team.seasonCap || 0;
@@ -819,6 +820,12 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           <button className="primary" onClick={onBack}>Back</button>
         ) : (
           <div className="bottombar-action">
+            {readyHumans.length > 0 && (
+              <div className="season-ready-status" aria-live="polite">
+                <span className="season-ready-label">Ready</span>
+                <span className="season-ready-teams">{readyHumans.map((readyTeam) => readyTeam.tricode).join(' · ')}</span>
+              </div>
+            )}
             <button
               className={'primary' + (!team.lineupConfirmed && seasonIssues.length > 0 ? ' needs-attention' : '')}
               disabled={team.lineupConfirmed}
