@@ -198,6 +198,17 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, roomCode
     setViewTeamId(null);
   };
 
+  const showBar = showChrome && !HIDE_BAR_PHASES.has(state.phase);
+  // Free Agency needs a visit before the draft/season can start (see closeFreeAgency,
+  // game/season.js) — flag the nav item while it's still open for this team, this team is over
+  // budget, or a bid this team placed is waiting on its own raise/stand-pat decision.
+  const myTeam = myTeamId != null ? state.teams?.[myTeamId] : null;
+  const freeAgencyAlert = Boolean(myTeam && showChrome && (
+    (state.phase === 'contracts' && !state.offseason?.freeAgencyClosed?.[myTeam.id])
+    || rosterSalary(myTeam) > (myTeam.seasonCap || 0)
+    || hasPendingBidDecision(state, myTeam)
+  ));
+
   const headerProps = {
     state,
     myTeamId,
@@ -214,16 +225,6 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, roomCode
     roomCode,
   };
 
-  const showBar = showChrome && !HIDE_BAR_PHASES.has(state.phase);
-  // Free Agency needs a visit before the draft/season can start (see closeFreeAgency,
-  // game/season.js) — flag the nav item while it's still open for this team, this team is over
-  // budget, or a bid this team placed is waiting on its own raise/stand-pat decision.
-  const myTeam = myTeamId != null ? state.teams?.[myTeamId] : null;
-  const freeAgencyAlert = Boolean(myTeam && showChrome && (
-    (state.phase === 'contracts' && !state.offseason?.freeAgencyClosed?.[myTeam.id])
-    || rosterSalary(myTeam) > (myTeam.seasonCap || 0)
-    || hasPendingBidDecision(state, myTeam)
-  ));
   const mastheadTeamId = overlay === 'team' && viewTeamId != null ? viewTeamId : myTeamId;
 
   const close = () => setOverlay(null);
