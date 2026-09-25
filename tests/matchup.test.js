@@ -85,9 +85,22 @@ test('season seeding saves a player-facing breakdown for every team', () => {
   assert.deepEqual(state.seasonBreakdown.map((row) => row.seed), state.seeds.map((_, index) => index + 1));
   const mine = state.seasonBreakdown.find((row) => row.teamId === state.teams[0].id);
   assert.equal(mine.gameplanSeedingPct, 12);
-  assert(mine.seasonRollPct >= -10 && mine.seasonRollPct <= 10);
+  assert(mine.seasonRollPct >= -2.5 && mine.seasonRollPct <= 2.5);
   assert(Number.isFinite(mine.baseRating));
   assert(Number.isFinite(mine.finalRating));
+});
+
+test('season roll variance is limited to plus or minus 2.5 percent', () => {
+  const lowState = game();
+  const originalRandom = Math.random;
+  Math.random = () => 0;
+  try { lockSeasonAndSeed(lowState); } finally { Math.random = originalRandom; }
+  assert(lowState.seasonBreakdown.every((row) => row.seasonRollPct === -2.5));
+
+  const highState = game();
+  Math.random = () => 0.999999;
+  try { lockSeasonAndSeed(highState); } finally { Math.random = originalRandom; }
+  assert(highState.seasonBreakdown.every((row) => row.seasonRollPct === 2.5));
 });
 
 test('extra draw and discard work when the Adjustment deck is exhausted', () => {

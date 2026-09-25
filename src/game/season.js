@@ -294,7 +294,10 @@ export function lockSeasonAndSeed(state) {
       const bonus = t.coach ? retentionBonus(t) + relationshipBonus(t) + handsOffBonus(t) : 0;
       const synergy = t.coach ? teamSynergy(t) : null;
       const base = effectiveRating(t);
-      const randomMult = 0.9 + Math.random() * 0.2;
+      // Keep season outcomes close to the roster users built. The roll provides enough
+      // movement for neighboring teams to trade places without overwhelming a clear output
+      // advantage: uniformly distributed from -2.5% through +2.5%.
+      const randomMult = 0.975 + Math.random() * 0.05;
       let val = base * randomMult;
       val *= 1 + ((t.seasonGameplanEffects?.seedingPercent || 0) / 100);
       const seedingCards = (t.matchupCards || []).filter((c) => c.effectType === 'SEEDING_PERCENT' && !c.used);
