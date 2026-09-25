@@ -21,9 +21,6 @@ const LEGACY_DEVELOPMENT_CHANGES = {
 const LONG_PRESS_MS = 500;
 
 export default function PlayerCard({ card, onClick, selected, rosterLabel, compact, onRelease, onDevelop, alwaysShowOptions, contractLabel, signingNote }) {
-  // Selected (a transient "you're holding this one" state) always wins over a static roster
-  // label like Starter — the more urgent, currently-relevant fact belongs in that one slot.
-  const pillLabel = selected ? 'Selected' : rosterLabel;
   const tier = cardTier(card);
   const skillset = skillsetFor(card);
   const level = careerLevel(card);
@@ -104,7 +101,10 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
       </div>
       <div className="pcard-name-block">
         <div className="pcard-jersey" aria-label={`Jersey number ${jerseyNumber(card)}`}>#{jerseyNumber(card)}</div>
-        <div className="pcard-name">{card.archetype}</div>
+        <div className="pcard-name-col">
+          <div className="pcard-name">{card.archetype}</div>
+          {!compact && rosterLabel && <span className="pcard-roster-badge">{rosterLabel}</span>}
+        </div>
       </div>
       <div className="pcard-contract pcard-budgethit-row">
         <span className="pcard-microlabel">Cost</span>
@@ -152,9 +152,9 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
           <RarityBadge rarity={rarity} />
           <div className="pcard-accolade-head">
             <span className="pcard-microlabel">Accolades</span>
-            {(pillLabel || card.development) && (
+            {(selected || card.development) && (
               <div className="pcard-accolade-tags">
-                {pillLabel && <span className={'pcard-stamp' + (pillLabel === 'Selected' ? ' pcard-stamp-selected' : '')}>{pillLabel}</span>}
+                {selected && <span className="pcard-stamp pcard-stamp-selected">Selected</span>}
                 {card.development && <span className="pcard-development" title={`Developed · ${card.development.cardName}`}>Developed</span>}
               </div>
             )}

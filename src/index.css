@@ -451,7 +451,12 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .pcard-header-badge{font-family:var(--font-label);font-size:10px;letter-spacing:.08em;}
 .pcard-name-block{display:flex;align-items:flex-start;gap:12px;padding:16px 12px 14px;border-bottom:2px solid var(--ink);}
 .pcard-jersey{font-family:var(--font-display);font-size:52px;line-height:.7;color:var(--stamp);}
+.pcard-name-col{display:flex;flex-direction:column;gap:6px;min-width:0;}
 .pcard-name{font-family:var(--font-display);font-size:26px;line-height:.85;color:var(--ink);letter-spacing:.01em;}
+/* A persistent roster fact (currently just Starter), not a transient interaction state like
+   Selected — kept right by the name it identifies instead of down with Accolades, and bigger
+   than the old stamp badges so it reads at a glance. */
+.pcard-roster-badge{align-self:flex-start;display:inline-block;border:2px solid var(--depth);padding:4px 9px;font-family:var(--font-label);font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--depth);transform:rotate(-3deg);}
 .pcard-contract{display:flex;justify-content:space-between;align-items:center;padding:11px 12px;border-bottom:1px solid var(--form-rule);}
 .pcard-contract + .pcard-contract{border-top:none;}
 .pcard-microlabel{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--file-muted);font-family:var(--font-mono);}
