@@ -2165,12 +2165,12 @@ body:has(.entry-screen){padding-bottom:0;}
      the screen with no scroll of its own but the horizontal swipe, so shut that axis off. */
   .ts-screen-lock .ts-roto-scroll{height:100%;overflow-y:hidden;overscroll-behavior:none;touch-action:pan-x;}
   .ts-screen-lock .ts-roto-grid{height:100%;}
-  /* A card never stretches to fill its slot — it sizes to its own natural width/height (capped,
-     centered) and, only when that natural height is actually taller than the space available,
-     TeamSummaryScreen's ResizeObserver effect shrinks it with a single uniform transform:scale()
-     (never scaleY alone, which would distort it) so it fits exactly without clipping or an
-     internal scrollbar. A card shorter than the available space just sits at its natural size
-     with real margin below it, rather than being force-filled to look busier than it is. */
+  /* The locked carousel's card frame owns all available height, matching the old initial
+     full-window view without bringing vertical page scrolling back. A card whose natural
+     content is genuinely taller than this area is still reduced uniformly by the
+     ResizeObserver below; shorter cards simply extend their frame to the bottom edge. */
+  .ts-screen-lock .ts-roto-grid .ts-roto-slot{height:100%;}
+  .ts-screen-lock .ts-roto-grid .pcard{min-height:100%;}
   .ts-screen-lock .ts-roto-grid .pcard{transform-origin:top;will-change:transform;}
   /* "Bigger, not stretched" — instead of a single transform blowing up the whole card (and its
      fixed peek-slot width along with it), the card's own internal sizes step up here: bigger
