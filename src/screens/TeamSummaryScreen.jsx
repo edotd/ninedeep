@@ -425,6 +425,13 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   // competing with the horizontal card swipe (see ts-screen-lock in index.css). Only true in
   // the Carousel view — List is a plain scrolling stack, same as every other tab.
   const isRotationLocked = !isDesktop && tab === 'rotation' && viewMode === 'carousel';
+  // This screen never remounts on a tab switch (unlike PlayoffSeriesScreen, which gets the same
+  // fix via a mount effect), so the page can still be scrolled down from a moment ago on another
+  // tab when the user swipes back to Rotation. ts-screen-lock's CSS (.mobile-shell:has(...){
+  // position:fixed;...}) is meant to pin the locked screen to the viewport regardless, but
+  // leaving a real scroll reset here too means the card can't ever render high/offset behind a
+  // leftover scroll position no matter how that CSS holds up.
+  useEffect(() => { if (isRotationLocked) window.scrollTo(0, 0); }, [isRotationLocked]);
 
   // The Begin Season button always reads "Begin Season" now — what used to be separate button
   // labels (Hire A Coach, Resolve Budget, ...) are collected here instead and surfaced as a
