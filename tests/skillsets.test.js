@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { SKILLSETS, SKILLSET_PAIRS, STAT_THRESHOLD_BONUSES, rollSkillset, teamSynergy } from '../src/game/skillsets.js';
+import { careerMultiplier } from '../src/game/aging.js';
 import { makeCard, drawCoachCard, drawMatchupModifierCard } from '../src/game/cards.js';
 import { REPLACEMENT_TIER } from '../src/game/constants.js';
 import { offenseModifier, defenseModifier } from '../src/game/roster.js';
@@ -41,19 +42,26 @@ test('stat-threshold bonuses unlock alongside Skillset pairs and fold into the s
   const onslaught=STAT_THRESHOLD_BONUSES.find(b=>b.name==='Offensive Onslaught');
   const t=team([9,10]); // Half-Court Clinic, +15% offense — leaves room to isolate the stat bonus
   t.hand.forEach(p=>{p.stats={SCO:10,PLM:10,DEF:10,REB:10};});
+  // team()'s fixture cards carry no careerStage/careerRoll, so careerLevel defaults to Prime and
+  // careerBonus's roll defaults to 0.5 — a fixed, known multiplier here, not the real game's
+  // per-card random one. The threshold is checked against this EFFECTIVE stat (printed value *
+  // career multiplier — see skillsets.js's effectiveStat), so the raw value needed to clear it
+  // is derived from that multiplier rather than hardcoded.
+  const mult=careerMultiplier(t.hand[0],t.hand[0].careerRoll);
+  const clears=Math.ceil(onslaught.threshold/mult);
   assert.equal(teamSynergy(t).offense,15);
   assert.equal(teamSynergy(t).statBonuses.length,0);
   // Only one starter clears the threshold — not enough on its own.
-  t.hand[0].stats.SCO=onslaught.threshold;
+  t.hand[0].stats.SCO=clears;
   assert.equal(teamSynergy(t).statBonuses.length,0);
   // A second starter clears it too — Offensive Onslaught unlocks on top of the existing pair.
-  t.hand[1].stats.SCO=onslaught.threshold;
+  t.hand[1].stats.SCO=clears;
   const s=teamSynergy(t);
   assert.equal(s.statBonuses.length,1);
   assert.equal(s.statBonuses[0].name,'Offensive Onslaught');
   assert.equal(s.offense,15+onslaught.percent);
-  // Below the threshold no longer counts, even if only by one.
-  t.hand[1].stats.SCO=onslaught.threshold-1;
+  // Below the threshold no longer counts, even if only by one raw point.
+  t.hand[1].stats.SCO=clears-1;
   assert.equal(teamSynergy(t).statBonuses.length,0);
 });
 test('independent caps apply and injury lineup overrides remove inactive pairings',()=>{

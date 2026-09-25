@@ -4,6 +4,7 @@ import CardTypeMark from './CardTypeMark';
 import { GM_BONUS_RATE, HANDS_OFF_BONUS_CAP } from '../game/constants';
 import { handsOffBonus } from '../game/gm';
 import { offenseDieSize, defenseDieSize } from '../game/roster';
+import { RARITY_CORNERS } from '../game/constants';
 
 // Front Office card, per the brand handoff's "Components: Front Office & Matchup Cards" —
 // landscape, ink ground, told apart from a Player card by shape alone. One component covers
@@ -87,9 +88,11 @@ function marketContent(team) {
 export default function FrontOfficeCard({ kind, team }) {
   const meta = KIND_META[kind];
   const content = kind === 'coach' ? coachContent(team) : kind === 'fanbase' ? fanbaseContent(team) : marketContent(team);
+  const coachRarity = kind === 'coach' ? (team.coach.rarity || 'Core') : null;
   return (
     <div className="fo2-wrap">
-      <div className={'fo2-card' + (kind === 'coach' ? ` rarity-${team.coach.rarity || 'Core'}` : '')}>
+      <div className={'fo2-card' + (coachRarity ? ` rarity-${coachRarity}` : '')}>
+        {coachRarity && (RARITY_CORNERS[coachRarity] || []).map((c) => <span key={c} className={'rarity-corner ' + c} />)}
         <CardTypeMark type="frontoffice" className="fo2-watermark" color="var(--ink-rule)" size={190} />
         <div className="fo2-header">
           <span className="fo2-kind-group">

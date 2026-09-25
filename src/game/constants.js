@@ -34,6 +34,16 @@ export const POSITION_MOD = {
 // stacking a second multiplier on top of it.
 export const RARITIES = ['Core', 'Prime', 'Signature', 'Legendary'];
 
+// Corner brackets per rarity, shared by every card type that carries one (Player, Front
+// Office, Matchup) so the frame language reads the same everywhere — Core gets none, Prime
+// gets the top two ("register brackets"), Signature and Legendary get all four.
+export const RARITY_CORNERS = {
+  Core: [],
+  Prime: ['tl', 'tr'],
+  Signature: ['tl', 'tr', 'bl', 'br'],
+  Legendary: ['tl', 'tr', 'bl', 'br'],
+};
+
 // Base Player Modifiers — quality/trait tiers with no age restriction on who can roll them.
 export const TIERS = [
   { name: 'Role Player', uniform: 1.00, peak: 1.00, contract: 7, count: 7, rarity: 'Core' },

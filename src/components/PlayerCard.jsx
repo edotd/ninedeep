@@ -3,7 +3,7 @@ import { skillsetFor } from '../game/skillsets';
 import { formatCoins } from '../game/economy';
 import { careerLevel } from '../game/aging';
 import { cardTier, jerseyNumber, playerGrade } from '../game/cards';
-import { LEAGUE_ACCOLADES } from '../game/constants';
+import { LEAGUE_ACCOLADES, RARITY_CORNERS } from '../game/constants';
 import CardTypeMark from './CardTypeMark';
 
 const LEGACY_DEVELOPMENT_CHANGES = {
@@ -44,6 +44,8 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
   const [expanded, setExpanded] = useState(false);
   const [accoladeInfoOpen, setAccoladeInfoOpen] = useState(false);
   const accoladeDef = accolade ? LEAGUE_ACCOLADES.find((a) => a.name === accolade) : null;
+  const rarity = card.rarity || 'Core';
+  const rarityCorners = compact ? [] : (RARITY_CORNERS[rarity] || []);
   const pressTimer = useRef(null);
   const longPressFired = useRef(false);
 
@@ -63,12 +65,13 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
 
   return (
     <div
-      className={`pcard tier-${tier} rarity-${card.rarity || 'Core'}${positionClass}${compact ? ' pcard-compact' : ''}${selected ? ' selected' : ''}${expanded ? ' expanded' : ''}`}
+      className={`pcard tier-${tier}${compact ? '' : ` rarity-${rarity}`}${positionClass}${compact ? ' pcard-compact' : ''}${selected ? ' selected' : ''}${expanded ? ' expanded' : ''}`}
       onClick={handleClick}
       onTouchStart={handleTouchStart}
       onTouchEnd={clearPressTimer}
       onTouchMove={clearPressTimer}
     >
+      {rarityCorners.map((c) => <span key={c} className={'rarity-corner ' + c} />)}
       <CardTypeMark
         type="player"
         size={compact ? 90 : 170}

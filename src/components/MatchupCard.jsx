@@ -1,4 +1,5 @@
 import CardTypeMark from './CardTypeMark';
+import { RARITY_CORNERS } from '../game/constants';
 
 // Adjustment card, per the brand handoff's "Components: Front Office & Adjustment Cards" — square,
 // stamp-bordered, torn bottom edge. The spec's two fixed bottom rows ("IF UNANSWERED" /
@@ -20,16 +21,6 @@ const CONSEQUENCES = {
   'Divine Intervention': { ifUnanswered: 'No effect — played on your own team', counter: 'None' },
   'Favorable Schedule': { ifUnanswered: 'Passive — always boosts your seeding roll', counter: 'None' },
   'Team Chemistry': { ifUnanswered: 'Passive — always boosts your bench score 50%', counter: 'None' },
-};
-
-// Corner brackets per rarity — real DOM elements rather than ::before/::after, since
-// Signature and Legendary need all four corners and a pseudo-element only gives two. Core
-// gets none; Prime gets the top two only (the "register brackets" per the handoff).
-const CORNERS = {
-  Core: [],
-  Prime: ['tl', 'tr'],
-  Signature: ['tl', 'tr', 'bl', 'br'],
-  Legendary: ['tl', 'tr', 'bl', 'br'],
 };
 
 // A stable per-card serial within its rarity's flavor print run (2500/1200/400/60) — deterministic
@@ -68,7 +59,7 @@ export default function MatchupCard({ card, playoff, justDealt }) {
             <div className="mu2-row"><span className="mu2-row-label">Timing</span><span className="mu2-row-value">{card.used ? 'Used' : card.passive === 'seeding' ? 'Automatic at seeding' : 'Play once · this matchup'}</span></div>
           </div>
           <div className="mu2-torn" />
-          {(CORNERS[rarity] || []).map((c) => <span key={c} className={'mu2-corner ' + c + dealCls} />)}
+          {(RARITY_CORNERS[rarity] || []).map((c) => <span key={c} className={'mu2-corner ' + c + dealCls} />)}
           {legendary && <div className={'mu2-badge' + dealCls}>Legendary</div>}
           {legendary && <div className={'mu2-serial' + dealCls}>#{serialFor(card)} / {PRINT_RUN.Legendary}</div>}
           {legendary && justDealt && (

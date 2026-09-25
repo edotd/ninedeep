@@ -97,7 +97,7 @@ export default function TeamChemistry({ team, canEdit, onEditLineup }) {
             ))}
             {current.statBonuses.map((bonus) => (
               <div key={bonus.name} className="tc2-pair-row">
-                <span className="tc2-pair-names">{bonus.minCount}+ starters with {bonus.stat} &ge; {bonus.threshold}</span>
+                <span className="tc2-pair-names">{bonus.minCount}+ starters at {bonus.threshold}+ effective {bonus.stat} (in-season, career-stage adjusted)</span>
                 <span className={'tc2-pair-tag ' + bonus.side}>{bonus.name} +{bonus.percent}% {bonus.side === 'offense' ? 'OFF' : 'DEF'}</span>
               </div>
             ))}

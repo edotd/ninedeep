@@ -400,6 +400,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .pcard-header-tier{font-family:var(--font-mono);font-size:9px;letter-spacing:.03em;text-transform:uppercase;line-height:1.25;color:inherit;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:118px;}
 .pcard-header-sep{opacity:.45;font-size:13px;}
 .pcard-header-pos{font-family:var(--font-label);font-size:21px;line-height:1;letter-spacing:.01em;text-transform:uppercase;}
+@media (min-width:1000px){.pcard-header-pos{font-size:15px;}}
 /* A stylized, bold badge rather than plain header text — Archivo Black (the brand's blockiest
    face, used nowhere else this small) instead of the header's mono label font, sized to
    dominate the thin header bar the way the design's tier-letter squares dominate a card
@@ -462,11 +463,23 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
    RARITIES), extended to player and coach cards. Reuses the exact same tokens .mu2-card's own
    rarity borders use, rather than a separate palette, so all three card types read as one
    consistent rarity language. These rules come after .tier-D/.tier-EXP's own border-color so
-   rarity always wins there. */
-.pcard.rarity-Core{border-color:#C4715A;border-width:2px;}
-.pcard.rarity-Prime{border-color:var(--stamp);border-width:3px;}
-.pcard.rarity-Signature{border-color:var(--stamp-text);border-width:4px;}
-.pcard.rarity-Legendary{border-color:var(--franchise);border-width:5px;box-shadow:0 0 16px rgba(240,160,61,.4);}
+   rarity always wins there.
+   Beyond color/weight, Prime+ also get corner brackets (.rarity-corner, rendered by
+   PlayerCard.jsx/FrontOfficeCard.jsx from RARITY_CORNERS — real elements rather than
+   ::before/::after since Signature/Legendary need all four corners and a pseudo-element only
+   gives two), Signature gets a clipped top-right corner, and Legendary gets a second inset
+   frame — the same shaped-frame language .mu2-card already carries, not just a plain border.
+   --rarity-accent feeds both the border and the corner brackets from one value per rarity. */
+.pcard.rarity-Core{--rarity-accent:#C4715A;border-color:var(--rarity-accent);border-width:2px;}
+.pcard.rarity-Prime{--rarity-accent:var(--stamp);border-color:var(--rarity-accent);border-width:3px;}
+.pcard.rarity-Signature{--rarity-accent:var(--stamp-text);border-color:var(--rarity-accent);border-width:4px;clip-path:polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);}
+.pcard.rarity-Legendary{--rarity-accent:var(--franchise);border-color:var(--rarity-accent);border-width:5px;box-shadow:0 0 16px rgba(240,160,61,.4);}
+.pcard.rarity-Legendary::after{content:'';position:absolute;inset:4px;border:2px solid var(--rarity-accent);pointer-events:none;z-index:2;}
+.rarity-corner{position:absolute;width:13px;height:13px;pointer-events:none;box-sizing:border-box;border-color:var(--rarity-accent);z-index:2;}
+.rarity-corner.tl{top:4px;left:4px;border-top:2px solid;border-left:2px solid;}
+.rarity-corner.tr{top:4px;right:4px;border-top:2px solid;border-right:2px solid;}
+.rarity-corner.bl{bottom:4px;left:4px;border-bottom:2px solid;border-left:2px solid;}
+.rarity-corner.br{bottom:4px;right:4px;border-bottom:2px solid;border-right:2px solid;}
 
 /* Position is the card header's primary visual code across every player tier. */
 .pcard.position-guard .pcard-header{background:var(--file);color:var(--ink);border-bottom:1px solid var(--file-rule);}
@@ -693,13 +706,15 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 /* ================= Front Office card (see brand handoff, "Components: Front Office &
    Matchup Cards") — landscape, ink ground, distinct silhouette from the player card. ============= */
 .fo2-card{position:relative;overflow:hidden;background:var(--ink);border:2px solid var(--ink);width:100%;max-width:340px;margin:0 auto 14px;font-family:var(--font-mono);display:flex;flex-direction:column;}
-/* Coach card rarity — same Core/Prime/Signature/Legendary tokens .pcard's rarity classes use
-   (see there). Only ever applied when kind==='coach' (see FrontOfficeCard.jsx) — Fanbase/GM
-   cards have no rarity concept. */
-.fo2-card.rarity-Core{border-color:#C4715A;border-width:2px;}
-.fo2-card.rarity-Prime{border-color:var(--stamp);border-width:3px;}
-.fo2-card.rarity-Signature{border-color:var(--stamp-text);border-width:4px;}
-.fo2-card.rarity-Legendary{border-color:var(--franchise);border-width:5px;box-shadow:0 0 16px rgba(240,160,61,.4);}
+/* Coach card rarity — same Core/Prime/Signature/Legendary tokens and shaped-frame treatment
+   (.rarity-corner, the Signature clip and Legendary inset frame) .pcard's rarity classes use —
+   see the comment there. Only ever applied when kind==='coach' (see FrontOfficeCard.jsx) —
+   Fanbase/GM cards have no rarity concept. */
+.fo2-card.rarity-Core{--rarity-accent:#C4715A;border-color:var(--rarity-accent);border-width:2px;}
+.fo2-card.rarity-Prime{--rarity-accent:var(--stamp);border-color:var(--rarity-accent);border-width:3px;}
+.fo2-card.rarity-Signature{--rarity-accent:var(--stamp-text);border-color:var(--rarity-accent);border-width:4px;clip-path:polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);}
+.fo2-card.rarity-Legendary{--rarity-accent:var(--franchise);border-color:var(--rarity-accent);border-width:5px;box-shadow:0 0 16px rgba(240,160,61,.4);}
+.fo2-card.rarity-Legendary::after{content:'';position:absolute;inset:4px;border:2px solid var(--rarity-accent);pointer-events:none;z-index:2;}
 .fo2-watermark{position:absolute;right:-20px;bottom:-18px;z-index:-1;opacity:.16;pointer-events:none;}
 .fo2-header{display:flex;justify-content:space-between;align-items:center;padding:10px 13px;border-bottom:1px solid var(--ink-rule);}
 .fo2-kind-group{display:inline-flex;align-items:center;gap:8px;color:var(--file);}
