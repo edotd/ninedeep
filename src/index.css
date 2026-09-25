@@ -438,9 +438,9 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .pcard-stat span{display:block;margin-top:2px;font-family:var(--font-label);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);}
 /* Where Release/Develop and the Career Stage row used to sit — now reserved for a League
    Accolade (a single icon, see CardTypeMark) plus whatever tags apply (Selected, Developed). */
-.pcard-accolade-block{position:relative;background:var(--file);padding:11px 12px 12px;border-bottom:1px solid var(--form-rule);}
-.pcard-accolade-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
-.pcard-accolade-value{display:flex;align-items:center;min-height:26px;}
+.pcard-accolade-block{position:relative;background:var(--file);padding:7px 12px 8px;border-bottom:1px solid var(--form-rule);}
+.pcard-accolade-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.pcard-accolade-value{display:flex;align-items:center;min-height:20px;}
 .pcard-accolade{display:inline-flex;color:var(--franchise);background:none;border:none;padding:0;cursor:pointer;}
 /* Clicking an accolade badge shows what it actually does (LEAGUE_ACCOLADES' description) — a
    small anchored popover rather than a full modal, since it's answering one quick question
@@ -507,10 +507,10 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 
 .pcard-stamp{display:inline-block;border:1.5px solid var(--stamp);padding:4px 6px;transform:rotate(-5deg);font-size:9px;letter-spacing:.12em;color:var(--stamp);font-family:var(--font-mono);text-transform:uppercase;}
 
-.pcard-release{width:100%;border:none;border-top:2px solid var(--stamp);background:var(--stamp);color:var(--form);font-family:var(--font-label);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:9px 12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
+.pcard-release{width:100%;border:none;border-top:2px solid var(--stamp);background:var(--stamp);color:var(--form);font-family:var(--font-label);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:14px 12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
 .pcard-release:hover{background:var(--stamp-text);}
 .pcard-release-cost{font-family:var(--font-mono);font-weight:normal;letter-spacing:.04em;}
-.pcard-develop{width:100%;border:none;border-top:2px solid var(--approved);background:var(--approved);color:var(--form);font-family:var(--font-label);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:9px 12px;cursor:pointer;}
+.pcard-develop{width:100%;border:none;border-top:2px solid var(--approved);background:var(--approved);color:var(--form);font-family:var(--font-label);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:14px 12px;cursor:pointer;}
 .pcard-develop:hover{background:var(--approved-ink);}
 /* Release/Develop no longer sit on the card permanently — a hold (mobile) or this arrow
    (desktop) reveals them in a panel overlaid on the card's own bottom edge (position:absolute,
@@ -2206,13 +2206,15 @@ body:has(.entry-screen){padding-bottom:0;}
   .ts-screen-lock .ts-roto-grid .pcard-name-block{padding:22px 16px 18px;gap:16px;}
   .ts-screen-lock .ts-roto-grid .pcard-jersey{font-size:66px;}
   .ts-screen-lock .ts-roto-grid .pcard-name{font-size:32px;}
-  .ts-screen-lock .ts-roto-grid .pcard-contract,.ts-screen-lock .ts-roto-grid .pcard-stats,.ts-screen-lock .ts-roto-grid .pcard-accolade-block{padding:14px 16px;}
+  .ts-screen-lock .ts-roto-grid .pcard-contract,.ts-screen-lock .ts-roto-grid .pcard-stats{padding:14px 16px;}
+  .ts-screen-lock .ts-roto-grid .pcard-accolade-block{padding:9px 16px 10px;}
   .ts-screen-lock .ts-roto-grid .pcard-microlabel{font-size:10px;}
   .ts-screen-lock .ts-roto-grid .pcard-budgethit{font-size:34px;}
   .ts-screen-lock .ts-roto-grid .pcard-stat b{font-size:32px;}
   .ts-screen-lock .ts-roto-grid .pcard-stat span{font-size:12px;}
   .ts-screen-lock .ts-roto-grid .pcard-skillset-name{font-size:32px;}
-  .ts-screen-lock .ts-roto-grid .pcard-accolade-value{min-height:32px;}
+  .ts-screen-lock .ts-roto-grid .pcard-accolade-value{min-height:24px;}
+  .ts-screen-lock .ts-roto-grid .pcard-release,.ts-screen-lock .ts-roto-grid .pcard-develop{padding:18px 16px;}
 }
 
 /* A live mobile match owns the viewport. The global chrome gives way to the board, while the
