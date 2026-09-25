@@ -428,7 +428,11 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .pcard-contract{display:flex;justify-content:space-between;align-items:center;padding:11px 12px;border-bottom:1px solid var(--form-rule);}
 .pcard-contract + .pcard-contract{border-top:none;}
 .pcard-microlabel{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--file-muted);font-family:var(--font-mono);}
-.pcard-budgethit{font-family:var(--font-display);font-size:28px;color:var(--ink);}
+/* Cost and Turns Remaining read as the two numbers that most directly matter for roster
+   decisions, so their row gets bigger label text than the other microlabels (Skillset,
+   Accolades) share. */
+.pcard-budgethit-row .pcard-microlabel,.pcard-years-row .pcard-microlabel{font-size:11px;}
+.pcard-budgethit{font-family:var(--font-display);font-size:32px;color:var(--ink);}
 .pcard-dots{display:flex;gap:5px;}
 .pcard-dot{width:9px;height:9px;border-radius:50%;background:var(--ink);}
 .pcard-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px 6px;padding:11px 12px;border-bottom:1px solid var(--form-rule);}
@@ -547,7 +551,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .pcard-compact .pcard-jersey{font-size:32px;}
 .pcard-compact .pcard-name{font-size:15px;}
 .pcard-compact .pcard-contract{padding:7px 8px;}
-.pcard-compact .pcard-budgethit{font-size:18px;}
+.pcard-compact .pcard-budgethit{font-size:20px;}
 
 /* ================= Desktop shell (>= 1000px) ================= */
 /* Sidebar + wide content pane + full-width persistent bar, per the brand handoff's
@@ -2209,7 +2213,8 @@ body:has(.entry-screen){padding-bottom:0;}
   .ts-screen-lock .ts-roto-grid .pcard-contract,.ts-screen-lock .ts-roto-grid .pcard-stats{padding:14px 16px;}
   .ts-screen-lock .ts-roto-grid .pcard-accolade-block{padding:9px 16px 10px;}
   .ts-screen-lock .ts-roto-grid .pcard-microlabel{font-size:10px;}
-  .ts-screen-lock .ts-roto-grid .pcard-budgethit{font-size:34px;}
+  .ts-screen-lock .ts-roto-grid .pcard-budgethit-row .pcard-microlabel,.ts-screen-lock .ts-roto-grid .pcard-years-row .pcard-microlabel{font-size:13px;}
+  .ts-screen-lock .ts-roto-grid .pcard-budgethit{font-size:40px;}
   .ts-screen-lock .ts-roto-grid .pcard-stat b{font-size:32px;}
   .ts-screen-lock .ts-roto-grid .pcard-stat span{font-size:12px;}
   .ts-screen-lock .ts-roto-grid .pcard-skillset-name{font-size:32px;}
