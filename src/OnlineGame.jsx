@@ -2,9 +2,11 @@ import { useRoomGame } from './game/useRoomGame';
 import LobbyScreen from './screens/LobbyScreen';
 import GameShell from './components/GameShell';
 import { deleteRoom } from './firebase/rooms';
+import { useHostNotifications } from './hooks/useHostNotifications';
 
 export default function OnlineGame({ roomCode, myUid, onExit }) {
   const { state, actions, myTeamId, actionError } = useRoomGame(roomCode, myUid);
+  const hostNotifications = useHostNotifications({ state, roomCode, myUid });
 
   if (state === undefined) {
     return (
@@ -32,7 +34,7 @@ export default function OnlineGame({ roomCode, myUid, onExit }) {
   } : null;
 
   if (state.phase === 'lobby') {
-    return <LobbyScreen state={state} actions={actions} roomCode={roomCode} myUid={myUid} onExit={onExit} onDeleteRoom={handleDeleteRoom} actionError={actionError} />;
+    return <LobbyScreen state={state} actions={actions} roomCode={roomCode} myUid={myUid} onExit={onExit} onDeleteRoom={handleDeleteRoom} hostNotifications={hostNotifications} actionError={actionError} />;
   }
 
   // The era already started without you (joined late, or your seat was reassigned) —
@@ -47,5 +49,5 @@ export default function OnlineGame({ roomCode, myUid, onExit }) {
     );
   }
 
-  return <GameShell state={state} actions={actions} myTeamId={myTeamId} roomCode={roomCode} onNewEra={isHost ? () => actions.resetRoomToLobby(myUid) : null} onDeleteRoom={handleDeleteRoom} />;
+  return <GameShell state={state} actions={actions} myTeamId={myTeamId} roomCode={roomCode} onNewEra={isHost ? () => actions.resetRoomToLobby(myUid) : null} onDeleteRoom={handleDeleteRoom} hostNotifications={hostNotifications} />;
 }

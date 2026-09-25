@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import EraSettingsFields from '../components/EraSettingsFields';
 import { randomFranchiseName } from '../game/names';
+import HostNotificationsButton from '../components/HostNotificationsButton';
 
-export default function LobbyScreen({ state, actions, roomCode, myUid, onExit, onDeleteRoom, actionError }) {
+export default function LobbyScreen({ state, actions, roomCode, myUid, onExit, onDeleteRoom, hostNotifications, actionError }) {
   const [seatNames, setSeatNames] = useState({});
   const isHost = state.hostUid === myUid;
   const claimedCount = state.seats.filter((s) => s.ownerUid).length;
@@ -60,6 +61,7 @@ export default function LobbyScreen({ state, actions, roomCode, myUid, onExit, o
         <>
           <h2>Era Setup</h2>
           <EraSettingsFields settings={state.settings} actions={actions} />
+          <HostNotificationsButton notifications={hostNotifications} />
           <button
             className="primary"
             style={{ width: '100%', padding: 16, marginTop: 16 }}

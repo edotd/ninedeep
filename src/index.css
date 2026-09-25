@@ -84,6 +84,11 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body,#root{margin:0;padding:0;background:var(--file);color:var(--ink);font-family:var(--font-mono);}
 body{min-height:100vh;padding-bottom:138px;}
+@media (display-mode:standalone) and (max-width:999px){
+  /* Installed iOS apps draw into the status-bar area. Reserve that inset inside the app shell
+     so the sticky header begins below the clock and system icons instead of underneath them. */
+  .mobile-shell{border-top:var(--app-safe-top,env(safe-area-inset-top,0px)) solid var(--ink);min-height:var(--app-vh,100dvh);}
+}
 /* The ball under the hand (design ref 5B, "PEBBLE + CHANNELS") — a true basketball-leather
    grain (two dot layers per 5px tile, offset in a brick pattern so each pebble gets its own
    light highlight + dark shadow, exactly the reference's own recipe) plus the court's channel

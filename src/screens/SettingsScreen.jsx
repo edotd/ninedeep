@@ -1,5 +1,6 @@
 import EraSettingsFields from '../components/EraSettingsFields';
 import { useDarkMode } from '../hooks/useDarkMode';
+import HostNotificationsButton from '../components/HostNotificationsButton';
 
 const ACTION_LOG_SPEED_OPTIONS = [
   { value: 'slow', label: 'Slow' },
@@ -8,7 +9,7 @@ const ACTION_LOG_SPEED_OPTIONS = [
   { value: 'instant', label: 'Instant' },
 ];
 
-export default function SettingsScreen({ state, actions, onBack, onNewEra, onDeleteRoom }) {
+export default function SettingsScreen({ state, actions, onBack, onNewEra, onDeleteRoom, hostNotifications }) {
   const s = state.settings;
   const winCondition = s.winCondition || 'bar';
   const { darkMode, setDarkMode } = useDarkMode();
@@ -29,6 +30,7 @@ export default function SettingsScreen({ state, actions, onBack, onNewEra, onDel
           <div className="pull-extra">A darker app background — this device only, doesn't sync to other players in a room.</div>
         </div>
         <EraSettingsFields settings={s} actions={actions} />
+        <HostNotificationsButton notifications={hostNotifications} />
         <div className="pull-slot">
           <div className="pull-label">Injury Chance (per team, per matchup)</div>
           <input
