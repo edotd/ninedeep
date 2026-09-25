@@ -62,7 +62,7 @@ export default function StandingsScreen({ state, actions, myTeamId, onViewTeam }
             <section className="season-breakdown" aria-label="Season breakdown">
               <div className="season-breakdown-intro">
                 <h2>How the season was decided</h2>
-                <p>Your base rating comes from the active five, coach and continuity bonuses, Synergy, and active output Gameplans. Every team then receives a season roll from −10% to +10%. Seeding Gameplans apply last. The highest final rating earns the top seed.</p>
+                <p>Your base rating comes from the active five, coach and continuity bonuses, Synergy, and active output Gameplans. Every team then receives a season roll from −2.5% to +2.5%. Seeding Gameplans apply last. The highest final rating earns the top seed.</p>
               </div>
               <div className="season-breakdown-table">
                 <div className="season-breakdown-row head">

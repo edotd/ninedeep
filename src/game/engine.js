@@ -156,6 +156,24 @@ export function markLineupSet(state, teamIdx) {
   return { valid: true };
 }
 
+// Commits the Set Lineup screen's local draft in one write. Individual editor interactions
+// never touch shared room state, preventing multiplayer snapshots from replaying Auto Set and
+// keeping the Franchise page's chemistry/output unchanged until Save Lineup is pressed.
+export function saveLineup(state, teamIdx, activeIds) {
+  const team = state.teams[teamIdx];
+  if (!team || !Array.isArray(activeIds)) return { valid: false, msg: 'Nothing to save yet.' };
+  const uniqueIds = [...new Set(activeIds)];
+  if (uniqueIds.length !== activeIds.length || uniqueIds.some((id) => !team.hand.some((card) => card.id === id))) {
+    return { valid: false, msg: 'That lineup contains an unavailable player.' };
+  }
+  const validation = validateLineup({ ...team, activeIds: uniqueIds });
+  if (!validation.valid) return validation;
+  team.activeIds = uniqueIds;
+  team.lineupSet = true;
+  team.lineupConfirmed = false;
+  return { valid: true };
+}
+
 // Empties the starting five so the Set Lineup screen can open onto nine empty-looking slots
 // instead of the auto-selected placeholder (see SetLineupScreen.jsx's mount effect) — only
 // ever called pre-season, before lineupSet is true, so there's nothing live to protect here

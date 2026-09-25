@@ -4,7 +4,7 @@ import { newEraState, renewExpiredContract, signFreeAgent, fileContracts, closeF
 import { startDraft, draftPick, forfeitPick, forfeitBonusForPosition, overallPickPosition, buildDraftPool, finishDraftTransition } from '../src/game/draft.js';
 import { rosterSalary } from '../src/game/economy.js';
 import { FORFEIT_BONUS_MAX, FORFEIT_BONUS_MIN, LEAGUE_TEAM_COUNT } from '../src/game/constants.js';
-import { startEra, confirmLineup, markLineupSet } from '../src/game/engine.js';
+import { startEra, confirmLineup, markLineupSet, saveLineup } from '../src/game/engine.js';
 import { fireCoach, fireGM, hireFreeAgentCoach, releasePlayer } from '../src/game/finances.js';
 import { LEAGUE_ACCOLADES, TIERS } from '../src/game/constants.js';
 import { rehydrateState } from '../src/game/rehydrate.js';
@@ -291,6 +291,21 @@ test('confirmLineup requires a reviewed lineup; markLineupSet unlocks it', () =>
   state.offseason.freeAgencyClosed[team.id] = true;
   assert.equal(confirmLineup(state, 0).valid, true);
   assert.equal(team.lineupConfirmed, true);
+});
+
+test('saving the lineup commits one validated five and clears prior season readiness', () => {
+  const state = newEraState();
+  startEra(state, 'Test');
+  const team = state.teams[0];
+  const original = [...team.activeIds];
+  team.lineupConfirmed = true;
+
+  assert.equal(saveLineup(state, 0, original.slice(0, 4)).valid, false);
+  assert.deepEqual(team.activeIds, original);
+  assert.equal(saveLineup(state, 0, [...original].reverse()).valid, true);
+  assert.deepEqual(team.activeIds, [...original].reverse());
+  assert.equal(team.lineupSet, true);
+  assert.equal(team.lineupConfirmed, false);
 });
 
 test('every human must close out free agency before the season can begin', () => {

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { findSkillPair, skillsetFor, teamSynergy } from '../game/skillsets';
 import { jerseyNumber, playerGrade } from '../game/cards';
+import { autoValidFive, validateLineup } from '../game/roster';
 
 // "The Floor" (design ref 1a) — the starting five placed on a half-court diagram, wired
 // together wherever two of them share a live Skillset pairing (game/skillsets.js's
@@ -82,26 +83,15 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
     return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = prevOverflow; };
   }, [onClose]);
 
-  // Nine empty-looking slots to start — the auto-selected five is a placeholder nobody has
-  // actually chosen, so a human's first visit each season clears it and starts from scratch.
-  // Only runs once per mount, and only pre-season (canEdit) — a locked-in, already-reviewed
-  // lineup (lineupSet true) is left exactly as it is.
-  useEffect(() => {
-    if (canEdit && !team.lineupSet && (team.activeIds || []).length > 0) {
-      actions.clearLineup(myTeamId);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const activeIds = team.activeIds || [];
-  const [slotOrder, setSlotOrder] = useState([null, null, null, null, null]);
-  // Reconcile whenever the actual SET of starters changes (order-independent key) — covers
-  // both this component's own actions and any external change (e.g. clearLineup on mount).
-  const activeIdsSetKey = activeIds.slice().sort().join(',');
-  useEffect(() => {
-    setSlotOrder((prev) => reconcileSlots(prev, activeIds));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeIdsSetKey]);
+  // Everything in this editor is a local draft. The shared team — and therefore the
+  // Franchise page underneath this modal — is changed exactly once, by Save Lineup. A fresh
+  // season still opens empty because the generated active five is only a placeholder until a
+  // human reviews it; an already-saved lineup opens with its current five intact.
+  const [slotOrder, setSlotOrder] = useState(() => reconcileSlots(
+    [null, null, null, null, null],
+    team.lineupSet ? (team.activeIds || []) : [],
+  ));
+  const activeIds = slotOrder.filter((id) => id != null);
   const starters = slotOrder.map((id) => (id ? team.hand.find((c) => c.id === id) || null : null));
   const bench = team.hand.filter((c) => !activeIds.includes(c.id));
   const [selectedId, setSelectedId] = useState(null);
@@ -155,35 +145,11 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
     setSelectedId((cur) => (cur === cardId ? null : cardId));
   };
 
-  // A five-only swapStarter can't place someone while a slot is genuinely empty (still being
-  // built up from nothing) — fall back to demote-then-promote, the same two calls
-  // swapStarter itself would otherwise make atomically. Returns whether it actually succeeded,
-  // so the caller only commits the visual slot change (see reconcileSlots above) once the real
-  // game state agrees.
-  const placeIncoming = (incomingId, occupant) => {
-    if (!occupant) {
-      const res = actions.promoteToStarter(myTeamId, incomingId);
-      if (res && res.ok === false) { alert(res.msg); return false; }
-      return true;
-    }
-    if (activeIds.length === 5) {
-      const res = actions.swapStarter(myTeamId, occupant.id, incomingId);
-      if (res && res.ok === false) { alert(res.msg); return false; }
-      return true;
-    }
-    actions.demoteStarter(myTeamId, occupant.id);
-    actions.promoteToStarter(myTeamId, incomingId);
-    return true;
-  };
-
   const placeOnSlot = (slotIndex) => {
     if (!canEdit || selectedId == null || activeIds.includes(selectedId)) { setSelectedId(null); return; }
     const incomingId = selectedId;
-    const occupant = starters[slotIndex];
     setSelectedId(null);
-    if (placeIncoming(incomingId, occupant)) {
-      setSlotOrder((prev) => { const next = [...prev]; next[slotIndex] = incomingId; return next; });
-    }
+    setSlotOrder((prev) => { const next = [...prev]; next[slotIndex] = incomingId; return next; });
   };
 
   const handleBenchClick = (card) => {
@@ -191,9 +157,8 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
     if (selectedId != null && activeIds.includes(selectedId)) {
       const outgoingId = selectedId;
       const outgoingIndex = slotOrder.indexOf(outgoingId);
-      const outgoing = starters[outgoingIndex];
       setSelectedId(null);
-      if (placeIncoming(card.id, outgoing) && outgoingIndex >= 0) {
+      if (outgoingIndex >= 0) {
         setSlotOrder((prev) => { const next = [...prev]; next[outgoingIndex] = card.id; return next; });
       }
       return;
@@ -204,24 +169,25 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
   const handleRemove = (card) => {
     if (!canEdit) return;
     setSelectedId(null);
-    const res = actions.demoteStarter(myTeamId, card.id);
-    if (res && res.ok === false) { alert(res.msg); return; }
     const idx = slotOrder.indexOf(card.id);
     if (idx >= 0) setSlotOrder((prev) => { const next = [...prev]; next[idx] = null; return next; });
   };
 
   const handleSave = () => {
-    const res = actions.markLineupSet(myTeamId);
-    if (res && res.valid === false) alert(res.msg);
-    else onClose();
+    const ids = slotOrder.filter((id) => id != null);
+    const check = validateLineup({ ...team, activeIds: ids });
+    if (!check.valid) { alert(check.msg); return; }
+    // Close in the same event as the single shared write. React batches these updates, so the
+    // saved lineup first appears on the Franchise page only after the editor is gone.
+    onClose();
+    actions.saveLineup(myTeamId, ids);
   };
 
   // A valid five, never the strongest one (see roster.js's autoValidFive) — an escape hatch
   // for someone who doesn't want to hand-pick, not a "set my best lineup" shortcut.
   const handleAutoSet = () => {
     setSelectedId(null);
-    const res = actions.autoSetLineup(myTeamId);
-    if (res && res.ok === false) alert(res.msg);
+    setSlotOrder(reconcileSlots([null, null, null, null, null], autoValidFive(team.hand)));
   };
 
   return (
