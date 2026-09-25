@@ -1,4 +1,5 @@
 import BallMark from './BallMark';
+import AnimatedPageLabel from './AnimatedPageLabel';
 import { teamOutput } from '../game/matchup';
 import { ERA_LENGTH } from '../game/constants';
 
@@ -33,7 +34,7 @@ const SUPPORT_NAV_ITEMS = [
 // into the sidebar's vertical list. Team was dropped for a while when the persistent bar
 // alone covered the roster/front-office/matchup view, but it's the only way to reach the
 // front-office moves (fire coach or GM, invest in fanbase), so it's back.
-export default function Sidebar({ state, myTeamId, overlay, viewTeamId, onNav, onViewTeam, onAcknowledgeNav, roomCode, freeAgencyAlert }) {
+export default function Sidebar({ state, myTeamId, overlay, pageLabel, viewTeamId, onNav, onViewTeam, onAcknowledgeNav, roomCode, freeAgencyAlert }) {
   const team = state.teams[myTeamId];
   const seasonNum = Math.min(state.season, ERA_LENGTH);
   // The Team overlay is showing someone else's file (opened from a standings row) when
@@ -64,7 +65,7 @@ export default function Sidebar({ state, myTeamId, overlay, viewTeamId, onNav, o
           same to-do state some other way. */}
       <button type="button" className="sidebar-lockup" onClick={onAcknowledgeNav} aria-label="Nine Deep menu">
         <BallMark size={36} variant="onInk" />
-        <span className="topbar-wordmark"><b>NINE</b> <i>DEEP</i></span>
+        <AnimatedPageLabel key={pageLabel} page={pageLabel} />
       </button>
       <div className="sidebar-team">{team.name}</div>
       {roomCode && <div className="sidebar-room-code" title="Share this code so others can join this room">Room {roomCode}</div>}

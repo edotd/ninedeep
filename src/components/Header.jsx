@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import BallMark from './BallMark';
+import AnimatedPageLabel from './AnimatedPageLabel';
 import { ERA_LENGTH } from '../game/constants';
 
 // The Cap/Bar/Titles stats strip that used to live here is gone — the persistent bar is
@@ -13,7 +14,7 @@ import { ERA_LENGTH } from '../game/constants';
 // doubles as that row's menu trigger there (see .topbar-menu-btn / .topbar-nav in index.css,
 // scoped to the mobile breakpoint only); desktop keeps the row inline exactly as before, so
 // menuOpen never applies there.
-export default function Header({ state, myTeamId, overlay, onTeam, onFreeAgency, onDraftClass, onGlossary, onStandings, onSettings, navNeedsAttention, onAcknowledgeNav, roomCode, freeAgencyAlert }) {
+export default function Header({ state, myTeamId, overlay, pageLabel, onTeam, onFreeAgency, onDraftClass, onGlossary, onStandings, onSettings, navNeedsAttention, onAcknowledgeNav, roomCode, freeAgencyAlert }) {
   const team = state.teams[myTeamId];
   const seasonNum = Math.min(state.season, ERA_LENGTH);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -30,7 +31,7 @@ export default function Header({ state, myTeamId, overlay, onTeam, onFreeAgency,
         >
           <BallMark size={28} variant="onInk" />
         </button>
-        <span className="topbar-wordmark"><b>NINE</b> <i>DEEP</i></span>
+        <AnimatedPageLabel key={pageLabel} page={pageLabel} />
         <div className="topbar-title">{team.name} {team.tricode && <span className="topbar-tricode">{team.tricode}</span>}</div>
       </div>
       <div className="era-bar-wrap">

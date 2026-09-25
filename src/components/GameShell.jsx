@@ -55,6 +55,30 @@ const SCREENS = {
 // same as Constructing.
 const HIDE_BAR_PHASES = new Set(['simulating', 'seasontransition']);
 
+const PAGE_LABELS = {
+  cardoverview: 'Card Types',
+  pullcards: 'Front Office',
+  pullhand: 'Your Deal',
+  pullmodifier: 'Adjustment Cards',
+  seasontransition: 'Next Season',
+  constructing: 'Building Season',
+  teamsummary: 'Franchise',
+  standings: 'Standings',
+  playoffs: 'Playoffs',
+  results: 'Results',
+  seasonrecap: 'Season Recap',
+  contracts: 'Contracts',
+  draft: 'Draft',
+  simulating: 'Simulating Season',
+  era_end: 'Era Recap',
+  team: 'Franchise',
+  freeagency: 'Free Agency',
+  draftclass: 'Draft Class',
+  cardtypes: 'Card Types',
+  glossary: 'Glossary',
+  settings: 'Settings',
+};
+
 // Glossary/Standings/Settings/Team/Card Types are client-local overlays, not part of the shared game
 // phase — a room's `state.phase` drives what everyone in the room sees, so if opening the
 // Glossary changed it, one player checking a rule would yank every other player's screen
@@ -186,6 +210,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, roomCode
   // `overlay` state (and everything that opens/closes it) is untouched.
   const onOwnTeamPage = overlay === null && viewTeamId == null && effectivePhase === 'teamsummary';
   const navOverlay = onOwnTeamPage ? 'team' : overlay;
+  const pageLabel = PAGE_LABELS[overlay || effectivePhase] || 'Nine Deep';
 
   const openTeamView = (teamId, fromOverlay) => {
     setReturnOverlay(fromOverlay);
@@ -224,6 +249,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, roomCode
     navNeedsAttention,
     onAcknowledgeNav: acknowledgeNav,
     roomCode,
+    pageLabel,
   };
 
   const mastheadTeamId = overlay === 'team' && viewTeamId != null ? viewTeamId : myTeamId;
@@ -252,7 +278,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, roomCode
   if (isDesktop && showChrome) {
     return (
       <div className="desktop-shell">
-        <Sidebar state={state} myTeamId={myTeamId} overlay={navOverlay} viewTeamId={viewTeamId} onNav={handleNav} onViewTeam={(id) => openTeamView(id, overlay)} onAcknowledgeNav={acknowledgeNav} roomCode={roomCode} freeAgencyAlert={freeAgencyAlert} />
+        <Sidebar state={state} myTeamId={myTeamId} overlay={navOverlay} pageLabel={pageLabel} viewTeamId={viewTeamId} onNav={handleNav} onViewTeam={(id) => openTeamView(id, overlay)} onAcknowledgeNav={acknowledgeNav} roomCode={roomCode} freeAgencyAlert={freeAgencyAlert} />
         <div className="desktop-content">
           <FranchiseMasthead state={state} teamId={mastheadTeamId} />
           {mainBody}
