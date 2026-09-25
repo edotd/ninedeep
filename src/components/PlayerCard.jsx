@@ -60,7 +60,7 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
 
   return (
     <div
-      className={`pcard tier-${tier}${positionClass}${compact ? ' pcard-compact' : ''}${selected ? ' selected' : ''}${expanded ? ' expanded' : ''}`}
+      className={`pcard tier-${tier} rarity-${card.rarity || 'Core'}${positionClass}${compact ? ' pcard-compact' : ''}${selected ? ' selected' : ''}${expanded ? ' expanded' : ''}`}
       onClick={handleClick}
       onTouchStart={handleTouchStart}
       onTouchEnd={clearPressTimer}

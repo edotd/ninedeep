@@ -89,7 +89,7 @@ export default function FrontOfficeCard({ kind, team }) {
   const content = kind === 'coach' ? coachContent(team) : kind === 'fanbase' ? fanbaseContent(team) : marketContent(team);
   return (
     <div className="fo2-wrap">
-      <div className="fo2-card">
+      <div className={'fo2-card' + (kind === 'coach' ? ` rarity-${team.coach.rarity || 'Core'}` : '')}>
         <CardTypeMark type="frontoffice" className="fo2-watermark" color="var(--ink-rule)" size={190} />
         <div className="fo2-header">
           <span className="fo2-kind-group">

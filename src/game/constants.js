@@ -21,29 +21,39 @@ export const POSITION_MOD = {
   Big:     { SCO: -1, PLM: -2, REB: 2, DEF: 1 },
 };
 
+// Card rarity — same four-tier vocabulary Adjustment cards already use (see skillsets.js's
+// SKILLSET_PAIRS "Core/Prime/Signature" comment and supplementalCards.js's own `rarity` field),
+// now extended to player and coach cards. Assigned by relative power/scarcity within each of
+// player tiers, League Accolades, and coach modifiers below (not an independent random roll),
+// so "rarer = bigger stat bonus + cost" falls out of which tier a card already is rather than
+// stacking a second multiplier on top of it.
+export const RARITIES = ['Core', 'Prime', 'Signature', 'Legendary'];
+
 // Base Player Modifiers — quality/trait tiers with no age restriction on who can roll them.
 export const TIERS = [
-  { name: 'Role Player', uniform: 1.00, peak: 1.00, contract: 7, count: 7 },
-  { name: 'Journeyman', uniform: 1.05, peak: 1.10, contract: 6, count: 4 },
-  { name: 'High IQ', uniform: 1.10, peak: 1.20, contract: 4, count: 4, forceStat: 'PLM' },
-  { name: 'Hustler', uniform: 1.10, peak: 1.20, contract: 4, count: 4, forceStats: ['DEF', 'REB'] },
-  { name: 'Generational Talent', uniform: 1.30, peak: 1.65, contract: 2, count: 2 },
+  { name: 'Role Player', uniform: 1.00, peak: 1.00, contract: 7, count: 7, rarity: 'Core' },
+  { name: 'Journeyman', uniform: 1.05, peak: 1.10, contract: 6, count: 4, rarity: 'Core' },
+  { name: 'High IQ', uniform: 1.10, peak: 1.20, contract: 4, count: 4, forceStat: 'PLM', rarity: 'Prime' },
+  { name: 'Hustler', uniform: 1.10, peak: 1.20, contract: 4, count: 4, forceStats: ['DEF', 'REB'], rarity: 'Prime' },
+  // Peak 1.65 is the single highest of any tier or accolade below (MVP's is 1.55) — the
+  // rarest, most powerful Base Player Modifier earns the top rarity outright.
+  { name: 'Generational Talent', uniform: 1.30, peak: 1.65, contract: 2, count: 2, rarity: 'Legendary' },
 ];
 // contractVariance widens the ±1 every other tier gets (see cards.js's makeCard) — these
 // generic fillers are the initial roster's bench toppers (see dealHands), and a flat ±1 kept
 // every one of them locked into a 5-7 season deal, so a fresh bench was always long-contract
 // players. The wider spread mixes real short deals (as low as 3) into the same pool.
-export const REPLACEMENT_TIER = { name: 'Undrafted', uniform: 1, peak: 1, contract: 6, contractVariance: 3 };
+export const REPLACEMENT_TIER = { name: 'Undrafted', uniform: 1, peak: 1, contract: 6, contractVariance: 3, rarity: 'Core' };
 
 // Cheap, low-output fillers seeded into free agency at era start. dealHands doesn't check
 // budget, so some teams start over cap — these give every team an immediate, low-commitment
 // way to shed salary instead of waiting for the first round of releases/expirations to stock
 // the free agent pool. Below-floor stat totals still clamp to MIN_PLAYER_SALARY in cardTotal.
-export const FREE_AGENT_TIER = { name: 'Undrafted', uniform: 0.7, peak: 1, contract: 3 };
+export const FREE_AGENT_TIER = { name: 'Undrafted', uniform: 0.7, peak: 1, contract: 3, rarity: 'Core' };
 // A handful of even-cheaper fillers mixed into the same pool (see season.js's
 // seedFreeAgentPool) — reliably floors out at MIN_PLAYER_SALARY, a genuine salary-dump /
 // minimum-contract option distinct from the regular filler above.
-export const BARGAIN_FREE_AGENT_TIER = { name: 'Undrafted', uniform: 0.5, peak: 1, contract: 2 };
+export const BARGAIN_FREE_AGENT_TIER = { name: 'Undrafted', uniform: 0.5, peak: 1, contract: 2, rarity: 'Core' };
 export const BARGAIN_FREE_AGENT_COUNT = 3;
 export const FREE_AGENT_POOL_SIZE = 12;
 export const MIN_PLAYER_SALARY = 0.25;
@@ -52,15 +62,15 @@ export const MIN_GM_COST = 0.5;
 // League Accolades — elite, statistical-distinction tiers. These only roll on players in
 // the Prime career stage and never appear in the draft.
 export const LEAGUE_ACCOLADES = [
-  { name: 'All-Star', uniform: 1.10, peak: 1.20, contract: 4, count: 4, accolade: true },
-  { name: 'All-League Defensive Team', uniform: 1.10, peak: 1.30, contract: 4, count: 3, forceStat: 'DEF', accolade: true },
-  { name: 'All-League 2nd Team', uniform: 1.15, peak: 1.30, contract: 4, count: 4, accolade: true },
-  { name: 'All-League 1st Team', uniform: 1.20, peak: 1.40, contract: 3, count: 3, accolade: true },
-  { name: 'Defensive Player of the Year', uniform: 1.15, peak: 1.50, contract: 2, count: 2, forceStat: 'DEF', accolade: true },
-  { name: 'Scoring Champion', uniform: 1.15, peak: 1.50, contract: 2, count: 2, forceStat: 'SCO', accolade: true },
-  { name: 'Rebounding Champion', uniform: 1.15, peak: 1.50, contract: 2, count: 2, forceStat: 'REB', allowedPositions: ['Forward', 'Big'], accolade: true },
-  { name: 'Assist Leader', uniform: 1.15, peak: 1.50, contract: 2, count: 2, forceStat: 'PLM', accolade: true },
-  { name: 'Most Valuable Player', uniform: 1.25, peak: 1.55, contract: 2, count: 3, accolade: true },
+  { name: 'All-Star', uniform: 1.10, peak: 1.20, contract: 4, count: 4, accolade: true, rarity: 'Prime' },
+  { name: 'All-League Defensive Team', uniform: 1.10, peak: 1.30, contract: 4, count: 3, forceStat: 'DEF', accolade: true, rarity: 'Prime' },
+  { name: 'All-League 2nd Team', uniform: 1.15, peak: 1.30, contract: 4, count: 4, accolade: true, rarity: 'Prime' },
+  { name: 'All-League 1st Team', uniform: 1.20, peak: 1.40, contract: 3, count: 3, accolade: true, rarity: 'Signature' },
+  { name: 'Defensive Player of the Year', uniform: 1.15, peak: 1.50, contract: 2, count: 2, forceStat: 'DEF', accolade: true, rarity: 'Signature' },
+  { name: 'Scoring Champion', uniform: 1.15, peak: 1.50, contract: 2, count: 2, forceStat: 'SCO', accolade: true, rarity: 'Signature' },
+  { name: 'Rebounding Champion', uniform: 1.15, peak: 1.50, contract: 2, count: 2, forceStat: 'REB', allowedPositions: ['Forward', 'Big'], accolade: true, rarity: 'Signature' },
+  { name: 'Assist Leader', uniform: 1.15, peak: 1.50, contract: 2, count: 2, forceStat: 'PLM', accolade: true, rarity: 'Signature' },
+  { name: 'Most Valuable Player', uniform: 1.25, peak: 1.55, contract: 2, count: 3, accolade: true, rarity: 'Legendary' },
 ];
 
 export const COACH_ARCHETYPES = {
@@ -78,13 +88,13 @@ export const COACH_ARCHETYPES = {
 // changeover.
 export const ON_THE_FLY_CHANCE = 0.3;
 export const COACH_MODIFIERS = [
-  { name: 'Strategist', mult: 1.3, die: 6, weight: 30, salary: 0.5, ability: '' },
-  { name: 'Former Player', mult: 1.6, die: 6, weight: 25, salary: 1.25, ability: '' },
-  { name: 'Collegiate Success', mult: 1.1, die: 6, weight: 25, salary: 0.5, ability: '+3% Off/Def and +1 die size for every consecutive season retained (stacks).' },
-  { name: 'Hot Headed', mult: 1.4, die: 7, weight: 12, salary: 1.0, ability: '' },
-  { name: 'On The Fly', mult: 1.15, die: 6, weight: 15, salary: 1.0, ability: `${Math.round(ON_THE_FLY_CHANCE * 100)}% chance to draw a new Adjustment card when possession changes during a matchup.` },
-  { name: 'Genius', mult: 1.5, die: 6, weight: 10, salary: 2.0, ability: '' },
-  { name: 'Hall of Fame', mult: 2.0, hofDie: true, weight: 8, salary: 3.0, ability: '' },
+  { name: 'Strategist', mult: 1.3, die: 6, weight: 30, salary: 0.5, ability: '', rarity: 'Core' },
+  { name: 'Former Player', mult: 1.6, die: 6, weight: 25, salary: 1.25, ability: '', rarity: 'Prime' },
+  { name: 'Collegiate Success', mult: 1.1, die: 6, weight: 25, salary: 0.5, ability: '+3% Off/Def and +1 die size for every consecutive season retained (stacks).', rarity: 'Prime' },
+  { name: 'Hot Headed', mult: 1.4, die: 7, weight: 12, salary: 1.0, ability: '', rarity: 'Signature' },
+  { name: 'On The Fly', mult: 1.15, die: 6, weight: 15, salary: 1.0, ability: `${Math.round(ON_THE_FLY_CHANCE * 100)}% chance to draw a new Adjustment card when possession changes during a matchup.`, rarity: 'Prime' },
+  { name: 'Genius', mult: 1.5, die: 6, weight: 10, salary: 2.0, ability: '', rarity: 'Signature' },
+  { name: 'Hall of Fame', mult: 2.0, hofDie: true, weight: 8, salary: 3.0, ability: '', rarity: 'Legendary' },
 ];
 // Fanbase archetype — drawn once per era, like Coach. Attendance itself is computed fresh
 // each season (see game/fanbase.js) from the archetype's formula, market floor, performance,

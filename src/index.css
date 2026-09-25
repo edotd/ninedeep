@@ -445,6 +445,18 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .pcard.tier-EXP .pcard-name-block,.pcard.tier-EXP .pcard-contract,.pcard.tier-EXP .pcard-stats{border-color:var(--ink-rule);}
 .pcard.tier-EXP .pcard-microlabel,.pcard.tier-EXP .pcard-stat span{color:var(--file);}.pcard.tier-EXP .pcard-stat-value em{color:var(--approved-file);}
 .pcard.tier-EXP .pcard-dot{background:var(--file);}
+
+/* Card rarity — same Core/Prime/Signature/Legendary vocabulary and border-weight progression
+   (2/3/4/5px) Adjustment cards already use (see .mu2-card[data-rarity] and game/constants.js's
+   RARITIES), extended to player and coach cards. Reuses the exact same tokens .mu2-card's own
+   rarity borders use, rather than a separate palette, so all three card types read as one
+   consistent rarity language. These rules come after .tier-D/.tier-EXP's own border-color so
+   rarity always wins there. */
+.pcard.rarity-Core{border-color:#C4715A;border-width:2px;}
+.pcard.rarity-Prime{border-color:var(--stamp);border-width:3px;}
+.pcard.rarity-Signature{border-color:var(--stamp-text);border-width:4px;}
+.pcard.rarity-Legendary{border-color:var(--franchise);border-width:5px;box-shadow:0 0 16px rgba(240,160,61,.4);}
+
 /* Position is the card header's primary visual code across every player tier. */
 .pcard.position-guard .pcard-header{background:var(--file);color:var(--ink);border-bottom:1px solid var(--file-rule);}
 .pcard.position-forward .pcard-header{background:var(--franchise);color:var(--ink);border-bottom-color:transparent;}
@@ -670,6 +682,13 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 /* ================= Front Office card (see brand handoff, "Components: Front Office &
    Matchup Cards") — landscape, ink ground, distinct silhouette from the player card. ============= */
 .fo2-card{position:relative;overflow:hidden;background:var(--ink);border:2px solid var(--ink);width:100%;max-width:340px;margin:0 auto 14px;font-family:var(--font-mono);display:flex;flex-direction:column;}
+/* Coach card rarity — same Core/Prime/Signature/Legendary tokens .pcard's rarity classes use
+   (see there). Only ever applied when kind==='coach' (see FrontOfficeCard.jsx) — Fanbase/GM
+   cards have no rarity concept. */
+.fo2-card.rarity-Core{border-color:#C4715A;border-width:2px;}
+.fo2-card.rarity-Prime{border-color:var(--stamp);border-width:3px;}
+.fo2-card.rarity-Signature{border-color:var(--stamp-text);border-width:4px;}
+.fo2-card.rarity-Legendary{border-color:var(--franchise);border-width:5px;box-shadow:0 0 16px rgba(240,160,61,.4);}
 .fo2-watermark{position:absolute;right:-20px;bottom:-18px;z-index:-1;opacity:.16;pointer-events:none;}
 .fo2-header{display:flex;justify-content:space-between;align-items:center;padding:10px 13px;border-bottom:1px solid var(--ink-rule);}
 .fo2-kind-group{display:inline-flex;align-items:center;gap:8px;color:var(--file);}
