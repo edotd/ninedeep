@@ -2167,11 +2167,12 @@ body:has(.entry-screen){padding-bottom:0;}
   .ts-screen-lock .ts-roto-grid{height:100%;}
   /* The locked carousel's card frame owns all available height, matching the old initial
      full-window view without bringing vertical page scrolling back. A card whose natural
-     content is genuinely taller than this area is still reduced uniformly by the
-     ResizeObserver below; shorter cards simply extend their frame to the bottom edge. */
-  .ts-screen-lock .ts-roto-grid .ts-roto-slot{height:100%;}
-  .ts-screen-lock .ts-roto-grid .pcard{min-height:100%;}
-  .ts-screen-lock .ts-roto-grid .pcard{transform-origin:top;will-change:transform;}
+     content is genuinely taller than this area is reduced uniformly by the ResizeObserver
+     below; a shorter card is centered in the leftover space (both here and by that same
+     ResizeObserver's fill-up scaling) rather than forced to stretch its own layout box tall
+     and left sitting at the top of it with dead space underneath. */
+  .ts-screen-lock .ts-roto-grid .ts-roto-slot{height:100%;display:flex;align-items:center;justify-content:center;}
+  .ts-screen-lock .ts-roto-grid .pcard{transform-origin:center;will-change:transform;}
   /* "Bigger, not stretched" — instead of a single transform blowing up the whole card (and its
      fixed peek-slot width along with it), the card's own internal sizes step up here: bigger
      type and more generous padding on every section, so the card's natural height at the same

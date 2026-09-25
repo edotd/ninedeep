@@ -276,25 +276,30 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
     // (that would fight the user's own in-progress swipe).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, isDesktop]);
-  // A card never stretches to fill its slot (see .ts-roto-slot in index.css) — it sits at its
-  // own natural, capped width/height. But that natural height can still be taller than the
-  // space the locked screen actually has for it (a dev-card note, an all-league tag, a longer
-  // bio all add up), so measure every card's content height against what's
-  // available and, only when it's taller, shrink the WHOLE card uniformly (never just one axis,
-  // which would distort it) to fit exactly. Each card gets its OWN scale rather than one shared
-  // worst-case value. scrollHeight preserves the natural content height even now that the card
-  // frame has a 100% minimum height, while offsetHeight/clientHeight remain unaffected by an
-  // existing transform, so this is safe to re-run without resetting first.
+  // A card sits at its own natural, capped width (see .ts-roto-slot in index.css) — but its
+  // natural HEIGHT can land on either side of the space the locked screen actually has for it
+  // (a dev-card note, an all-league tag, a longer bio all add up on the tall side; a bare-bones
+  // card with no accolade/development text falls short on the other), so measure every card's
+  // content height against what's available and scale the WHOLE card uniformly (never just one
+  // axis, which would distort it) to nearly fill it either way — 96%, not exactly edge to edge.
+  // Each card gets its OWN scale rather than one shared worst-case value. Scaling up is capped
+  // low (10%) since the card's width already fills its slot; sizing up much more than that would
+  // push its edges past the slot's own reserved next-card peek. scrollHeight preserves the
+  // natural content height even with a transform already applied, and offsetHeight/clientHeight
+  // are unaffected by one either, so this is safe to re-run without resetting first.
   useEffect(() => {
     if (isDesktop || tab !== 'rotation' || !rotoScrollRef.current) return undefined;
+    const FILL_RATIO = 0.96;
+    const MAX_UPSCALE = 1.1;
     const container = rotoScrollRef.current;
     const applyScales = () => {
       const available = container.clientHeight;
       if (!available) return;
       container.querySelectorAll('.ts-roto-grid .pcard').forEach((el) => {
         const natural = Math.max(el.scrollHeight, el.offsetHeight);
-        const scale = natural > available ? available / natural : 1;
-        el.style.transform = scale < 1 ? `scale(${scale})` : 'none';
+        if (!natural) return;
+        const scale = Math.min(MAX_UPSCALE, (available * FILL_RATIO) / natural);
+        el.style.transform = Math.abs(scale - 1) < 0.001 ? 'none' : `scale(${scale})`;
       });
     };
     applyScales();
