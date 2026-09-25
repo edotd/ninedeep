@@ -4,6 +4,9 @@ import { firebaseReady } from '../firebase/config';
 import BallMark from '../components/BallMark';
 import SettingsScreen from './SettingsScreen';
 import { randomFranchiseName } from '../game/names';
+import packageInfo from '../../package.json';
+
+const DISPLAY_VERSION = packageInfo.version.replace(/^1\.0\./, '1.');
 
 // A compact branded setup screen. Solo keeps only the franchise name and Start action here;
 // all configuration lives on the linked Settings screen.
@@ -91,7 +94,7 @@ export default function EntryScreen({ pendingJoinCode, joinOnly = false, soloSta
 
           {!joinOnly && tab === 'solo' && (
             <>
-              <div className="entry-version">v1.24</div>
+              <div className="entry-version">v{DISPLAY_VERSION}</div>
               <div className="entry-field-group">
                 <div className="entry-field-heading">
                   <span>Franchise Name</span>
