@@ -13,13 +13,15 @@ import { useEffect, useMemo, useState } from 'react';
 // and with any caller that needs to time a phase change around a roll actually finishing.
 export const ROLL_DURATION_MS = 900;
 
+// Five other faces besides the front — only top/right are ever actually visible at the fixed
+// idle tilt, but back/bottom/left are real faces too now (see the backface-visibility comment
+// in index.css), so they need some value on them for the moments they ARE visible: mid-spin
+// during a roll, or at the edge of the idle tilt if rounding exposes a sliver of one.
 function otherFaceValues(sides, value) {
   const pool = [];
   for (let i = 1; i <= sides; i++) if (i !== value) pool.push(i);
-  if (!pool.length) return [value, value];
-  const top = pool[Math.floor(pool.length / 3) % pool.length];
-  const right = pool[Math.floor((pool.length * 2) / 3) % pool.length];
-  return [top, right];
+  if (!pool.length) return [value, value, value, value, value];
+  return Array.from({ length: 5 }, (_, i) => pool[Math.floor(((i + 1) * pool.length) / 6) % pool.length]);
 }
 
 function randomFace(sides, exclude) {
@@ -55,11 +57,14 @@ export default function Die({ sides = 6, value = 1, size = 120, rolling = false 
   }, [rolling, sides]);
 
   const shownValue = rolling ? tumbleValue : value;
-  const [topValue, rightValue] = useMemo(() => otherFaceValues(sides, shownValue), [sides, shownValue]);
+  const [topValue, rightValue, backValue, bottomValue, leftValue] = useMemo(() => otherFaceValues(sides, shownValue), [sides, shownValue]);
 
   return (
     <div className={'nd-die' + (rolling ? ' rolling' : '')} style={{ '--die-size': `${size}px` }}>
       <div className="nd-die-cube">
+        <div className="nd-die-face nd-die-back">{backValue}</div>
+        <div className="nd-die-face nd-die-bottom">{bottomValue}</div>
+        <div className="nd-die-face nd-die-left">{leftValue}</div>
         <div className="nd-die-face nd-die-top">{topValue}</div>
         <div className="nd-die-face nd-die-right">{rightValue}</div>
         <div className="nd-die-face nd-die-front" key={shownValue}>{shownValue}</div>

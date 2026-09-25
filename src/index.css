@@ -1049,10 +1049,20 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
    0%/100% values are the whole animation (no separate settle transition needed): 100% already
    equals the base rest transform, so the cube simply stays there once the animation ends. */
 .nd-die.rolling .nd-die-cube{animation:nd-die-roll 900ms cubic-bezier(.13,.82,.24,1) both;}
-.nd-die-face{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);border:2px solid var(--ink);box-sizing:border-box;line-height:1;}
+/* backface-visibility:hidden is what makes this an actual closed cube instead of three
+   floating panels — without it, a face rotated edge-on or away from the camera (which happens
+   throughout the roll spin, and at some fixed idle tilts too, depending on rounding) still
+   paints from behind, so you'd see a face's mirrored underside bleeding through, or the front
+   face's amber panel reading as a flat square detached from the rest of the die rather than
+   one face of a solid object. All six faces are real elements now (not just front/top/right)
+   so the cube has no gap to show background through at any rotation, mid-roll or at rest. */
+.nd-die-face{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);border:2px solid var(--ink);box-sizing:border-box;line-height:1;backface-visibility:hidden;}
 .nd-die-front{background:var(--franchise);color:var(--ink);font-size:calc(var(--die-size) * 0.42);transform:translateZ(calc(var(--die-size) / 2));animation:nd-die-pop 90ms ease-out both;}
+.nd-die-back{background:var(--form);color:var(--ink-muted);font-size:calc(var(--die-size) * 0.26);transform:rotateY(180deg) translateZ(calc(var(--die-size) / 2));}
 .nd-die-top{background:var(--file);color:var(--ink-muted);font-size:calc(var(--die-size) * 0.26);transform:rotateX(90deg) translateZ(calc(var(--die-size) / 2));}
+.nd-die-bottom{background:var(--form);color:var(--ink-muted);font-size:calc(var(--die-size) * 0.26);transform:rotateX(-90deg) translateZ(calc(var(--die-size) / 2));}
 .nd-die-right{background:var(--form);color:var(--ink-muted);font-size:calc(var(--die-size) * 0.26);transform:rotateY(90deg) translateZ(calc(var(--die-size) / 2));}
+.nd-die-left{background:var(--file);color:var(--ink-muted);font-size:calc(var(--die-size) * 0.26);transform:rotateY(-90deg) translateZ(calc(var(--die-size) / 2));}
 @keyframes nd-die-roll{0%{transform:rotateX(1062deg) rotateY(1475deg);}100%{transform:rotateX(-18deg) rotateY(35deg);}}
 @keyframes nd-die-pop{from{filter:brightness(1.6);}to{filter:brightness(1);}}
 @media(prefers-reduced-motion:reduce){.nd-die-front{animation:none;}.nd-die.rolling .nd-die-cube{animation:none;}}
