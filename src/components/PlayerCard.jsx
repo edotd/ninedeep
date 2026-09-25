@@ -19,7 +19,7 @@ const LEGACY_DEVELOPMENT_CHANGES = {
 // that a normal card-select tap never trips it, short enough that it doesn't feel unresponsive.
 const LONG_PRESS_MS = 500;
 
-export default function PlayerCard({ card, onClick, selected, rosterLabel, compact, onRelease, onDevelop, alwaysShowOptions, contractLabel }) {
+export default function PlayerCard({ card, onClick, selected, rosterLabel, compact, onRelease, onDevelop, alwaysShowOptions, contractLabel, signingNote }) {
   const pillLabel = rosterLabel || (selected ? 'Selected' : null);
   const tier = cardTier(card);
   const skillset = skillsetFor(card);
@@ -115,6 +115,11 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
           </div>
         </div>
       )}
+      {/* One-line signing outlook for a free agent or an expiring contract — the negotiation
+          band/chance while re-signing your own player, or the bidding priority and minimum
+          terms for an open free agent (see ContractsScreen/FreeAgencyScreen). Not shown at all
+          for a roster card with nothing to negotiate. */}
+      {!compact && signingNote && <div className="pcard-signing-note">{signingNote}</div>}
       {!compact && (
         <div className="pcard-stats">
           {['SCO', 'PLM', 'REB', 'DEF'].map((stat) => <div className="pcard-stat" key={stat}><div className="pcard-stat-value"><b>{card.stats[stat]}</b>{developmentChanges[stat] > 0 && <em>+{developmentChanges[stat]}</em>}</div><span>{stat}</span></div>)}

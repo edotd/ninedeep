@@ -51,3 +51,9 @@ export function rosterSalary(team) {
   const total = team.hand.reduce((s, c) => s + c.salary, 0) + (team.coach ? team.coach.salary : 0) + (team.gmType ? gmCost(team.gmType) : 0) + deadCapDue(team);
   return Math.round(total * 100) / 100;
 }
+
+// Unused season cap room right now — negotiation.js and bidding.js both validate new offers
+// against this rather than re-deriving seasonCap - rosterSalary(team) inline at each call site.
+export function remainingCap(team) {
+  return Math.round(((team.seasonCap || 0) - rosterSalary(team)) * 100) / 100;
+}

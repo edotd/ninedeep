@@ -49,6 +49,7 @@ export function fireCoach(state, teamIdx) {
 export function hireFreeAgentCoach(state, teamIdx, coachId) {
   const team = state.teams[teamIdx];
   if (!state.settings?.coachChangesEnabled) return { ok: false, msg: 'Coach & GM Changes is off — turn it on in Settings.' };
+  if (state.offseason?.freeAgencyClosed?.[team?.id]) return { ok: false, msg: 'You have closed out free agency this turn.' };
   const index = (state.freeAgentCoaches || []).findIndex((coach) => coach.id === coachId);
   if (!team || team.coach || index < 0) return { ok: false, msg: team?.coach ? 'Fire your current coach before hiring a replacement.' : 'Coach is not available.' };
   const coach = state.freeAgentCoaches[index];
@@ -97,6 +98,7 @@ export function fireGM(state, teamIdx) {
 // at all unless activeIds.length === 5.
 export function releasePlayer(state, teamIdx, cardId) {
   const team = state.teams[teamIdx];
+  if (state.offseason?.freeAgencyClosed?.[team.id]) return { ok: false, msg: 'You have closed out free agency this turn.' };
   const idx = team.hand.findIndex((c) => c.id === cardId);
   if (idx < 0) return { ok: false, msg: 'Player not found on this roster.' };
   const card = team.hand[idx];

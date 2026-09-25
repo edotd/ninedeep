@@ -1,12 +1,14 @@
 // Single source of truth for "action name -> mutator function" used by both useLocalGame
 // (solo, in-memory) and useRoomGame (Firestore-backed). Every mutator has the same signature
 // either way: (state, ...args) => result | undefined, mutating state in place.
-import { newEraState, signFreeAgent, proceedFromResults, proceedFromSeasonRecap, proceedFromSeasonTransition, finishPlayoffs, fileContracts, renewExpiredContract } from './season';
+import { newEraState, signFreeAgent, proceedFromResults, proceedFromSeasonRecap, proceedFromSeasonTransition, finishPlayoffs, fileContracts, renewExpiredContract, closeFreeAgency } from './season';
 import { draftPick, forfeitPick } from './draft';
 import { fireCoach, fireGM, hireFreeAgentCoach, investInFanbase, releasePlayer } from './finances';
 import * as engine from './engine';
 import { beginTurn, advanceTurn } from './turn';
 import { applyDevelopmentCard, playGameplanCard } from './strategyCards';
+import { openNegotiation, submitNegotiationOffer, acceptNegotiationCounter, walkAwayFromNegotiation } from './negotiation';
+import { openFreeAgentBid, raiseFreeAgentBid, standPatFreeAgentBid } from './bidding';
 
 export const actionMap = {
   newEra: (state) => { Object.assign(state, newEraState()); },
@@ -51,4 +53,12 @@ export const actionMap = {
   releasePlayer,
   applyDevelopmentCard,
   playGameplanCard,
+  closeFreeAgency,
+  openNegotiation,
+  submitNegotiationOffer,
+  acceptNegotiationCounter,
+  walkAwayFromNegotiation,
+  openFreeAgentBid,
+  raiseFreeAgentBid,
+  standPatFreeAgentBid,
 };

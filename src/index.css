@@ -2359,3 +2359,92 @@ body:has(.trans-screen){padding-bottom:0;}
   .trans-panels{grid-template-columns:1fr;}
   .trans-numeral{font-size:64px;}
 }
+
+/* Negotiation (Game 1) and Bidding (Game 2) — the two contract mini-games, full-screen
+   takeovers over Contracts/Free Agency per the design handoff. Shares the .tsx-overlay
+   backdrop Set Lineup already uses; the panel reuses .slf-panel's navy pebble-grain ground
+   for the same "its own surface" treatment rather than inventing a third texture. */
+.neg-panel{
+  color:var(--file);width:100%;max-width:420px;max-height:100%;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.55);
+  background-color:var(--ink);
+  background-image:
+    radial-gradient(circle at 15% 25%, rgba(230,220,196,.08) .6px, transparent .6px),
+    radial-gradient(circle at 55% 65%, rgba(230,220,196,.07) .6px, transparent .6px),
+    radial-gradient(circle at 80% 15%, rgba(230,220,196,.08) .6px, transparent .6px);
+  background-size:6px 6px,9px 9px,11px 11px;
+  padding:20px;
+  display:flex;flex-direction:column;gap:14px;
+}
+.neg-head{display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:2px solid var(--franchise);padding-bottom:10px;}
+.neg-close{background:none;border:none;color:var(--ink-muted);font-size:16px;cursor:pointer;padding:2px 6px;}
+.neg-head-title{font-family:var(--font-label);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--file);flex:1;text-align:center;}
+.neg-rolls-pips{display:flex;gap:4px;}
+.neg-pip{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--ink-muted);}
+.neg-pip.used{background:var(--franchise);border-color:var(--franchise);}
+.neg-player{display:flex;align-items:center;gap:12px;}
+.neg-jersey{font-family:var(--font-display);font-size:34px;line-height:.8;color:var(--stamp-ink);}
+.neg-player-tags{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-muted);}
+.neg-player-name{font-family:var(--font-display);font-size:24px;line-height:1;color:var(--file);text-transform:uppercase;}
+.neg-ask-row,.bid-priority-row{display:flex;justify-content:space-between;gap:12px;}
+.neg-microlabel{display:block;font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:2px;}
+.neg-figure{font-family:var(--font-display);font-size:22px;line-height:1;color:var(--file);}
+.neg-figure.big{font-size:30px;margin:4px 0;}
+.neg-counter-block{background:rgba(230,220,196,.08);border:1px solid rgba(230,220,196,.2);padding:14px;display:flex;flex-direction:column;gap:8px;}
+.neg-counter-terms{font-family:var(--font-display);font-size:26px;line-height:1;color:var(--franchise);}
+.neg-note{font-family:var(--font-mono);font-size:11px;line-height:1.5;color:var(--ink-muted);margin:0;}
+.neg-actions{display:flex;flex-direction:column;gap:8px;margin-top:4px;}
+.neg-walk-link{background:none;border:none;color:var(--stamp-ink);font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;text-align:center;cursor:pointer;padding:6px;}
+.neg-stepper-row{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.neg-stepper{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-size:20px;color:var(--file);}
+.neg-stepper button{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--ink-muted);background:none;color:var(--file);font-size:16px;cursor:pointer;}
+.neg-stepper button:disabled{opacity:.35;cursor:not-allowed;}
+.neg-years-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.neg-years-options{display:flex;gap:5px;}
+.neg-year-opt{width:26px;height:26px;border:1.5px solid var(--ink-muted);background:none;color:var(--file);font-family:var(--font-mono);font-size:11px;cursor:pointer;}
+.neg-year-opt.selected{background:var(--franchise);border-color:var(--franchise);color:var(--ink);font-weight:700;}
+.neg-year-opt:disabled{opacity:.3;cursor:not-allowed;}
+.neg-band-row{display:flex;align-items:baseline;justify-content:space-between;}
+.neg-band-name{font-family:var(--font-label);font-size:13px;letter-spacing:.08em;color:var(--file);}
+.neg-band-chance{font-family:var(--font-display);font-size:26px;color:var(--approved-ink);}
+.neg-band-chance span{font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;color:var(--ink-muted);}
+.neg-band-split{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-family:var(--font-mono);font-size:9px;letter-spacing:.06em;color:var(--ink-muted);}
+.neg-band-split .walk{color:var(--stamp-ink);}
+.neg-band-split .sign{color:var(--approved-ink);}
+.neg-error{font-family:var(--font-mono);font-size:11px;color:var(--stamp-ink);}
+.neg-roll-btn{width:100%;}
+.neg-result{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;padding:20px 0;}
+.neg-stamp{font-family:var(--font-label);font-size:16px;letter-spacing:.1em;text-transform:uppercase;border:3px solid;padding:8px 14px;transform:rotate(-3deg);}
+.neg-stamp.signed{color:var(--approved-ink);border-color:var(--approved-ink);}
+.neg-stamp.walked{color:var(--stamp-ink);border-color:var(--stamp-ink);}
+.neg-result button{width:100%;margin-top:6px;}
+
+/* d10 face strip — the whole ten-face spread of one roll, colored by what each face does, so
+   the odds are visible before Roll is ever pressed (see DieFaceStrip.jsx). */
+.dfs-strip{display:flex;gap:3px;}
+.dfs-face{flex:1;height:24px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:10px;font-weight:600;color:var(--file);background:var(--ink-rule);border-radius:2px;}
+.dfs-face.sign{background:var(--approved);}
+.dfs-face.counter{background:var(--depth);}
+.dfs-face.walk{background:var(--stamp);}
+.dfs-face.rolled{outline:2px solid var(--franchise);outline-offset:1px;}
+
+/* Bidding-only additions on top of the shared .neg-* panel styles above. */
+.bid-panel{max-width:460px;}
+.bid-minimum{font-family:var(--font-mono);font-size:11px;color:var(--ink-muted);align-self:flex-end;}
+.bid-bonus-table{display:flex;flex-direction:column;gap:4px;}
+.bid-bonus-row{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:11px;color:var(--file);background:rgba(230,220,196,.06);padding:5px 10px;}
+.bid-bonus-row span:first-child{color:var(--franchise);font-weight:700;}
+.bid-board{display:flex;flex-direction:column;gap:2px;font-family:var(--font-mono);font-size:10px;}
+.bid-board-head,.bid-board-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:6px;padding:5px 6px;align-items:center;}
+.bid-board-head{color:var(--ink-muted);letter-spacing:.06em;text-transform:uppercase;font-size:9px;}
+.bid-board-row{background:rgba(230,220,196,.06);color:var(--file);}
+
+/* Free Agency turn-milestone chrome — the close-out button and the "come back" alert (design
+   ask: a warning to get the user to visit the page before the season can start). */
+.fa-close-bar{flex-direction:column;align-items:stretch;gap:8px;}
+.fa-alert{font-family:var(--font-mono);font-size:11px;color:var(--stamp-text);text-align:center;}
+.pcard-signing-note{font-family:var(--font-mono);font-size:9px;letter-spacing:.04em;color:var(--file-muted);margin-top:2px;}
+
+/* Free Agency nav badge — a small pulse next to the label so a human doesn't forget to close
+   it out (or come back to a raise/stand-pat decision) before the draft can start. */
+.nav-badge-dot{display:inline-block;width:6px;height:6px;margin-left:6px;border-radius:50%;background:var(--stamp);vertical-align:middle;animation:ts-tab-dot-pulse 1.8s ease-in-out infinite;}
+@media (prefers-reduced-motion: reduce){.nav-badge-dot{animation:none;}}

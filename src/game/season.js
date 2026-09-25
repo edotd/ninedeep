@@ -15,6 +15,7 @@ import { simulateSeasonOutput, teamOutput } from './matchup';
 import { teamSynergy } from './skillsets';
 import { recordFreeAgencyActivity } from './freeAgencyActivity';
 import { autoPlaySeasonGameplans, dealStrategyCards } from './strategyCards';
+import { forceFinalizeTeamBids } from './bidding';
 
 export function newEraState() {
   return {
@@ -31,6 +32,10 @@ export function newEraState() {
     strategyCardCounter: 0,
     freeAgentCoachCounter: 0,
     eraId: null,
+    // Present from era start (not just once proceedFromResults first resets it) since Free
+    // Agency itself is reachable at any time, including before the first season's playoffs —
+    // openFreeAgentBid/closeFreeAgency write into this the moment anyone bids.
+    offseason: { contractsFiled: {}, freeAgencyClosed: {}, negotiations: {}, bidding: {} },
     settings: {
       injuryChance: INJURY_CHANCE,
       championshipBarMult: CHAMPIONSHIP_BAR_MULT,
@@ -409,7 +414,7 @@ export function proceedFromResults(state) {
     });
   });
   state.lastExpiredPlayers = [];
-  state.offseason = { contractsFiled: {} };
+  state.offseason = { contractsFiled: {}, freeAgencyClosed: {}, negotiations: {}, bidding: {} };
   state.teams.forEach((team) => {
     creditTeamSeason(team, state.season);
     const kept = [];
@@ -441,9 +446,28 @@ export function proceedFromSeasonRecap(state) {
 const allHumanFiled = (state, key) => state.teams.filter((t) => t.human).every((t) => state.offseason[key][t.id]);
 
 export function fileContracts(state, teamIdx) {
-  if (state.phase !== 'contracts' || !state.teams[teamIdx]?.human) return { ok: false, msg: 'Contracts are not open.' };
-  state.offseason.contractsFiled[state.teams[teamIdx].id] = true;
+  const team = state.teams[teamIdx];
+  if (state.phase !== 'contracts' || !team?.human) return { ok: false, msg: 'Contracts are not open.' };
+  if (!state.offseason.freeAgencyClosed?.[team.id]) return { ok: false, msg: 'Close out free agency before starting the draft.' };
+  state.offseason.contractsFiled[team.id] = true;
   if (allHumanFiled(state, 'contractsFiled')) startDraft(state);
+  return { ok: true };
+}
+
+// The Free Agency turn milestone (design ask: "users must close out free agency before they
+// can begin the season") — once closed, this team can no longer sign, bid on, or release
+// players until next turn (see the freeAgencyClosed guards on signFreeAgent below and on
+// releasePlayer/hireFreeAgentCoach in finances.js, and openFreeAgentBid/raiseFreeAgentBid in
+// bidding.js). fileContracts (the "Begin Draft" button) won't let this team's franchise into
+// the draft until this is true. Blocked while over budget so a team can't lock in an invalid
+// roster and get stuck once the draft starts.
+export function closeFreeAgency(state, teamIdx) {
+  const team = state.teams[teamIdx];
+  if (!team?.human) return { ok: false, msg: 'Only a human GM closes out free agency.' };
+  if (rosterSalary(team) > team.seasonCap) return { ok: false, msg: 'You are over the salary cap — fix your roster before closing out free agency.' };
+  forceFinalizeTeamBids(state, team);
+  state.offseason.freeAgencyClosed ||= {};
+  state.offseason.freeAgencyClosed[team.id] = true;
   return { ok: true };
 }
 
@@ -467,6 +491,7 @@ export function signFreeAgent(state, cardId, teamIdx) {
   const idx = state.freeAgents.findIndex((c) => c.id === cardId);
   if (idx < 0) return { ok: false, msg: 'Card not available.' };
   const team = state.teams[teamIdx];
+  if (state.offseason?.freeAgencyClosed?.[team.id]) return { ok: false, msg: 'You have closed out free agency this turn.' };
   const card = state.freeAgents[idx];
   if (wasReleasedByTeamThisSeason(card, team, state.season)) {
     return { ok: false, msg: 'You cannot re-sign a player you released this season.' };

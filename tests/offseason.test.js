@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { newEraState, renewExpiredContract, signFreeAgent } from '../src/game/season.js';
+import { newEraState, renewExpiredContract, signFreeAgent, fileContracts, closeFreeAgency } from '../src/game/season.js';
 import { startDraft, draftPick, forfeitPick, forfeitBonusForPosition, overallPickPosition, buildDraftPool } from '../src/game/draft.js';
 import { rosterSalary } from '../src/game/economy.js';
 import { FORFEIT_BONUS_MAX, FORFEIT_BONUS_MIN, LEAGUE_TEAM_COUNT } from '../src/game/constants.js';
@@ -212,6 +212,36 @@ test('season start rejects a franchise with an open coach slot', () => {
   const cards = Array.from({ length: 9 }, (_, i) => ({ id: `p${i}`, position: ['Guard', 'Forward', 'Big'][i % 3], salary: 1 }));
   state.teams = [{ id: 0, human: true, hand: cards, activeIds: cards.slice(0, 5).map((card) => card.id), seasonCap: 20, coach: null }];
   assert.match(confirmLineup(state, 0).msg, /Hire a coach/);
+});
+
+test('the draft cannot begin until this team has closed out free agency', () => {
+  const state = newEraState();
+  state.phase = 'contracts';
+  // A second, not-yet-filed human keeps allHumanFiled false so filing here doesn't cascade into
+  // startDraft, which needs state.seeds (only real once lockSeasonAndSeed has actually run).
+  state.teams = [{ id: 0, human: true, hand: [], seasonCap: 20 }, { id: 1, human: true, hand: [], seasonCap: 20 }];
+  const blocked = fileContracts(state, 0);
+  assert.equal(blocked.ok, false);
+  assert.equal(state.offseason.contractsFiled[0], undefined);
+  assert.equal(closeFreeAgency(state, 0).ok, true);
+  assert.equal(fileContracts(state, 0).ok, true);
+});
+
+test('closing out free agency is refused while over the salary cap', () => {
+  const state = newEraState();
+  state.teams = [{ id: 0, human: true, hand: [{ id: 'p1', salary: 25 }], seasonCap: 20 }];
+  const res = closeFreeAgency(state, 0);
+  assert.equal(res.ok, false);
+  assert.equal(state.offseason.freeAgencyClosed[0], undefined);
+});
+
+test('once free agency is closed, this team can no longer sign, bid, or release players this turn', () => {
+  const state = newEraState();
+  state.teams = [{ id: 0, human: true, hand: [{ id: 'onroster', salary: 1, contract: 2 }], seasonCap: 20 }];
+  state.freeAgents = [{ id: 'fa1', salary: 1 }];
+  assert.equal(closeFreeAgency(state, 0).ok, true);
+  assert.equal(signFreeAgent(state, 'fa1', 0).ok, false);
+  assert.equal(releasePlayer(state, 0, 'onroster').ok, false);
 });
 
 test('confirmLineup requires a reviewed lineup; markLineupSet unlocks it', () => {

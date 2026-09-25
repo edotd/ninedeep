@@ -24,6 +24,8 @@ import SeasonTransitionScreen from '../screens/SeasonTransitionScreen';
 import ContractsScreen from '../screens/ContractsScreen';
 import FreeAgencyScreen from '../screens/FreeAgencyScreen';
 import FranchiseMasthead from './FranchiseMasthead';
+import { rosterSalary } from '../game/economy';
+import { hasPendingBidDecision } from '../game/bidding';
 
 const SCREENS = {
   cardoverview: CardOverviewScreen,
@@ -204,12 +206,22 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, roomCode
     onSettings: () => toggleOverlay('settings'),
     onTeam: () => handleNav('team'),
     onFreeAgency: () => toggleOverlay('freeagency'),
+    freeAgencyAlert,
     navNeedsAttention,
     onAcknowledgeNav: acknowledgeNav,
     roomCode,
   };
 
   const showBar = showChrome && !HIDE_BAR_PHASES.has(state.phase);
+  // Free Agency needs a visit before the draft/season can start (see closeFreeAgency,
+  // game/season.js) — flag the nav item while it's still open for this team, this team is over
+  // budget, or a bid this team placed is waiting on its own raise/stand-pat decision.
+  const myTeam = myTeamId != null ? state.teams?.[myTeamId] : null;
+  const freeAgencyAlert = Boolean(myTeam && showChrome && (
+    (state.phase === 'contracts' && !state.offseason?.freeAgencyClosed?.[myTeam.id])
+    || rosterSalary(myTeam) > (myTeam.seasonCap || 0)
+    || hasPendingBidDecision(state, myTeam)
+  ));
   const mastheadTeamId = overlay === 'team' && viewTeamId != null ? viewTeamId : myTeamId;
 
   const close = () => setOverlay(null);
@@ -235,7 +247,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, roomCode
   if (isDesktop && showChrome) {
     return (
       <div className="desktop-shell">
-        <Sidebar state={state} myTeamId={myTeamId} overlay={navOverlay} viewTeamId={viewTeamId} onNav={handleNav} onViewTeam={(id) => openTeamView(id, overlay)} onAcknowledgeNav={acknowledgeNav} roomCode={roomCode} />
+        <Sidebar state={state} myTeamId={myTeamId} overlay={navOverlay} viewTeamId={viewTeamId} onNav={handleNav} onViewTeam={(id) => openTeamView(id, overlay)} onAcknowledgeNav={acknowledgeNav} roomCode={roomCode} freeAgencyAlert={freeAgencyAlert} />
         <div className="desktop-content">
           <FranchiseMasthead state={state} teamId={mastheadTeamId} />
           {mainBody}

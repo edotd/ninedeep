@@ -1,17 +1,38 @@
+import { useState } from 'react';
 import PlayerCard from '../components/PlayerCard';
 import FrontOfficeCard from '../components/FrontOfficeCard';
-import { formatCoins } from '../game/economy';
-import { offseasonPrice } from '../game/gm';
+import BiddingModal from '../components/BiddingModal';
+import { formatCoins, rosterSalary } from '../game/economy';
 import { wasReleasedByTeamThisSeason } from '../game/season';
+import { freeAgentPriority, hasPendingBidDecision } from '../game/bidding';
 
 export default function FreeAgencyScreen({ state, actions, myTeamId, onBack }) {
   const team = state.teams[myTeamId];
   const openSlots = Math.max(0, 9 - team.hand.length);
+  const closed = state.offseason?.freeAgencyClosed?.[team.id];
+  const overBudget = rosterSalary(team) > team.seasonCap;
+  const pendingDecision = hasPendingBidDecision(state, team);
+  // Holds the actual card object, not just an id looked up live in state.freeAgents — a
+  // resolved auction splices the winning card out of freeAgents immediately, and the modal
+  // still needs to render its own reveal screen for a beat after that.
+  const [biddingCard, setBiddingCard] = useState(null);
+
+  const closeOut = () => {
+    const res = actions.closeFreeAgency(myTeamId);
+    if (res && res.ok === false) alert(res.msg);
+  };
+
   return (
     <div className="screen">
       <div className="screen-kicker">League Personnel Wire</div>
       <h1>Free Agency</h1>
       <p className="lede">Browse available players and coaches at any time. Signing is optional.</p>
+      <div className="bottombar fa-close-bar">
+        <button className="primary" disabled={closed || overBudget} onClick={closeOut}>
+          {closed ? 'Closed For This Turn' : overBudget ? 'Over Budget — Fix Roster To Close' : 'Close Out Free Agency'}
+        </button>
+        {pendingDecision && !closed && <div className="fa-alert">You have an open bid waiting on your raise or stand pat.</div>}
+      </div>
       <h2>Coaches</h2>
       {(state.freeAgentCoaches || []).length ? (
         <div className="fa-coach-grid">
@@ -25,7 +46,7 @@ export default function FreeAgencyScreen({ state, actions, myTeamId, onBack }) {
             return (
               <div key={coach.id}>
                 <FrontOfficeCard kind="coach" team={{ ...team, coach, retainedStreak: 0 }} />
-                <button className="pcard-renew" disabled={hasCoach || firedHere} onClick={hire}>
+                <button className="pcard-renew" disabled={hasCoach || firedHere || closed} onClick={hire}>
                   {firedHere ? 'Fired This Season' : hasCoach ? 'Fire Coach To Hire' : `Hire — ${formatCoins(coach.salary)}`}
                 </button>
               </div>
@@ -38,17 +59,14 @@ export default function FreeAgencyScreen({ state, actions, myTeamId, onBack }) {
       {state.freeAgents.length ? (
         <div className="fa-grid">
           {state.freeAgents.map((card) => {
-            const price = offseasonPrice(team, card.salary);
             const releasedHere = wasReleasedByTeamThisSeason(card, team, state.season);
-            const sign = () => {
-              const result = actions.signFreeAgent(card.id, myTeamId);
-              if (result && result.ok === false) alert(result.msg);
-            };
+            const bid = state.offseason?.bidding?.[card.id]?.bids?.[team.id];
+            const sign = () => setBiddingCard(card);
             return (
               <div key={card.id}>
-                <PlayerCard card={{ ...card, salary: price }} />
-                <button className="pcard-renew" disabled={!openSlots || releasedHere} onClick={sign}>
-                  {releasedHere ? 'Released This Season' : `Offer — ${formatCoins(price)}`}
+                <PlayerCard card={card} signingNote={`Rolls for ${freeAgentPriority(card)} · min ${card.contract} yr${card.contract === 1 ? '' : 's'}`} />
+                <button className="pcard-renew" disabled={(!openSlots && !bid) || releasedHere || closed} onClick={sign}>
+                  {releasedHere ? 'Released This Season' : bid ? `Bidding — ${formatCoins(bid.salary)}` : `Offer — ${formatCoins(card.salary)}`}
                 </button>
               </div>
             );
@@ -56,6 +74,9 @@ export default function FreeAgencyScreen({ state, actions, myTeamId, onBack }) {
         </div>
       ) : <p className="lede">No players are currently available.</p>}
       <div className="bottombar"><button className="primary" onClick={onBack}>Back</button></div>
+      {biddingCard && (
+        <BiddingModal state={state} actions={actions} myTeamId={myTeamId} card={biddingCard} onClose={() => setBiddingCard(null)} />
+      )}
     </div>
   );
 }

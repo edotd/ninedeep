@@ -11,6 +11,10 @@ const lobbyActionMap = { claimSeat, leaveSeat, startEraOnline, resetRoomToLobby 
 const NON_OPTIMISTIC_ACTIONS = new Set([
   'confirmLineup', 'finishConstruction', 'finishSeasonSimulation', 'openSeries', 'closeSeries',
   'beginTurn', 'simulateOneMatch', 'simulateAllPlayoffs', 'beginPlayoffs', 'finishPlayoffs',
+  // Each of these rolls dice (or can resolve someone else's dangling bid) inside the mutator
+  // itself — an optimistic local roll would show a result the real transaction's own roll can
+  // then silently overwrite. See rng.js's header comment on single-resolver-path rolls.
+  'submitNegotiationOffer', 'openFreeAgentBid', 'raiseFreeAgentBid', 'standPatFreeAgentBid', 'closeFreeAgency',
 ]);
 
 // Firestore-backed counterpart to useLocalGame — same actions object shape (plus a few
