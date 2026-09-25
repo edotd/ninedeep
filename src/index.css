@@ -1384,9 +1384,9 @@ button.t2-adjustment-mini.empty.pulsing{cursor:pointer;}
 @media(prefers-reduced-motion:reduce){.t2-fade-in{animation:none;}}
 .t2-rollzone-caption{font-family:var(--font-label);font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--file);text-align:center;line-height:1.5;}
 .t2-rollzone-caption span{display:block;font-family:var(--font-mono);font-size:12px;letter-spacing:.02em;color:var(--ink-muted);text-transform:none;margin-top:2px;}
-/* The pre-flip hint ("Winner opens on offense") — scaled up 3x from the shared caption-span
-   size above since it's the only thing on screen before the coin's even been touched. */
-.t2-rollzone-caption .t2-coin-hint{font-size:36px;margin-top:6px;line-height:1.2;}
+/* The pre-flip hint ("Winner opens on offense") is a display headline, not enlarged data
+   copy. Bebas matches the game's mastheads and remains readable at this scale. */
+.t2-rollzone-caption .t2-coin-hint{font-family:var(--font-display);font-size:36px;letter-spacing:.045em;text-transform:uppercase;color:var(--franchise);margin-top:6px;line-height:1.05;}
 /* One block per side now (rendered once above the roll circle for teamA's play, once below
    for teamB's — see TurnPanel), so this is just a single stacked column, not the old shared
    two-team grid. */
