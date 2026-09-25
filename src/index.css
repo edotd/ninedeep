@@ -1183,6 +1183,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
    so the cube has no gap to show background through at any rotation, mid-roll or at rest. */
 .nd-die-face{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);border:2px solid var(--ink);box-sizing:border-box;line-height:1;backface-visibility:hidden;}
 .nd-die-front{background:var(--franchise);color:var(--ink);font-size:calc(var(--die-size) * 0.42);transform:translateZ(calc(var(--die-size) / 2));animation:nd-die-pop 90ms ease-out both;}
+.nd-die-front.prompt{font-family:var(--font-label);font-size:calc(var(--die-size) * .2);font-weight:700;letter-spacing:.08em;text-transform:uppercase;}
 .nd-die-back{background:var(--form);color:var(--ink-muted);font-size:calc(var(--die-size) * 0.26);transform:rotateY(180deg) translateZ(calc(var(--die-size) / 2));}
 .nd-die-top{background:var(--file);color:var(--ink-muted);font-size:calc(var(--die-size) * 0.26);transform:rotateX(90deg) translateZ(calc(var(--die-size) / 2));}
 .nd-die-bottom{background:var(--form);color:var(--ink-muted);font-size:calc(var(--die-size) * 0.26);transform:rotateX(-90deg) translateZ(calc(var(--die-size) / 2));}
@@ -1273,9 +1274,10 @@ button.t2-adjustment-mini.empty.pulsing{cursor:pointer;}
    tile via flex:1, so the row holds at any board width down to wrapping on narrow screens. */
 .nd2-roster{position:relative;display:flex;gap:3px;flex-wrap:wrap;padding-bottom:2px;}
 .t2-teamboard.flip .nd2-roster{padding-bottom:0;padding-top:2px;}
-.nd2-roster-timer{position:absolute;inset:0 auto 0 0;z-index:0;background:rgba(240,160,61,.2);border-bottom:3px solid var(--franchise);transition:width 100ms linear,border-color 180ms ease,background 180ms ease;pointer-events:none;}
-.nd2-roster-timer.urgent{background:rgba(181,67,31,.2);border-color:var(--stamp);}
-.nd2-roster.timer-active .nd2-tile{position:relative;z-index:1;background-color:rgba(230,220,196,.9);}
+.nd2-roster.timer-active::after{content:'';position:absolute;left:0;right:0;bottom:0;height:7px;z-index:2;background:var(--ink-rule);pointer-events:none;}
+.nd2-roster-timer{position:absolute;left:0;bottom:0;height:7px;z-index:3;background:var(--franchise);transition:width 100ms linear,background 180ms ease;pointer-events:none;box-shadow:0 0 8px rgba(240,160,61,.55);}
+.nd2-roster-timer.urgent{background:var(--stamp);box-shadow:0 0 8px rgba(181,67,31,.65);}
+.nd2-roster.timer-active .nd2-tile{position:relative;z-index:1;}
 
 .nd2-tile{flex:1 1 78px;min-width:78px;box-sizing:border-box;background:var(--form);display:flex;flex-direction:column;transition:transform 200ms ease-out;}
 .nd2-tile.edge-bottom{border-bottom:4px solid var(--franchise);}
@@ -1338,9 +1340,8 @@ button.t2-adjustment-mini.empty.pulsing{cursor:pointer;}
 .t2-possession-arrow::after{content:'';position:absolute;top:50%;left:0;width:0;height:0;border-top:21px solid transparent;border-bottom:21px solid transparent;border-right:30px solid var(--franchise);transform:translateY(-50%);}
 .t2-possession-arrow.flip{transform:scaleX(-1);}
 .t2-die-stage{position:relative;display:flex;align-items:center;justify-content:center;}
-/* Replaces the old standalone Roll button — the prompt lives right on the die's own face
-   instead of a separate control underneath it, and the die itself pulses to invite the tap. */
-.t2-die-roll-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(240,160,61,.92);color:var(--ink);font-family:var(--font-label);font-size:15px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;pointer-events:none;}
+/* The Roll prompt replaces the number on Die's amber front face; the die itself pulses to
+   invite the tap without drawing a second square over the three-dimensional cube. */
 .t2-die-stage.t2-die-clickable{animation:t2-die-roll-pulse 1.8s ease-in-out infinite;}
 @keyframes t2-die-roll-pulse{0%,100%{box-shadow:0 0 0 0 rgba(240,160,61,.5);}50%{box-shadow:0 0 0 10px rgba(240,160,61,0);}}
 @media(prefers-reduced-motion:reduce){.t2-die-stage.t2-die-clickable{animation:none;}}

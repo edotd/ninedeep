@@ -147,7 +147,7 @@ function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, gameplan
               : (
                 <div className={'t2-gameplan-mini empty' + (gameplanCanPlay ? ' pulsing' : '')} aria-hidden="true">
                   <CardTypeMark type="gameplan" size={42} />
-                  <span className="t2-mini-plus">+</span>
+                  {gameplanCanPlay && <span className="t2-mini-plus">+</span>}
                 </div>
               )}
           </div>
@@ -445,8 +445,9 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [benchPhase, turn.stage]);
 
+  const cardWindowOpen = turn.stage === 'card' && Boolean(actingTeam);
   useEffect(() => {
-    if (!myTurnToAct) { setTimeLeft(CARD_TIMER_SECONDS); return undefined; }
+    if (!cardWindowOpen) { setTimeLeft(CARD_TIMER_SECONDS); return undefined; }
     setTimeLeft(CARD_TIMER_SECONDS);
     const start = Date.now();
     const iv = setInterval(() => {
@@ -454,14 +455,14 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
       if (remaining <= 0) {
         clearInterval(iv);
         setTimeLeft(0);
-        advance({ pass: true });
+        if (myTurnToAct) advance({ pass: true });
       } else {
         setTimeLeft(remaining);
       }
     }, 100);
     return () => clearInterval(iv);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [myTurnToAct, turn.exchangeIndex, cur?.team, cur?.role]);
+  }, [cardWindowOpen, myTurnToAct, turn.exchangeIndex, cur?.team, cur?.role]);
   useEffect(() => { if (!myTurnToAct) setSelectedAdjustment(null); }, [myTurnToAct]);
   useEffect(() => { setAdjustmentPickerOpen(false); }, [myTurnToAct, turn.exchangeIndex]);
 
@@ -514,14 +515,14 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
     if (benchPhase === 'first' && team !== benchOrder[0]) return null;
     return benchFor(team);
   };
-  const timerFor = (team) => (myTurnToAct && actingTeam === team ? Math.max(0, Math.min(100, (timeLeft / CARD_TIMER_SECONDS) * 100)) : null);
+  const timerFor = (team) => (cardWindowOpen && actingTeam === team ? Math.max(0, Math.min(100, (timeLeft / CARD_TIMER_SECONDS) * 100)) : null);
   // Only the viewer's own empty slot ever pulses — you can't play the opponent's cards, so
   // there's nothing actionable to draw their eye to on that side. Gameplan mirrors
   // playGameplanCard's own 'playoff' eligibility window and its one-active-at-a-time rule;
   // Adjustment mirrors the picker's own availableAdjustments during the human's own card turn.
   const gameplanCanPlayFor = (team) => (
     team === myTeam
-    && ['coinflip', 'coinflipped'].includes(turn.stage)
+    && turn.stage === 'coinflip'
     && !(team.gameplanCards || []).some((c) => c.used)
     && (team.gameplanCards || []).some((c) => !c.used && c.contexts.includes('playoff'))
   );
@@ -666,8 +667,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
       const offenseBlock = (
         <div className="t2-rollzone-die" key="offense">
           <div className={'t2-die-stage' + (offInteractive ? ' t2-die-clickable' : '') + (showCut ? ' t2-die-cut' : '')} onClick={offInteractive ? () => startRoll('off') : undefined}>
-            <Die sides={offSides} value={offSettled ? offDie : offSides} size={dieSize} rolling={offRolling} />
-            {rollPhase === 'idle-off' && offInteractive && <span className="t2-die-roll-label">Roll</span>}
+            <Die sides={offSides} value={offSettled ? offDie : offSides} size={dieSize} rolling={offRolling} prompt={rollPhase === 'idle-off' && offInteractive ? 'Roll' : null} />
           </div>
           <div className="t2-rollzone-caption">
             {offSettled ? `${offTeam.name} Rolls ${offDie}` : `${offTeam.name} On Offense`}
@@ -682,8 +682,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
       const defenseBlock = (
         <div className="t2-rollzone-die" key="defense">
           <div className={'t2-die-stage' + (defInteractive ? ' t2-die-clickable' : '')} onClick={defInteractive ? () => startRoll('def') : undefined}>
-            <Die sides={defSides} value={defSettled ? defDie : defSides} size={dieSize} rolling={defRolling} />
-            {rollPhase === 'idle-def' && defInteractive && <span className="t2-die-roll-label">Roll</span>}
+            <Die sides={defSides} value={defSettled ? defDie : defSides} size={dieSize} rolling={defRolling} prompt={rollPhase === 'idle-def' && defInteractive ? 'Roll' : null} />
           </div>
           <div className="t2-rollzone-caption">
             {defSettled ? `${defTeam.name} Rolls ${defDie}` : `${defTeam.name} On Defense`}

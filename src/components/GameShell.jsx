@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Header from './Header';
 import PersistentBar from './PersistentBar';
 import Sidebar from './Sidebar';
@@ -214,6 +214,17 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
   const onOwnTeamPage = overlay === null && viewTeamId == null && effectivePhase === 'teamsummary';
   const navOverlay = onOwnTeamPage ? 'team' : overlay;
   const pageLabel = PAGE_LABELS[overlay || effectivePhase] || 'Nine Deep';
+  const screenKey = `${overlay || effectivePhase}:${overlay === 'team' ? (viewTeamId ?? myTeamId) : ''}:${teamFocus?.request || ''}`;
+
+  // Every navigation starts as a fresh page. React can keep GameShell mounted for the whole
+  // session, and browsers preserve the document offset when one child screen replaces another,
+  // which made a long Free Agency/Lobby page push the next screen upward. Reset both the page
+  // and the few screens with their own vertical scroller before the new screen paints.
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+    if (document.scrollingElement) document.scrollingElement.scrollTop = 0;
+    document.querySelectorAll('.of-content,.ts-body,.t2-board,.t2-log-body').forEach((element) => { element.scrollTop = 0; });
+  }, [screenKey]);
 
   const openTeamView = (teamId, fromOverlay) => {
     setReturnOverlay(fromOverlay);
@@ -259,17 +270,17 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
 
   const close = () => setOverlay(null);
   let overlayBody = null;
-  if (overlay === 'glossary') overlayBody = <GlossaryScreen state={state} onBack={close} />;
-  else if (overlay === 'settings') overlayBody = <SettingsScreen state={state} actions={actions} onBack={close} onNewEra={onNewEra} onDeleteRoom={onDeleteRoom} hostNotifications={hostNotifications} />;
-  else if (overlay === 'standings') overlayBody = <LeagueScreen state={state} myTeamId={myTeamId} onBack={close} onViewTeam={(id) => openTeamView(id, 'standings')} />;
-  else if (overlay === 'team') overlayBody = <TeamSummaryScreen key={teamFocus?.request || 'team'} state={state} actions={actions} myTeamId={myTeamId} viewTeamId={viewTeamId} onBack={closeTeamView} focusSection={teamFocus} onFreeAgency={() => setOverlay('freeagency')} />;
-  else if (overlay === 'freeagency') overlayBody = <FreeAgencyScreen state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
-  else if (overlay === 'draftclass') overlayBody = <DraftClassScreen state={state} onBack={close} />;
-  else if (overlay === 'cardtypes') overlayBody = <CardOverviewScreen state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
+  if (overlay === 'glossary') overlayBody = <GlossaryScreen key={screenKey} state={state} onBack={close} />;
+  else if (overlay === 'settings') overlayBody = <SettingsScreen key={screenKey} state={state} actions={actions} onBack={close} onNewEra={onNewEra} onDeleteRoom={onDeleteRoom} hostNotifications={hostNotifications} />;
+  else if (overlay === 'standings') overlayBody = <LeagueScreen key={screenKey} state={state} myTeamId={myTeamId} onBack={close} onViewTeam={(id) => openTeamView(id, 'standings')} />;
+  else if (overlay === 'team') overlayBody = <TeamSummaryScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} viewTeamId={viewTeamId} onBack={closeTeamView} focusSection={teamFocus} onFreeAgency={() => setOverlay('freeagency')} />;
+  else if (overlay === 'freeagency') overlayBody = <FreeAgencyScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
+  else if (overlay === 'draftclass') overlayBody = <DraftClassScreen key={screenKey} state={state} onBack={close} />;
+  else if (overlay === 'cardtypes') overlayBody = <CardOverviewScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
 
   const Screen = SCREENS[effectivePhase];
   const mainBody = overlayBody || (Screen
-    ? <Screen state={state} actions={actions} myTeamId={myTeamId} onViewTeam={(id) => openTeamView(id, null)} onFreeAgency={() => setOverlay('freeagency')} onEndGame={onNewEra} dealProgress={dealProgress} onDealProgress={setDealProgress} onDealDone={() => setPastDeal(true)} />
+    ? <Screen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onViewTeam={(id) => openTeamView(id, null)} onFreeAgency={() => setOverlay('freeagency')} onEndGame={onNewEra} dealProgress={dealProgress} onDealProgress={setDealProgress} onDealDone={() => setPastDeal(true)} />
     : (
       <div className="screen">
         <h1>Something broke</h1>

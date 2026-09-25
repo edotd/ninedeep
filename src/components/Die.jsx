@@ -36,7 +36,7 @@ function randomFace(sides, exclude) {
 // stop exactly at its fixed rest pose after ROLL_DURATION_MS — while the front face flickers
 // through random values on the same decelerating cadence, landing on the real `value` right as
 // the spin settles.
-export default function Die({ sides = 6, value = 1, size = 120, rolling = false }) {
+export default function Die({ sides = 6, value = 1, size = 120, rolling = false, prompt = null }) {
   const [tumbleValue, setTumbleValue] = useState(value);
 
   useEffect(() => {
@@ -67,7 +67,7 @@ export default function Die({ sides = 6, value = 1, size = 120, rolling = false 
         <div className="nd-die-face nd-die-left">{leftValue}</div>
         <div className="nd-die-face nd-die-top">{topValue}</div>
         <div className="nd-die-face nd-die-right">{rightValue}</div>
-        <div className="nd-die-face nd-die-front" key={shownValue}>{shownValue}</div>
+        <div className={'nd-die-face nd-die-front' + (prompt ? ' prompt' : '')} key={prompt || shownValue}>{prompt || shownValue}</div>
       </div>
     </div>
   );
