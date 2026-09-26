@@ -13,7 +13,11 @@ export const BID_SALARY_STEP = 0.5;
 export const BID_PRIORITIES = ['Salary', 'Contract', 'Winning'];
 const RESULT_BONUS = { MISSED: 0, R1: 1, R2: 2, FINALS: 2.5, TITLE: 3 };
 
-function round1(n) { return Math.round(n * 2) / 2; }
+// Snaps to the game's real salary granularity (quarter-point, same as makeCard/statsToCoins) —
+// NOT to BID_SALARY_STEP's own 0.5, which would incorrectly round a genuine quarter-point
+// minimum (MIN_PLAYER_SALARY is 0.25) up to the next half-point, rejecting a bid at the exact
+// displayed minimum as "over the cap" before the cap check even runs.
+function round1(n) { return Math.round(n * 4) / 4; }
 function hashSeed(str) {
   let h = 0;
   for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;

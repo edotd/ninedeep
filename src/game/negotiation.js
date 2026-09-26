@@ -16,7 +16,10 @@ export const MAX_NEGOTIATION_ROLLS = 3;
 export const NEGOTIATION_BANDS = ['Lowball', 'Discounted', 'Fair', 'Premium'];
 const BAND_THRESHOLD = { Lowball: 7, Discounted: 5, Fair: 3, Premium: 2 };
 
-function round1(n) { return Math.round(n * 2) / 2; }
+// Snaps to the game's real salary granularity (quarter-point, same as makeCard/statsToCoins) —
+// NOT SALARY_STEP's own 0.5, which would incorrectly round a genuine quarter-point minimum
+// (MIN_PLAYER_SALARY is 0.25) up to the next half-point (see bidding.js's identical fix).
+function round1(n) { return Math.round(n * 4) / 4; }
 
 // Salary band against the ask, then dropped one band if the offered term is shorter than
 // requested — see the design doc's band table. Longer terms never raise the band by themselves.

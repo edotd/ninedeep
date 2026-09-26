@@ -193,3 +193,17 @@ test('bidding on a card is blocked once this team has closed out free agency', (
   const res = openFreeAgentBid(state, 0, 'p1', 5, 2);
   assert.equal(res.ok, false);
 });
+
+test('a bid at the exact minimum salary is accepted even when it uses all remaining room', () => {
+  // MIN_PLAYER_SALARY (0.25) isn't a multiple of BID_SALARY_STEP (0.5) — a prior bug rounded
+  // every submitted salary to the nearest 0.5 before checking it against the cap, which bumped
+  // an exact 0.25 minimum bid up to 0.5 and rejected it as over the cap even though it used
+  // exactly all the room available.
+  const state = baseState();
+  state.teams[0].seasonCap = 0.25;
+  state.freeAgents[0].salary = 0.25;
+  state.freeAgents[0].contract = 3;
+  const res = openFreeAgentBid(state, 0, 'p1', 0.25, 3);
+  assert.equal(res.ok, true);
+  assert.equal(res.session.bids[0].salary, 0.25);
+});
