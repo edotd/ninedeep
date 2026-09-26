@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import PlayerCard from '../components/PlayerCard';
 import FrontOfficeCard from '../components/FrontOfficeCard';
 import BiddingModal from '../components/BiddingModal';
@@ -6,7 +6,7 @@ import { formatCoins, rosterSalary } from '../game/economy';
 import { wasReleasedByTeamThisSeason } from '../game/season';
 import { freeAgentPriority, hasPendingBidDecision } from '../game/bidding';
 
-export default function FreeAgencyScreen({ state, actions, myTeamId, onBack }) {
+export default function FreeAgencyScreen({ state, actions, myTeamId, onBack, onGoToFranchise }) {
   const team = state.teams[myTeamId];
   const closed = state.offseason?.freeAgencyClosed?.[team.id];
   const overBudget = rosterSalary(team) > team.seasonCap;
@@ -18,6 +18,10 @@ export default function FreeAgencyScreen({ state, actions, myTeamId, onBack }) {
   const [confirmingClose, setConfirmingClose] = useState(false);
   const [closing, setClosing] = useState(false);
   const [closeError, setCloseError] = useState(null);
+  // Every player this team signed through free agency this offseason (direct signs and
+  // resolved auction wins alike) — shown once, right after closing out, since a bid this team
+  // placed earlier might only resolve at the moment the last human GM closes theirs out too.
+  const [signedSummary, setSignedSummary] = useState(null);
 
   const closeOut = async () => {
     setClosing(true);
@@ -30,7 +34,20 @@ export default function FreeAgencyScreen({ state, actions, myTeamId, onBack }) {
     }
     setConfirmingClose(false);
     setClosing(false);
+    // Don't read state.freeAgencyActivity from this closure — it's the snapshot from whenever
+    // this render happened, not necessarily what the action above just wrote. The effect below,
+    // keyed on `closed` actually flipping true, runs against a guaranteed-fresh `state` prop.
   };
+  const wasClosed = useRef(closed);
+  useEffect(() => {
+    if (closed && !wasClosed.current) {
+      const signed = (state.freeAgencyActivity || []).filter((entry) => entry.type === 'signed' && entry.teamId === team.id && entry.season === state.season);
+      if (signed.length) setSignedSummary(signed);
+      else onGoToFranchise?.();
+    }
+    wasClosed.current = closed;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [closed]);
 
   return (
     <div className="screen">
@@ -110,6 +127,28 @@ export default function FreeAgencyScreen({ state, actions, myTeamId, onBack }) {
             <div className="fa-close-actions">
               <button type="button" className="secondary" disabled={closing} onClick={() => setConfirmingClose(false)}>Keep Free Agency Open</button>
               <button type="button" className="primary" disabled={closing} onClick={closeOut}>{closing ? 'Processing…' : 'Close Free Agency'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {signedSummary && (
+        <div className="tsx-overlay" role="dialog" aria-modal="true" aria-label="Free agency results">
+          <div className="neg-panel fa-close-dialog">
+            <div className="neg-head">
+              <div className="neg-head-title">FREE AGENCY CLOSED</div>
+            </div>
+            <p>You signed {signedSummary.length} player{signedSummary.length === 1 ? '' : 's'} this offseason:</p>
+            <div className="fa-signed-list">
+              {signedSummary.map((entry) => (
+                <div key={entry.id} className="fa-signed-row">
+                  <span>{entry.player}</span>
+                  <span>{entry.position}</span>
+                  <span>{entry.grade}</span>
+                </div>
+              ))}
+            </div>
+            <div className="fa-close-actions fa-close-actions-single">
+              <button type="button" className="primary" onClick={() => { setSignedSummary(null); onGoToFranchise?.(); }}>Continue To Franchise</button>
             </div>
           </div>
         </div>

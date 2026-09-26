@@ -2599,7 +2599,13 @@ body:has(.trans-screen){padding-bottom:0;}
 .fa-close-dialog{max-width:520px;}
 .fa-close-dialog p{margin:0;color:var(--file);font-family:var(--font-mono);font-size:12px;line-height:1.6;}
 .fa-close-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;}
+.fa-close-actions.fa-close-actions-single{grid-template-columns:1fr;}
 .fa-close-actions button{width:100%;}
+/* Who-you-signed recap, shown once right after closing out (design ask) — a plain list, same
+   typography family as the rest of this dialog. */
+.fa-signed-list{display:flex;flex-direction:column;gap:2px;margin:12px 0;max-height:260px;overflow-y:auto;}
+.fa-signed-row{display:grid;grid-template-columns:1fr auto auto;gap:10px;padding:8px 10px;background:rgba(230,220,196,.06);font-family:var(--font-mono);font-size:12px;color:var(--file);}
+.fa-signed-row span:last-child{color:var(--franchise);font-weight:700;}
 @media(max-width:999px){
   .fa-close-panel{display:grid;grid-template-columns:1fr;margin:8px 0 18px;padding:10px;box-shadow:0 5px 14px rgba(8,18,38,.24);}
   .fa-close-panel .primary{display:block;width:100%;min-height:46px;font-size:12px;}

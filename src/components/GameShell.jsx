@@ -302,7 +302,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
   else if (overlay === 'settings') overlayBody = <SettingsScreen key={screenKey} state={state} actions={actions} onBack={close} onNewEra={onNewEra} onDeleteRoom={onDeleteRoom} hostNotifications={hostNotifications} />;
   else if (overlay === 'standings') overlayBody = <LeagueScreen key={screenKey} state={state} myTeamId={myTeamId} onBack={close} onViewTeam={(id) => openTeamView(id, 'standings')} />;
   else if (overlay === 'team') overlayBody = <TeamSummaryScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} viewTeamId={viewTeamId} onBack={closeTeamView} focusSection={teamFocus} onFreeAgency={openFreeAgency} onLineupPreviewChange={setLineupPreview} />;
-  else if (overlay === 'freeagency') overlayBody = <FreeAgencyScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
+  else if (overlay === 'freeagency') overlayBody = <FreeAgencyScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onBack={close} onGoToFranchise={() => setOverlay('team')} />;
   else if (overlay === 'draftclass') overlayBody = <DraftClassScreen key={screenKey} state={state} onBack={close} />;
   else if (overlay === 'cardtypes') overlayBody = <CardOverviewScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
 
