@@ -149,6 +149,18 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
     <span className={'ts-hero-tally ' + (liveTally[key] > 0 ? 'up' : 'down')}>{liveTally[key] > 0 ? '+' : ''}{liveTally[key]}</span>
   ) : null;
 
+  // Mobile has no bench sidebar to hold a card from first (see the Players section, desktop
+  // only below), so tapping an empty court slot there opens a picker of eligible players right
+  // in this window instead — one tap to open, one tap on a card to place it. Desktop keeps its
+  // existing hold-from-the-sidebar-then-tap-the-slot flow, so this is mobile-only.
+  const [pickerSlotIndex, setPickerSlotIndex] = useState(null);
+  useEffect(() => { if (isDesktop) setPickerSlotIndex(null); }, [isDesktop]);
+  const placeCardInSlot = (slotIndex, cardId) => {
+    setSelectedId(null);
+    setSlotOrder((prev) => { const next = [...prev]; next[slotIndex] = cardId; return next; });
+    setPickerSlotIndex(null);
+  };
+
   const courtRef = useRef(null);
   const slotRefs = useRef([]);
   const [wires, setWires] = useState([]);
@@ -248,12 +260,6 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
       <div className="slf-panel">
         <div className="slf-head">
           <h2 className="slf-title">Your Lineup</h2>
-          {canEdit && (
-            <div className="slf-head-actions">
-              <button type="button" className="slf-auto-set" onClick={handleAutoSet}><span aria-hidden="true">↻</span> Auto Set Lineup</button>
-              <button type="button" className="slf-save-btn" onClick={handleSave}>Save Lineup</button>
-            </div>
-          )}
         </div>
 
         {!isDesktop && liveOutput && (
@@ -277,8 +283,14 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
         )}
 
         <div className="slf-synergy-totals">
-          <span className="off">Offense +{synergy.skillOffense}</span>
-          <span className="def">Defense +{synergy.skillDefense}</span>
+          <div className="slf-synergy-stat">
+            <span className="slf-live-label">Offense Bonus</span>
+            <span className="slf-live-value off">+{synergy.skillOffense}</span>
+          </div>
+          <div className="slf-synergy-stat">
+            <span className="slf-live-label">Defense Bonus</span>
+            <span className="slf-live-value def">+{synergy.skillDefense}</span>
+          </div>
         </div>
 
         <p className="slf-note">{canEdit ? 'Set your lineup. Lines between players show how pairings affect your team’s offense and/or defense.' : 'Your lineup. Lines between players show how pairings affect your team’s offense and/or defense.'}</p>
@@ -298,6 +310,12 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
 
         <div className="slf-columns">
           <div className="slf-court-col">
+            {team.coach && (
+              <div className="slf-coach">
+                <div className="slf-microlabel">Head Coach</div>
+                <div className="slf-coach-name">{team.coach.archetype}</div>
+              </div>
+            )}
             <div className="slf-microlabel slf-starters-label">Starters</div>
             <div className="slf-court" ref={courtRef}>
               <CourtLines />
@@ -314,7 +332,17 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
                   <MiniCard
                     card={starters[i]}
                     selected={starters[i] && selectedId === starters[i].id}
-                    onClick={canEdit ? () => (starters[i] && selectedId == null ? holdCard(starters[i].id) : placeOnSlot(i)) : undefined}
+                    onClick={canEdit ? () => {
+                      if (starters[i]) {
+                        if (selectedId == null) holdCard(starters[i].id);
+                        else placeOnSlot(i);
+                      } else if (!isDesktop) {
+                        setSelectedId(null);
+                        setPickerSlotIndex(i);
+                      } else {
+                        placeOnSlot(i);
+                      }
+                    } : undefined}
                     onRemove={canEdit && starters[i] ? () => handleRemove(starters[i]) : undefined}
                     onHoverStart={handleHoverStart}
                     onHoverEnd={handleHoverEnd}
@@ -322,50 +350,48 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
                 </div>
               ))}
             </div>
-            {team.coach && (
-              <div className="slf-coach">
-                <div className="slf-microlabel">Head Coach</div>
-                <div className="slf-coach-name">{team.coach.archetype}</div>
-              </div>
-            )}
           </div>
 
-          <div className="slf-sideline">
-            <div className="slf-bench">
-              {/* Every roster card in one grid — the starters (row one, five slots, matching
-                  the court above) followed by the bench (row two) — a flat, tappable list
-                  covering the same ground as the court diagram for whoever finds floating
-                  court positions fiddly to hit, especially on a phone. */}
-              <div className="slf-microlabel">Players</div>
-              <div className="slf-bench-row">
-                {starters.map((c, i) => (
-                  <MiniCard
-                    key={c ? c.id : 'starter-open-' + i}
-                    card={c}
-                    selected={c != null && selectedId === c.id}
-                    onClick={canEdit ? () => (c && selectedId == null ? holdCard(c.id) : placeOnSlot(i)) : undefined}
-                    onRemove={canEdit && c ? () => handleRemove(c) : undefined}
-                    onHoverStart={handleHoverStart}
-                    onHoverEnd={handleHoverEnd}
-                  />
-                ))}
-                {bench.map((c) => (
-                  <MiniCard
-                    key={c.id}
-                    card={c}
-                    selected={selectedId === c.id}
-                    onClick={canEdit ? () => handleBenchClick(c) : undefined}
-                    onHoverStart={handleHoverStart}
-                    onHoverEnd={handleHoverEnd}
-                    dim
-                  />
-                ))}
+          {isDesktop && (
+            <div className="slf-sideline">
+              <div className="slf-bench">
+                <div className="slf-microlabel">Players</div>
+                <div className="slf-bench-row">
+                  {starters.map((c, i) => (
+                    <MiniCard
+                      key={c ? c.id : 'starter-open-' + i}
+                      card={c}
+                      selected={c != null && selectedId === c.id}
+                      onClick={canEdit ? () => (c && selectedId == null ? holdCard(c.id) : placeOnSlot(i)) : undefined}
+                      onRemove={canEdit && c ? () => handleRemove(c) : undefined}
+                      onHoverStart={handleHoverStart}
+                      onHoverEnd={handleHoverEnd}
+                    />
+                  ))}
+                  {bench.map((c) => (
+                    <MiniCard
+                      key={c.id}
+                      card={c}
+                      selected={selectedId === c.id}
+                      onClick={canEdit ? () => handleBenchClick(c) : undefined}
+                      onHoverStart={handleHoverStart}
+                      onHoverEnd={handleHoverEnd}
+                      dim
+                    />
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         <div className="slf-footer">
+          {canEdit && (
+            <div className="slf-footer-actions">
+              <button type="button" className="slf-auto-set" onClick={handleAutoSet}><span aria-hidden="true">↻</span> Auto Set Lineup</button>
+              <button type="button" className="slf-save-btn" onClick={handleSave}>Save Lineup</button>
+            </div>
+          )}
           <button type="button" className={canEdit ? 'secondary' : 'primary'} onClick={onClose}>Back</button>
         </div>
       </div>
@@ -373,6 +399,25 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
       {previewCard && (
         <div className="slf-preview" aria-hidden="true">
           <PlayerCard card={previewCard} />
+        </div>
+      )}
+
+      {pickerSlotIndex != null && (
+        <div className="slf-slot-picker-backdrop" onClick={() => setPickerSlotIndex(null)}>
+          <div className="slf-slot-picker" role="dialog" aria-modal="true" aria-label="Choose a starter" onClick={(e) => e.stopPropagation()}>
+            <div className="slf-slot-picker-head">
+              <span>Choose A Starter</span>
+              <button type="button" className="slf-picker-close" onClick={() => setPickerSlotIndex(null)} aria-label="Close">×</button>
+            </div>
+            <div className="slf-slot-picker-carousel">
+              {bench.map((c) => (
+                <button key={c.id} type="button" className="slf-slot-picker-card" onClick={() => placeCardInSlot(pickerSlotIndex, c.id)}>
+                  <PlayerCard card={c} />
+                </button>
+              ))}
+              {bench.length === 0 && <div className="slf-slot-picker-empty">No available players.</div>}
+            </div>
+          </div>
         </div>
       )}
 

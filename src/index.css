@@ -2160,19 +2160,18 @@ body:has(.entry-screen){padding-bottom:0;}
 }
 .slf-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:20px 24px 12px;border-bottom:2px solid var(--franchise);}
 .slf-title{font-family:var(--font-display);font-size:24px;line-height:1.1;color:var(--file);text-transform:uppercase;}
-/* The only thing in the header's upper-right corner now that there's no close button
-   (Save/Close live in the footer instead) — see slf-footer below. Sized and center-aligned
-   against the title on the same row, not a small afterthought tucked in the corner. */
 /* Docked right under the live-output bar (design ask), not in the title row — the skillset
    synergy bonus is a different number (a % modifier) from that bar's own projected totals, but
-   belongs in the same "here's your lineup's numbers" cluster at the top. */
-.slf-synergy-totals{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:18px;padding:10px 24px;border-bottom:1px solid var(--ink-rule);font-family:var(--font-mono);font-size:15px;font-weight:600;flex-wrap:wrap;}
-.slf-synergy-totals .off{color:var(--franchise);}
-.slf-synergy-totals .def{color:var(--approved-ink);}
-/* Auto Set Lineup and Save Lineup sit side by side (design ask: "move the save lineups button
-   next to the auto set lineups button") — the wrapper takes the full-width row .slf-auto-set
-   used to claim alone, and each button splits it evenly. */
-.slf-head-actions{order:3;flex:0 0 100%;display:flex;gap:10px;}
+   belongs in the same "here's your lineup's numbers" cluster at the top. Label-over-value,
+   matching .slf-live-bar directly above it rather than the plain mono line this used to be. */
+.slf-synergy-totals{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:32px;padding:10px 24px;border-bottom:1px solid var(--ink-rule);flex-wrap:wrap;}
+.slf-synergy-stat{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.slf-synergy-totals .slf-live-value.off{color:var(--franchise);}
+.slf-synergy-totals .slf-live-value.def{color:var(--approved-ink);}
+/* Auto Set Lineup and Save Lineup sit side by side in the footer (design ask: "move the
+   auto-set lineup and save lineups buttons to the bottom of the screen"), above the Back
+   button rather than up in the header. */
+.slf-footer-actions{display:flex;gap:10px;}
 .slf-auto-set{flex:1;display:flex!important;align-items:center;justify-content:center;gap:9px;min-height:48px;position:relative;z-index:50;border:3px solid #E6DCC4!important;background:#F0A03D!important;color:#1E2B47!important;-webkit-text-fill-color:#1E2B47!important;opacity:1!important;visibility:visible!important;padding:12px 16px;font-family:var(--font-label);font-size:13px;font-weight:700;line-height:1.2;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;box-shadow:0 0 0 2px #F0A03D,0 0 18px rgba(240,160,61,.65);}
 .slf-auto-set span{font-size:20px;line-height:1;}
 .slf-auto-set:hover:not(:disabled){background:#ffb455;}
@@ -2218,8 +2217,21 @@ body:has(.entry-screen){padding-bottom:0;}
 .slf-bench-row{display:flex;gap:8px;flex-wrap:wrap;}
 .slf-coach{align-self:center;width:fit-content;max-width:100%;background:var(--form);border:2px solid var(--franchise);padding:8px 14px;box-sizing:border-box;text-align:center;}
 .slf-coach-name{font-family:var(--font-label);font-size:12px;text-transform:uppercase;color:var(--ink);margin-top:2px;white-space:nowrap;}
-.slf-footer{padding:18px 24px 22px;display:flex;gap:10px;}
-.slf-footer button{flex:1;}
+.slf-footer{padding:18px 24px 22px;display:flex;flex-direction:column;gap:10px;}
+.slf-footer-actions button{flex:1;}
+.slf-footer>button{width:100%;}
+
+/* In-window carousel opened by tapping an empty court slot on mobile (design ask) — the same
+   full PlayerCard used everywhere else, not a scaled-down stand-in, so the stats a GM needs to
+   choose are right there without leaving this screen. */
+.slf-slot-picker-backdrop{position:fixed;inset:0;z-index:540;background:rgba(11,17,30,.82);display:flex;align-items:flex-end;justify-content:center;}
+.slf-slot-picker{width:100%;max-width:480px;max-height:80vh;background:var(--ink);border-top:2px solid var(--franchise);box-sizing:border-box;display:flex;flex-direction:column;}
+.slf-slot-picker-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--ink-rule);font-family:var(--font-label);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--file);}
+.slf-picker-close{background:none;border:none;color:var(--ink-muted);font-size:20px;line-height:1;cursor:pointer;padding:2px 6px;}
+.slf-slot-picker-carousel{display:flex;gap:14px;overflow-x:auto;padding:18px 20px 22px;-webkit-overflow-scrolling:touch;}
+.slf-slot-picker-card{flex:0 0 auto;width:200px;background:none;border:none;padding:0;cursor:pointer;}
+.slf-slot-picker-empty{padding:20px;font-family:var(--font-mono);font-size:12px;color:var(--ink-muted);}
+@media(min-width:1000px){.slf-slot-picker-backdrop{display:none;}}
 
 /* Live-output bar, mobile only (design ask: "a persistent bar at the top of this page on
    mobile") — the draft five's own projected Offense/Defense/Bench, reacting to every swap with
