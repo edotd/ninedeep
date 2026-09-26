@@ -141,7 +141,7 @@ export default function FranchiseMasthead({ state, teamId, lineupPreview }) {
       <div className="ts-masthead-right persistent">
         {lineupStats ? ['SCO', 'PLM', 'REB', 'DEF'].map((stat) => (
           <div key={stat} className={'ts-hero-metric lineup-stat' + (stat === 'SCO' ? ' first' : '') + (pulsing[stat] ? ' pulsing' : '')}>
-            {tallyBadge(stat)}<div className="ts-proj-label">{stat}</div><div className="ts-hero-value">{lineupStats[stat]}</div><div className="ts-proj-rank">Starting Five</div>
+            {tallyBadge(stat)}<div className="ts-proj-label">{stat}</div><div className="ts-hero-value">{lineupStats[stat]}</div>
           </div>
         )) : (
           <>
