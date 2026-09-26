@@ -2135,6 +2135,10 @@ body:has(.entry-screen){padding-bottom:0;}
    the app. No backdrop-click dismiss on purpose: it's meant to be closed deliberately via the
    button or Escape, not brushed away by an accidental click. */
 .tsx-overlay{position:fixed;inset:0;z-index:500;background:rgba(11,17,30,.82);display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto;}
+/* Keep the shell's existing masthead and warning visible while editing a lineup. Installed iOS
+   apps also need the safe-area inset because their fixed coordinates begin above the shell's
+   status-bar border. */
+.mobile-shell .tsx-overlay:has(.slf-panel){top:calc(var(--app-safe-top,0px) + var(--mobile-persistent-top-height,0px));bottom:var(--mobile-persistent-bar-height,0px);}
 
 /* Set Lineup screen ("The Floor", design ref 1a) — a light panel inside the same dark
    .tsx-overlay backdrop TeamSynergyModal uses. Five court slots at fixed, purely cosmetic
@@ -2257,6 +2261,7 @@ body:has(.entry-screen){padding-bottom:0;}
    floor (court+coach left, bench as a sidebar list on the right), matching the shell's own
    999px/1000px mobile/desktop split used everywhere else (see .ts-tabbar and friends). */
 @media(min-width:1000px){
+  .desktop-shell .tsx-overlay:has(.slf-panel){left:220px;top:var(--desktop-persistent-top-height,0px);bottom:var(--desktop-bar-height);}
   .slf-panel{max-width:920px;}
   .slf-columns{flex-direction:row;align-items:flex-start;}
   .slf-court-col{flex:1.4;max-width:520px;}

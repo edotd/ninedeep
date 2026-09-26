@@ -96,6 +96,8 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
   const myTeam = myTeamId != null ? state.teams?.[myTeamId] : null;
   const mobileTopRef = useRef(null);
   const [mobileTopHeight, setMobileTopHeight] = useState(0);
+  const desktopTopRef = useRef(null);
+  const [desktopTopHeight, setDesktopTopHeight] = useState(0);
   const persistentBarRef = useRef(null);
   const [persistentBarHeight, setPersistentBarHeight] = useState(0);
   const [overlay, setOverlay] = useState(null); // null | 'glossary' | 'settings' | 'standings' | 'team' | 'freeagency' | 'draftclass' | 'cardtypes'
@@ -151,6 +153,15 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
     updateHeight();
     const observer = new ResizeObserver(updateHeight);
     observer.observe(mobileTopRef.current);
+    return () => observer.disconnect();
+  }, [isDesktop, showChrome]);
+
+  useEffect(() => {
+    if (!isDesktop || !desktopTopRef.current) return undefined;
+    const updateHeight = () => setDesktopTopHeight(desktopTopRef.current?.getBoundingClientRect().height || 0);
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(desktopTopRef.current);
     return () => observer.disconnect();
   }, [isDesktop, showChrome]);
 
@@ -304,10 +315,10 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
 
   if (isDesktop && showChrome) {
     return (
-      <div className="desktop-shell">
+      <div className="desktop-shell" style={{ '--desktop-persistent-top-height': `${desktopTopHeight}px` }}>
         <Sidebar state={state} myTeamId={myTeamId} overlay={navOverlay} pageLabel={pageLabel} viewTeamId={viewTeamId} onNav={handleNav} onViewTeam={(id) => openTeamView(id, overlay)} onAcknowledgeNav={acknowledgeNav} roomCode={roomCode} freeAgencyAlert={freeAgencyAlert} freeAgencyLocked={freeAgencyLocked} />
         <div className="desktop-content">
-          <FranchiseMasthead state={state} teamId={mastheadTeamId} />
+          <div className="desktop-persistent-top" ref={desktopTopRef}><FranchiseMasthead state={state} teamId={mastheadTeamId} /></div>
           {mainBody}
         </div>
         {showBar && <DesktopBar state={state} myTeamId={myTeamId} actions={actions} dealProgress={dealProgress} />}
