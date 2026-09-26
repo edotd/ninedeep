@@ -257,7 +257,10 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
     const timer = window.setTimeout(() => setShowSeasonIssues(false), 4000);
     return () => window.clearTimeout(timer);
   }, [showSeasonIssues]);
-  useEffect(() => { setSelectedId(null); setRotationIndex(0); }, [team.id, canEdit]);
+  useEffect(() => {
+    setSelectedId(null);
+    setRotationIndex(0);
+  }, [state.season, team.id, canEdit]);
   // Mobile's rotation carousel is one card per swipe (starters then bench, in that order —
   // see the JSX below) — this is how many pages it actually has, so the "more cards" chevron
   // knows when to disappear and the end-of-carousel swipe knows when it's actually at the end.
@@ -524,6 +527,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
               {!isRotationLocked && <div className="ts-heading ts-rotation-heading">Players <span>{rotationIndex < 5 ? 'Starters' : 'Bench'}</span></div>}
               <div className="ts-roto-viewport">
                 <div
+                  key={`rotation-${state.season}-${team.id}`}
                   className="ts-roto-scroll"
                   ref={rotoScrollRef}
                   onScroll={!isDesktop ? (event) => {

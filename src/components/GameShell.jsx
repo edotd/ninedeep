@@ -239,7 +239,10 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
   const onOwnTeamPage = overlay === null && viewTeamId == null && effectivePhase === 'teamsummary';
   const navOverlay = onOwnTeamPage ? 'team' : overlay;
   const pageLabel = PAGE_LABELS[overlay || effectivePhase] || 'Nine Deep';
-  const screenKey = `${overlay || effectivePhase}:${overlay === 'team' ? (viewTeamId ?? myTeamId) : ''}:${teamFocus?.request || ''}`;
+  // Season is part of screen identity. A Team overlay can remain selected while the shared
+  // flow moves through the draft, so phase/overlay alone can otherwise reuse last season's
+  // TeamSummaryScreen and its carousel position after the new roster arrives.
+  const screenKey = `${state.eraId || 'era'}:${state.season}:${overlay || effectivePhase}:${overlay === 'team' ? (viewTeamId ?? myTeamId) : ''}:${teamFocus?.request || ''}`;
 
   // Every navigation starts as a fresh page. React can keep GameShell mounted for the whole
   // session, and browsers preserve the document offset when one child screen replaces another,
