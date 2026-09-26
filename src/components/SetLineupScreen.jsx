@@ -237,10 +237,6 @@ export default function SetLineupScreen({ state, team, actions, myTeamId, canEdi
   return (
     <div className="tsx-overlay" role="dialog" aria-modal="true" aria-label="Your Lineup">
       <div className="slf-panel">
-        <div className="slf-head">
-          <h2 className="slf-title">Your Lineup</h2>
-        </div>
-
         <p className="slf-note">{canEdit ? 'Set your lineup. Lines between players show how pairings affect your team’s offense and/or defense.' : 'Your lineup. Lines between players show how pairings affect your team’s offense and/or defense.'}</p>
 
         {wires.length > 0 && (

@@ -2165,8 +2165,6 @@ body:has(.entry-screen){padding-bottom:0;}
 /* The topbar/masthead are sticky by default so they stay put while the APP's own page scrolls —
    nested here inside this modal's own scroll area, that sticky position is exactly what earlier
    made the (now-removed) live-projections bar overlap the app's top bar. Plain in-flow instead. */
-.slf-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:20px 24px 12px;border-bottom:2px solid var(--franchise);}
-.slf-title{font-family:var(--font-display);font-size:24px;line-height:1.1;color:var(--file);text-transform:uppercase;}
 /* Auto Set Lineup and Save Lineup sit side by side in the footer (design ask: "move the
    auto-set lineup and save lineups buttons to the bottom of the screen"), above the Back
    button rather than up in the header. */
