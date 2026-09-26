@@ -1,12 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
-import { findSkillPair, skillsetFor, teamSynergy } from '../game/skillsets';
+import { useMemo, useEffect, useRef, useState } from 'react';
+import { findSkillPair, skillsetFor } from '../game/skillsets';
 import { jerseyNumber, playerGrade } from '../game/cards';
 import { autoValidFive, validateLineup } from '../game/roster';
-import { teamOutput } from '../game/matchup';
-import { useMetricTally } from '../hooks/useMetricTally';
 import { useIsDesktop } from '../hooks/useIsDesktop';
 import PlayerCard from './PlayerCard';
 import FrontOfficeCard from './FrontOfficeCard';
+import FranchiseMasthead from './FranchiseMasthead';
 
 // Shown once per browser — the first time anyone opens this editor, not once per team/era, so
 // re-explaining after a fresh solo game or a new room would be redundant.
@@ -90,7 +89,7 @@ function MiniCard({ card, selected, onClick, onRemove, dim, onHoverStart, onHove
   );
 }
 
-export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onClose }) {
+export default function SetLineupScreen({ state, team, actions, myTeamId, canEdit, onClose }) {
   const isDesktop = useIsDesktop();
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -136,19 +135,16 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
   const previewId = isDesktop ? (hoveredId ?? selectedId) : selectedId;
   const previewCard = previewId != null ? team.hand.find((c) => c.id === previewId) || null : null;
 
-  // Live projection against the DRAFT five, not the team's last-saved activeIds — this is what
-  // makes the persistent bar (and its glow tally) react to every swap before Save Lineup ever
-  // runs. modifierBreakdown/offenseModifier already tolerate fewer than 5 active ids (see the
-  // Incomplete Roster penalty in FranchiseMasthead's breakdown), so this stays sane mid-edit.
-  const liveOutput = team.coach ? teamOutput({ ...team, activeIds }) : null;
-  const { tally: liveTally, pulsing: livePulsing } = useMetricTally({
-    offense: liveOutput ? liveOutput.off : null,
-    defense: liveOutput ? liveOutput.def : null,
-    bench: liveOutput ? liveOutput.bench : null,
-  }, myTeamId);
-  const liveTallyBadge = (key) => Number.isFinite(liveTally[key]) && liveTally[key] !== 0 ? (
-    <span className={'ts-hero-tally ' + (liveTally[key] > 0 ? 'up' : 'down')}>{liveTally[key] > 0 ? '+' : ''}{liveTally[key]}</span>
-  ) : null;
+  // The same persistent masthead used everywhere else in the app, fed a state where THIS team's
+  // activeIds/lineupSet reflect the local draft (not the last-saved lineup) — so Chemistry/
+  // Output/Offense/Defense, and their glow tally, react to every swap before Save Lineup ever
+  // runs, exactly like the rest of the app's own Chemistry/Output/Offense/Defense readout.
+  // Keyed by team.id (the team this editor actually opened for), not myTeamId — viewing another
+  // team's file read-only passes a `team` other than the viewer's own.
+  const draftState = useMemo(() => ({
+    ...state,
+    teams: state.teams.map((t) => (t.id === team.id ? { ...t, activeIds, lineupSet: true } : t)),
+  }), [state, team.id, activeIds]);
 
   // Mobile has no bench sidebar to hold a card from first (see the Players section, desktop
   // only below), so tapping an empty court slot there opens a picker of eligible players right
@@ -205,8 +201,6 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [starterKey]);
 
-  const synergy = teamSynergy(team);
-
   // Click a bench card to hold it, click again to release it, click a different bench card to
   // switch which one is held — a starter no longer becomes "held" by clicking it (that now
   // always shows its full card instead, see the court slots below), so a held card is always
@@ -259,36 +253,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
           <h2 className="slf-title">Your Lineup</h2>
         </div>
 
-        {!isDesktop && liveOutput && (
-          <div className="slf-live-bar">
-            <div className={'slf-live-metric' + (livePulsing.offense ? ' pulsing' : '')}>
-              {liveTallyBadge('offense')}
-              <span className="slf-live-label">Offense</span>
-              <span className="slf-live-value">{liveOutput.off}</span>
-            </div>
-            <div className={'slf-live-metric' + (livePulsing.defense ? ' pulsing' : '')}>
-              {liveTallyBadge('defense')}
-              <span className="slf-live-label">Defense</span>
-              <span className="slf-live-value">{liveOutput.def}</span>
-            </div>
-            <div className={'slf-live-metric' + (livePulsing.bench ? ' pulsing' : '')}>
-              {liveTallyBadge('bench')}
-              <span className="slf-live-label">Bench</span>
-              <span className="slf-live-value">{liveOutput.bench}</span>
-            </div>
-          </div>
-        )}
-
-        <div className="slf-synergy-totals">
-          <div className="slf-synergy-stat">
-            <span className="slf-live-label">Offense Bonus</span>
-            <span className="slf-live-value off">+{synergy.skillOffense}</span>
-          </div>
-          <div className="slf-synergy-stat">
-            <span className="slf-live-label">Defense Bonus</span>
-            <span className="slf-live-value def">+{synergy.skillDefense}</span>
-          </div>
-        </div>
+        <FranchiseMasthead state={draftState} teamId={team.id} />
 
         <p className="slf-note">{canEdit ? 'Set your lineup. Lines between players show how pairings affect your team’s offense and/or defense.' : 'Your lineup. Lines between players show how pairings affect your team’s offense and/or defense.'}</p>
 

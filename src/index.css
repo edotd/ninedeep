@@ -2159,15 +2159,11 @@ body:has(.entry-screen){padding-bottom:0;}
   background-repeat:repeat,repeat,repeat,repeat,repeat,no-repeat,repeat-y;
 }
 .slf-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:20px 24px 12px;border-bottom:2px solid var(--franchise);}
+/* The masthead is sticky by default so it stays put while the APP's own page scrolls — nested
+   here inside this modal's own scroll area, that sticky position is exactly what earlier made
+   the (now-removed) live-projections bar overlap the app's top bar. Plain in-flow instead. */
+.slf-panel .persistent-franchise-masthead{position:relative;top:auto;border-bottom:1px solid var(--ink-rule);}
 .slf-title{font-family:var(--font-display);font-size:24px;line-height:1.1;color:var(--file);text-transform:uppercase;}
-/* Docked right under the live-output bar (design ask), not in the title row — the skillset
-   synergy bonus is a different number (a % modifier) from that bar's own projected totals, but
-   belongs in the same "here's your lineup's numbers" cluster at the top. Label-over-value,
-   matching .slf-live-bar directly above it rather than the plain mono line this used to be. */
-.slf-synergy-totals{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:32px;padding:10px 24px;border-bottom:1px solid var(--ink-rule);flex-wrap:wrap;}
-.slf-synergy-stat{display:flex;flex-direction:column;align-items:center;gap:2px;}
-.slf-synergy-totals .slf-live-value.off{color:var(--franchise);}
-.slf-synergy-totals .slf-live-value.def{color:var(--approved-ink);}
 /* Auto Set Lineup and Save Lineup sit side by side in the footer (design ask: "move the
    auto-set lineup and save lineups buttons to the bottom of the screen"), above the Back
    button rather than up in the header. */
@@ -2233,19 +2229,6 @@ body:has(.entry-screen){padding-bottom:0;}
 .slf-slot-picker-card{flex:0 0 auto;width:200px;background:none;border:none;padding:0;cursor:pointer;}
 .slf-slot-picker-empty{padding:20px;font-family:var(--font-mono);font-size:12px;color:var(--ink-muted);}
 @media(min-width:1000px){.slf-slot-picker-backdrop{display:none;}}
-
-/* Live-output bar, mobile only (design ask: "a persistent bar at the top of this page on
-   mobile") — the draft five's own projected Offense/Defense/Bench, reacting to every swap with
-   the same glow+tally treatment as the main franchise masthead (see hooks/useMetricTally.js and
-   .ts-hero-tally/.ts-hero-metric.pulsing, reused here). Sits right under the title, in normal
-   flow rather than pinned — a sticky position here rendered under the app's own top bar on some
-   phones instead of staying inside this modal. */
-.slf-live-bar{display:grid;grid-template-columns:repeat(3,1fr);background:var(--ink);border-bottom:2px solid var(--franchise);}
-.slf-live-metric{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 6px;border-left:1px solid var(--ink-rule);}
-.slf-live-metric:first-child{border-left:0;}
-.slf-live-metric.pulsing{animation:ts-hero-pulse 1s ease-out;}
-.slf-live-label{font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);}
-.slf-live-value{font-family:var(--font-display);font-size:22px;line-height:1;color:var(--file);}
 
 /* Full player-card preview — "show the full players when the cards are held on mobile, hovered
    on desktop." Non-interactive and fixed in a corner so it never intercepts the click that

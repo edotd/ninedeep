@@ -804,6 +804,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
         )}
         {lineupScreenOpen && (
           <SetLineupScreen
+            state={state}
             team={team}
             actions={actions}
             myTeamId={myTeamId}
