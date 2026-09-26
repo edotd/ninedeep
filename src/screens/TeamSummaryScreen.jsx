@@ -8,13 +8,14 @@ import { PlayerLedgerIdentity, CostBlocks } from '../components/LedgerRow';
 import { formatCoins, rosterSalary, gmCost } from '../game/economy';
 import { jerseyNumber, playerGrade, rawOverall } from '../game/cards';
 import { FANBASE_BOOST_COST } from '../game/constants';
-import { DEFAULT_PLAYER_FILTERS, matchesPlayerFilters, playerFiltersActive } from '../game/playerFilters';
+import { sortPlayers } from '../game/playerFilters';
 import MatchupCard from '../components/MatchupCard';
-import StrategyCard from '../components/StrategyCard';
 import CardBack from '../components/CardBack';
 import PlayerFilterBar from '../components/PlayerFilterBar';
+import { teamOutput } from '../game/matchup';
+import { DEVELOPMENT_STATS_BY_STYLE } from '../game/strategyCards';
 
-const tabForSection = (section) => ['gameplan', 'adjustment'].includes(section) ? 'office' : section || 'rotation';
+const tabForSection = (section) => section === 'gameplan' ? 'chemistry' : ['office', 'adjustment'].includes(section) ? 'office' : section || 'rotation';
 
 // Front Office / Development / Gameplan / Adjustment each render as one horizontally-scrolling
 // row of same-kind cards on mobile. Two or fewer fit the screen outright (no scrolling needed,
@@ -114,7 +115,7 @@ function PlayerRosterTable({ starters, bench, starterOpenSlots, benchOpenSlots, 
               {!readOnly && (
                 <td className="ts-roto-actions">
                   {canEdit && <button type="button" onClick={(e) => { e.stopPropagation(); onRelease(card); }}>Release</button>}
-                  {!card.development && <button type="button" onClick={(e) => { e.stopPropagation(); onDevelop(card); }}>Dev</button>}
+                  {onDevelop && <button type="button" onClick={(e) => { e.stopPropagation(); onDevelop(card); }}>Dev</button>}
                 </td>
               )}
             </tr>
@@ -131,36 +132,6 @@ function PlayerRosterTable({ starters, bench, starterOpenSlots, benchOpenSlots, 
   );
 }
 
-function StrategyAction({ card, team, state, actions, myTeamId, readOnly }) {
-  const [targetId, setTargetId] = useState('');
-  if (readOnly || card.used) return null;
-  if (card.kind === 'development') {
-    const eligible = team.hand.filter((player) => !player.development);
-    return (
-      <div className="strategy-card-action">
-        <select value={targetId} onChange={(event) => setTargetId(event.target.value)}>
-          <option value="">Choose player</option>
-          {eligible.map((player) => <option key={player.id} value={player.id}>{player.position} · {player.archetype} · #{player.id}</option>)}
-        </select>
-        <button className="secondary" disabled={!targetId} onClick={() => actions.applyDevelopmentCard(myTeamId, card.id, targetId)}>Apply</button>
-      </div>
-    );
-  }
-  const liveMatch = (state.playoff?.matches || []).find((match) => match.turn && !match.result && (match.a === team || match.b === team));
-  const playoffReady = liveMatch?.turn && ['coinflip', 'coinflipped'].includes(liveMatch.turn.stage);
-  const seasonOpen = ['pullhand', 'pullmodifier', 'constructing', 'teamsummary'].includes(state.phase);
-  const context = playoffReady && card.contexts.includes('playoff') ? 'playoff' : seasonOpen && card.contexts.includes('season') ? 'season' : null;
-  const alreadyActive = (team.gameplanCards || []).some((c) => c.used && c.id !== card.id);
-  const opponents = state.teams.filter((candidate) => candidate.id !== team.id);
-  const needsTarget = card.target === 'opponent' && context === 'season';
-  return (
-    <div className="strategy-card-action">
-      {needsTarget && <select value={targetId} onChange={(event) => setTargetId(event.target.value)}><option value="">Choose opponent</option>{opponents.map((opponent) => <option key={opponent.id} value={opponent.id}>{opponent.name}</option>)}</select>}
-      <button className="secondary" disabled={!context || alreadyActive || (needsTarget && !targetId)} onClick={() => actions.playGameplanCard(myTeamId, card.id, context, needsTarget ? targetId : null)}>{alreadyActive ? 'Another Is Active' : context === 'playoff' ? 'Use In Matchup' : context === 'season' ? 'Use Now' : 'Unavailable'}</button>
-    </div>
-  );
-}
-
 // The Team Summary screen — "the file the league keeps on you" (design brand handoff, 1a).
 // Serves two roles from the same markup: as the 'teamsummary' phase (shown once per season,
 // after the Adjustment Cards pull and the Constructing loading beat — its own button confirms
@@ -173,7 +144,7 @@ function StrategyAction({ card, team, state, actions, myTeamId, readOnly }) {
 // regardless of whose file is on screen.
 // Read-only otherwise, organised by category: rotation, budget ledger, front office. No
 // nine-slot navigation here (that's the persistent bar's job on every other screen).
-export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId, onBack, focusSection, onFreeAgency, onLineupPreviewChange }) {
+export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId, onBack, focusSection, onFreeAgency, onStandings, onDraftClass, onLineupPreviewChange }) {
   // viewTeamId lets this screen show a DIFFERENT team's file — reached by clicking a team in
   // Standings — read-only: no substitutions, releases, or front-office moves, since those
   // actions always take myTeamId regardless of which file is on screen.
@@ -192,10 +163,9 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   // Filters only ever narrow the bench pool (starters are few and already committed, so
   // there's nothing to search for there) — open-slot placeholders aren't real cards and don't
   // match any filter, so they're hidden whenever a filter is actually narrowing the view.
-  const [playerFilters, setPlayerFilters] = useState(DEFAULT_PLAYER_FILTERS);
-  const filtersActive = playerFiltersActive(playerFilters);
-  const filteredBench = bench.filter((c) => matchesPlayerFilters(c, playerFilters));
-  const shownBenchOpenSlots = filtersActive ? 0 : benchOpenSlots;
+  const [playerSort, setPlayerSort] = useState('position');
+  const filteredBench = sortPlayers(bench, playerSort);
+  const shownBenchOpenSlots = benchOpenSlots;
   const otherHumans = state.teams.filter((t) => t.human && t.id !== team.id);
   const waitingOn = otherHumans.filter((t) => !t.lineupConfirmed);
   const readyHumans = state.teams.filter((t) => t.human && t.lineupConfirmed);
@@ -229,9 +199,10 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   const [tab, setTab] = useState(() => tabForSection(focusSection?.section));
   const showSection = (key) => isDesktop || tab === key;
   const showStaffCards = isDesktop || tab === 'office';
-  const devRow = useRowEnd((team.developmentCards || []).length, 1);
-  const gameplanRow = useRowEnd((team.gameplanCards || []).length, 1);
   const adjRow = useRowEnd((team.matchupCards || []).length, 1);
+  const leagueOutputs = state.teams.map((candidate) => ({ team: candidate, output: candidate.coach ? teamOutput(candidate) : { total: 0, off: 0, def: 0, bench: 0 } }));
+  const leagueTotal = leagueOutputs.reduce((sum, entry) => sum + entry.output.total, 0);
+  const bestFor = (key) => leagueOutputs.reduce((best, entry) => entry.output[key] > best.output[key] ? entry : best, leagueOutputs[0]);
   useEffect(() => {
     if (!focusSection) return;
     setTab(tabForSection(focusSection.section));
@@ -341,7 +312,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   // version tried gating this by requiring the touch to START within ~32px of the screen edge
   // instead, which also blocked the ordinary case of swiping back to Rotation from the middle
   // of the Chemistry tab, where nothing actually conflicts.
-  const TAB_ORDER = ['rotation', 'chemistry', team.market ? 'office' : null, 'ledger'].filter(Boolean);
+  const TAB_ORDER = ['rotation', 'chemistry', 'ledger', team.market ? 'office' : null].filter(Boolean);
   const bodyTouchStartX = useRef(null);
   const tabbarRef = useRef(null);
   const underlineRef = useRef(null);
@@ -495,16 +466,16 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             )}
           </div>
           <button className={'ts-tab' + (tab === 'chemistry' ? ' active' : '')} onClick={() => setTab('chemistry')}>
-            Lineup & Chemistry
+            Gameplan
             {!readOnly && !team.lineupSet && <span className="alert-badge" aria-label="Lineup not set">!</span>}
           </button>
-          {team.market && (
-            <button className={'ts-tab' + (tab === 'office' ? ' active' : '')} onClick={() => setTab('office')}>Gameplan</button>
-          )}
           <button className={'ts-tab' + (tab === 'ledger' ? ' active' : '')} onClick={() => setTab('ledger')}>
             Budget
             {!readOnly && preSeason && committed > cap && <span className="alert-badge" aria-label="Team is over budget">!</span>}
           </button>
+          {team.market && (
+            <button className={'ts-tab' + (tab === 'office' ? ' active' : '')} onClick={() => setTab('office')}>League</button>
+          )}
           {!isDesktop && <span className="ts-tab-underline" ref={underlineRef} aria-hidden="true" />}
         </div>
 
@@ -513,10 +484,27 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             <TeamChemistry team={team} canEdit={canEdit} onEditLineup={() => setLineupScreenOpen(true)} />
           )}
 
+          {showSection('office') && (
+            <div className="ts-section league-overview">
+              <div className="ts-heading">League</div>
+              <div className="league-jump-actions">
+                <button type="button" className="secondary" onClick={onStandings}>Standings</button>
+                <button type="button" className="secondary" onClick={onFreeAgency}>Free Agency</button>
+                <button type="button" className="secondary" onClick={onDraftClass}>Draft Class</button>
+              </div>
+              <div className="league-output-grid">
+                <div><span>League Output</span><strong>{Math.round(leagueTotal * 100) / 100}</strong><small>Total collective output from all teams</small></div>
+                <div><span>Best Offense</span><strong>{bestFor('off').output.off}</strong><small>{bestFor('off').team.name}</small></div>
+                <div><span>Best Defense</span><strong>{bestFor('def').output.def}</strong><small>{bestFor('def').team.name}</small></div>
+                <div><span>Best Bench</span><strong>{bestFor('bench').output.bench}</strong><small>{bestFor('bench').team.name}</small></div>
+              </div>
+            </div>
+          )}
+
           {showSection('rotation') && !isDesktop && viewMode === 'list' && (
             <div className="ts-section" id="team-rotation">
               <div className="ts-heading">Players</div>
-              <PlayerFilterBar filters={playerFilters} onChange={setPlayerFilters} />
+              <PlayerFilterBar sort={playerSort} onChange={setPlayerSort} />
               <PlayerRosterTable
                 starters={starters}
                 bench={filteredBench}
@@ -527,7 +515,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                 readOnly={readOnly}
                 onCardClick={handleCardClick}
                 onRelease={handleRelease}
-                onDevelop={setDevelopPlayer}
+                onDevelop={!readOnly && team.developmentPoints > 0 ? setDevelopPlayer : undefined}
               />
             </div>
           )}
@@ -535,7 +523,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           {showSection('rotation') && !(!isDesktop && viewMode === 'list') && (
             <div className="ts-section ts-player-carousel" id="team-rotation">
               {!isRotationLocked && <div className="ts-heading ts-rotation-heading">Players <span>{rotationIndex < 5 ? 'Starters' : 'Bench'}</span></div>}
-              <PlayerFilterBar filters={playerFilters} onChange={setPlayerFilters} />
+              <PlayerFilterBar sort={playerSort} onChange={setPlayerSort} />
               <div className="ts-roto-viewport">
                 <div
                   key={`rotation-${state.season}-${team.id}`}
@@ -557,7 +545,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                           rosterLabel={team.lineupSet ? 'Starter' : undefined}
                           onClick={canEdit ? () => handleCardClick(c) : undefined}
                           onRelease={canEdit ? handleRelease : undefined}
-                          onDevelop={!readOnly && !c.development ? setDevelopPlayer : undefined}
+                          onDevelop={!readOnly && team.developmentPoints > 0 ? setDevelopPlayer : undefined}
                           alwaysShowOptions={!isDesktop}
                         />
                       </div>
@@ -570,7 +558,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                           selected={selectedId === c.id}
                           onClick={canEdit ? () => handleCardClick(c) : undefined}
                           onRelease={canEdit ? handleRelease : undefined}
-                          onDevelop={!readOnly && !c.development ? setDevelopPlayer : undefined}
+                          onDevelop={!readOnly && team.developmentPoints > 0 ? setDevelopPlayer : undefined}
                           alwaysShowOptions
                         />
                       </div>
@@ -603,7 +591,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                       selected={selectedId === c.id}
                       onClick={canEdit ? () => handleCardClick(c) : undefined}
                       onRelease={canEdit ? handleRelease : undefined}
-                      onDevelop={!readOnly && !c.development ? setDevelopPlayer : undefined}
+                      onDevelop={!readOnly && team.developmentPoints > 0 ? setDevelopPlayer : undefined}
                     />
                   ))}
                   {Array.from({ length: shownBenchOpenSlots }, (_, i) => (
@@ -752,32 +740,6 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             </div>
           )}
 
-          {showStaffCards && (
-            <div className="ts-section" id="team-gameplan-cards">
-              <div className="ts-heading">Development</div>
-              <div className="row-swipe-wrap">
-              <div className={'strategy-deal-row ts-swipe-row' + (devRow.scrolls ? ' row-scroll' : ' row-fit')} onScroll={devRow.scrolls ? devRow.onScroll : undefined}>
-                {(team.developmentCards || []).map((card) => <div className="strategy-card-wrap" key={card.id}>{readOnly ? <CardBack /> : <><StrategyCard card={card} /><StrategyAction card={card} team={team} state={state} actions={actions} myTeamId={myTeamId} readOnly={readOnly} /></>}</div>)}
-                {(team.developmentCards || []).length === 0 && <div className="strategy-empty">New cards are dealt at the start of each season.</div>}
-              </div>
-              <RowSwipeHint row={devRow} />
-              </div>
-            </div>
-          )}
-
-          {showStaffCards && (
-            <div className="ts-section">
-              <div className="ts-heading">Gameplan</div>
-              <div className="row-swipe-wrap">
-              <div className={'strategy-deal-row ts-swipe-row' + (gameplanRow.scrolls ? ' row-scroll' : ' row-fit')} onScroll={gameplanRow.scrolls ? gameplanRow.onScroll : undefined}>
-                {(team.gameplanCards || []).map((card) => <div className="strategy-card-wrap" key={card.id}>{readOnly ? <CardBack /> : <><StrategyCard card={card} /><StrategyAction card={card} team={team} state={state} actions={actions} myTeamId={myTeamId} readOnly={readOnly} /></>}</div>)}
-                {(team.gameplanCards || []).length === 0 && <div className="strategy-empty">New cards are dealt at the start of each season.</div>}
-              </div>
-              <RowSwipeHint row={gameplanRow} />
-              </div>
-            </div>
-          )}
-
           {(team.matchupCards || []).length > 0 && showStaffCards && (
             <div className="ts-section" id="team-adjustment-cards">
               <div className="ts-heading">Adjustments</div>
@@ -807,12 +769,10 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             <div className="development-picker" role="dialog" aria-modal="true" aria-label={`Develop ${developPlayer.archetype}`} onClick={(event) => event.stopPropagation()}>
               <div className="development-picker-head"><div><div className="ts-heading">Develop Player</div><div className="development-picker-player">#{developPlayer.id} · {developPlayer.position} · {developPlayer.archetype}</div></div><button className="secondary" onClick={() => setDevelopPlayer(null)}>Close</button></div>
               <div className="development-picker-cards">
-                {(team.developmentCards || []).filter((card) => !card.used).map((card) => (
-                  <button key={card.id} className="development-picker-card" onClick={() => { const result = actions.applyDevelopmentCard(myTeamId, card.id, developPlayer.id); if (result?.ok === false) alert(result.msg); else setDevelopPlayer(null); }}>
-                    <StrategyCard card={card} />
-                  </button>
+                <div className="development-points-summary"><strong>{team.developmentPoints || 0}</strong><span>Development Points Available</span><small>{team.coach?.archetype} coaches develop {DEVELOPMENT_STATS_BY_STYLE[team.coach?.archetype]?.join(' or ')}.</small></div>
+                {(DEVELOPMENT_STATS_BY_STYLE[team.coach?.archetype] || []).map((stat) => (
+                  <button key={stat} className="development-stat-button" disabled={!team.developmentPoints} onClick={() => { const result = actions.applyDevelopmentPoint(myTeamId, developPlayer.id, stat); if (result?.ok === false) alert(result.msg); else setDevelopPlayer(null); }}>+1 {stat}</button>
                 ))}
-                {(team.developmentCards || []).every((card) => card.used) && <div className="strategy-empty">No Development cards are available.</div>}
               </div>
             </div>
           </div>
@@ -844,6 +804,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
               disabled={team.lineupConfirmed}
               aria-expanded={showSeasonIssues}
               onClick={() => {
+                if (lineupScreenOpen) { setLineupScreenOpen(false); return; }
                 if (seasonIssues.length > 0) {
                   setShowSeasonIssues(true);
                   return;
@@ -853,7 +814,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                 if (res && res.valid === false) alert(res.msg);
               }}
             >
-              {team.lineupConfirmed
+              {lineupScreenOpen ? 'Back' : team.lineupConfirmed
                 ? (waitingOn.length > 0 ? `Waiting For ${waitingOn.length} User${waitingOn.length === 1 ? '' : 's'} To Continue` : 'Waiting…')
                 : 'Begin Season'}
               {!team.lineupConfirmed && seasonIssues.length > 0 && <span className="bottombar-warn-icon" aria-hidden="true">!</span>}

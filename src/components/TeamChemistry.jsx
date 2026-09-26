@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { SKILLSETS, SYNERGY_CAP, teamSynergy } from '../game/skillsets';
 import { teamExperience } from '../game/aging';
 import { relationshipBonus, retentionBonus } from '../game/cards';
@@ -40,6 +41,7 @@ function teamProfile(team, chemistry, experience, coachOffense, coachDefense) {
 }
 
 export default function TeamChemistry({ team, canEdit, onEditLineup }) {
+  const [expanded, setExpanded] = useState(null);
   const current = teamSynergy(team);
   const experience = team.coach ? teamExperience(team) : null;
   const coachOffense = team.coach ? Math.round((team.coach.offBonus + retentionBonus(team) + relationshipBonus(team)) * 100) : 0;
@@ -64,51 +66,56 @@ export default function TeamChemistry({ team, canEdit, onEditLineup }) {
 
         {team.lineupSet ? (
           <div className="tc2-bonus-row">
-            <div className="tc2-bonus">
+            <button type="button" className="tc2-bonus" onClick={() => setExpanded(expanded === 'offense' ? null : 'offense')}>
               <div className="tc2-bonus-label">Offensive Bonus</div>
               <div className="tc2-bonus-value">{bonusValue(current.offense + coachOffense)}</div>
-            </div>
-            <div className="tc2-bonus">
+            </button>
+            <button type="button" className="tc2-bonus" onClick={() => setExpanded(expanded === 'defense' ? null : 'defense')}>
               <div className="tc2-bonus-label">Defensive Bonus</div>
               <div className="tc2-bonus-value">{bonusValue(current.defense + coachDefense)}</div>
-            </div>
-            <div className="tc2-bonus">
+            </button>
+            <button type="button" className="tc2-bonus" onClick={() => setExpanded(expanded === 'continuity' ? null : 'continuity')}>
               <div className="tc2-bonus-label">Continuity</div>
               <div className="tc2-bonus-value">{bonusValue(current.continuity)}</div>
-              <div className="tc2-bonus-sub">
-                Starters {current.starterYears}yr (+{current.starterYears * 0.5}%) · Bench {current.benchYears}yr (+{current.benchYears * 0.25}%) · Pairs {current.pairYears}yr (+{current.pairYears * 0.25}%) · Coach {current.coachYears}yr (+{current.coachYears * 0.5}%)
-              </div>
-            </div>
+            </button>
           </div>
         ) : (
           <p className="tc2-note tc2-bonus-row-empty">Set your lineup to see your Offense, Defense and Continuity bonuses.</p>
         )}
       </div>
 
-      {team.lineupSet && (
+      {team.lineupSet && expanded && (
         <div className="tc2-pairs-panel">
-          {(current.pairs.length || current.statBonuses.length || current.positionBonuses.length) ? (
+          {expanded === 'continuity' ? (
             <div className="tc2-pairs-grid">
-              {current.pairs.map((pair) => (
+              <div className="tc2-pair-row"><span>Starters</span><span>+{current.starterYears * 0.5}%</span></div>
+              <div className="tc2-pair-row"><span>Bench</span><span>+{current.benchYears * 0.25}%</span></div>
+              <div className="tc2-pair-row"><span>Retained pairs</span><span>+{current.pairYears * 0.25}%</span></div>
+              <div className="tc2-pair-row"><span>Coach</span><span>+{current.coachYears * 0.5}%</span></div>
+            </div>
+          ) : (current.pairs.length || current.statBonuses.length || current.positionBonuses.length) ? (
+            <div className="tc2-pairs-grid">
+              <div className="tc2-pair-row"><span className="tc2-pair-names">Coach and relationships</span><span className={'tc2-pair-tag ' + expanded}>+{expanded === 'offense' ? coachOffense : coachDefense}% {expanded === 'offense' ? 'OFF' : 'DEF'}</span></div>
+              {current.pairs.filter((pair) => pair.side === expanded).map((pair) => (
                 <div key={pair.skills.join(':')} className="tc2-pair-row">
                   <span className="tc2-pair-names">{pair.skills.map(nameFor).join(' + ')}</span>
                   <span className={'tc2-pair-tag ' + pair.side}>{pair.name} +{pair.percent}% {pair.side === 'offense' ? 'OFF' : 'DEF'}</span>
                 </div>
               ))}
-              {current.statBonuses.map((bonus) => (
+              {current.statBonuses.filter((bonus) => bonus.side === expanded).map((bonus) => (
                 <div key={bonus.name} className="tc2-pair-row">
                   <span className="tc2-pair-names">{bonus.minCount}+ starters at {bonus.threshold}+ effective {bonus.stat} (in-season, career-stage adjusted)</span>
                   <span className={'tc2-pair-tag ' + bonus.side}>{bonus.name} +{bonus.percent}% {bonus.side === 'offense' ? 'OFF' : 'DEF'}</span>
                 </div>
               ))}
-              {current.positionBonuses.map((bonus) => (
+              {current.positionBonuses.filter((bonus) => bonus.side === expanded).map((bonus) => (
                 <div key={bonus.name} className="tc2-pair-row">
                   <span className="tc2-pair-names">{nameFor(bonus.skillsetId)} at {bonus.position}</span>
                   <span className={'tc2-pair-tag ' + bonus.side}>{bonus.name} +{bonus.percent}% {bonus.side === 'offense' ? 'OFF' : 'DEF'}</span>
                 </div>
               ))}
             </div>
-          ) : <p className="tc2-note">No active Skillset pairings or stat-threshold bonuses in this starting five.</p>}
+          ) : <p className="tc2-note">No active {expanded} Skillset bonuses in this starting five.</p>}
           {(current.rawOffense > SYNERGY_CAP || current.rawDefense > SYNERGY_CAP) && <p className="tc2-note">The +{SYNERGY_CAP}% Skillset cap is applied before adding tenure bonuses.</p>}
           {current.leadership > 0 && <p className="tc2-note">Wise Veteran adds +1% Offense and Defense from anywhere on the roster. Applies once.</p>}
         </div>

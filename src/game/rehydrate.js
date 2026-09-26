@@ -1,3 +1,5 @@
+import { ensureCoachSystems } from './strategyCards';
+
 // State that comes back from Firestore is plain JSON — any place the original code stored a
 // direct object reference to a team (so `===` comparisons and shared mutations worked) instead
 // gets a structurally-identical but distinct copy after every read. This walks the known
@@ -27,6 +29,7 @@ export function rehydrateState(state) {
     team.developmentCards ||= [];
     team.gameplanCards ||= [];
     team.seasonGameplanEffects ||= { offPercent: 0, defPercent: 0, benchBonus: 0, seedingPercent: 0 };
+    ensureCoachSystems(team);
     (team.hand || []).forEach(migratePlayerTier);
     (team.deadCap || []).forEach((entry) => migratePlayerTier(entry.player));
   });

@@ -4,7 +4,6 @@ import FrontOfficeCard from '../components/FrontOfficeCard';
 import MatchupCard from '../components/MatchupCard';
 import CardTypeMark from '../components/CardTypeMark';
 import CardAnnotation from '../components/CardAnnotation';
-import StrategyCard from '../components/StrategyCard';
 import { drawCoachCard, applyCoachRetention } from '../game/cards';
 import { weightedPick } from '../game/rng';
 import { FANBASE_ARCHETYPES, MATCHUP_MODIFIER_TYPES } from '../game/constants';
@@ -81,15 +80,6 @@ const MATCHUP_NOTES = [
     text: 'The tell that this card is temporary. No other card type has it — it leaves the table after one game.' },
 ];
 
-const STRATEGY_NOTES = [
-  { key: 'type', selector: '.strategy-card-kicker', label: 'Card type', text: 'Identifies whether this is a permanent Development card or a one-use seasonal Gameplan.' },
-  { key: 'name', selector: '.strategy-card-name', label: 'Card name', text: 'The program or plan you are choosing to use.' },
-  { key: 'effect', selector: '.strategy-card-description', label: 'Effect', text: 'The exact stat, output, opponent, or seeding change this card applies.' },
-  { key: 'rule', selector: '.strategy-card-rule', label: 'Career limit', text: 'A player can receive only one Development card during their career.' },
-];
-
-const GAMEPLAN_NOTES = STRATEGY_NOTES.filter((note) => note.key !== 'rule');
-
 function CardOverviewSection({ accent, markType, eyebrow, title, body, howLabel, howText, costLabel, costText, notes, children }) {
   return (
     <div className="co2-section">
@@ -122,8 +112,6 @@ export default function CardOverviewScreen({ state, actions, myTeamId = 0, onBac
   const playerExample = state.teams?.[myTeamId]?.hand?.[0] || state.starPool?.[0];
   const sampleTeam = useMemo(() => buildSampleTeam(), []);
   const matchupExample = useMemo(() => sampleMatchupCard(), []);
-  const developmentExample = { id: 'dev-preview', kind: 'development', name: 'Shooting Lab', description: '+2 SCO permanently.', statChanges: { SCO: 2 }, used: false };
-  const gameplanExample = { id: 'gp-preview', kind: 'gameplan', name: 'Run And Gun', description: '+8% team Offense.', target: 'self', contexts: ['season', 'playoff'], used: false };
 
   return (
     <>
@@ -141,7 +129,7 @@ export default function CardOverviewScreen({ state, actions, myTeamId = 0, onBac
               </div>
               <div>
                 <div className="co-meta-label">Card Types</div>
-                <div className="co-meta-value accent">Five</div>
+                <div className="co-meta-value accent">Three</div>
               </div>
             </div>
           </div>
@@ -158,7 +146,7 @@ export default function CardOverviewScreen({ state, actions, myTeamId = 0, onBac
 
           <CardOverviewSection
             accent="var(--stamp-text)" markType="frontoffice" eyebrow="Three Of Your Nine" title="Front Office Cards"
-            body="A standing arrangement that shapes everything else — a coach, a fanbase, a market. It never takes a possession. It changes the terms every possession is played under, and it holds across seasons."
+            body="A standing arrangement that shapes everything else — a coach, a fanbase, a market. Coaches provide Development Points and two Gameplans in addition to their team bonuses."
             howLabel="How It Plays" howText="It does not get played. It is in force from the moment it is dealt."
             costLabel="How It Ends" costText="It holds for the stated duration. Read the footer before you build around it."
             notes={FRONTOFFICE_NOTES}
@@ -174,26 +162,6 @@ export default function CardOverviewScreen({ state, actions, myTeamId = 0, onBac
             notes={MATCHUP_NOTES}
           >
             <MatchupCard card={matchupExample} />
-          </CardOverviewSection>
-
-          <CardOverviewSection
-            accent="var(--approved-file)" markType="frontoffice" eyebrow="Coach Development" title="Development Cards"
-            body="A permanent training program applied to one player. Each coach rolls two to four every season, and each player can receive only one Development card during their career."
-            howLabel="How It Plays" howText="Choose an eligible player and apply the card directly to their stats."
-            costLabel="How It Ends" costText="Consumed when applied. The player keeps the improvement for their career."
-            notes={STRATEGY_NOTES}
-          >
-            <StrategyCard card={developmentExample} />
-          </CardOverviewSection>
-
-          <CardOverviewSection
-            accent="var(--franchise)" markType="matchup" eyebrow="Two Per Season" title="Gameplan Cards"
-            body="A coach's plan for the season or a playoff matchup. It can strengthen your team, disrupt an opponent, or improve your regular-season seeding roll."
-            howLabel="How It Plays" howText="Play before summing the regular season or before a playoff matchup begins."
-            costLabel="How It Ends" costText="Consumed after one use. Unused cards expire when the next season is dealt."
-            notes={GAMEPLAN_NOTES}
-          >
-            <StrategyCard card={gameplanExample} />
           </CardOverviewSection>
 
           <div className="co2-footer">

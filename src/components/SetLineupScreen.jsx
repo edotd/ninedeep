@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { findSkillPair, skillsetFor } from '../game/skillsets';
 import { jerseyNumber, playerGrade } from '../game/cards';
 import { autoValidFive, validateLineup } from '../game/roster';
-import { DEFAULT_PLAYER_FILTERS, matchesPlayerFilters } from '../game/playerFilters';
+import { sortPlayers } from '../game/playerFilters';
 import { useIsDesktop } from '../hooks/useIsDesktop';
 import PlayerCard from './PlayerCard';
 import FrontOfficeCard from './FrontOfficeCard';
@@ -140,9 +140,10 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
   const activeIds = slotOrder.filter((id) => id != null);
   const starters = slotOrder.map((id) => (id ? team.hand.find((c) => c.id === id) || null : null));
   const bench = team.hand.filter((c) => !activeIds.includes(c.id));
-  const [playerFilters, setPlayerFilters] = useState(DEFAULT_PLAYER_FILTERS);
-  const filteredBench = bench.filter((c) => matchesPlayerFilters(c, playerFilters));
+  const [playerSort, setPlayerSort] = useState('position');
+  const filteredBench = sortPlayers(bench, playerSort);
   const [selectedId, setSelectedId] = useState(null);
+  const [selectedGameplanId, setSelectedGameplanId] = useState(team.activeGameplanId || team.coach?.gameplans?.[0]?.id || '');
 
   const previewSignature = starters.map((card) => card?.id ?? 'open').join(',');
   useEffect(() => {
@@ -260,7 +261,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
     // Close in the same event as the single shared write. React batches these updates, so the
     // saved lineup first appears on the Franchise page only after the editor is gone.
     onClose();
-    actions.saveLineup(myTeamId, ids);
+    actions.saveLineup(myTeamId, ids, selectedGameplanId);
   };
 
   // A valid five, never the strongest one (see roster.js's autoValidFive) — an escape hatch
@@ -285,6 +286,19 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
                 <span className={'slf-pairing-value ' + w.pair.side}>+{w.pair.percent}% {w.pair.side === 'offense' ? 'OFF' : 'DEF'}</span>
               </div>
             ))}
+          </div>
+        )}
+
+        {team.coach?.gameplans?.length > 0 && (
+          <div className="slf-gameplan-picker">
+            <div className="slf-microlabel">Set Gameplan</div>
+            <div className="slf-gameplan-options">
+              {team.coach.gameplans.map((plan, index) => (
+                <button type="button" key={plan.id} disabled={!canEdit} className={selectedGameplanId === plan.id ? 'active' : ''} onClick={() => setSelectedGameplanId(plan.id)}>
+                  <span>{index === 0 ? 'Primary' : 'Secondary'}</span><strong>{plan.name}</strong><small>{plan.description}</small>
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
@@ -342,7 +356,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
             <div className="slf-sideline">
               <div className="slf-bench">
                 <div className="slf-microlabel">Players</div>
-                <PlayerFilterBar filters={playerFilters} onChange={setPlayerFilters} />
+                <PlayerFilterBar sort={playerSort} onChange={setPlayerSort} />
                 <div className="slf-bench-row">
                   {starters.map((c, i) => (
                     <MiniCard
@@ -403,7 +417,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
               <span>Choose A Starter</span>
               <button type="button" className="slf-picker-close" onClick={() => setPickerSlotIndex(null)} aria-label="Close">×</button>
             </div>
-            <PlayerFilterBar filters={playerFilters} onChange={setPlayerFilters} />
+            <PlayerFilterBar sort={playerSort} onChange={setPlayerSort} />
             <div className="slf-slot-picker-carousel">
               {filteredBench.map((c) => (
                 <button key={c.id} type="button" className="slf-slot-picker-card" onClick={() => placeCardInSlot(pickerSlotIndex, c.id)}>

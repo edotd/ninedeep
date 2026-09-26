@@ -19,7 +19,7 @@ import {
   benchScore, hasHomeCourt, applyLiveFanbaseMod, wantsAdvantage,
 } from './matchup';
 import { applyPlayoffWinMilestone } from './fanbase';
-import { applyGameplanToTurn } from './strategyCards';
+import { activeCoachGameplan, applyGameplanToTurn } from './strategyCards';
 
 export const EXCHANGE_PLAN = [
   { offenseWho: 'first', defenseWho: 'second' },
@@ -81,14 +81,7 @@ export function beginTurn(state) {
     log: [],
   };
   for (const [side, team] of [['a', m.a], ['b', m.b]]) {
-    if (team.human) continue;
-    for (const card of team.gameplanCards || []) {
-      if (card.used || !card.contexts?.includes('playoff')) continue;
-      applyGameplanToTurn(m.turn, side, card, team);
-      card.used = true;
-      card.playedContext = 'playoff';
-      card.targetTeamId = card.target === 'opponent' ? (side === 'a' ? m.b.id : m.a.id) : team.id;
-    }
+    applyGameplanToTurn(m.turn, side, activeCoachGameplan(team), team);
   }
 }
 

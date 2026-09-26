@@ -34,7 +34,9 @@ function coachContent(team) {
       { label: 'Off Bonus', value: `+${Math.round((coach.offBonus + bonus) * 100)}%`, tone: 'approved-ink' },
       { label: 'Def Bonus', value: `+${Math.round((coach.defBonus + bonus) * 100)}%`, tone: 'approved-ink' },
       { label: 'Player Relations', value: coach.playerRelationship, tone: 'file' },
+      { label: 'Development', value: `${team.developmentPoints || 0} pts · ${coach.archetype}`, tone: 'approved-ink' },
     ],
+    detail: (coach.gameplans || []).map((plan, index) => `${index === 0 ? 'Primary' : 'Secondary'}: ${plan.name}${team.activeGameplanId === plan.id ? ' · Active' : ''}`).join(' · '),
     duration: 'Holds Through Era 01',
   };
 }
@@ -97,7 +99,6 @@ export default function FrontOfficeCard({ kind, team }) {
         {coachRarity && (RARITY_CORNERS[coachRarity] || []).map((c) => <span key={c} className={'rarity-corner ' + c} />)}
         <CardTypeMark type="frontoffice" className="fo2-watermark" color="var(--ink-rule)" size={190} />
         <div className="fo2-logo-mark"><BallMark size={44} variant="onInk" /></div>
-        {coachRarity && <RarityBadge rarity={coachRarity} />}
         <div className="fo2-header">
           <span className="fo2-kind-group">
             <CardTypeMark type="frontoffice" size={16} />
@@ -120,6 +121,7 @@ export default function FrontOfficeCard({ kind, team }) {
             </div>
           ))}
         </div>
+        {coachRarity && <div className="fo2-rarity-row"><RarityBadge rarity={coachRarity} /></div>}
         {content.detail && <div className="fo2-mod-detail">{content.detail}</div>}
       </div>
     </div>

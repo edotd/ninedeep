@@ -38,8 +38,7 @@ const PersistentBar = forwardRef(function PersistentBar({ state, myTeamId, overl
   const foTotal = state.settings.fanbaseCardsEnabled !== false ? 3 : 2;
   const fullyDealt = !inDeal || (dealProgress ?? 0) >= rawHand.length + foTotal + (team.matchupCards || []).length;
   const coachDealt = !inDeal || (dealProgress ?? 0) > rawHand.length;
-  const available = (cards) => (fullyDealt ? (cards || []).filter((card) => !card.used).length : 0);
-  const activeGameplan = (team.gameplanCards || []).find((c) => c.used);
+  const activeGameplan = team.coach?.gameplans?.find((plan) => plan.id === team.activeGameplanId);
 
   return (
     <div className="persistent-bar" ref={ref}>
@@ -48,8 +47,8 @@ const PersistentBar = forwardRef(function PersistentBar({ state, myTeamId, overl
         <b>{coachDealt ? team.coach?.archetype || 'Open Slot' : 'Pending'}</b>
         {coachDealt && team.coach && <small>{team.coach.modifier}</small>}
       </button>
-      <button className="persistent-bar-section persistent-card-count gameplan" onClick={() => onNavigate('gameplan')} aria-label="Gameplan"><CardTypeMark type="gameplan" size={16} /><b>{available(team.gameplanCards)}</b></button>
-      <button className="persistent-bar-section persistent-card-count adjustment" onClick={() => onNavigate('adjustment')} aria-label="Adjustment"><CardTypeMark type="adjustment" size={16} /><b>{available(team.matchupCards)}</b></button>
+      <button className="persistent-bar-section persistent-card-count gameplan" onClick={() => onNavigate('gameplan')} aria-label="Active Gameplan"><CardTypeMark type="gameplan" size={16} /><b>{fullyDealt ? activeGameplan?.name || '—' : '—'}</b></button>
+      <button className="persistent-bar-section persistent-card-count development" onClick={() => onNavigate('rotation')} aria-label="Coach Development Points"><span className="persistent-development-mark">DEV</span><b>{fullyDealt ? team.developmentPoints || 0 : 0}</b></button>
     </div>
   );
 });

@@ -137,7 +137,7 @@ export default function DesktopBar({ state, myTeamId, actions, dealProgress }) {
 
   const activeIds = rawActiveIds;
   const coach = foCount >= 1 ? team.coach : null;
-  const activeGameplan = (team.gameplanCards || []).find((c) => c.used);
+  const activeGameplan = team.coach?.gameplans?.find((plan) => plan.id === team.activeGameplanId);
   const fanbaseArchetype = fanbaseDealt && foCount >= 2 ? team.fanbaseArchetype : null;
   const market = foCount >= (fanbaseDealt ? 3 : 2) ? team.market : null;
   const frontOfficeTeam = foCount >= 1 ? team : null;
@@ -275,28 +275,10 @@ export default function DesktopBar({ state, myTeamId, actions, dealProgress }) {
         </div>
       </div>
       <div className="db-section db-slots-fixed">
-        <div className="db-heading gameplan">Gameplan</div>
+        <div className="db-heading gameplan">Coach Development</div>
         <div className="db-slots">
-          {Array.from({ length: 2 }, (_, i) => <StrategySlot key={i} card={gameplanCards[i]} onHover={handleHover} onLeave={handleLeave} onSelect={handleStrategyClick} picking={strategyPicker?.card.id === gameplanCards[i]?.id} />)}
-        </div>
-      </div>
-      <div className="db-section db-slots-fixed">
-        <div className="db-heading matchup">Adjustment</div>
-        <div className="db-slots">
-          {Array.from({ length: MATCHUP_CARD_DRAW_COUNT }, (_, i) => {
-            const card = matchupCards[i];
-            return (
-              <MatchupSlot
-                key={i}
-                card={card}
-                onHover={handleHover}
-                onLeave={handleLeave}
-                onSelect={handleMatchupClick}
-                playable={!!card && playableIds.has(card.id)}
-                picking={!!card && targetPicker?.card.id === card.id}
-              />
-            );
-          })}
+          <div className="db-slot db-development-points"><strong>{fullyDealt ? team.developmentPoints || 0 : 0}</strong><span>Points</span></div>
+          <div className="db-slot db-active-gameplan"><span>Gameplan</span><strong>{fullyDealt ? activeGameplan?.name || 'Pending' : 'Pending'}</strong></div>
         </div>
       </div>
       {swap && (swap.phase === 'flip1' || swap.phase === 'flip2') && swap.stampRect && (() => {

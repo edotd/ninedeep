@@ -1,91 +1,120 @@
-import { SEEDING_GAMEPLAN_TYPES, POSITION_GAMEPLAN_TYPES } from './supplementalCards';
+import { POSITION_GAMEPLAN_TYPES } from './supplementalCards';
 import { POSITIONS } from './constants';
 
-const DEVELOPMENT_DEFINITIONS = [
-  { name: 'Shooting Lab', description: '+2 SCO permanently.', statChanges: { SCO: 2 } },
-  { name: 'Lead Guard Reps', description: '+2 PLM permanently.', statChanges: { PLM: 2 } },
-  { name: 'Glass Work', description: '+2 REB permanently.', statChanges: { REB: 2 } },
-  { name: 'Defensive Camp', description: '+2 DEF permanently.', statChanges: { DEF: 2 } },
-  { name: 'Complete Program', description: '+1 to every player stat permanently.', statChanges: { SCO: 1, PLM: 1, REB: 1, DEF: 1 } },
+export const COACH_GAMEPLANS = [
+  { name: 'Run And Gun', description: '+8% team Offense.', effects: { offPercent: 8 } },
+  { name: 'Pack The Paint', description: '+8% team Defense.', effects: { defPercent: 8 } },
+  { name: 'Second Unit Focus', description: '+3 Bench Output.', effects: { benchBonus: 3 } },
+  { name: 'Numbers Advantage', description: '+12% team Offense if 3 or more starters share a position.', dynamicEffect: { type: 'positionThreshold', minCount: 3, bonusPercent: 12, ability: 'offense' } },
+  { name: 'United Front', description: '+12% team Defense if 3 or more starters share a position.', dynamicEffect: { type: 'positionThreshold', minCount: 3, bonusPercent: 12, ability: 'defense' } },
+  ...POSITION_GAMEPLAN_TYPES.map(({ name, description, dynamicEffect }) => ({ name, description, dynamicEffect })),
 ];
 
-const GAMEPLAN_DEFINITIONS = [
-  { name: 'Run And Gun', description: '+8% team Offense.', target: 'self', contexts: ['season', 'playoff'], effects: { offPercent: 8 } },
-  { name: 'Pack The Paint', description: '+8% team Defense.', target: 'self', contexts: ['season', 'playoff'], effects: { defPercent: 8 } },
-  { name: 'Second Unit Focus', description: '+3 Bench Output.', target: 'self', contexts: ['season', 'playoff'], effects: { benchBonus: 3 } },
-  { name: 'Disrupt Rhythm', description: '-6% opponent Offense.', target: 'opponent', contexts: ['season', 'playoff'], effects: { offPercent: -6 } },
-  { name: 'Attack Their Scheme', description: '-6% opponent Defense.', target: 'opponent', contexts: ['season', 'playoff'], effects: { defPercent: -6 } },
-  // Reward 3+ starters sharing a position, regardless of which one — a generic complement to
-  // POSITION_GAMEPLAN_TYPES' per-position, per-count cards below.
-  { name: 'Numbers Advantage', description: '+12% team Offense if 3 or more starters share a position.', target: 'self', contexts: ['season', 'playoff'], dynamicEffect: { type: 'positionThreshold', minCount: 3, bonusPercent: 12, ability: 'offense' } },
-  { name: 'United Front', description: '+12% team Defense if 3 or more starters share a position.', target: 'self', contexts: ['season', 'playoff'], dynamicEffect: { type: 'positionThreshold', minCount: 3, bonusPercent: 12, ability: 'defense' } },
-  ...SEEDING_GAMEPLAN_TYPES,
-  ...POSITION_GAMEPLAN_TYPES,
-];
+export const DEVELOPMENT_STATS_BY_STYLE = {
+  'Offensive Minded': ['SCO', 'PLM'],
+  'Defensive Minded': ['REB', 'DEF'],
+  Balanced: ['SCO', 'PLM', 'REB', 'DEF'],
+};
 
-// Some Gameplan cards (see POSITION_GAMEPLAN_TYPES and the two positionThreshold cards above)
-// can't carry a fixed `effects` object at definition time — their value depends on the team's
-// actual starting lineup, which is only known once the card is played. Resolved against
-// team.activeIds at play time in playGameplanCard, then written onto card.effects so every
-// downstream reader (turn.gameplanNotes, the played-card "Active" stamp, autoPlaySeasonGameplans)
-// sees a normal, already-resolved effects object exactly like every static card has.
 function resolveDynamicEffects(team, dynamicEffect) {
   const activeIds = new Set(team.activeIds || []);
-  const starters = team.hand.filter((p) => activeIds.has(p.id));
+  const starters = (team.hand || []).filter((player) => activeIds.has(player.id));
   const key = dynamicEffect.ability === 'offense' ? 'offPercent' : 'defPercent';
   if (dynamicEffect.type === 'positionCount') {
-    const count = starters.filter((p) => p.position === dynamicEffect.position).length;
+    const count = starters.filter((player) => player.position === dynamicEffect.position).length;
     return { [key]: dynamicEffect.perCount * count };
   }
   if (dynamicEffect.type === 'positionThreshold') {
-    const maxCount = Math.max(0, ...POSITIONS.map((position) => starters.filter((p) => p.position === position).length));
+    const maxCount = Math.max(0, ...POSITIONS.map((position) => starters.filter((player) => player.position === position).length));
     return { [key]: maxCount >= dynamicEffect.minCount ? dynamicEffect.bonusPercent : 0 };
   }
   return { [key]: 0 };
 }
 
-function nextId(state, prefix) {
-  state.strategyCardCounter = (state.strategyCardCounter || 0) + 1;
-  return `${prefix}${state.strategyCardCounter}`;
-}
-
-function draw(definitions) {
-  return definitions[Math.floor(Math.random() * definitions.length)];
-}
-
 function drawUnique(definitions, count) {
   const pool = definitions.slice();
-  const cards = [];
-  while (cards.length < count && pool.length) {
-    const index = Math.floor(Math.random() * pool.length);
-    cards.push(pool.splice(index, 1)[0]);
+  const picks = [];
+  while (picks.length < count && pool.length) picks.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+  return picks;
+}
+
+function planWithId(plan, index) {
+  return { ...plan, id: `coach-plan-${index}-${plan.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}` };
+}
+
+export function ensureCoachSystems(team) {
+  if (!team?.coach) return;
+  if (!Array.isArray(team.coach.gameplans) || team.coach.gameplans.length < 2) {
+    const seed = String(team.coach.name || team.coach.archetype || '').split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+    const first = seed % COACH_GAMEPLANS.length;
+    const second = (first + 1 + (seed % (COACH_GAMEPLANS.length - 1))) % COACH_GAMEPLANS.length;
+    team.coach.gameplans = [planWithId(COACH_GAMEPLANS[first], 0), planWithId(COACH_GAMEPLANS[second], 1)];
   }
-  return cards;
+  team.activeGameplanId ||= team.coach.gameplans[0].id;
+  team.developmentPoints = Number.isFinite(team.developmentPoints) ? team.developmentPoints : 2;
+  team.developmentCards = [];
+  team.gameplanCards = [];
 }
 
-export function dealStrategyCards(state, team) {
-  const developmentCount = 2 + Math.floor(Math.random() * 3);
-  team.developmentCards = Array.from({ length: developmentCount }, () => ({
-    ...draw(DEVELOPMENT_DEFINITIONS), id: nextId(state, 'dev'), kind: 'development', used: false,
-  }));
-  team.gameplanCards = drawUnique(GAMEPLAN_DEFINITIONS, 2).map((definition) => ({
-    ...definition, id: nextId(state, 'gp'), kind: 'gameplan', used: false,
-  }));
-  team.seasonGameplanEffects = { offPercent: 0, defPercent: 0, benchBonus: 0, seedingPercent: 0 };
+export function activeCoachGameplan(team) {
+  ensureCoachSystems(team);
+  return team?.coach?.gameplans?.find((plan) => plan.id === team.activeGameplanId) || team?.coach?.gameplans?.[0] || null;
 }
 
-export function applyDevelopmentCard(state, teamIdx, cardId, playerId) {
+export function gameplanEffects(team, plan = activeCoachGameplan(team)) {
+  if (!plan) return {};
+  return plan.dynamicEffect ? resolveDynamicEffects(team, plan.dynamicEffect) : { ...(plan.effects || {}) };
+}
+
+export function syncSeasonGameplan(team) {
+  const effects = gameplanEffects(team);
+  team.seasonGameplanEffects = {
+    offPercent: effects.offPercent || 0,
+    defPercent: effects.defPercent || 0,
+    benchBonus: effects.benchBonus || 0,
+    seedingPercent: effects.seedingPercent || 0,
+  };
+}
+
+export function dealStrategyCards(_state, team) {
+  if (!team?.coach) return;
+  team.coach.gameplans = drawUnique(COACH_GAMEPLANS, 2).map(planWithId);
+  team.activeGameplanId = team.coach.gameplans[0]?.id || null;
+  team.developmentPoints = 2;
+  team.developmentCards = [];
+  team.gameplanCards = [];
+  syncSeasonGameplan(team);
+}
+
+export function setCoachGameplan(state, teamIdx, planId) {
   const team = state.teams[teamIdx];
-  const card = team?.developmentCards?.find((c) => c.id === cardId);
-  const player = team?.hand?.find((p) => String(p.id) === String(playerId));
-  if (!card || card.used) return { ok: false, msg: 'That Development card is no longer available.' };
-  if (!player) return { ok: false, msg: 'Choose a player on your roster.' };
-  if (player.development) return { ok: false, msg: 'That player has already received career development.' };
-  Object.entries(card.statChanges).forEach(([stat, value]) => { player.stats[stat] += value; });
-  player.development = { cardName: card.name, description: card.description, statChanges: { ...card.statChanges }, season: state.season };
-  card.used = true;
-  card.playerId = player.id;
+  ensureCoachSystems(team);
+  if (!team?.coach?.gameplans?.some((plan) => plan.id === planId)) return { ok: false, msg: 'That Gameplan is not available to this coach.' };
+  if (team.lineupConfirmed) return { ok: false, msg: 'The lineup and Gameplan are already locked for this season.' };
+  team.activeGameplanId = planId;
+  syncSeasonGameplan(team);
   return { ok: true };
+}
+
+export function applyDevelopmentPoint(state, teamIdx, playerId, stat) {
+  const team = state.teams[teamIdx];
+  ensureCoachSystems(team);
+  const player = team?.hand?.find((candidate) => String(candidate.id) === String(playerId));
+  if (!player) return { ok: false, msg: 'Choose a player on your roster.' };
+  if ((team.developmentPoints || 0) <= 0) return { ok: false, msg: 'This coach has no Development Points remaining this season.' };
+  const eligible = DEVELOPMENT_STATS_BY_STYLE[team.coach.archetype] || DEVELOPMENT_STATS_BY_STYLE.Balanced;
+  if (!eligible.includes(stat)) return { ok: false, msg: `${team.coach.archetype} coaches can develop ${eligible.join(' or ')}.` };
+  player.stats[stat] = (player.stats[stat] || 0) + 1;
+  player.development ||= { cardName: 'Coach Development', description: 'Permanent coach development.', statChanges: {}, seasons: [] };
+  player.development.statChanges[stat] = (player.development.statChanges[stat] || 0) + 1;
+  player.development.seasons ||= [];
+  player.development.seasons.push(state.season);
+  team.developmentPoints -= 1;
+  return { ok: true };
+}
+
+export function applyDevelopmentCard(state, teamIdx, _cardId, playerId, stat = 'SCO') {
+  return applyDevelopmentPoint(state, teamIdx, playerId, stat);
 }
 
 function addEffects(target, effects) {
@@ -95,64 +124,19 @@ function addEffects(target, effects) {
   target.seedingPercent = (target.seedingPercent || 0) + (effects.seedingPercent || 0);
 }
 
-// `team` is the card's OWNER (whoever played it) — needed here, not just in playGameplanCard,
-// because AI teams' gameplan cards get applied straight through this function (see turn.js's
-// beginTurn and engine.js's rollCurrentMatchup, which auto-play an AI's unused card without
-// ever calling playGameplanCard), so a dynamicEffect card must resolve here too or its
-// card.effects is still unset when addEffects reads it.
-export function applyGameplanToTurn(turn, side, card, team) {
-  if (card.dynamicEffect) card.effects = resolveDynamicEffects(team, card.dynamicEffect);
+export function applyGameplanToTurn(turn, side, plan, team) {
+  if (!plan) return;
   const own = side === 'a' ? turn.extraA : turn.extraB;
-  const opponent = side === 'a' ? turn.extraB : turn.extraA;
-  const target = card.target === 'opponent' ? opponent : own;
-  addEffects(target, card.effects);
+  addEffects(own, gameplanEffects(team, plan));
   turn.gameplanNotes ||= [];
-  turn.gameplanNotes.push({ teamSide: side, cardName: card.name, description: card.description, card: { ...card } });
+  turn.gameplanNotes.push({ teamSide: side, cardName: plan.name, description: plan.description, card: { ...plan } });
 }
 
-export function playGameplanCard(state, teamIdx, cardId, context, targetTeamId) {
-  const team = state.teams[teamIdx];
-  const card = team?.gameplanCards?.find((c) => c.id === cardId);
-  if (!card || card.used) return { ok: false, msg: 'That Gameplan card is no longer available.' };
-  if ((team.gameplanCards || []).some((c) => c.used)) return { ok: false, msg: 'Only one Gameplan card can be active at a time.' };
-  if (!card.contexts.includes(context)) return { ok: false, msg: `That card cannot be used for a ${context} plan.` };
-
-  if (context === 'season') {
-    const seasonOpen = ['pullhand', 'pullmodifier', 'constructing', 'teamsummary'].includes(state.phase);
-    if (!seasonOpen) return { ok: false, msg: 'The regular season has already been summed.' };
-    const target = card.target === 'opponent' ? state.teams.find((t) => String(t.id) === String(targetTeamId)) : team;
-    if (!target || (card.target === 'opponent' && target === team)) return { ok: false, msg: 'Choose an opponent.' };
-    target.seasonGameplanEffects ||= { offPercent: 0, defPercent: 0, benchBonus: 0, seedingPercent: 0 };
-    if (card.dynamicEffect) card.effects = resolveDynamicEffects(team, card.dynamicEffect);
-    addEffects(target.seasonGameplanEffects, card.effects);
-    card.used = true;
-    card.playedContext = 'season';
-    card.targetTeamId = target.id;
-    return { ok: true };
-  }
-
-  const match = state.playoff?.matches?.[state.playoff.activeMatchIndex];
-  if (!match?.turn || match.result || !['coinflip', 'coinflipped'].includes(match.turn.stage)) return { ok: false, msg: 'Gameplans must be played before the matchup begins.' };
-  const side = match.a === team ? 'a' : match.b === team ? 'b' : null;
-  if (!side) return { ok: false, msg: 'Your team is not in this matchup.' };
-  applyGameplanToTurn(match.turn, side, card, team);
-  card.used = true;
-  card.playedContext = 'playoff';
-  card.targetTeamId = card.target === 'opponent' ? (side === 'a' ? match.b.id : match.a.id) : team.id;
-  return { ok: true };
+export function playGameplanCard(state, teamIdx, planId) {
+  return setCoachGameplan(state, teamIdx, planId);
 }
 
-export function autoPlaySeasonGameplans(state, team) {
-  for (const card of team.gameplanCards || []) {
-    if (card.used || !card.contexts.includes('season') || !card.effects?.seedingPercent) continue;
-    const target = card.target === 'opponent'
-      ? state.teams.filter((t) => t !== team).sort((a, b) => (b.seed || 0) - (a.seed || 0))[0]
-      : team;
-    target.seasonGameplanEffects ||= { offPercent: 0, defPercent: 0, benchBonus: 0, seedingPercent: 0 };
-    addEffects(target.seasonGameplanEffects, card.effects);
-    card.used = true;
-    card.playedContext = 'season';
-    card.targetTeamId = target.id;
-    break;
-  }
+export function autoPlaySeasonGameplans(_state, team) {
+  ensureCoachSystems(team);
+  syncSeasonGameplan(team);
 }

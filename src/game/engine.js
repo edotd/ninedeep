@@ -22,7 +22,7 @@ import {
 } from './matchup';
 import { rosterSalary } from './economy';
 import { applyPlayoffWinMilestone, fanbaseEnabled } from './fanbase';
-import { applyGameplanToTurn } from './strategyCards';
+import { activeCoachGameplan, applyGameplanToTurn, setCoachGameplan } from './strategyCards';
 import { beginTurn as initializeTurn } from './turn';
 
 function humanTeams(state) {
@@ -161,7 +161,7 @@ export function markLineupSet(state, teamIdx) {
 // Commits the Set Lineup screen's local draft in one write. Individual editor interactions
 // never touch shared room state, preventing multiplayer snapshots from replaying Auto Set and
 // keeping the Franchise page's chemistry/output unchanged until Save Lineup is pressed.
-export function saveLineup(state, teamIdx, activeIds) {
+export function saveLineup(state, teamIdx, activeIds, activeGameplanId) {
   const team = state.teams[teamIdx];
   if (!team || !Array.isArray(activeIds)) return { valid: false, msg: 'Nothing to save yet.' };
   const uniqueIds = [...new Set(activeIds)];
@@ -171,6 +171,10 @@ export function saveLineup(state, teamIdx, activeIds) {
   const validation = validateLineup({ ...team, activeIds: uniqueIds });
   if (!validation.valid) return validation;
   team.activeIds = uniqueIds;
+  if (activeGameplanId) {
+    const gameplanResult = setCoachGameplan(state, teamIdx, activeGameplanId);
+    if (gameplanResult.ok === false) return { valid: false, msg: gameplanResult.msg };
+  }
   team.lineupSet = true;
   team.lineupConfirmed = false;
   return { valid: true };
@@ -274,13 +278,7 @@ export function rollCurrentMatchup(state, matchIndex = state.playoff.activeMatch
 
   const planTurn = { extraA, extraB, gameplanNotes: [] };
   for (const [side, team] of [['a', m.a], ['b', m.b]]) {
-    if (team.human) continue;
-    const plan = (team.gameplanCards || []).find((card) => !card.used && card.contexts?.includes('playoff'));
-    if (!plan) continue;
-    applyGameplanToTurn(planTurn, side, plan, team);
-    plan.used = true;
-    plan.playedContext = 'playoff';
-    plan.targetTeamId = plan.target === 'opponent' ? (side === 'a' ? m.b.id : m.a.id) : team.id;
+    applyGameplanToTurn(planTurn, side, activeCoachGameplan(team), team);
   }
 
   const choicesA = cardChoicesFor(state.playoff, m.a);

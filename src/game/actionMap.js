@@ -6,7 +6,7 @@ import { draftPick, forfeitPick, finishDraftTransition } from './draft';
 import { fireCoach, fireGM, hireFreeAgentCoach, investInFanbase, releasePlayer } from './finances';
 import * as engine from './engine';
 import { beginTurn, advanceTurn } from './turn';
-import { applyDevelopmentCard, playGameplanCard } from './strategyCards';
+import { applyDevelopmentCard, applyDevelopmentPoint, playGameplanCard, setCoachGameplan } from './strategyCards';
 import { openNegotiation, submitNegotiationOffer, acceptNegotiationCounter, walkAwayFromNegotiation } from './negotiation';
 import { openFreeAgentBid, raiseFreeAgentBid, standPatFreeAgentBid } from './bidding';
 
@@ -54,7 +54,9 @@ export const actionMap = {
   investInFanbase,
   releasePlayer,
   applyDevelopmentCard,
+  applyDevelopmentPoint,
   playGameplanCard,
+  setCoachGameplan,
   closeFreeAgency,
   openNegotiation,
   submitNegotiationOffer,

@@ -24,3 +24,20 @@ export function matchesPlayerFilters(card, filters) {
 }
 
 export { POSITIONS, RARITIES };
+
+const POSITION_ORDER = { Guard: 0, Forward: 1, Big: 2 };
+const RARITY_ORDER = { Legendary: 0, Signature: 1, Prime: 2, Core: 3 };
+
+export function sortPlayers(cards, sort = 'position') {
+  return [...cards].sort((a, b) => {
+    if (['SCO', 'PLM', 'REB', 'DEF'].includes(sort)) return (b.stats?.[sort] || 0) - (a.stats?.[sort] || 0);
+    if (sort === 'grade') return total(b) - total(a);
+    if (sort === 'rarity') return (RARITY_ORDER[a.rarity] ?? 99) - (RARITY_ORDER[b.rarity] ?? 99);
+    if (sort === 'archetype') return String(a.archetype).localeCompare(String(b.archetype));
+    return (POSITION_ORDER[a.position] ?? 99) - (POSITION_ORDER[b.position] ?? 99);
+  });
+}
+
+function total(card) {
+  return Object.values(card.stats || {}).reduce((sum, value) => sum + value, 0);
+}
