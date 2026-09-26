@@ -220,8 +220,6 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   const [tab, setTab] = useState(() => tabForSection(focusSection?.section));
   const showSection = (key) => isDesktop || tab === key;
   const showStaffCards = isDesktop || tab === 'office';
-  const foItemCount = 2 + (state.settings.fanbaseCardsEnabled !== false ? 1 : 0); // coach + market, plus fanbase when on
-  const foRow = useRowEnd(foItemCount);
   const devRow = useRowEnd((team.developmentCards || []).length, 1);
   const gameplanRow = useRowEnd((team.gameplanCards || []).length, 1);
   const adjRow = useRowEnd((team.matchupCards || []).length, 1);
@@ -321,7 +319,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
     const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 4;
     if (!atEnd) return;
     const deltaX = startX - event.changedTouches[0].clientX;
-    if (deltaX > 40) setTab('chemistry');
+    if (deltaX > 70) setTab('chemistry');
   };
   // Swipe anywhere in the body to move between tabs, on any tab except Rotation (that one
   // already owns left/right for its own card-to-card carousel, including the hand-off into
@@ -389,7 +387,9 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
     if (startX == null) return;
     const deltaX = startX - event.changedTouches[0].clientX;
     const idx = TAB_ORDER.indexOf(tab);
-    if (Math.abs(deltaX) < 50) { positionUnderline(idx, true); return; }
+    // A light or partial swipe shouldn't change tabs — this needs a deliberate, most-of-the-way
+    // gesture, not just a passing touch-drag while scrolling the page vertically.
+    if (Math.abs(deltaX) < 110) { positionUnderline(idx, true); return; }
     if (deltaX > 0 && idx < TAB_ORDER.length - 1) setTab(TAB_ORDER[idx + 1]);
     else if (deltaX < 0 && idx > 0) setTab(TAB_ORDER[idx - 1]);
     else positionUnderline(idx, true);
@@ -676,8 +676,12 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           {team.market && showSection('office') && (
             <div className="ts-section" id="team-office">
               <div className="ts-heading">Coach & GM</div>
-              <div className="row-swipe-wrap">
-              <div className={'fo-deal-row' + (foRow.scrolls ? ' row-scroll' : ' row-fit')} style={{ margin: 0 }} onScroll={foRow.scrolls ? foRow.onScroll : undefined}>
+              {/* Coach gets its own row, GM (and Fanbase, the other front-office role) a second
+                  row below it — kept apart rather than sharing one swipeable row of up to three
+                  cards. Neither row ever holds more than two cards, so both stay a plain
+                  stretch-to-fit row (see useRowEnd's own "1-2 cards" comment) with no scroll
+                  tracking needed. */}
+              <div className="fo-deal-row row-fit" style={{ margin: 0 }}>
                 <div className="ts-fo-col" id="team-coach-card">
                   {team.coach ? <FrontOfficeCard kind="coach" team={team} /> : <div className="ts-empty-coach"><span>Coach</span><strong>Open Slot</strong><small>Choose a replacement in Free Agency.</small></div>}
                   {!readOnly && team.coach && state.settings.coachChangesEnabled && (
@@ -693,6 +697,8 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                     </button>
                   )}
                 </div>
+              </div>
+              <div className="fo-deal-row row-fit" style={{ margin: '12px 0 0' }}>
                 {state.settings.fanbaseCardsEnabled !== false && (
                   <div className="ts-fo-col">
                     <FrontOfficeCard kind="fanbase" team={team} />
@@ -727,8 +733,6 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                     </button>
                   )}
                 </div>
-              </div>
-              <RowSwipeHint row={foRow} />
               </div>
             </div>
           )}

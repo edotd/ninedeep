@@ -6,6 +6,7 @@ import { teamOutput } from '../game/matchup';
 import { useMetricTally } from '../hooks/useMetricTally';
 import { useIsDesktop } from '../hooks/useIsDesktop';
 import PlayerCard from './PlayerCard';
+import FrontOfficeCard from './FrontOfficeCard';
 
 // Shown once per browser — the first time anyone opens this editor, not once per team/era, so
 // re-explaining after a fresh solo game or a new room would be redundant.
@@ -161,6 +162,11 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
     setPickerSlotIndex(null);
   };
 
+  // A starter's full card, or the coach's full card, centered on screen — a plain inspection
+  // view, so it's available whether or not the lineup can be edited right now. { type: 'player',
+  // card } or { type: 'coach' } (the coach itself always comes from `team`, already in scope).
+  const [centeredCard, setCenteredCard] = useState(null);
+
   const courtRef = useRef(null);
   const slotRefs = useRef([]);
   const [wires, setWires] = useState([]);
@@ -201,10 +207,10 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
 
   const synergy = teamSynergy(team);
 
-  // Click to hold a card (bench or court), click again to release it, click a different card
-  // in the same group to switch which one is held. A held card is placed by clicking the
-  // OTHER group next — a bench card onto a court slot (empty or occupied), or a starter onto
-  // a bench card. Nothing happens instantly on a single click; placing always takes two.
+  // Click a bench card to hold it, click again to release it, click a different bench card to
+  // switch which one is held — a starter no longer becomes "held" by clicking it (that now
+  // always shows its full card instead, see the court slots below), so a held card is always
+  // a bench card, and it's always placed by clicking the target starter slot next.
   const holdCard = (cardId) => {
     if (!canEdit) return;
     setSelectedId((cur) => (cur === cardId ? null : cardId));
@@ -219,15 +225,6 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
 
   const handleBenchClick = (card) => {
     if (!canEdit) return;
-    if (selectedId != null && activeIds.includes(selectedId)) {
-      const outgoingId = selectedId;
-      const outgoingIndex = slotOrder.indexOf(outgoingId);
-      setSelectedId(null);
-      if (outgoingIndex >= 0) {
-        setSlotOrder((prev) => { const next = [...prev]; next[outgoingIndex] = card.id; return next; });
-      }
-      return;
-    }
     holdCard(card.id);
   };
 
@@ -311,10 +308,10 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
         <div className="slf-columns">
           <div className="slf-court-col">
             {team.coach && (
-              <div className="slf-coach">
+              <button type="button" className="slf-coach" onClick={() => setCenteredCard({ type: 'coach' })}>
                 <div className="slf-microlabel">Head Coach</div>
                 <div className="slf-coach-name">{team.coach.archetype}</div>
-              </div>
+              </button>
             )}
             <div className="slf-microlabel slf-starters-label">Starters</div>
             <div className="slf-court" ref={courtRef}>
@@ -332,10 +329,16 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
                   <MiniCard
                     card={starters[i]}
                     selected={starters[i] && selectedId === starters[i].id}
-                    onClick={canEdit ? () => {
+                    onClick={(starters[i] || canEdit) ? () => {
                       if (starters[i]) {
-                        if (selectedId == null) holdCard(starters[i].id);
-                        else placeOnSlot(i);
+                        // A held bench card still completes its swap by clicking the target
+                        // starter slot on desktop — everywhere else, clicking a starter is
+                        // simply "show me this player's full card."
+                        if (isDesktop && canEdit && selectedId != null && !activeIds.includes(selectedId)) {
+                          placeOnSlot(i);
+                        } else {
+                          setCenteredCard({ type: 'player', card: starters[i] });
+                        }
                       } else if (!isDesktop) {
                         setSelectedId(null);
                         setPickerSlotIndex(i);
@@ -361,8 +364,14 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
                     <MiniCard
                       key={c ? c.id : 'starter-open-' + i}
                       card={c}
-                      selected={c != null && selectedId === c.id}
-                      onClick={canEdit ? () => (c && selectedId == null ? holdCard(c.id) : placeOnSlot(i)) : undefined}
+                      onClick={(c || canEdit) ? () => {
+                        if (c) {
+                          if (canEdit && selectedId != null) placeOnSlot(i);
+                          else setCenteredCard({ type: 'player', card: c });
+                        } else {
+                          placeOnSlot(i);
+                        }
+                      } : undefined}
                       onRemove={canEdit && c ? () => handleRemove(c) : undefined}
                       onHoverStart={handleHoverStart}
                       onHoverEnd={handleHoverEnd}
@@ -417,6 +426,21 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
               ))}
               {bench.length === 0 && <div className="slf-slot-picker-empty">No available players.</div>}
             </div>
+          </div>
+        </div>
+      )}
+
+      {centeredCard && (
+        <div className="slf-card-modal-backdrop" onClick={() => setCenteredCard(null)}>
+          <div
+            className="slf-card-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label={centeredCard.type === 'coach' ? 'Coach card' : 'Player card'}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button type="button" className="slf-picker-close" onClick={() => setCenteredCard(null)} aria-label="Close">×</button>
+            {centeredCard.type === 'coach' ? <FrontOfficeCard kind="coach" team={team} /> : <PlayerCard card={centeredCard.card} />}
           </div>
         </div>
       )}

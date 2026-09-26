@@ -2215,7 +2215,8 @@ body:has(.entry-screen){padding-bottom:0;}
 .slf-microlabel{font-family:var(--font-label);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--file-muted);margin-bottom:6px;}
 .slf-bench{flex:1;min-width:0;}
 .slf-bench-row{display:flex;gap:8px;flex-wrap:wrap;}
-.slf-coach{align-self:center;width:fit-content;max-width:100%;background:var(--form);border:2px solid var(--franchise);padding:8px 14px;box-sizing:border-box;text-align:center;}
+.slf-coach{align-self:center;width:fit-content;max-width:100%;background:var(--form);border:2px solid var(--franchise);padding:8px 14px;box-sizing:border-box;text-align:center;font:inherit;cursor:pointer;}
+.slf-coach:hover{background:var(--file);}
 .slf-coach-name{font-family:var(--font-label);font-size:12px;text-transform:uppercase;color:var(--ink);margin-top:2px;white-space:nowrap;}
 .slf-footer{padding:18px 24px 22px;display:flex;flex-direction:column;gap:10px;}
 .slf-footer-actions button{flex:1;}
@@ -2251,6 +2252,13 @@ body:has(.entry-screen){padding-bottom:0;}
    actually places a card. */
 .slf-preview{position:fixed;right:16px;bottom:16px;z-index:520;width:170px;pointer-events:none;filter:drop-shadow(0 12px 28px rgba(0,0,0,.5));animation:ts-hero-tally-in .15s ease-out;}
 @media(prefers-reduced-motion:reduce){.slf-preview{animation:none;}}
+
+/* Clicking a starter (or the coach) shows their full card centered on screen — a plain
+   inspection view, distinct from .slf-preview's small non-blocking corner peek, since here the
+   card itself is the point of the click, not a side effect of holding one for placement. */
+.slf-card-modal-backdrop{position:fixed;inset:0;z-index:525;background:rgba(11,17,30,.82);display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;}
+.slf-card-modal{position:relative;width:100%;max-width:280px;}
+.slf-card-modal .slf-picker-close{position:absolute;top:-38px;right:0;color:var(--file);font-size:26px;}
 
 /* One-time explainer, first visit only (see LINEUP_INTRO_KEY) — its own lighter backdrop so it
    reads as a quick tip, not another full modal stacked on the lineup editor. */
