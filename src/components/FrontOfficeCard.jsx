@@ -24,19 +24,21 @@ const KIND_META = {
 function coachContent(team) {
   const coach = team.coach;
   const bonus = retentionBonus(team) + relationshipBonus(team);
+  const activeGameplan = (coach.gameplans || []).find((plan) => plan.id === team.activeGameplanId);
   return {
     name: coach.archetype,
     qualifier: team.retainedStreak ? `Retained ${team.retainedStreak} season${team.retainedStreak === 1 ? '' : 's'}` : 'League appointment',
-    disposition: coach.modifier,
+    disposition: null,
     dispositionTone: 'approved-ink',
     effects: [
       { label: 'Cost', value: formatCoins(coach.salary), tone: 'file' },
       { label: 'Off Bonus', value: `+${Math.round((coach.offBonus + bonus) * 100)}%`, tone: 'approved-ink' },
       { label: 'Def Bonus', value: `+${Math.round((coach.defBonus + bonus) * 100)}%`, tone: 'approved-ink' },
       { label: 'Player Relations', value: coach.playerRelationship, tone: 'file' },
-      { label: 'Development', value: `${team.developmentPoints || 0} pts · ${coach.archetype}`, tone: 'approved-ink' },
+      { label: 'Development Point', value: team.developmentPoints || 0, tone: 'approved-ink' },
     ],
-    detail: (coach.gameplans || []).map((plan, index) => `${index === 0 ? 'Primary' : 'Secondary'}: ${plan.name}${team.activeGameplanId === plan.id ? ' · Active' : ''}`).join(' · '),
+    detail: `${coach.modifier} — ${coach.ability || 'Improves the coach’s base Offense and Defense bonuses.'}`,
+    rarityLead: { label: 'Gameplan', value: activeGameplan?.name || 'None' },
     duration: 'Holds Through Era 01',
   };
 }
@@ -121,7 +123,7 @@ export default function FrontOfficeCard({ kind, team }) {
             </div>
           ))}
         </div>
-        {coachRarity && <div className="fo2-rarity-row"><RarityBadge rarity={coachRarity} /></div>}
+        {coachRarity && <div className="fo2-rarity-row">{content.rarityLead && <div className="fo2-rarity-lead"><span>{content.rarityLead.label}</span><strong>{content.rarityLead.value}</strong></div>}<RarityBadge rarity={coachRarity} /></div>}
         {content.detail && <div className="fo2-mod-detail">{content.detail}</div>}
       </div>
     </div>
