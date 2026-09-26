@@ -171,8 +171,11 @@ export function playMatchup(a, b, advA, advB, idsA, idsB, extraA, extraB) {
   extraB = extraB || { offDelta: 0, defDelta: 0, leagueMod: 0 };
   const exA = resolveExchange(a, b, idsA, idsB, extraA, extraB, advA, advB);
   const exB = resolveExchange(b, a, idsB, idsA, extraB, extraA, advB, advA);
-  const aBench = benchScore(a, idsA, false) + (extraA.benchBonus || 0);
-  const bBench = benchScore(b, idsB, false) + (extraB.benchBonus || 0);
+  // Deep Rotation is a per-game roll, not a static projection bonus — it's added here, in the
+  // actual matchup resolution, rather than inside benchScore (which also powers Standings/
+  // persistent-bar projections, where a random per-game roll wouldn't make sense).
+  const aBench = benchScore(a, idsA, false) + (extraA.benchBonus || 0) + (a.coach?.modifier === 'Deep Rotation' ? rollDie(6) : 0);
+  const bBench = benchScore(b, idsB, false) + (extraB.benchBonus || 0) + (b.coach?.modifier === 'Deep Rotation' ? rollDie(6) : 0);
   const aLeagueMod = extraA.leagueMod || 0;
   const bLeagueMod = extraB.leagueMod || 0;
   // Round the sum too, not just its inputs — several already-rounded floats (e.g. 11.06 +

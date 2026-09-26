@@ -7,7 +7,7 @@ import { newEraState, lockSeasonAndSeed, initSeasonModifierCards, startPlayoffs 
 import { startEra, rollCurrentMatchup, openSeries, simulateOneMatch } from '../src/game/engine.js';
 import { beginTurn, advanceTurn } from '../src/game/turn.js';
 import { rehydrateState } from '../src/game/rehydrate.js';
-import { benchRatingContribution, effectiveRating } from '../src/game/roster.js';
+import { benchRatingContribution, effectiveRating, matchupCardCountFor } from '../src/game/roster.js';
 import { benchScore } from '../src/game/matchup.js';
 import { rosterSalary } from '../src/game/economy.js';
 const card = (name) => ({ ...deck.find((c) => c.name === name), id: name, used: false });
@@ -72,8 +72,8 @@ test('player targets validated; stat changes remain temporary and cover all four
   }
 });
 
-test('three Adjustment cards per team contain no seeding effects; disabling cards clears hands', () => {
-  const state=game(); assert(state.teams.every(t=>t.matchupCards.length===3));
+test('three Adjustment cards per team (four for a Strategist coach) contain no seeding effects; disabling cards clears hands', () => {
+  const state=game(); assert(state.teams.every(t=>t.matchupCards.length===matchupCardCountFor(t)));
   assert(state.teams.every(t=>t.matchupCards.every(c=>c.effectType!=='SEEDING_PERCENT')));
   state.settings.matchupCardsEnabled=false; initSeasonModifierCards(state);
   assert(state.teams.every(t=>t.matchupCards.length===0)); assert.equal(state.phase,'constructing');

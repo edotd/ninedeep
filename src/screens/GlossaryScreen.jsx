@@ -170,7 +170,7 @@ export default function GlossaryScreen({ state, onBack }) {
             <div className="meta-row" style={{ borderTop: 'none', paddingTop: 0 }}>
               <GlossaryStat label="Multiplier" val={'x' + m.mult.toFixed(2)} />
               <GlossaryStat label="Die" val={m.hofDie ? 'd6–d9' : 'd' + m.die} />
-              <GlossaryStat label="Salary" val={formatCoins(m.salary)} />
+              <GlossaryStat label="Salary" val={formatCoins(m.salaryMin) + '–' + formatCoins(m.salaryMax)} />
             </div>
             {m.ability && <div className="statusline" style={{ marginTop: 8 }}>Ability: {m.ability}</div>}
           </div>

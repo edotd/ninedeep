@@ -1,11 +1,11 @@
 import { addToRoster, creditTeamSeason } from './chemistry';
-import { TIERS, LEAGUE_ACCOLADES, REPLACEMENT_TIER, FREE_AGENT_TIER, BARGAIN_FREE_AGENT_TIER, BARGAIN_FREE_AGENT_COUNT, FREE_AGENT_POOL_SIZE, AI_NAMES, AI_TRICODES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_ARCHETYPES, MATCHUP_CARD_DRAW_COUNT, LEAGUE_TEAM_COUNT } from './constants';
+import { TIERS, LEAGUE_ACCOLADES, REPLACEMENT_TIER, FREE_AGENT_TIER, BARGAIN_FREE_AGENT_TIER, BARGAIN_FREE_AGENT_COUNT, FREE_AGENT_POOL_SIZE, AI_NAMES, AI_TRICODES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_ARCHETYPES, LEAGUE_TEAM_COUNT } from './constants';
 import { drawGM, acquireOffseasonPlayer } from './gm';
 import { advanceCareer } from './aging';
 import { shuffle, weightedPick } from './rng';
 import { makeCard, randomArch, randomArchForTier, neededPosition, drawCoachCard, applyCoachRetention, drawMatchupModifierCard, resetMatchupDeck } from './cards';
 import { finalizeCap, rosterSalary } from './economy';
-import { autoSelectFive, effectiveRating, activeStatSum, benchRatingContribution, validateLineup } from './roster';
+import { autoSelectFive, effectiveRating, activeStatSum, benchRatingContribution, validateLineup, matchupCardCountFor } from './roster';
 import { retentionBonus, relationshipBonus } from './cards';
 import { handsOffBonus } from './gm';
 import { startDraft, prepareDraftClass } from './draft';
@@ -240,7 +240,7 @@ export function initSeasonModifierCards(state) {
   resetMatchupDeck(state);
   state.phase = 'pullmodifier';
   state.teams.forEach((team) => {
-    team.matchupCards = Array.from({ length: MATCHUP_CARD_DRAW_COUNT }, () => drawMatchupModifierCard(state));
+    team.matchupCards = Array.from({ length: matchupCardCountFor(team) }, () => drawMatchupModifierCard(state));
   });
 }
 

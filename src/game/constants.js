@@ -121,15 +121,20 @@ export const COACH_ARCHETYPES = {
 // exactly two possessions, so this fires at most once per matchup, at the exchange 1 -> 2
 // changeover.
 export const ON_THE_FLY_CHANCE = 0.3;
+// Salary is rolled once, at draw time, within each modifier's own [salaryMin, salaryMax] band
+// (see cards.js's drawCoachCard) — a range instead of one fixed number, so two coaches with the
+// same modifier aren't always identically priced.
 export const COACH_MODIFIERS = [
-  { name: 'Strategist', mult: 1.3, die: 6, weight: 30, salary: 0.5, ability: '', rarity: 'Core' },
-  { name: 'Former Player', mult: 1.6, die: 6, weight: 25, salary: 1.25, ability: '', rarity: 'Prime' },
-  { name: 'Collegiate Success', mult: 1.1, die: 6, weight: 25, salary: 0.5, ability: '+3% Off/Def and +1 die size for every consecutive season retained (stacks).', rarity: 'Prime' },
-  { name: 'Hot Headed', mult: 1.4, die: 7, weight: 12, salary: 1.0, ability: '', rarity: 'Signature' },
-  { name: 'On The Fly', mult: 1.15, die: 6, weight: 15, salary: 1.0, ability: `${Math.round(ON_THE_FLY_CHANCE * 100)}% chance to draw a new Adjustment card when possession changes during a matchup.`, rarity: 'Prime' },
-  { name: 'More with Less', mult: 1.2, die: 6, weight: 15, salary: 1.0, ability: 'Avoids Offense and Defense penalties for carrying fewer than nine players.', rarity: 'Prime' },
-  { name: 'Genius', mult: 1.5, die: 6, weight: 10, salary: 2.0, ability: '', rarity: 'Signature' },
-  { name: 'Hall of Fame', mult: 2.0, hofDie: true, weight: 8, salary: 3.0, ability: '', rarity: 'Legendary' },
+  { name: 'Strategist', mult: 1.3, die: 6, weight: 30, salaryMin: 0.25, salaryMax: 0.75, ability: 'Deals the team one extra Adjustment card every season.', rarity: 'Core' },
+  { name: 'Former Player', mult: 1.6, die: 6, weight: 25, salaryMin: 1.0, salaryMax: 1.5, ability: '+3 to the coach’s rolled player relationship.', rarity: 'Prime' },
+  { name: 'Collegiate Success', mult: 1.1, die: 6, weight: 25, salaryMin: 0.25, salaryMax: 0.75, ability: '+3% Off/Def and +1 die size for every consecutive season retained (stacks).', rarity: 'Prime' },
+  { name: 'Hot Headed', mult: 1.4, die: 7, weight: 12, salaryMin: 0.75, salaryMax: 1.25, ability: '', rarity: 'Signature' },
+  { name: 'On The Fly', mult: 1.15, die: 6, weight: 15, salaryMin: 0.75, salaryMax: 1.25, ability: `${Math.round(ON_THE_FLY_CHANCE * 100)}% chance to draw a new Adjustment card when possession changes during a matchup.`, rarity: 'Prime' },
+  { name: 'More with Less', mult: 1.2, die: 6, weight: 15, salaryMin: 0.75, salaryMax: 1.25, ability: 'Avoids Offense and Defense penalties for carrying fewer than nine players.', rarity: 'Prime' },
+  { name: 'Team Builder', mult: 1.2, die: 6, weight: 20, salaryMin: 0.5, salaryMax: 1.0, ability: '+0.25% Off/Def for every consecutive season retained (stacks).', rarity: 'Core' },
+  { name: 'Deep Rotation', mult: 1.2, die: 6, weight: 18, salaryMin: 0.75, salaryMax: 1.25, ability: '+1d6 Bench Output in every matchup.', rarity: 'Prime' },
+  { name: 'Genius', mult: 1.5, die: 6, weight: 10, salaryMin: 1.5, salaryMax: 2.5, ability: '', rarity: 'Signature' },
+  { name: 'Hall of Fame', mult: 2.0, hofDie: true, weight: 8, salaryMin: 2.5, salaryMax: 3.5, ability: '', rarity: 'Legendary' },
 ];
 // Fanbase archetype — drawn once per era, like Coach. Attendance itself is computed fresh
 // each season (see game/fanbase.js) from the archetype's formula, market floor, performance,

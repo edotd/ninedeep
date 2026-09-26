@@ -172,7 +172,7 @@ export function drawCoachCard({ excludeHallOfFame = false } = {}) {
     modifier: mod.name,
     ability: mod.ability,
     rarity: mod.rarity || 'Core',
-    salary: mod.salary,
+    salary: rollCoachSalary(mod),
     offBonus,
     defBonus,
     offDie,
@@ -181,12 +181,20 @@ export function drawCoachCard({ excludeHallOfFame = false } = {}) {
   };
 }
 
-// A coach who's a Former Player relates to the roster better than most — bias their
-// baseline relationship roll up instead of drawing from the full 1-10 range.
+// Rolls a coach's salary within their modifier's [salaryMin, salaryMax] band, rounded to the
+// nearest quarter-point like every other salary in the game.
+function rollCoachSalary(mod) {
+  if (mod.salaryMin == null || mod.salaryMax == null) return mod.salary;
+  const raw = mod.salaryMin + Math.random() * (mod.salaryMax - mod.salaryMin);
+  return Math.round(raw * 4) / 4;
+}
+
+// A coach who's a Former Player relates to the roster better than most — add a flat bonus
+// on top of the normal 1-10 roll instead of biasing the roll's floor.
 function rollPlayerRelationship(modifierName) {
-  const min = modifierName === 'Former Player' ? PLAYER_RELATIONSHIP_MIN + 3 : PLAYER_RELATIONSHIP_MIN;
-  const roll = min + Math.floor(Math.random() * (PLAYER_RELATIONSHIP_MAX - min + 1));
-  return Math.min(PLAYER_RELATIONSHIP_MAX, roll);
+  const bonus = modifierName === 'Former Player' ? 3 : 0;
+  const roll = PLAYER_RELATIONSHIP_MIN + Math.floor(Math.random() * (PLAYER_RELATIONSHIP_MAX - PLAYER_RELATIONSHIP_MIN + 1));
+  return Math.min(PLAYER_RELATIONSHIP_MAX, roll + bonus);
 }
 
 export function applyCoachRetention(team, coach) {
@@ -194,7 +202,9 @@ export function applyCoachRetention(team, coach) {
   team.lastCoachName = coach.name;
 }
 export function retentionBonus(team) {
-  return team.coach.modifier === 'Collegiate Success' ? 0.03 * (team.retainedStreak || 0) : 0;
+  if (team.coach.modifier === 'Collegiate Success') return 0.03 * (team.retainedStreak || 0);
+  if (team.coach.modifier === 'Team Builder') return 0.0025 * (team.retainedStreak || 0);
+  return 0;
 }
 export function retentionDieBump(team) {
   return team.coach.modifier === 'Collegiate Success' ? team.retainedStreak || 0 : 0;

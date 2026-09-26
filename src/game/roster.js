@@ -1,5 +1,5 @@
 import { applySynergy, teamSynergy } from './skillsets';
-import { POSITIONS } from './constants';
+import { POSITIONS, MATCHUP_CARD_DRAW_COUNT } from './constants';
 import { cardTotal, retentionBonus, retentionDieBump, relationshipBonus } from './cards';
 import { handsOffBonus } from './gm';
 import { careerMultiplier } from './aging';
@@ -127,5 +127,10 @@ export function offenseModifier(team, idsOverride) {
 export function defenseModifier(team, idsOverride) {
   return modifierBreakdown(team, idsOverride, 'defense').base;
 }
+// A Strategist coach deals one extra Adjustment card every season on top of the league-wide base.
+export function matchupCardCountFor(team) {
+  return MATCHUP_CARD_DRAW_COUNT + (team.coach?.modifier === 'Strategist' ? 1 : 0);
+}
+
 export function offenseDieSize(team) { return team.coach.offDie + retentionDieBump(team); }
 export function defenseDieSize(team) { return team.coach.defDie + retentionDieBump(team); }

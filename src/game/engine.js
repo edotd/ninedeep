@@ -10,8 +10,8 @@ import { applySupplementalCard } from './supplementalEffects';
 // room, the caller resolves teamIdx from the acting player's own seat (ownerUid) first. See
 // game/useLocalGame.js and game/useRoomGame.js for the two callers.
 import { drawMatchupModifierCard } from './cards';
-import { MATCHUP_CARD_DRAW_COUNT, HOME_COURT_BONUS, MAX_CAP_OVERAGE } from './constants';
-import { autoSelectFive, autoValidFive, validateLineup } from './roster';
+import { HOME_COURT_BONUS, MAX_CAP_OVERAGE } from './constants';
+import { autoSelectFive, autoValidFive, validateLineup, matchupCardCountFor } from './roster';
 import {
   buildStarPool, buildTeams, defaultSoloSeats, dealHands, initFrontOffice,
   initSeasonModifierCards, lockSeasonAndSeed, startPlayoffs,
@@ -81,15 +81,15 @@ export function proceedToSeason1(state) {
 export function pullMatchupCard(state, teamIdx) {
   const team = state.teams[teamIdx];
   team.matchupCards ||= [];
-  if (team.matchupCards.length >= MATCHUP_CARD_DRAW_COUNT) return;
+  if (team.matchupCards.length >= matchupCardCountFor(team)) return;
   const card = drawMatchupModifierCard(state);
   if (card) team.matchupCards.push(card);
 }
-// One-click Matchup Cards pull — deals all MATCHUP_CARD_DRAW_COUNT at once.
+// One-click Matchup Cards pull — deals all matchupCardCountFor(team) at once.
 export function pullAllMatchupCards(state, teamIdx) {
   const team = state.teams[teamIdx];
   team.matchupCards ||= [];
-  while (team.matchupCards.length < MATCHUP_CARD_DRAW_COUNT) {
+  while (team.matchupCards.length < matchupCardCountFor(team)) {
     const card = drawMatchupModifierCard(state);
     if (!card) break;
     team.matchupCards.push(card);
@@ -101,7 +101,7 @@ export function pullAllMatchupCards(state, teamIdx) {
 // persistent bar (which stays empty through the whole Front Office / Hand / Matchup Cards
 // sequence) populates with the finished roster.
 export function proceedToLineupFromModifier(state) {
-  if (!allHumansReady(state, (t) => (t.matchupCards || []).length >= MATCHUP_CARD_DRAW_COUNT)) return;
+  if (!allHumansReady(state, (t) => (t.matchupCards || []).length >= matchupCardCountFor(t))) return;
   state.phase = 'constructing';
 }
 
