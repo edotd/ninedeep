@@ -257,7 +257,13 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
     const MAX_UPSCALE = 1;
     const container = rotoScrollRef.current;
     const applyScales = () => {
-      const available = container.clientHeight;
+      const containerRect = container.getBoundingClientRect();
+      const lowerChrome = [document.querySelector('.persistent-bar'), document.querySelector('.bottombar')]
+        .filter(Boolean)
+        .map((element) => element.getBoundingClientRect().top)
+        .filter((top) => top > containerRect.top);
+      const visibleBottom = lowerChrome.length ? Math.min(...lowerChrome) : containerRect.bottom;
+      const available = Math.min(container.clientHeight, visibleBottom - containerRect.top);
       if (!available) return;
       container.querySelectorAll('.ts-roto-grid .pcard').forEach((el) => {
         const natural = Math.max(el.scrollHeight, el.offsetHeight);
@@ -267,10 +273,11 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
       });
     };
     applyScales();
+    const firstFrame = requestAnimationFrame(() => requestAnimationFrame(applyScales));
     const observer = new ResizeObserver(applyScales);
     observer.observe(container);
-    return () => observer.disconnect();
-  }, [isDesktop, tab, team.hand]);
+    return () => { cancelAnimationFrame(firstFrame); observer.disconnect(); };
+  }, [isDesktop, isRotationLocked, tab, team.hand, state.season, mobileCardCount]);
   const handleRotationTouchStart = (event) => { rotationTouchStartX.current = event.touches[0].clientX; };
   // Swiping further forward while already on the carousel's last card reads as "done with the
   // rotation" — hand it off to the Chemistry tab (the next one in the bar) instead of just
