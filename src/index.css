@@ -588,10 +588,10 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 @keyframes pcard-stamp-pop{from{transform:rotate(-5deg) scale(1.35);}to{transform:rotate(-5deg) scale(1);}}
 @media (prefers-reduced-motion: reduce){.pcard-stamp-selected{animation:none;}}
 
-.pcard-release{width:100%;border:none;border-top:2px solid var(--stamp);background:var(--stamp);color:var(--form);font-family:var(--font-label);font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:14px 12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
+.pcard-release{width:100%;border:none;border-top:2px solid var(--stamp);background:var(--stamp);color:var(--form);font-family:var(--font-label);font-size:17px;letter-spacing:.08em;text-transform:uppercase;padding:14px 12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
 .pcard-release:hover{background:var(--stamp-text);}
 .pcard-release-cost{font-family:var(--font-mono);font-size:11px;font-weight:normal;letter-spacing:.04em;}
-.pcard-develop{width:100%;border:none;border-top:2px solid var(--approved);background:var(--approved);color:var(--form);font-family:var(--font-label);font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:14px 12px;cursor:pointer;}
+.pcard-develop{width:100%;border:none;border-top:2px solid var(--approved);background:var(--approved);color:var(--form);font-family:var(--font-label);font-size:17px;letter-spacing:.08em;text-transform:uppercase;padding:14px 12px;cursor:pointer;}
 .pcard-develop:hover{background:var(--approved-ink);}
 /* Release/Develop no longer sit on the card permanently — a hold (mobile) or this arrow
    (desktop) reveals them in a panel overlaid on the card's own bottom edge (position:absolute,
