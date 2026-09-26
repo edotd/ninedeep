@@ -113,9 +113,11 @@ test('incomplete rosters lose seeding rating unless the coach has More with Less
   const completeRating = effectiveRating(team);
   const benchRating = benchRatingContribution(team);
   team.hand = team.hand.filter((player) => team.activeIds.includes(player.id));
-  assert.equal(effectiveRating(team), Math.max(0, completeRating - benchRating - 160));
+  // Floating-point arithmetic on randomly generated roster stats can land a ULP off an exact
+  // value, so compare with a tolerance rather than ===.
+  assert(Math.abs(effectiveRating(team) - Math.max(0, completeRating - benchRating - 160)) < 1e-9);
   team.coach.modifier = 'More with Less';
-  assert.equal(effectiveRating(team), completeRating - benchRating);
+  assert(Math.abs(effectiveRating(team) - (completeRating - benchRating)) < 1e-9);
 });
 
 test('bench output contributes to the base season seeding rating', () => {
@@ -127,7 +129,9 @@ test('bench output contributes to the base season seeding rating', () => {
   const completeRating = effectiveRating(team);
   team.hand = team.hand.filter((player) => team.activeIds.includes(player.id));
   team.coach.modifier = 'More with Less';
-  assert.equal(completeRating - effectiveRating(team), benchRating);
+  // Floating-point arithmetic on randomly generated roster stats can land a ULP off an exact
+  // integer (e.g. 120.00000000000003 vs 120), so compare with a tolerance rather than ===.
+  assert(Math.abs(completeRating - effectiveRating(team) - benchRating) < 1e-9);
 });
 
 test('extra draw and discard work when the Adjustment deck is exhausted', () => {
