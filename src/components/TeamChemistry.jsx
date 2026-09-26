@@ -71,6 +71,13 @@ export default function TeamChemistry({ team, canEdit, onEditLineup }) {
             <div className="tc2-bonus-label">Defensive Bonus</div>
             <div className="tc2-bonus-value">{bonusValue(current.defense + coachDefense)}</div>
           </div>
+          <div className="tc2-bonus">
+            <div className="tc2-bonus-label">Continuity</div>
+            <div className="tc2-bonus-value">{bonusValue(current.continuity)}</div>
+            <div className="tc2-bonus-sub">
+              Starters {current.starterYears}yr (+{current.starterYears * 0.5}%) · Bench {current.benchYears}yr (+{current.benchYears * 0.25}%) · Pairs {current.pairYears}yr (+{current.pairYears * 0.25}%) · Coach {current.coachYears}yr (+{current.coachYears * 0.5}%)
+            </div>
+          </div>
         </div>
       </div>
 
