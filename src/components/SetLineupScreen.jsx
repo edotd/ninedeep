@@ -143,7 +143,8 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
   const [playerSort, setPlayerSort] = useState('position');
   const filteredBench = sortPlayers(bench, playerSort);
   const [selectedId, setSelectedId] = useState(null);
-  const [selectedGameplanId, setSelectedGameplanId] = useState(team.activeGameplanId || team.coach?.gameplans?.[0]?.id || '');
+  const [selectedGameplanId, setSelectedGameplanId] = useState('');
+  const [gameplanPickerOpen, setGameplanPickerOpen] = useState(false);
 
   const previewSignature = starters.map((card) => card?.id ?? 'open').join(',');
   useEffect(() => {
@@ -290,16 +291,10 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
         )}
 
         {team.coach?.gameplans?.length > 0 && (
-          <div className="slf-gameplan-picker">
-            <div className="slf-microlabel">Set Gameplan</div>
-            <div className="slf-gameplan-options">
-              {team.coach.gameplans.map((plan, index) => (
-                <button type="button" key={plan.id} disabled={!canEdit} className={selectedGameplanId === plan.id ? 'active' : ''} onClick={() => setSelectedGameplanId(plan.id)}>
-                  <span>{index === 0 ? 'Primary' : 'Secondary'}</span><strong>{plan.name}</strong><small>{plan.description}</small>
-                </button>
-              ))}
-            </div>
-          </div>
+          <button type="button" className="slf-set-gameplan" disabled={!canEdit} onClick={() => setGameplanPickerOpen(true)}>
+            <span>Set Gameplan</span>
+            <strong>{team.coach.gameplans.find((plan) => plan.id === selectedGameplanId)?.name || 'None'}</strong>
+          </button>
         )}
 
         <div className="slf-columns">
@@ -442,6 +437,22 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
           >
             <button type="button" className="slf-picker-close" onClick={() => setCenteredCard(null)} aria-label="Close">×</button>
             {centeredCard.type === 'coach' ? <FrontOfficeCard kind="coach" team={team} /> : <PlayerCard card={centeredCard.card} />}
+          </div>
+        </div>
+      )}
+
+      {gameplanPickerOpen && (
+        <div className="slf-gameplan-modal-backdrop" onClick={() => setGameplanPickerOpen(false)}>
+          <div className="slf-gameplan-modal" role="dialog" aria-modal="true" aria-label="Select a Gameplan" onClick={(event) => event.stopPropagation()}>
+            <div className="slf-gameplan-modal-head"><div><div className="slf-microlabel">Set Gameplan</div><h3>Choose Your Approach</h3></div><button type="button" className="slf-picker-close" onClick={() => setGameplanPickerOpen(false)} aria-label="Close">×</button></div>
+            <div className="slf-gameplan-options">
+              <button type="button" className={!selectedGameplanId ? 'active' : ''} onClick={() => { setSelectedGameplanId(''); setGameplanPickerOpen(false); }}><span>None</span><strong>No Gameplan</strong><small>No Gameplan bonus will be applied.</small></button>
+              {team.coach.gameplans.map((plan, index) => (
+                <button type="button" key={plan.id} className={selectedGameplanId === plan.id ? 'active' : ''} onClick={() => { setSelectedGameplanId(plan.id); setGameplanPickerOpen(false); }}>
+                  <span>{index === 0 ? 'Primary' : 'Secondary'}</span><strong>{plan.name}</strong><small>{plan.description}</small>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}

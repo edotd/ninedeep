@@ -142,6 +142,6 @@ test('turn-by-turn scoring retains skillsets after each multiplayer serializatio
     advanceTurn(state,{pass:true});state=rehydrateState(JSON.parse(JSON.stringify(state)));
   }
   const result=state.playoff.matches[0].result;assert(result);
-  assert.equal(result.aOffMod,Math.round(offenseModifier(state.teams[0]) * 1.08 * 100) / 100);
+  assert.equal(result.aOffMod,offenseModifier(state.teams[0]));
   assert.equal(result.bDefMod,defenseModifier(state.teams[1]));
 });

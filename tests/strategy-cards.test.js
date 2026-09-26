@@ -17,7 +17,7 @@ test('coaches receive two unique Gameplans and two Development Points each seaso
     assert.equal(team.developmentPoints, 2);
     assert.equal(team.coach.gameplans.length, 2);
     assert.equal(new Set(team.coach.gameplans.map((plan) => plan.name)).size, 2);
-    assert.equal(team.activeGameplanId, team.coach.gameplans[0].id);
+    assert.equal(team.activeGameplanId, null);
     assert.deepEqual(team.developmentCards, []);
     assert.deepEqual(team.gameplanCards, []);
   }

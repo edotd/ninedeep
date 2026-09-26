@@ -50,7 +50,7 @@ export function ensureCoachSystems(team) {
     const second = (first + 1 + (seed % (COACH_GAMEPLANS.length - 1))) % COACH_GAMEPLANS.length;
     team.coach.gameplans = [planWithId(COACH_GAMEPLANS[first], 0), planWithId(COACH_GAMEPLANS[second], 1)];
   }
-  team.activeGameplanId ||= team.coach.gameplans[0].id;
+  if (team.activeGameplanId === undefined) team.activeGameplanId = null;
   team.developmentPoints = Number.isFinite(team.developmentPoints) ? team.developmentPoints : 2;
   team.developmentCards = [];
   team.gameplanCards = [];
@@ -58,7 +58,8 @@ export function ensureCoachSystems(team) {
 
 export function activeCoachGameplan(team) {
   ensureCoachSystems(team);
-  return team?.coach?.gameplans?.find((plan) => plan.id === team.activeGameplanId) || team?.coach?.gameplans?.[0] || null;
+  if (!team?.activeGameplanId) return null;
+  return team.coach?.gameplans?.find((plan) => plan.id === team.activeGameplanId) || null;
 }
 
 export function gameplanEffects(team, plan = activeCoachGameplan(team)) {
@@ -79,7 +80,7 @@ export function syncSeasonGameplan(team) {
 export function dealStrategyCards(_state, team) {
   if (!team?.coach) return;
   team.coach.gameplans = drawUnique(COACH_GAMEPLANS, 2).map(planWithId);
-  team.activeGameplanId = team.coach.gameplans[0]?.id || null;
+  team.activeGameplanId = null;
   team.developmentPoints = 2;
   team.developmentCards = [];
   team.gameplanCards = [];

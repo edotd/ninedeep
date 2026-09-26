@@ -1265,16 +1265,19 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
    flipped (top) team so its cards sit above its name instead, mirroring the team board itself. */
 .t2-teamboard-meta{display:flex;flex-direction:column;gap:10px;min-width:0;}
 .t2-teamboard.flip .t2-teamboard-meta{flex-direction:column-reverse;}
-.t2-teamboard-toprow{display:grid;grid-template-columns:220px minmax(0,1fr);align-items:center;gap:14px;min-width:0;}
+.t2-teamboard-toprow{display:grid;grid-template-columns:220px 88px minmax(0,1fr);align-items:center;gap:14px;min-width:0;}
 .t2-teamboard-toprow>.t2-coach-dock{grid-column:1;}
-.t2-teamboard.flip .t2-teamboard-toprow{grid-template-columns:minmax(0,1fr) 220px;}
-.t2-teamboard.flip .t2-teamboard-toprow>.t2-coach-dock{grid-column:2;}
+.t2-teamboard-toprow>.t2-adjustment-dock{grid-column:2;}
+.t2-teamboard-toprow>.t2-teamboard-name{grid-column:3;}
+.t2-teamboard.flip .t2-teamboard-toprow{grid-template-columns:minmax(0,1fr) 88px 220px;}
+.t2-teamboard.flip .t2-teamboard-toprow>.t2-coach-dock{grid-column:3;}
+.t2-teamboard.flip .t2-teamboard-toprow>.t2-adjustment-dock{grid-column:2;}
 .t2-teamboard.flip .t2-teamboard-toprow>.t2-teamboard-name{grid-column:1;}
 .t2-teamboard-meta>.t2-card-docks{display:flex;align-items:center;justify-content:center;gap:10px;min-width:0;}
 .t2-teamboard-name{text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-width:0;}
 .t2-teamboard-name-line{display:flex;align-items:center;justify-content:center;gap:12px;min-width:0;width:100%;}
 .t2-hca-tag{display:inline-block;font-family:var(--font-label);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--franchise);border:1px solid var(--franchise);padding:3px 8px;}
-.t2-teamboard-name-text{font-family:var(--font-display);font-size:26px;color:var(--file);line-height:1;}
+.t2-teamboard-name-text{font-family:var(--font-display);font-size:36px;color:var(--file);line-height:1;}
 .t2-team-role{font-family:var(--font-display);font-size:20px;line-height:1;letter-spacing:.08em;color:var(--ink);background:var(--franchise);padding:5px 9px;white-space:nowrap;}
 .t2-team-role.defense{color:var(--file);background:transparent;border:2px solid var(--franchise);padding:3px 7px;}
 .t2-teamboard-status{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--ink-muted);text-transform:uppercase;}
@@ -1526,8 +1529,8 @@ button.t2-gameplan-mini.empty.pulsing{cursor:pointer;}
   .t2-shell{padding:14px 10px;}
   .t2-teamboard{padding:12px 10px;gap:8px;}
   .t2-teamboard-meta{gap:5px;}
-  .t2-teamboard-toprow{grid-template-columns:112px minmax(0,1fr);}
-  .t2-teamboard.flip .t2-teamboard-toprow{grid-template-columns:minmax(0,1fr) 112px;}
+  .t2-teamboard-toprow{grid-template-columns:112px 72px minmax(0,1fr);}
+  .t2-teamboard.flip .t2-teamboard-toprow{grid-template-columns:minmax(0,1fr) 72px 112px;}
   .nd2-tile{flex-basis:58px;min-width:58px;}
   .nd2-tile.empty{min-height:88px;}
   .nd2-tile-jersey{font-size:16px;}
@@ -1535,7 +1538,7 @@ button.t2-gameplan-mini.empty.pulsing{cursor:pointer;}
   .nd2-coach-slot{width:112px;}
   .nd2-coach-name{font-size:14px;}
   .nd2-coach-desc{font-size:8px;}
-  .t2-teamboard-name-text{font-size:19px;}
+  .t2-teamboard-name-text{font-size:26px;}
   .t2-team-role{font-size:14px;padding:4px 6px;}
   .t2-team-role.defense{padding:2px 4px;}
   .t2-rollzone{padding:20px 10px;min-height:0;gap:14px;}
@@ -1577,8 +1580,8 @@ button.t2-gameplan-mini.empty.pulsing{cursor:pointer;}
   .desktop-content:has(.t2-shell) .nd2-tile{min-width:0;flex-basis:0;}
   .desktop-content:has(.t2-shell) .nd2-tile-tags{display:none;}
   .desktop-content:has(.t2-shell) .t2-teamboard-meta{gap:8px;}
-  .desktop-content:has(.t2-shell) .t2-teamboard-toprow{grid-template-columns:220px minmax(0,1fr);}
-  .desktop-content:has(.t2-shell) .t2-teamboard.flip .t2-teamboard-toprow{grid-template-columns:minmax(0,1fr) 220px;}
+  .desktop-content:has(.t2-shell) .t2-teamboard-toprow{grid-template-columns:220px 88px minmax(0,1fr);}
+  .desktop-content:has(.t2-shell) .t2-teamboard.flip .t2-teamboard-toprow{grid-template-columns:minmax(0,1fr) 88px 220px;}
   .desktop-content:has(.t2-shell) .nd2-coach-slot{width:150px;flex-basis:150px;}
   .desktop-content:has(.t2-shell) .nd2-coach-body{padding:5px 8px;}
   .desktop-content:has(.t2-shell) .nd2-coach-desc{display:none;}
@@ -1931,6 +1934,11 @@ html[data-theme="dark"] .wordmark-ink{color:var(--file);}
 .league-output-grid span,.league-output-grid small{font:10px var(--font-mono);color:var(--ink-muted);}
 .league-output-grid strong{font:32px/1 var(--font-display);color:var(--franchise);font-weight:400;}
 .slf-gameplan-picker{padding:12px;border:1px solid var(--ink-rule);background:var(--ink-deep);}
+.slf-set-gameplan{margin:12px 24px 0;width:calc(100% - 48px);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:2px solid var(--franchise);background:var(--ink-deep);color:var(--file);cursor:pointer;text-align:left;}
+.slf-set-gameplan span{font:11px var(--font-label);letter-spacing:.1em;text-transform:uppercase;}.slf-set-gameplan strong{font:20px var(--font-display);font-weight:400;color:var(--franchise);}
+.slf-gameplan-modal-backdrop{position:fixed;inset:0;z-index:720;background:rgba(11,17,30,.88);display:flex;align-items:center;justify-content:center;padding:20px;}
+.slf-gameplan-modal{width:min(520px,100%);padding:18px;background:var(--ink);border:2px solid var(--franchise);box-shadow:0 22px 60px rgba(0,0,0,.55);}
+.slf-gameplan-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;}.slf-gameplan-modal-head h3{margin:3px 0 0;font:28px var(--font-display);color:var(--file);font-weight:400;}
 .slf-gameplan-options{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:7px;}
 .slf-gameplan-options button{display:flex;flex-direction:column;gap:3px;padding:10px;text-align:left;border:1px solid var(--ink-rule);background:transparent;color:var(--file);}
 .slf-gameplan-options button.active{border:2px solid var(--franchise);background:rgba(240,160,61,.1);}
@@ -2452,8 +2460,8 @@ body:has(.entry-screen){padding-bottom:0;}
   /* Team names and coach cards get real room now (see t2-board's scroll above — growing these
      no longer risks losing content off the bottom of the screen). */
   .mobile-shell:has(.t2-shell) .t2-teamboard-meta{gap:6px;min-height:54px;}
-  .mobile-shell:has(.t2-shell) .t2-teamboard-toprow{grid-template-columns:96px minmax(0,1fr);}
-  .mobile-shell:has(.t2-shell) .t2-teamboard.flip .t2-teamboard-toprow{grid-template-columns:minmax(0,1fr) 96px;}
+  .mobile-shell:has(.t2-shell) .t2-teamboard-toprow{grid-template-columns:96px 70px minmax(0,1fr);}
+  .mobile-shell:has(.t2-shell) .t2-teamboard.flip .t2-teamboard-toprow{grid-template-columns:minmax(0,1fr) 70px 96px;}
   .mobile-shell:has(.t2-shell) .nd2-coach-slot{width:96px;flex:1 1 96px;}
   .mobile-shell:has(.t2-shell) .nd2-coach{box-shadow:none;}
   .mobile-shell:has(.t2-shell) .nd2-coach-head{padding:4px 6px;}
@@ -2468,7 +2476,7 @@ body:has(.entry-screen){padding-bottom:0;}
   /* Wraps instead of truncating — the flanking coach/gameplan columns leave the center column
      narrower than some franchise names at any reasonable font size, so ellipsis was cutting
      names off outright. Two lines reads better than a guess at how much to shrink the font. */
-  .mobile-shell:has(.t2-shell) .t2-teamboard-name-text{font-size:16px;line-height:1.15;white-space:normal;overflow:visible;text-overflow:clip;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+  .mobile-shell:has(.t2-shell) .t2-teamboard-name-text{font-size:24px;line-height:1.05;white-space:normal;overflow:visible;text-overflow:clip;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
   .mobile-shell:has(.t2-shell) .t2-team-role{font-size:11px;padding:4px 6px;}
   .mobile-shell:has(.t2-shell) .t2-teamboard-status{font-size:8px;}
   .mobile-shell:has(.t2-shell) .t2-hca-tag{font-size:7px;padding:2px 5px;}

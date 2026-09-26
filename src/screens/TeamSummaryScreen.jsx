@@ -15,7 +15,7 @@ import PlayerFilterBar from '../components/PlayerFilterBar';
 import { teamOutput } from '../game/matchup';
 import { DEVELOPMENT_STATS_BY_STYLE } from '../game/strategyCards';
 
-const tabForSection = (section) => section === 'gameplan' ? 'chemistry' : ['office', 'adjustment'].includes(section) ? 'office' : section || 'rotation';
+const tabForSection = (section) => ['gameplan', 'office', 'adjustment'].includes(section) ? 'chemistry' : section || 'rotation';
 
 // Front Office / Development / Gameplan / Adjustment each render as one horizontally-scrolling
 // row of same-kind cards on mobile. Two or fewer fit the screen outright (no scrolling needed,
@@ -198,7 +198,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   const isDesktop = useIsDesktop();
   const [tab, setTab] = useState(() => tabForSection(focusSection?.section));
   const showSection = (key) => isDesktop || tab === key;
-  const showStaffCards = isDesktop || tab === 'office';
+  const showStaffCards = isDesktop || tab === 'chemistry';
   const adjRow = useRowEnd((team.matchupCards || []).length, 1);
   const leagueOutputs = state.teams.map((candidate) => ({ team: candidate, output: candidate.coach ? teamOutput(candidate) : { total: 0, off: 0, def: 0, bench: 0 } }));
   const leagueTotal = leagueOutputs.reduce((sum, entry) => sum + entry.output.total, 0);
@@ -676,7 +676,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             </div>
           )}
 
-          {team.market && showSection('office') && (
+          {team.market && showSection('chemistry') && (
             <div className="ts-section" id="team-office">
               <div className="ts-heading">Coach & GM</div>
               {/* Coach gets its own row, GM (and Fanbase, the other front-office role) a second
@@ -702,24 +702,6 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                 </div>
               </div>
               <div className="fo-deal-row row-fit" style={{ margin: '12px 0 0' }}>
-                {state.settings.fanbaseCardsEnabled !== false && (
-                  <div className="ts-fo-col">
-                    <FrontOfficeCard kind="fanbase" team={team} />
-                    {!readOnly && (
-                      <button
-                        className="secondary ts-fo-action"
-                        style={{ width: '100%' }}
-                        disabled={team.financeBoostUsedThisSeason}
-                        onClick={() => {
-                          const res = actions.investInFanbase(myTeamId);
-                          if (res && res.ok === false) alert(res.msg);
-                        }}
-                      >
-                        {team.financeBoostUsedThisSeason ? 'Already Invested This Season' : `Invest — ${formatCoins(FANBASE_BOOST_COST)}`}
-                      </button>
-                    )}
-                  </div>
-                )}
                 <div className="ts-fo-col">
                   <FrontOfficeCard kind="market" team={team} />
                   {!readOnly && state.settings.coachChangesEnabled && (
@@ -733,6 +715,25 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                       }}
                     >
                       {team.gmChangeSeason === state.season ? 'GM Replaced This Season' : `Fire GM (${formatCoins(Math.round((gmCost(team.gmType) / 2) * 100) / 100)})`}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {state.settings.fanbaseCardsEnabled !== false && showSection('office') && (
+            <div className="ts-section">
+              <div className="ts-heading">Fanbase</div>
+              <div className="fo-deal-row row-fit" style={{ margin: 0 }}>
+                <div className="ts-fo-col">
+                  <FrontOfficeCard kind="fanbase" team={team} />
+                  {!readOnly && (
+                    <button className="secondary ts-fo-action" style={{ width: '100%' }} disabled={team.financeBoostUsedThisSeason} onClick={() => {
+                      const res = actions.investInFanbase(myTeamId);
+                      if (res && res.ok === false) alert(res.msg);
+                    }}>
+                      {team.financeBoostUsedThisSeason ? 'Already Invested This Season' : `Invest — ${formatCoins(FANBASE_BOOST_COST)}`}
                     </button>
                   )}
                 </div>
@@ -800,8 +801,8 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
               </div>
             )}
             <button
-              className={'primary' + (!team.lineupConfirmed && seasonIssues.length > 0 ? ' needs-attention' : '')}
-              disabled={team.lineupConfirmed}
+              className={'primary' + (!lineupScreenOpen && !team.lineupConfirmed && seasonIssues.length > 0 ? ' needs-attention' : '')}
+              disabled={!lineupScreenOpen && team.lineupConfirmed}
               aria-expanded={showSeasonIssues}
               onClick={() => {
                 if (lineupScreenOpen) { setLineupScreenOpen(false); return; }
@@ -817,9 +818,9 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
               {lineupScreenOpen ? 'Back' : team.lineupConfirmed
                 ? (waitingOn.length > 0 ? `Waiting For ${waitingOn.length} User${waitingOn.length === 1 ? '' : 's'} To Continue` : 'Waiting…')
                 : 'Begin Season'}
-              {!team.lineupConfirmed && seasonIssues.length > 0 && <span className="bottombar-warn-icon" aria-hidden="true">!</span>}
+              {!lineupScreenOpen && !team.lineupConfirmed && seasonIssues.length > 0 && <span className="bottombar-warn-icon" aria-hidden="true">!</span>}
             </button>
-            {!team.lineupConfirmed && seasonIssues.length > 0 && showSeasonIssues && (
+            {!lineupScreenOpen && !team.lineupConfirmed && seasonIssues.length > 0 && showSeasonIssues && (
               <div className="bottombar-issues">
                 <div className="bottombar-issues-head">Before you begin you must resolve:</div>
                 <ul>

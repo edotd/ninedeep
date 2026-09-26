@@ -22,7 +22,7 @@ import {
 } from './matchup';
 import { rosterSalary } from './economy';
 import { applyPlayoffWinMilestone, fanbaseEnabled } from './fanbase';
-import { activeCoachGameplan, applyGameplanToTurn, setCoachGameplan } from './strategyCards';
+import { activeCoachGameplan, applyGameplanToTurn, setCoachGameplan, syncSeasonGameplan } from './strategyCards';
 import { beginTurn as initializeTurn } from './turn';
 
 function humanTeams(state) {
@@ -174,6 +174,9 @@ export function saveLineup(state, teamIdx, activeIds, activeGameplanId) {
   if (activeGameplanId) {
     const gameplanResult = setCoachGameplan(state, teamIdx, activeGameplanId);
     if (gameplanResult.ok === false) return { valid: false, msg: gameplanResult.msg };
+  } else {
+    team.activeGameplanId = null;
+    syncSeasonGameplan(team);
   }
   team.lineupSet = true;
   team.lineupConfirmed = false;

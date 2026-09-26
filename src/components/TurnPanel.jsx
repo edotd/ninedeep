@@ -115,16 +115,14 @@ function readAutoProgress() {
 }
 
 // All nine rotation tiles remain visible. The coach gets a dedicated dock beside the team
-// name: below the home roster on the left, and above the away roster on the right. Gameplan
-// and Adjustment sit together on the side opposite the coach. Both always render, even with
-// nothing played yet, so the slot (and whether it is actionable) remains visible.
-function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, gameplanPlays, gameplanCanPlay, adjustmentCanPlay, onGameplanSlotClick, onAdjustmentSlotClick, isActive, flip, contributing, timerPercent, benchContribution }) {
+// name: below the home roster on the left, and above the away roster on the right. The
+// Adjustment slot sits beside the coach; coach Gameplans affect play without occupying a slot.
+function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, adjustmentCanPlay, onAdjustmentSlotClick, isActive, flip, contributing, timerPercent, benchContribution }) {
   const hand = team.hand || [];
   const activeIds = ids || team.activeIds || [];
   const starters = activeIds.map((id) => hand.find((c) => c.id === id)).filter(Boolean);
   const bench = hand.filter((c) => !activeIds.includes(c.id));
   const edge = flip ? 'top' : 'bottom';
-  const hasGameplan = gameplanPlays?.length > 0;
   const hasAdjustment = cardPlays?.length > 0;
   return (
     <div className={'t2-teamboard' + (isActive ? ' active' : '') + (flip ? ' flip' : '')}>
@@ -146,29 +144,6 @@ function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, gameplan
             </div>
             {statusLabel && <div className="t2-teamboard-status">{statusLabel}</div>}
             {benchContribution !== null && benchContribution !== undefined && <div className="t2-teamboard-bench">Bench Contribution <strong>+{benchContribution}</strong></div>}
-          </div>
-        </div>
-        <div className="t2-card-docks">
-          <div className="t2-gameplan-dock">
-            {hasGameplan
-              ? gameplanPlays.map((entry, i) => (
-                <div className="t2-gameplan-mini" key={`${entry.teamName}-${entry.cardName}-${i}`} title={entry.card ? `${entry.card.name} — ${entry.description}` : entry.cardName}>
-                  <CardTypeMark type="gameplan" size={60} />
-                </div>
-              ))
-              : (
-                <button
-                  type="button"
-                  className={'t2-gameplan-mini empty' + (gameplanCanPlay ? ' pulsing' : '')}
-                  onClick={gameplanCanPlay ? onGameplanSlotClick : undefined}
-                  disabled={!gameplanCanPlay}
-                  aria-label={gameplanCanPlay ? 'Play a Gameplan card' : undefined}
-                  aria-hidden={!gameplanCanPlay}
-                >
-                  <CardTypeMark type="gameplan" size={42} />
-                  {gameplanCanPlay && <span className="t2-mini-plus">+</span>}
-                </button>
-              )}
           </div>
           <div className="t2-adjustment-dock">
             {hasAdjustment
