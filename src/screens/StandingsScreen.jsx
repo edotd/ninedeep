@@ -32,6 +32,7 @@ export default function StandingsScreen({ state, actions, myTeamId, onViewTeam }
       gameplanSeedingPct,
       seedingCardPct: oldSeedingPct,
       favorableSchedulePct: 0,
+      incompleteRosterPenalty: t.coach?.modifier === 'More with Less' ? 0 : Math.max(0, 9 - t.hand.length) * 40,
       finalRating: Math.round(seed.val),
     };
   });
@@ -62,11 +63,11 @@ export default function StandingsScreen({ state, actions, myTeamId, onViewTeam }
             <section className="season-breakdown" aria-label="Season breakdown">
               <div className="season-breakdown-intro">
                 <h2>How the season was decided</h2>
-                <p>Your base rating comes from the active five, coach and continuity bonuses, Synergy, and active output Gameplans. Every team then receives a season roll from −2.5% to +2.5%. Seeding Gameplans apply last. The highest final rating earns the top seed.</p>
+                <p>Your base rating comes from the active five, coach and continuity bonuses, Synergy, active output Gameplans, and any incomplete-roster penalty. Every team then receives a season roll from −2.5% to +2.5%. Seeding Gameplans apply last. The highest final rating earns the top seed.</p>
               </div>
               <div className="season-breakdown-table">
                 <div className="season-breakdown-row head">
-                  <span>Team</span><span>Base</span><span>Season Roll</span><span>Gameplan</span><span>Final</span>
+                  <span>Team</span><span>Roster</span><span>Base</span><span>Season Roll</span><span>Gameplan</span><span>Final</span>
                 </div>
                 {breakdown.map((row) => {
                   const cardPct = (row.seedingCardPct || 0) + (row.favorableSchedulePct || 0);
@@ -74,6 +75,7 @@ export default function StandingsScreen({ state, actions, myTeamId, onViewTeam }
                   return (
                     <div key={row.teamId} className={'season-breakdown-row' + (row.teamId === myTeamId ? ' you' : '')}>
                       <span className="season-breakdown-team"><b>#{row.seed}</b> {row.teamName}</span>
+                      <span className={row.incompleteRosterPenalty ? 'negative' : ''}>{row.incompleteRosterPenalty ? `−${row.incompleteRosterPenalty}` : '—'}</span>
                       <span>{row.baseRating}</span>
                       <span className={(row.seasonRollPct || 0) < 0 ? 'negative' : 'positive'}>{signedPct(row.seasonRollPct)}</span>
                       <span>{gameplanPct ? signedPct(gameplanPct) : '—'}</span>

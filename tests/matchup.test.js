@@ -7,6 +7,7 @@ import { newEraState, lockSeasonAndSeed, initSeasonModifierCards, startPlayoffs 
 import { startEra, rollCurrentMatchup, openSeries, simulateOneMatch } from '../src/game/engine.js';
 import { beginTurn, advanceTurn } from '../src/game/turn.js';
 import { rehydrateState } from '../src/game/rehydrate.js';
+import { effectiveRating } from '../src/game/roster.js';
 const card = (name) => ({ ...deck.find((c) => c.name === name), id: name, used: false });
 function game() {
   const state = newEraState();
@@ -101,6 +102,17 @@ test('season roll variance is limited to plus or minus 2.5 percent', () => {
   Math.random = () => 0.999999;
   try { lockSeasonAndSeed(highState); } finally { Math.random = originalRandom; }
   assert(highState.seasonBreakdown.every((row) => row.seasonRollPct === 2.5));
+});
+
+test('incomplete rosters lose seeding rating unless the coach has More with Less', () => {
+  const state = game();
+  const team = state.teams[0];
+  team.hand.forEach((player) => { if (player.skillsetId === 'skill-03') player.skillsetId = null; });
+  const completeRating = effectiveRating(team);
+  team.hand = team.hand.filter((player) => team.activeIds.includes(player.id));
+  assert.equal(effectiveRating(team), Math.max(0, completeRating - 160));
+  team.coach.modifier = 'More with Less';
+  assert.equal(effectiveRating(team), completeRating);
 });
 
 test('extra draw and discard work when the Adjustment deck is exhausted', () => {

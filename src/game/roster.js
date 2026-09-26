@@ -62,7 +62,12 @@ export function effectiveRating(team) {
   const synergy = teamSynergy(team);
   const synergyAvg = (synergy.offense + synergy.defense) / 200;
   const planAvg = ((team.seasonGameplanEffects?.offPercent || 0) + (team.seasonGameplanEffects?.defPercent || 0)) / 200;
-  return activeStatSum(team) * (1 + (team.coach.offBonus + bonus + team.coach.defBonus + bonus) / 2 + synergyAvg + planAvg);
+  // Each missing roster player costs one point from BOTH projected Offense and Defense in
+  // modifierBreakdown below. Seeding is expressed on the underlying four-stat scale, where
+  // one output point equals 20 stat points, so mirror that visible two-sided penalty here:
+  // 2 output × 20 = 40 rating per open roster spot. More with Less waives both versions.
+  const missingPlayers = team.coach?.modifier === 'More with Less' ? 0 : Math.max(0, 9 - team.hand.length);
+  return Math.max(0, activeStatSum(team) * (1 + (team.coach.offBonus + bonus + team.coach.defBonus + bonus) / 2 + synergyAvg + planAvg) - missingPlayers * 40);
 }
 
 // SCO/PLM (offense) and DEF/REB (defense) contributions are scaled per-card by that

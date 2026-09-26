@@ -314,6 +314,7 @@ export function lockSeasonAndSeed(state) {
         staffPct: t.coach ? Math.round(bonus * 1000) / 10 : null,
         synergyOffensePct: synergy?.offense ?? null,
         synergyDefensePct: synergy?.defense ?? null,
+        incompleteRosterPenalty: t.coach?.modifier === 'More with Less' ? 0 : Math.max(0, 9 - t.hand.length) * 40,
         baseRating: Math.round(base * 10) / 10,
         seasonRollPct: Math.round((randomMult - 1) * 1000) / 10,
         gameplanSeedingPct: t.seasonGameplanEffects?.seedingPercent || 0,
