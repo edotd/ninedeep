@@ -543,7 +543,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                         <PlayerCard
                           card={c}
                           selected={selectedId === c.id}
-                          rosterLabel="Starter"
+                          rosterLabel={team.lineupSet ? 'Starter' : undefined}
                           onClick={canEdit ? () => handleCardClick(c) : undefined}
                           onRelease={canEdit ? handleRelease : undefined}
                           onDevelop={!readOnly && !c.development ? setDevelopPlayer : undefined}
