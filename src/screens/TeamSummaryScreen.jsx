@@ -8,9 +8,11 @@ import { PlayerLedgerIdentity, CostBlocks } from '../components/LedgerRow';
 import { formatCoins, rosterSalary, gmCost } from '../game/economy';
 import { jerseyNumber, playerGrade, rawOverall } from '../game/cards';
 import { FANBASE_BOOST_COST } from '../game/constants';
+import { DEFAULT_PLAYER_FILTERS, matchesPlayerFilters, playerFiltersActive } from '../game/playerFilters';
 import MatchupCard from '../components/MatchupCard';
 import StrategyCard from '../components/StrategyCard';
 import CardBack from '../components/CardBack';
+import PlayerFilterBar from '../components/PlayerFilterBar';
 
 const tabForSection = (section) => ['gameplan', 'adjustment'].includes(section) ? 'office' : section || 'rotation';
 
@@ -187,6 +189,13 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   const bench = team.hand.filter((c) => !activeSet.has(c.id));
   const starterOpenSlots = Math.max(0, 5 - starters.length);
   const benchOpenSlots = Math.max(0, 4 - bench.length);
+  // Filters only ever narrow the bench pool (starters are few and already committed, so
+  // there's nothing to search for there) — open-slot placeholders aren't real cards and don't
+  // match any filter, so they're hidden whenever a filter is actually narrowing the view.
+  const [playerFilters, setPlayerFilters] = useState(DEFAULT_PLAYER_FILTERS);
+  const filtersActive = playerFiltersActive(playerFilters);
+  const filteredBench = bench.filter((c) => matchesPlayerFilters(c, playerFilters));
+  const shownBenchOpenSlots = filtersActive ? 0 : benchOpenSlots;
   const otherHumans = state.teams.filter((t) => t.human && t.id !== team.id);
   const waitingOn = otherHumans.filter((t) => !t.lineupConfirmed);
   const readyHumans = state.teams.filter((t) => t.human && t.lineupConfirmed);
@@ -264,7 +273,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   // Mobile's rotation carousel is one card per swipe (starters then bench, in that order —
   // see the JSX below) — this is how many pages it actually has, so the "more cards" chevron
   // knows when to disappear and the end-of-carousel swipe knows when it's actually at the end.
-  const mobileCardCount = starters.length + starterOpenSlots + bench.length + benchOpenSlots;
+  const mobileCardCount = starters.length + starterOpenSlots + filteredBench.length + shownBenchOpenSlots;
   const rotationTouchStartX = useRef(null);
   const rotoScrollRef = useRef(null);
   // The scroll container unmounts whenever another tab is showing (showSection below), so its
@@ -507,11 +516,12 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           {showSection('rotation') && !isDesktop && viewMode === 'list' && (
             <div className="ts-section" id="team-rotation">
               <div className="ts-heading">Players</div>
+              <PlayerFilterBar filters={playerFilters} onChange={setPlayerFilters} />
               <PlayerRosterTable
                 starters={starters}
-                bench={bench}
+                bench={filteredBench}
                 starterOpenSlots={starterOpenSlots}
-                benchOpenSlots={benchOpenSlots}
+                benchOpenSlots={shownBenchOpenSlots}
                 selectedId={selectedId}
                 canEdit={canEdit}
                 readOnly={readOnly}
@@ -525,6 +535,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           {showSection('rotation') && !(!isDesktop && viewMode === 'list') && (
             <div className="ts-section ts-player-carousel" id="team-rotation">
               {!isRotationLocked && <div className="ts-heading ts-rotation-heading">Players <span>{rotationIndex < 5 ? 'Starters' : 'Bench'}</span></div>}
+              <PlayerFilterBar filters={playerFilters} onChange={setPlayerFilters} />
               <div className="ts-roto-viewport">
                 <div
                   key={`rotation-${state.season}-${team.id}`}
@@ -552,7 +563,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                       </div>
                     ))}
                     {Array.from({ length: starterOpenSlots }, (_, i) => <div className="ts-roto-slot" key={'starter-open-' + i}><div className="ts-bench-open starter">OPEN STARTER</div></div>)}
-                    {!isDesktop && bench.map((c) => (
+                    {!isDesktop && filteredBench.map((c) => (
                       <div className="ts-roto-slot" key={c.id}>
                         <PlayerCard
                           card={c}
@@ -564,7 +575,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                         />
                       </div>
                     ))}
-                    {!isDesktop && Array.from({ length: benchOpenSlots }, (_, i) => <div className="ts-roto-slot" key={'open-' + i}><div className="ts-bench-open">OPEN</div></div>)}
+                    {!isDesktop && Array.from({ length: shownBenchOpenSlots }, (_, i) => <div className="ts-roto-slot" key={'open-' + i}><div className="ts-bench-open">OPEN</div></div>)}
                   </div>
                 </div>
                 {!isDesktop && (() => {
@@ -585,7 +596,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
               <div className="ts-heading">Bench</div>
               <div className="ts-roto-scroll">
                 <div className="ts-roto-grid">
-                  {bench.map((c) => (
+                  {filteredBench.map((c) => (
                     <PlayerCard
                       key={c.id}
                       card={c}
@@ -595,12 +606,12 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                       onDevelop={!readOnly && !c.development ? setDevelopPlayer : undefined}
                     />
                   ))}
-                  {Array.from({ length: benchOpenSlots }, (_, i) => (
+                  {Array.from({ length: shownBenchOpenSlots }, (_, i) => (
                     <div key={'open' + i} className="ts-bench-open">OPEN</div>
                   ))}
                 </div>
               </div>
-              {bench.length + benchOpenSlots > 1 && <div className="ts-card-stack-cue" aria-hidden="true"><i /><i /><i /></div>}
+              {filteredBench.length + shownBenchOpenSlots > 1 && <div className="ts-card-stack-cue" aria-hidden="true"><i /><i /><i /></div>}
             </div>
           )}
 

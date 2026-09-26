@@ -2214,6 +2214,9 @@ body:has(.entry-screen){padding-bottom:0;}
 .slf-microlabel{font-family:var(--font-label);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--file-muted);margin-bottom:6px;}
 .slf-bench{flex:1;min-width:0;}
 .slf-bench-row{display:flex;gap:8px;flex-wrap:wrap;}
+.player-filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+.player-filter-bar select{font-size:11px;padding:3px 6px;border-radius:4px;}
+.player-filter-clear{font-size:11px;padding:3px 8px;}
 .slf-coach{position:absolute;top:12px;right:12px;z-index:4;width:120px;max-width:38%;background:var(--form);border:2px solid var(--franchise);padding:7px 9px;box-sizing:border-box;text-align:center;font:inherit;cursor:pointer;}
 .slf-coach:hover{background:var(--file);}
 .slf-coach .slf-microlabel{margin-bottom:3px;font-size:8px;color:var(--file-body);}

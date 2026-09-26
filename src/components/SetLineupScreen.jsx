@@ -2,9 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { findSkillPair, skillsetFor } from '../game/skillsets';
 import { jerseyNumber, playerGrade } from '../game/cards';
 import { autoValidFive, validateLineup } from '../game/roster';
+import { DEFAULT_PLAYER_FILTERS, matchesPlayerFilters } from '../game/playerFilters';
 import { useIsDesktop } from '../hooks/useIsDesktop';
 import PlayerCard from './PlayerCard';
 import FrontOfficeCard from './FrontOfficeCard';
+import PlayerFilterBar from './PlayerFilterBar';
 
 // Shown once per browser — the first time anyone opens this editor, not once per team/era, so
 // re-explaining after a fresh solo game or a new room would be redundant.
@@ -138,6 +140,8 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
   const activeIds = slotOrder.filter((id) => id != null);
   const starters = slotOrder.map((id) => (id ? team.hand.find((c) => c.id === id) || null : null));
   const bench = team.hand.filter((c) => !activeIds.includes(c.id));
+  const [playerFilters, setPlayerFilters] = useState(DEFAULT_PLAYER_FILTERS);
+  const filteredBench = bench.filter((c) => matchesPlayerFilters(c, playerFilters));
   const [selectedId, setSelectedId] = useState(null);
 
   const previewSignature = starters.map((card) => card?.id ?? 'open').join(',');
@@ -338,6 +342,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
             <div className="slf-sideline">
               <div className="slf-bench">
                 <div className="slf-microlabel">Players</div>
+                <PlayerFilterBar filters={playerFilters} onChange={setPlayerFilters} />
                 <div className="slf-bench-row">
                   {starters.map((c, i) => (
                     <MiniCard
@@ -356,7 +361,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
                       onHoverEnd={handleHoverEnd}
                     />
                   ))}
-                  {bench.map((c) => (
+                  {filteredBench.map((c) => (
                     <MiniCard
                       key={c.id}
                       card={c}
@@ -367,6 +372,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
                       dim
                     />
                   ))}
+                  {filteredBench.length === 0 && bench.length > 0 && <div className="slf-slot-picker-empty">No players match these filters.</div>}
                 </div>
               </div>
             </div>
@@ -397,13 +403,15 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
               <span>Choose A Starter</span>
               <button type="button" className="slf-picker-close" onClick={() => setPickerSlotIndex(null)} aria-label="Close">×</button>
             </div>
+            <PlayerFilterBar filters={playerFilters} onChange={setPlayerFilters} />
             <div className="slf-slot-picker-carousel">
-              {bench.map((c) => (
+              {filteredBench.map((c) => (
                 <button key={c.id} type="button" className="slf-slot-picker-card" onClick={() => placeCardInSlot(pickerSlotIndex, c.id)}>
                   <PlayerCard card={c} />
                 </button>
               ))}
               {bench.length === 0 && <div className="slf-slot-picker-empty">No available players.</div>}
+              {bench.length > 0 && filteredBench.length === 0 && <div className="slf-slot-picker-empty">No players match these filters.</div>}
             </div>
           </div>
         </div>
