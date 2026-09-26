@@ -7,6 +7,7 @@ import { useIsDesktop } from '../hooks/useIsDesktop';
 import PlayerCard from './PlayerCard';
 import FrontOfficeCard from './FrontOfficeCard';
 import PlayerFilterBar from './PlayerFilterBar';
+import { gameplanEffects } from '../game/strategyCards';
 
 // Shown once per browser — the first time anyone opens this editor, not once per team/era, so
 // re-explaining after a fresh solo game or a new room would be redundant.
@@ -157,10 +158,19 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
       for (const stat of ['SCO', 'PLM', 'REB', 'DEF']) totals[stat] += card.stats?.[stat] || 0;
       return totals;
     }, { SCO: 0, PLM: 0, REB: 0, DEF: 0 });
-    onPreviewChange?.({ teamId: team.id, stats });
+    const previewTeam = { ...team, activeIds, activeGameplanId: selectedGameplanId };
+    const selectedPlan = team.coach?.gameplans?.find((plan) => plan.id === selectedGameplanId) || null;
+    const effects = gameplanEffects(previewTeam, selectedPlan);
+    const adjustedStats = {
+      SCO: Math.round(stats.SCO * (1 + (effects.offPercent || 0) / 100) * 10) / 10,
+      PLM: Math.round(stats.PLM * (1 + (effects.offPercent || 0) / 100) * 10) / 10,
+      REB: Math.round(stats.REB * (1 + (effects.defPercent || 0) / 100) * 10) / 10,
+      DEF: Math.round(stats.DEF * (1 + (effects.defPercent || 0) / 100) * 10) / 10,
+    };
+    onPreviewChange?.({ teamId: team.id, stats: adjustedStats });
     // The player ids are the source of every stat total; card objects themselves remain stable.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [previewSignature, team.id, onPreviewChange]);
+  }, [previewSignature, selectedGameplanId, team, team.id, onPreviewChange]);
   useEffect(() => () => onPreviewChange?.(null), [onPreviewChange]);
 
   // A card is "held" the moment it's selected for placement (the existing tap-to-hold

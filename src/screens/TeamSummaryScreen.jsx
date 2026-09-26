@@ -489,9 +489,9 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             <div className="ts-section league-overview">
               <div className="ts-heading">League</div>
               <div className="league-jump-actions">
-                <button type="button" className="secondary" onClick={onStandings}>Standings</button>
-                <button type="button" className="secondary" onClick={onFreeAgency}>Free Agency</button>
-                <button type="button" className="secondary" onClick={onDraftClass}>Draft Class</button>
+                <button type="button" className="league-jump-button standings" onClick={onStandings}>Standings</button>
+                <button type="button" className="league-jump-button free-agency" onClick={onFreeAgency}>Free Agency{!readOnly && !state.offseason?.freeAgencyClosed?.[team.id] && <span className="alert-badge" aria-label="Free Agency requires attention">!</span>}</button>
+                <button type="button" className="league-jump-button draft" onClick={onDraftClass}>Draft Class</button>
               </div>
               <div className="league-output-grid">
                 <div><span>League Output</span><strong>{Math.round(leagueTotal * 100) / 100}</strong><small>Total collective output from all teams</small></div>

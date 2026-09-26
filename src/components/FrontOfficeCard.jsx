@@ -35,7 +35,7 @@ function coachContent(team) {
       { label: 'Off Bonus', value: `+${Math.round((coach.offBonus + bonus) * 100)}%`, tone: 'approved-ink' },
       { label: 'Def Bonus', value: `+${Math.round((coach.defBonus + bonus) * 100)}%`, tone: 'approved-ink' },
       { label: 'Player Relations', value: coach.playerRelationship, tone: 'file' },
-      { label: 'Development Point', value: team.developmentPoints || 0, tone: 'approved-ink' },
+      { label: 'Development Points', value: team.developmentPoints || 0, tone: 'approved-ink' },
     ],
     detail: `${coach.modifier} — ${coach.ability || 'Improves the coach’s base Offense and Defense bonuses.'}`,
     rarityLead: { label: 'Gameplan', value: activeGameplan?.name || 'None' },

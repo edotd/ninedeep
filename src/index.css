@@ -1177,10 +1177,10 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
      this bar's own width must match, and the coach/gameplan/adjustment sections shrink to
      leave it that room. */
   .bottombar{position:fixed;left:auto;right:0;bottom:0;z-index:13;background:var(--ink);border:none;border-top:2px solid var(--franchise);border-left:1px solid rgba(230,220,196,.2);box-shadow:none;padding:9px 10px calc(9px + env(safe-area-inset-bottom,0px));min-height:72px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;width:118px;max-width:118px;gap:0;}
-  .bottombar button{min-width:0;width:100%;flex:none;font-size:10.5px;letter-spacing:.02em;padding:9px 6px;white-space:normal;line-height:1.2;text-align:center;}
+  .bottombar button{min-width:0;width:100%;min-height:52px;align-self:stretch;flex:none;font-size:10.5px;letter-spacing:.02em;padding:9px 6px;white-space:normal;line-height:1.2;text-align:center;}
   .persistent-bar{padding-right:130px;}
   .persistent-bar-coach{flex:1.1;}
-  .persistent-card-count{flex:0 0 52px;}
+  .persistent-card-count{flex:1 1 0;}
   .persistent-card-count b{font-size:17px;}
 }
 
@@ -1265,15 +1265,14 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 /* Two stacked rows: the coach+name row, and Gameplan/Adjustment below it — reversed for the
    flipped (top) team so its cards sit above its name instead, mirroring the team board itself. */
 .t2-teamboard-meta{display:flex;flex-direction:column;gap:10px;min-width:0;}
-.t2-teamboard.flip .t2-teamboard-meta{flex-direction:column-reverse;}
-.t2-teamboard-toprow{display:grid;grid-template-columns:220px 88px minmax(0,1fr);align-items:center;gap:14px;min-width:0;}
-.t2-teamboard-toprow>.t2-coach-dock{grid-column:1;}
-.t2-teamboard-toprow>.t2-adjustment-dock{grid-column:2;}
-.t2-teamboard-toprow>.t2-teamboard-name{grid-column:3;}
-.t2-teamboard.flip .t2-teamboard-toprow{grid-template-columns:minmax(0,1fr) 88px 220px;}
-.t2-teamboard.flip .t2-teamboard-toprow>.t2-coach-dock{grid-column:3;}
-.t2-teamboard.flip .t2-teamboard-toprow>.t2-adjustment-dock{grid-column:2;}
-.t2-teamboard.flip .t2-teamboard-toprow>.t2-teamboard-name{grid-column:1;}
+.t2-teamboard-toprow{display:grid;grid-template-columns:minmax(0,1fr) 220px;grid-template-rows:auto auto;align-items:center;gap:8px 14px;min-width:0;}
+.t2-teamboard-toprow>.t2-teamboard-name{grid-column:1;grid-row:1/3;}
+.t2-teamboard-toprow>.t2-adjustment-dock{grid-column:2;grid-row:1;justify-content:flex-end;}
+.t2-teamboard-toprow>.t2-coach-dock{grid-column:2;grid-row:2;}
+.t2-teamboard.flip .t2-teamboard-toprow{grid-template-columns:220px minmax(0,1fr);}
+.t2-teamboard.flip .t2-teamboard-toprow>.t2-coach-dock{grid-column:1;grid-row:1;}
+.t2-teamboard.flip .t2-teamboard-toprow>.t2-adjustment-dock{grid-column:1;grid-row:2;justify-content:flex-start;}
+.t2-teamboard.flip .t2-teamboard-toprow>.t2-teamboard-name{grid-column:2;grid-row:1/3;}
 .t2-teamboard-meta>.t2-card-docks{display:flex;align-items:center;justify-content:center;gap:10px;min-width:0;}
 .t2-teamboard-name{text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-width:0;}
 .t2-teamboard-name-line{display:flex;align-items:center;justify-content:center;gap:12px;min-width:0;width:100%;}
@@ -1530,8 +1529,8 @@ button.t2-gameplan-mini.empty.pulsing{cursor:pointer;}
   .t2-shell{padding:14px 10px;}
   .t2-teamboard{padding:12px 10px;gap:8px;}
   .t2-teamboard-meta{gap:5px;}
-  .t2-teamboard-toprow{grid-template-columns:112px 72px minmax(0,1fr);}
-  .t2-teamboard.flip .t2-teamboard-toprow{grid-template-columns:minmax(0,1fr) 72px 112px;}
+  .t2-teamboard-toprow{grid-template-columns:minmax(0,1fr) 112px;}
+  .t2-teamboard.flip .t2-teamboard-toprow{grid-template-columns:112px minmax(0,1fr);}
   .nd2-tile{flex-basis:58px;min-width:58px;}
   .nd2-tile.empty{min-height:88px;}
   .nd2-tile-jersey{font-size:16px;}
@@ -1581,8 +1580,8 @@ button.t2-gameplan-mini.empty.pulsing{cursor:pointer;}
   .desktop-content:has(.t2-shell) .nd2-tile{min-width:0;flex-basis:0;}
   .desktop-content:has(.t2-shell) .nd2-tile-tags{display:none;}
   .desktop-content:has(.t2-shell) .t2-teamboard-meta{gap:8px;}
-  .desktop-content:has(.t2-shell) .t2-teamboard-toprow{grid-template-columns:220px 88px minmax(0,1fr);}
-  .desktop-content:has(.t2-shell) .t2-teamboard.flip .t2-teamboard-toprow{grid-template-columns:minmax(0,1fr) 88px 220px;}
+  .desktop-content:has(.t2-shell) .t2-teamboard-toprow{grid-template-columns:minmax(0,1fr) 220px;}
+  .desktop-content:has(.t2-shell) .t2-teamboard.flip .t2-teamboard-toprow{grid-template-columns:220px minmax(0,1fr);}
   .desktop-content:has(.t2-shell) .nd2-coach-slot{width:150px;flex-basis:150px;}
   .desktop-content:has(.t2-shell) .nd2-coach-body{padding:5px 8px;}
   .desktop-content:has(.t2-shell) .nd2-coach-desc{display:none;}
@@ -1930,6 +1929,7 @@ html[data-theme="dark"] .wordmark-ink{color:var(--file);}
 .season-breakdown-team b,.season-breakdown-final{font-family:var(--font-display);font-size:17px;font-weight:400;}.season-breakdown-row .positive{color:var(--approved-file);}.season-breakdown-row .negative{color:var(--stamp-ink);}
 .season-breakdown-note{padding:12px 16px;}
 .league-jump-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 14px;}
+.league-jump-button{min-height:48px;border:2px solid var(--franchise);background:var(--franchise);color:var(--ink);font:12px var(--font-label);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;}.league-jump-button:hover{background:#ffb455;}.league-jump-button.free-agency{background:var(--approved-file);border-color:var(--approved-file);}.league-jump-button.free-agency:hover{background:var(--approved-ink);}.league-jump-button.draft{background:var(--file);border-color:var(--file);}
 .league-output-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
 .league-output-grid>div{display:flex;flex-direction:column;gap:4px;padding:14px;border:1px solid var(--ink-rule);background:var(--ink-deep);color:var(--file);}
 .league-output-grid span,.league-output-grid small{font:10px var(--font-mono);color:var(--ink-muted);}
@@ -1946,7 +1946,8 @@ html[data-theme="dark"] .wordmark-ink{color:var(--file);}
 .slf-gameplan-options span,.slf-gameplan-options small{font:9px var(--font-mono);color:var(--ink-muted);}.slf-gameplan-options strong{font:17px var(--font-display);color:var(--franchise);font-weight:400;}
 .development-points-summary{display:flex;flex-direction:column;gap:4px;width:100%;}.development-points-summary strong{font:44px var(--font-display);color:var(--approved-file);}.development-points-summary span,.development-points-summary small{font:11px var(--font-mono);}
 .development-stat-button{padding:16px;border:2px solid var(--approved-file);background:transparent;color:var(--approved-file);font-family:var(--font-label);}
-.tc2-bonus-row button.tc2-bonus{appearance:none;text-align:left;color:inherit;cursor:pointer;}
+.tc2-bonus-row button.tc2-bonus{appearance:none;text-align:left;color:inherit;cursor:pointer;background:transparent;border:1px solid transparent;padding:9px;}
+.tc2-bonus-row button.tc2-bonus.selected{border-color:var(--approved-file);background:rgba(70,137,103,.12);}
 @media(max-width:700px){.league-output-grid{grid-template-columns:1fr 1fr}.league-jump-actions{grid-template-columns:1fr}.slf-gameplan-options{grid-template-columns:1fr}}
 .standings-table{max-width:1000px;}
 .standings-head-row,.standings-row{display:grid;grid-template-columns:1fr 100px 100px 90px;gap:10px;align-items:center;padding:12px;}
@@ -2461,8 +2462,8 @@ body:has(.entry-screen){padding-bottom:0;}
   /* Team names and coach cards get real room now (see t2-board's scroll above — growing these
      no longer risks losing content off the bottom of the screen). */
   .mobile-shell:has(.t2-shell) .t2-teamboard-meta{gap:6px;min-height:54px;}
-  .mobile-shell:has(.t2-shell) .t2-teamboard-toprow{grid-template-columns:96px 70px minmax(0,1fr);}
-  .mobile-shell:has(.t2-shell) .t2-teamboard.flip .t2-teamboard-toprow{grid-template-columns:minmax(0,1fr) 70px 96px;}
+  .mobile-shell:has(.t2-shell) .t2-teamboard-toprow{grid-template-columns:minmax(0,1fr) 96px;}
+  .mobile-shell:has(.t2-shell) .t2-teamboard.flip .t2-teamboard-toprow{grid-template-columns:96px minmax(0,1fr);}
   .mobile-shell:has(.t2-shell) .nd2-coach-slot{width:96px;flex:1 1 96px;}
   .mobile-shell:has(.t2-shell) .nd2-coach{box-shadow:none;}
   .mobile-shell:has(.t2-shell) .nd2-coach-head{padding:4px 6px;}

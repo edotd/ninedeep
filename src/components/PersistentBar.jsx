@@ -48,7 +48,6 @@ const PersistentBar = forwardRef(function PersistentBar({ state, myTeamId, overl
         {coachDealt && team.coach && <small>{team.coach.modifier}</small>}
       </button>
       <button className="persistent-bar-section persistent-card-count gameplan" onClick={() => onNavigate('gameplan')} aria-label="Active Gameplan"><CardTypeMark type="gameplan" size={16} /><b>{fullyDealt ? activeGameplan?.name || '—' : '—'}</b></button>
-      <button className="persistent-bar-section persistent-card-count development" onClick={() => onNavigate('rotation')} aria-label="Coach Development Points"><span className="persistent-development-mark">DEV</span><b>{fullyDealt ? team.developmentPoints || 0 : 0}</b></button>
     </div>
   );
 });

@@ -66,15 +66,15 @@ export default function TeamChemistry({ team, canEdit, onEditLineup }) {
 
         {team.lineupSet ? (
           <div className="tc2-bonus-row">
-            <button type="button" className="tc2-bonus" onClick={() => setExpanded(expanded === 'offense' ? null : 'offense')}>
+            <button type="button" className={'tc2-bonus' + (expanded === 'offense' ? ' selected' : '')} onClick={() => setExpanded(expanded === 'offense' ? null : 'offense')}>
               <div className="tc2-bonus-label">Offensive Bonus</div>
               <div className="tc2-bonus-value">{bonusValue(current.offense + coachOffense)}</div>
             </button>
-            <button type="button" className="tc2-bonus" onClick={() => setExpanded(expanded === 'defense' ? null : 'defense')}>
+            <button type="button" className={'tc2-bonus' + (expanded === 'defense' ? ' selected' : '')} onClick={() => setExpanded(expanded === 'defense' ? null : 'defense')}>
               <div className="tc2-bonus-label">Defensive Bonus</div>
               <div className="tc2-bonus-value">{bonusValue(current.defense + coachDefense)}</div>
             </button>
-            <button type="button" className="tc2-bonus" onClick={() => setExpanded(expanded === 'continuity' ? null : 'continuity')}>
+            <button type="button" className={'tc2-bonus' + (expanded === 'continuity' ? ' selected' : '')} onClick={() => setExpanded(expanded === 'continuity' ? null : 'continuity')}>
               <div className="tc2-bonus-label">Continuity</div>
               <div className="tc2-bonus-value">{bonusValue(current.continuity)}</div>
             </button>
