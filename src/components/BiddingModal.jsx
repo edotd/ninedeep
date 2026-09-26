@@ -13,7 +13,7 @@ const BONUS_LABEL = {
 // Game 2, "Free-agent bidding" — a full-screen takeover over the Free Agency pool. Every
 // team's whole position lives in state.offseason.bidding[card.id] (see bidding.js); this
 // component only ever renders that shared session and forwards clicks into its actions.
-export default function BiddingModal({ state, actions, myTeamId, card, onClose }) {
+export default function BiddingModal({ state, actions, myTeamId, card, onClose, market = 'freeagency' }) {
   const team = state.teams[myTeamId];
   const session = state.offseason?.bidding?.[card.id];
   const myBid = session?.bids?.[team.id];
@@ -31,7 +31,7 @@ export default function BiddingModal({ state, actions, myTeamId, card, onClose }
 
   const submitOpen = () => {
     setError(null);
-    const res = actions.openFreeAgentBid(myTeamId, card.id, offer.salary, offer.years);
+    const res = actions.openFreeAgentBid(myTeamId, card.id, offer.salary, offer.years, market);
     if (res && res.ok === false) setError(res.msg);
   };
   const submitRaise = () => {
@@ -49,7 +49,7 @@ export default function BiddingModal({ state, actions, myTeamId, card, onClose }
       <div className="neg-panel bid-panel">
         <div className="neg-head">
           <button type="button" className="neg-close" onClick={onClose} aria-label="Close">✕</button>
-          <div className="neg-head-title">FREE AGENCY{resolved ? ' · CLOSED' : ''}</div>
+          <div className="neg-head-title">{market === 'contracts' ? 'EXPIRING CONTRACTS' : 'FREE AGENCY'}{resolved ? ' · CLOSED' : ''}</div>
         </div>
 
         <div className="neg-player">
@@ -147,7 +147,7 @@ export default function BiddingModal({ state, actions, myTeamId, card, onClose }
         )}
 
         {!resolved && myBid && myBid.stage === 'final' && (
-          <div className="neg-note">Your offer is final. Bidding resolves after every human GM closes free agency.</div>
+          <div className="neg-note">Your offer is final. Bidding resolves {market === 'contracts' ? 'when every human club begins the draft.' : 'after every human GM closes free agency.'}</div>
         )}
 
         {resolved && result && (

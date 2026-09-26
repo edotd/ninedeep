@@ -139,7 +139,7 @@ export function resolveFreeAgentBidding(state, session) {
 
   const [rawCard] = state.freeAgents.splice(cardIdx, 1);
   const signed = acquireOffseasonPlayer(winner.team, { ...rawCard, salary: winner.salary, contract: winner.years, maxContract: winner.years, freeAgentSignedSeason: state.season });
-  recordFreeAgencyActivity(state, 'signed', signed, winner.team);
+  recordFreeAgencyActivity(state, 'signed', signed, winner.team, { via: 'bid', market: session.market || 'freeagency' });
   return (session.result = {
     winnerTeamId: winner.teamId, winnerTeamName: winner.teamName, salary: winner.salary, years: winner.years,
     priority: session.priority,
@@ -148,15 +148,15 @@ export function resolveFreeAgentBidding(state, session) {
   });
 }
 
-export function resolveAllFreeAgentBidding(state) {
+export function resolveAllFreeAgentBidding(state, market = 'freeagency') {
   Object.values(state.offseason?.bidding || {}).forEach((session) => {
-    if (session.status !== 'open') return;
+    if (session.status !== 'open' || (session.market || 'freeagency') !== market) return;
     Object.values(session.bids).forEach((bid) => { bid.stage = 'final'; });
     resolveFreeAgentBidding(state, session);
   });
 }
 
-export function openFreeAgentBid(state, teamIdx, cardId, salary, years) {
+export function openFreeAgentBid(state, teamIdx, cardId, salary, years, market = 'freeagency') {
   const team = state.teams[teamIdx];
   if (!team) return { ok: false, msg: 'Unknown team.' };
   if (state.offseason?.freeAgencyClosed?.[team.id]) return { ok: false, msg: 'You have closed out free agency this turn.' };
@@ -166,9 +166,10 @@ export function openFreeAgentBid(state, teamIdx, cardId, salary, years) {
   state.offseason.bidding ||= {};
   let session = state.offseason.bidding[cardId];
   if (!session) {
-    session = { cardId, priority: freeAgentPriority(card), minSalary: card.salary, minYears: card.contract, bids: {}, status: 'open' };
+    session = { cardId, priority: freeAgentPriority(card), minSalary: card.salary, minYears: card.contract, bids: {}, status: 'open', market };
     state.offseason.bidding[cardId] = session;
   }
+  if ((session.market || 'freeagency') !== market) return { ok: false, msg: 'This player is listed in a different signing period.' };
   if (session.status !== 'open') return { ok: false, msg: 'Bidding on this player has already closed.' };
   if (session.bids[team.id]) return { ok: false, msg: 'You already have a bid in on this player — raise it instead.' };
   const check = validateBid(state, team, session, salary, years);

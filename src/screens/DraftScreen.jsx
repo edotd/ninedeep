@@ -38,6 +38,16 @@ export default function DraftScreen({ state, actions, myTeamId }) {
   const sortedPool = [...draft.pool].sort((a, b) => cardTotal(b) - cardTotal(a));
   const onTheClock = draft.queue[0] === myTeam;
   const [viewedCard, setViewedCard] = useState(null);
+  // Bids on the expiring-contracts board (ContractsScreen) only resolve once the draft actually
+  // starts (fileContracts, season.js) — often triggered by another team filing last, not this
+  // team's own click, so ContractsScreen itself unmounts before it could ever show the result to
+  // anyone but the last filer. DraftScreen's first mount is the one moment every team reliably
+  // lands on right after that resolution, so a lazy initializer (runs once, on mount, never
+  // again for this component instance) is the recap's only correct home.
+  const [signedSummary, setSignedSummary] = useState(() => {
+    const signed = (state.freeAgencyActivity || []).filter((entry) => entry.via === 'bid' && entry.market === 'contracts' && entry.teamId === myTeam.id && entry.season === state.season);
+    return signed.length ? signed : null;
+  });
 
   return (
     <OffseasonFile state={state} team={myTeam}>
@@ -100,6 +110,29 @@ export default function DraftScreen({ state, actions, myTeamId }) {
           <div className="slf-card-modal" role="dialog" aria-modal="true" aria-label="Player card" onClick={(e) => e.stopPropagation()}>
             <button type="button" className="slf-picker-close" onClick={() => setViewedCard(null)} aria-label="Close">×</button>
             <PlayerCard card={viewedCard} />
+          </div>
+        </div>
+      )}
+
+      {signedSummary && (
+        <div className="tsx-overlay" role="dialog" aria-modal="true" aria-label="Bidding results">
+          <div className="neg-panel fa-close-dialog">
+            <div className="neg-head">
+              <div className="neg-head-title">BIDS RESOLVED</div>
+            </div>
+            <p>You signed {signedSummary.length} player{signedSummary.length === 1 ? '' : 's'} on the expiring-contracts board:</p>
+            <div className="fa-signed-list">
+              {signedSummary.map((entry) => (
+                <div key={entry.id} className="fa-signed-row">
+                  <span>{entry.player}</span>
+                  <span>{entry.position}</span>
+                  <span>{entry.grade}</span>
+                </div>
+              ))}
+            </div>
+            <div className="fa-close-actions fa-close-actions-single">
+              <button type="button" className="primary" onClick={() => setSignedSummary(null)}>Continue</button>
+            </div>
           </div>
         </div>
       )}

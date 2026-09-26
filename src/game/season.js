@@ -449,8 +449,12 @@ export function proceedFromResults(state) {
       if (c.contract <= 0) {
         // Contracts/FreeAgencyScreen both filter lastExpiredPlayers by lastTeamId — push the
         // same tagged copy that goes to free agency (not the bare original `c`, which never
-        // carries lastTeamId) so that filter can actually match.
-        const expiredCard = Object.assign({}, c, { contract: c.maxContract, lastTeamId: team.id });
+        // carries lastTeamId) so that filter can actually match. expiredSeason marks exactly
+        // this season's crop, league-wide (every team, not just human ones, unlike
+        // lastExpiredPlayers) — ContractsScreen filters state.freeAgents by it directly, since
+        // freeAgents itself is a single era-long pool with no other way to isolate "just
+        // expired this season" from years of accumulated unsigned free agents.
+        const expiredCard = Object.assign({}, c, { contract: c.maxContract, lastTeamId: team.id, expiredSeason: state.season });
         state.freeAgents.push(expiredCard);
         recordFreeAgencyActivity(state, 'released', expiredCard, team);
         if (team.human) state.lastExpiredPlayers.push(expiredCard);
@@ -474,7 +478,15 @@ export function fileContracts(state, teamIdx) {
   const team = state.teams[teamIdx];
   if (state.phase !== 'contracts' || !team?.human) return { ok: false, msg: 'Contracts are not open.' };
   state.offseason.contractsFiled[team.id] = true;
-  if (allHumanFiled(state, 'contractsFiled')) startDraft(state);
+  if (allHumanFiled(state, 'contractsFiled')) {
+    // The draft starting is what actually ends the open-market bidding on this season's
+    // expiring contracts (see ContractsScreen's own confirmation copy) — finalize every human's
+    // still-"opening" bid first (mirrors closeFreeAgency's own forceFinalizeTeamBids step) so a
+    // bid nobody got to raise doesn't lose to a tie-break roll it never had a real shot at.
+    state.teams.forEach((t) => forceFinalizeTeamBids(state, t));
+    resolveAllFreeAgentBidding(state, 'contracts');
+    startDraft(state);
+  }
   return { ok: true };
 }
 

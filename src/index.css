@@ -912,6 +912,16 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 @media (max-width:700px){.fa-coach-grid{grid-template-columns:1fr;}}
 @media (max-width:440px){.fa-grid{grid-template-columns:1fr;}}
 
+/* Expiring Contracts (ContractsScreen) — every team's expiring players, grouped under its own
+   name, each group a single horizontally-scrolling row rather than a wrapping grid, since the
+   league can have many more expiring players at once than one team's own free-agent pool. */
+.ec-team-group{margin-bottom:22px;}
+.ec-team-name{font-family:var(--font-label);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:8px;}
+.ec-team-tricode{margin-left:6px;color:var(--franchise);}
+.ec-row{display:flex;gap:14px;overflow-x:auto;padding-bottom:6px;}
+.ec-card{flex:0 0 180px;}
+.ec-card .pcard{width:180px;max-width:none;margin:0;}
+
 /* ================= Team Summary (1a, "the file") — brand handoff Screen: Team Summary.
    Filed once per season, right after the hand is dealt. ================= */
 .ts-screen{padding:0;}

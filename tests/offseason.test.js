@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { newEraState, renewExpiredContract, signFreeAgent, fileContracts, closeFreeAgency } from '../src/game/season.js';
+import { newEraState, renewExpiredContract, signFreeAgent, fileContracts, closeFreeAgency, proceedFromResults, proceedFromSeasonRecap, lockSeasonAndSeed, startPlayoffs } from '../src/game/season.js';
 import { startDraft, draftPick, forfeitPick, forfeitBonusForPosition, overallPickPosition, buildDraftPool, finishDraftTransition } from '../src/game/draft.js';
+import { openFreeAgentBid } from '../src/game/bidding.js';
 import { rosterSalary } from '../src/game/economy.js';
 import { FORFEIT_BONUS_MAX, FORFEIT_BONUS_MIN, LEAGUE_TEAM_COUNT } from '../src/game/constants.js';
 import { startEra, confirmLineup, markLineupSet, saveLineup } from '../src/game/engine.js';
@@ -278,6 +279,50 @@ test('contract filing and the draft do not require free agency to be closed', ()
   assert.equal(fileContracts(state, 0).ok, true);
   assert.equal(state.offseason.contractsFiled[0], true);
   assert.equal(state.offseason.freeAgencyClosed[0], undefined);
+});
+
+test('an open bid on the expiring-contracts board resolves once every human files for the draft', () => {
+  const state = newEraState();
+  startEra(state, 'Test');
+  state.teams[1].human = true; // a second human, so it can bid on team 0's expiring player
+  lockSeasonAndSeed(state);
+  startPlayoffs(state);
+  state.playoffTeams = [];
+  const owner = state.teams[0];
+  const bidder = state.teams[1];
+  // A randomly-generated league can leave any given team tight against its own cap — give the
+  // bidder plenty of headroom so the assertions below test bid resolution, not cap room.
+  bidder.seasonCap = rosterSalary(bidder) + 10;
+  const player = owner.hand[0];
+  player.contract = 1;
+  state.phase = 'results';
+  proceedFromResults(state);
+  const expiredCard = state.freeAgents.find((c) => c.id === player.id);
+  // Expirations can leave AI clubs under nine, which makes them legitimate bidders. Fill
+  // those openings after contracts expire so this test isolates the human bid path.
+  state.teams.forEach((t) => {
+    if (t === owner || t === bidder) return;
+    while (t.hand.length < 9) t.hand.push({ id: `pad-${t.id}-${t.hand.length}`, contract: 5, maxContract: 5, salary: 1, position: 'Guard', stats: { SCO: 1, PLM: 1, REB: 1, DEF: 1 } });
+  });
+  // expiredSeason is what lets ContractsScreen show every team's freshly-expired players
+  // (state.freeAgents itself accumulates across the whole era, human and AI teams alike).
+  assert.equal(expiredCard.expiredSeason, state.season);
+  assert.equal(expiredCard.lastTeamId, owner.id);
+
+  proceedFromSeasonRecap(state);
+  assert.equal(state.phase, 'contracts');
+  assert.equal(openFreeAgentBid(state, bidder.id, expiredCard.id, expiredCard.salary, expiredCard.maxContract, 'contracts').ok, true);
+
+  fileContracts(state, owner.id);
+  assert.equal(state.phase, 'contracts', 'the draft should not start until every human has filed');
+  fileContracts(state, bidder.id);
+  assert.equal(state.phase, 'draft', 'the last human filing starts the draft');
+
+  assert(!state.freeAgents.some((c) => c.id === expiredCard.id), 'the winning bid should remove the card from free agents');
+  assert(bidder.hand.some((c) => c.id === expiredCard.id), 'the winning team should now have the card');
+  const activity = state.freeAgencyActivity.find((e) => e.playerId === expiredCard.id && e.via === 'bid');
+  assert(activity, 'a via:bid activity entry should be recorded for the recap on Draft Order');
+  assert.equal(activity.teamId, bidder.id);
 });
 
 test('closing out free agency is refused while over the salary cap', () => {
