@@ -10,7 +10,7 @@ import { applySupplementalCard } from './supplementalEffects';
 // room, the caller resolves teamIdx from the acting player's own seat (ownerUid) first. See
 // game/useLocalGame.js and game/useRoomGame.js for the two callers.
 import { drawMatchupModifierCard } from './cards';
-import { MATCHUP_CARD_DRAW_COUNT, HOME_COURT_BONUS } from './constants';
+import { MATCHUP_CARD_DRAW_COUNT, HOME_COURT_BONUS, MAX_CAP_OVERAGE } from './constants';
 import { autoSelectFive, autoValidFive, validateLineup } from './roster';
 import {
   buildStarPool, buildTeams, defaultSoloSeats, dealHands, initFrontOffice,
@@ -130,7 +130,9 @@ export function confirmLineup(state, teamIdx) {
   if (!team.coach) return { valid: false, msg: 'Hire a coach before the season begins.' };
   if (team.hand.length > 9) return { valid: false, msg: `Resolve your roster before the season begins. You currently have ${team.hand.length} of 9 players.` };
   const committed = rosterSalary(team);
-  if (committed > team.seasonCap) return { valid: false, msg: `Get under budget before the season begins. You are using ${committed} of ${team.seasonCap}.` };
+  // Up to MAX_CAP_OVERAGE over is allowed — see benchScore (matchup.js) for the bench-roll
+  // penalty that scales with how far over a team actually locks in.
+  if (committed > team.seasonCap + MAX_CAP_OVERAGE) return { valid: false, msg: `Get under budget before the season begins. You are using ${committed} of ${team.seasonCap} (up to ${MAX_CAP_OVERAGE} over is allowed).` };
   if (!team.lineupSet) return { valid: false, msg: 'Set your lineup before the season begins.' };
   const v = validateLineup(team);
   if (!v.valid) return v;

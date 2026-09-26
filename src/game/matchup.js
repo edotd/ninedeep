@@ -1,8 +1,20 @@
 import { supplementalRoll } from './supplementalEffects';
-import { INJURY_CHANCE } from './constants';
+import { INJURY_CHANCE, BENCH_OVERAGE_STEP } from './constants';
 import { rollDie } from './rng';
 import { offenseDieSize, defenseDieSize, offenseModifier, defenseModifier } from './roster';
 import { cardTotal } from './cards';
+import { rosterSalary } from './economy';
+
+// A team locked in over its own salary cap (see confirmLineup, engine.js's MAX_CAP_OVERAGE)
+// keeps its stars, but its depth suffers — every BENCH_OVERAGE_STEP points over costs 1 off the
+// bench score, computed fresh here rather than read from team.lastOverage (only ever set once,
+// at lockSeasonAndSeed time — stale or undefined before that, e.g. simulateSeasonOutput's
+// pre-lock preview use).
+function capOveragePenalty(team) {
+  if (!team.seasonCap) return 0;
+  const overage = Math.round(Math.max(0, rosterSalary(team) - team.seasonCap) * 100) / 100;
+  return Math.floor(overage / BENCH_OVERAGE_STEP);
+}
 
 // How many simulated regular-season games to average a team's dice-based output over — see
 // simulateSeasonOutput below.
@@ -67,7 +79,8 @@ export function benchScore(team, idsOverride, includeSeasonGameplan = true) {
   const benchCards = team.hand.filter((c) => !activeIds.includes(c.id));
   let sum = benchCards.reduce((s, c) => s + cardTotal(c), 0);
   if ((team.matchupCards || []).some((c) => c.name === 'Team Chemistry')) { sum *= 1.5; }
-  return Math.round(sum / 20) + (includeSeasonGameplan ? (team.seasonGameplanEffects?.benchBonus || 0) : 0);
+  const base = Math.round(sum / 20) + (includeSeasonGameplan ? (team.seasonGameplanEffects?.benchBonus || 0) : 0);
+  return base - capOveragePenalty(team);
 }
 
 // A team's expected matchup score — shown everywhere as "Projected Output" (persistent bar,

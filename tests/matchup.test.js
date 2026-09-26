@@ -8,6 +8,8 @@ import { startEra, rollCurrentMatchup, openSeries, simulateOneMatch } from '../s
 import { beginTurn, advanceTurn } from '../src/game/turn.js';
 import { rehydrateState } from '../src/game/rehydrate.js';
 import { benchRatingContribution, effectiveRating } from '../src/game/roster.js';
+import { benchScore } from '../src/game/matchup.js';
+import { rosterSalary } from '../src/game/economy.js';
 const card = (name) => ({ ...deck.find((c) => c.name === name), id: name, used: false });
 function game() {
   const state = newEraState();
@@ -272,4 +274,19 @@ test('Bargain Production rejects expensive starters and bench players; AI finds 
   assert.equal(applySupplementalCard(state,a,b,c,effects,extra(),a.activeIds,b.activeIds,bench.id),null);
   assert(applySupplementalCard(state,a,b,c,effects,extra(),a.activeIds,b.activeIds,null,'REB'));
   assert.deepEqual(effects.statChanges,[{playerId:cheap.id,stat:'REB',value:2}]);
+});
+
+test('a roster locked in over its own cap loses bench score proportionally', () => {
+  const state = game();
+  const [a] = state.teams;
+  const baseline = benchScore(a);
+  const used = rosterSalary(a);
+  a.seasonCap = used; // exactly at cap: no penalty
+  assert.equal(benchScore(a), baseline);
+  a.seasonCap = used - 0.5; // 0.5 over -> -1
+  assert.equal(benchScore(a), baseline - 1);
+  a.seasonCap = used - 1.0; // 1.0 over -> -2
+  assert.equal(benchScore(a), baseline - 2);
+  a.seasonCap = used - 2.0; // 2.0 over (the max confirmLineup allows) -> -4
+  assert.equal(benchScore(a), baseline - 4);
 });

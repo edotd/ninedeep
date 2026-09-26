@@ -74,6 +74,14 @@ export const FREE_AGENT_POOL_SIZE = 12;
 export const MIN_PLAYER_SALARY = 0.25;
 export const MIN_GM_COST = 0.5;
 
+// A team can lock in its lineup up to this many points over its own salary cap (see
+// confirmLineup, engine.js) rather than being forced to cut down to the exact number — the
+// tradeoff is a bench-roll penalty scaled to how far over (see BENCH_OVERAGE_STEP below), so a
+// team can keep its stars at the cost of its depth instead of always being turned away outright.
+export const MAX_CAP_OVERAGE = 2;
+// Every this many cap points over, the bench score loses 1 — 0.5 over is -1, 1.0 over is -2.
+export const BENCH_OVERAGE_STEP = 0.5;
+
 // League Accolades — elite, statistical-distinction tiers. These only roll on players in
 // the Prime career stage and never appear in the draft. `description` is shown to the user
 // when they click an accolade badge on a player card (see PlayerCard.jsx) — plain-language

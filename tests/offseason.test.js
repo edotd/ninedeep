@@ -231,6 +231,24 @@ test('season start permits fewer than nine players but rejects over-budget and o
   assert.equal(team.lineupConfirmed, undefined);
 });
 
+test('season start allows locking in up to 2 cap points over, but no further', () => {
+  const state = newEraState();
+  const cards = Array.from({ length: 9 }, (_, i) => ({ id: `p${i}`, position: ['Guard', 'Forward', 'Big'][i % 3], salary: 2 }));
+  // 9 * 2 = 18 committed.
+  const team = { id: 0, human: true, hand: cards, activeIds: cards.slice(0, 5).map((c) => c.id), seasonCap: 16, coach: { salary: 0 }, lineupSet: true, deadCap: [] };
+  // A second, not-yet-confirmed human keeps allHumansReady false — confirmLineup would
+  // otherwise cascade into lockSeasonAndSeed on a real success, which this minimal fake team
+  // isn't built out enough to survive (no matchupCards/gmType/market/etc).
+  const other = { id: 1, human: true, hand: [], activeIds: [], seasonCap: 20, coach: { salary: 0 }, lineupSet: true, deadCap: [] };
+  state.teams = [team, other];
+  state.offseason = { freeAgencyClosed: { 0: true, 1: true } };
+  // 18 committed vs a 16 cap is exactly 2.0 over — right at MAX_CAP_OVERAGE, still allowed.
+  assert.equal(confirmLineup(state, 0).valid, true);
+  team.lineupConfirmed = false;
+  team.seasonCap = 15; // 3.0 over now — past the allowance.
+  assert.match(confirmLineup(state, 0).msg, /under budget/);
+});
+
 test('season start rejects a franchise with an open coach slot', () => {
   const state = newEraState();
   const cards = Array.from({ length: 9 }, (_, i) => ({ id: `p${i}`, position: ['Guard', 'Forward', 'Big'][i % 3], salary: 1 }));
