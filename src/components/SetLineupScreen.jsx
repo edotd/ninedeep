@@ -254,15 +254,15 @@ export default function SetLineupScreen({ state, team, actions, myTeamId, canEdi
 
         <div className="slf-columns">
           <div className="slf-court-col">
-            {team.coach && (
-              <button type="button" className="slf-coach" onClick={() => setCenteredCard({ type: 'coach' })}>
-                <div className="slf-microlabel">Head Coach</div>
-                <div className="slf-coach-name">{team.coach.archetype}</div>
-              </button>
-            )}
             <div className="slf-microlabel slf-starters-label">Starters</div>
             <div className="slf-court" ref={courtRef}>
               <CourtLines />
+              {team.coach && (
+                <button type="button" className="slf-coach" onClick={() => setCenteredCard({ type: 'coach' })}>
+                  <div className="slf-microlabel">Head Coach</div>
+                  <div className="slf-coach-name">{team.coach.archetype}</div>
+                </button>
+              )}
               <svg className="slf-wire-svg">
                 {wires.map((w) => <line key={w.id} x1={w.x1} y1={w.y1} x2={w.x2} y2={w.y2} className={'slf-wire ' + w.pair.side} />)}
               </svg>
