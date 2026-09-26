@@ -164,6 +164,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   // there's nothing to search for there) — open-slot placeholders aren't real cards and don't
   // match any filter, so they're hidden whenever a filter is actually narrowing the view.
   const [playerSort, setPlayerSort] = useState('position');
+  const sortedStarters = sortPlayers(starters, playerSort);
   const filteredBench = sortPlayers(bench, playerSort);
   const shownBenchOpenSlots = benchOpenSlots;
   const otherHumans = state.teams.filter((t) => t.human && t.id !== team.id);
@@ -506,7 +507,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
               <div className="ts-heading">Players</div>
               <PlayerFilterBar sort={playerSort} onChange={setPlayerSort} />
               <PlayerRosterTable
-                starters={starters}
+                starters={sortedStarters}
                 bench={filteredBench}
                 starterOpenSlots={starterOpenSlots}
                 benchOpenSlots={shownBenchOpenSlots}
@@ -537,7 +538,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                   onTouchEnd={!isDesktop ? handleRotationTouchEnd : undefined}
                 >
                   <div className="ts-roto-grid">
-                    {starters.map((c) => (
+                    {sortedStarters.map((c) => (
                       <div className="ts-roto-slot" key={c.id}>
                         <PlayerCard
                           card={c}

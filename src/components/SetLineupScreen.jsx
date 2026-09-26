@@ -142,6 +142,10 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
   const bench = team.hand.filter((c) => !activeIds.includes(c.id));
   const [playerSort, setPlayerSort] = useState('position');
   const filteredBench = sortPlayers(bench, playerSort);
+  const sortedRosterEntries = sortPlayers(starters.filter(Boolean).concat(bench), playerSort).map((card) => ({
+    card,
+    slotIndex: starters.findIndex((starter) => starter?.id === card.id),
+  }));
   const [selectedId, setSelectedId] = useState(null);
   const [selectedGameplanId, setSelectedGameplanId] = useState('');
   const [gameplanPickerOpen, setGameplanPickerOpen] = useState(false);
@@ -353,32 +357,18 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
                 <div className="slf-microlabel">Players</div>
                 <PlayerFilterBar sort={playerSort} onChange={setPlayerSort} />
                 <div className="slf-bench-row">
-                  {starters.map((c, i) => (
-                    <MiniCard
-                      key={c ? c.id : 'starter-open-' + i}
-                      card={c}
-                      onClick={(c || canEdit) ? () => {
-                        if (c) {
-                          if (canEdit && selectedId != null) placeOnSlot(i);
-                          else setCenteredCard({ type: 'player', card: c });
-                        } else {
-                          placeOnSlot(i);
-                        }
-                      } : undefined}
-                      onRemove={canEdit && c ? () => handleRemove(c) : undefined}
-                      onHoverStart={handleHoverStart}
-                      onHoverEnd={handleHoverEnd}
-                    />
-                  ))}
-                  {filteredBench.map((c) => (
+                  {sortedRosterEntries.map(({ card: c, slotIndex }) => (
                     <MiniCard
                       key={c.id}
                       card={c}
                       selected={selectedId === c.id}
-                      onClick={canEdit ? () => handleBenchClick(c) : undefined}
+                      onClick={slotIndex >= 0
+                        ? () => { if (canEdit && selectedId != null) placeOnSlot(slotIndex); else setCenteredCard({ type: 'player', card: c }); }
+                        : canEdit ? () => handleBenchClick(c) : () => setCenteredCard({ type: 'player', card: c })}
+                      onRemove={canEdit && slotIndex >= 0 ? () => handleRemove(c) : undefined}
                       onHoverStart={handleHoverStart}
                       onHoverEnd={handleHoverEnd}
-                      dim
+                      dim={slotIndex < 0}
                     />
                   ))}
                   {filteredBench.length === 0 && bench.length > 0 && <div className="slf-slot-picker-empty">No players match these filters.</div>}
