@@ -2139,7 +2139,7 @@ body:has(.entry-screen){padding-bottom:0;}
    modal) — sits well above the persistent bar (z-index 15) and every other in-flow overlay in
    the app. No backdrop-click dismiss on purpose: it's meant to be closed deliberately via the
    button or Escape, not brushed away by an accidental click. */
-.tsx-overlay{position:fixed;inset:0;z-index:500;background:rgba(11,17,30,.82);display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto;}
+.tsx-overlay{position:fixed;inset:0;z-index:500;background:rgba(11,17,30,.82);display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto;overscroll-behavior:contain;}
 /* Keep the shell's existing masthead and warning visible while editing a lineup. Installed iOS
    apps also need the safe-area inset because their fixed coordinates begin above the shell's
    status-bar border. */
@@ -2154,7 +2154,7 @@ body:has(.entry-screen){padding-bottom:0;}
    and lines on dark instead of dark-on-cream, since this panel is deliberately its own navy
    surface rather than following the app's light/dark theme toggle. */
 .slf-panel{
-  color:var(--file);width:100%;max-width:480px;max-height:100%;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.55);
+  color:var(--file);width:100%;max-width:480px;max-height:100%;overflow-y:auto;overscroll-behavior:contain;box-shadow:0 24px 60px rgba(0,0,0,.55);
   background-color:var(--ink);
   background-image:
     radial-gradient(circle at 15% 25%, rgba(230,220,196,.08) .6px, transparent .6px),
