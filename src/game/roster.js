@@ -51,6 +51,18 @@ export function validateLineup(team) {
 export function activeStatSum(team) {
   return team.activeIds.reduce((s, id) => { const c = team.hand.find((h) => h.id === id); return c ? s + cardTotal(c) : s; }, 0);
 }
+
+// Bench output is scored separately from the active five in actual matchups, so it should
+// enter season seeding separately too. One displayed bench-output point represents 20 player
+// stat points (the same conversion used by matchup.js's benchScore); keeping that scale here
+// lets a productive second unit improve seeding without receiving starter-only coach or
+// Synergy multipliers.
+export function benchRatingContribution(team) {
+  const active = new Set(team.activeIds || []);
+  const benchTotal = (team.hand || []).filter((card) => !active.has(card.id)).reduce((sum, card) => sum + cardTotal(card), 0);
+  const benchOutput = Math.round(benchTotal / 20) + (team.seasonGameplanEffects?.benchBonus || 0);
+  return benchOutput * 20;
+}
 // Seeding needs to see the same Team Chemistry/Skillset synergy that Proj Offense/Defense
 // (offenseModifier/defenseModifier, below) already apply — otherwise a roster built around
 // chemistry can lead the league in projected output and still seed near the bottom, since the
@@ -67,7 +79,8 @@ export function effectiveRating(team) {
   // one output point equals 20 stat points, so mirror that visible two-sided penalty here:
   // 2 output × 20 = 40 rating per open roster spot. More with Less waives both versions.
   const missingPlayers = team.coach?.modifier === 'More with Less' ? 0 : Math.max(0, 9 - team.hand.length);
-  return Math.max(0, activeStatSum(team) * (1 + (team.coach.offBonus + bonus + team.coach.defBonus + bonus) / 2 + synergyAvg + planAvg) - missingPlayers * 40);
+  const starterRating = activeStatSum(team) * (1 + (team.coach.offBonus + bonus + team.coach.defBonus + bonus) / 2 + synergyAvg + planAvg);
+  return Math.max(0, starterRating + benchRatingContribution(team) - missingPlayers * 40);
 }
 
 // SCO/PLM (offense) and DEF/REB (defense) contributions are scaled per-card by that

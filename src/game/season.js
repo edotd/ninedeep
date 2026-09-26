@@ -5,7 +5,7 @@ import { advanceCareer } from './aging';
 import { shuffle, weightedPick } from './rng';
 import { makeCard, randomArch, randomArchForTier, neededPosition, drawCoachCard, applyCoachRetention, drawMatchupModifierCard, resetMatchupDeck } from './cards';
 import { finalizeCap, rosterSalary } from './economy';
-import { autoSelectFive, effectiveRating, activeStatSum, validateLineup } from './roster';
+import { autoSelectFive, effectiveRating, activeStatSum, benchRatingContribution, validateLineup } from './roster';
 import { retentionBonus, relationshipBonus } from './cards';
 import { handsOffBonus } from './gm';
 import { startDraft, prepareDraftClass } from './draft';
@@ -314,6 +314,7 @@ export function lockSeasonAndSeed(state) {
         staffPct: t.coach ? Math.round(bonus * 1000) / 10 : null,
         synergyOffensePct: synergy?.offense ?? null,
         synergyDefensePct: synergy?.defense ?? null,
+        benchRating: benchRatingContribution(t),
         incompleteRosterPenalty: t.coach?.modifier === 'More with Less' ? 0 : Math.max(0, 9 - t.hand.length) * 40,
         baseRating: Math.round(base * 10) / 10,
         seasonRollPct: Math.round((randomMult - 1) * 1000) / 10,
@@ -328,6 +329,7 @@ export function lockSeasonAndSeed(state) {
         'Raw 4-Stat Sum': raw,
         'Coach+Rel Bonus %': t.coach ? Math.round(bonus * 1000) / 10 : '—',
         'Synergy Off/Def %': synergy ? `${synergy.offense > 0 ? `+${synergy.offense}%` : 'N/A'} / ${synergy.defense > 0 ? `+${synergy.defense}%` : 'N/A'}` : '—',
+        'Bench Rating': benchRatingContribution(t),
         'Effective Rating (incl. synergy)': Math.round(base * 10) / 10,
         'Random Roll': `${Math.round((randomMult - 1) * 1000) / 10}%`,
         'Seeding Card Bonus %': seedingCardPct + (favorableSchedule ? ' +10 (Favorable Schedule)' : ''),
