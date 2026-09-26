@@ -6,7 +6,7 @@ import PlayerCard from '../components/PlayerCard';
 import FrontOfficeCard from '../components/FrontOfficeCard';
 import { PlayerLedgerIdentity, CostBlocks } from '../components/LedgerRow';
 import { formatCoins, rosterSalary, gmCost } from '../game/economy';
-import { jerseyNumber, playerGrade, rawOverall } from '../game/cards';
+import { jerseyNumber, playerGrade } from '../game/cards';
 import { FANBASE_BOOST_COST } from '../game/constants';
 import { sortPlayers } from '../game/playerFilters';
 import MatchupCard from '../components/MatchupCard';
@@ -58,32 +58,9 @@ const ROSTER_TABLE_COLUMNS = [
 // Sort is client-local UI state, not game state — it never affects the underlying activeIds
 // order. Open roster slots always render last, unsorted, same placement as before this became
 // a table.
-function PlayerRosterTable({ starters, bench, starterOpenSlots, benchOpenSlots, selectedId, canEdit, readOnly, onCardClick, onRelease, onDevelop }) {
-  const [sortKey, setSortKey] = useState('role');
-  const [sortDir, setSortDir] = useState('asc');
-
-  const rows = [...starters.map((card) => ({ card, role: 'Starter' })), ...bench.map((card) => ({ card, role: 'Bench' }))];
-  const valueFor = (row, key) => {
-    switch (key) {
-      case 'role': return row.role === 'Starter' ? 0 : 1;
-      case 'position': return row.card.position;
-      case 'number': return jerseyNumber(row.card);
-      case 'grade': return rawOverall(row.card);
-      case 'cost': return row.card.salary;
-      default: return row.card.stats[key];
-    }
-  };
-  const sorted = rows.slice().sort((a, b) => {
-    const av = valueFor(a, sortKey), bv = valueFor(b, sortKey);
-    const cmp = typeof av === 'string' ? av.localeCompare(bv) : av - bv;
-    return sortDir === 'asc' ? cmp : -cmp;
-  });
-
-  const onSort = (key) => {
-    if (key === sortKey) { setSortDir((d) => (d === 'asc' ? 'desc' : 'asc')); return; }
-    setSortKey(key);
-    setSortDir('asc');
-  };
+function PlayerRosterTable({ starters, bench, sort, starterOpenSlots, benchOpenSlots, selectedId, canEdit, readOnly, onCardClick, onRelease, onDevelop }) {
+  const starterIds = new Set(starters.map((card) => card.id));
+  const sorted = sortPlayers(starters.concat(bench), sort).map((card) => ({ card, role: starterIds.has(card.id) ? 'Starter' : 'Bench' }));
 
   return (
     <div className="ts-roto-table-wrap">
@@ -91,11 +68,7 @@ function PlayerRosterTable({ starters, bench, starterOpenSlots, benchOpenSlots, 
         <thead>
           <tr>
             {ROSTER_TABLE_COLUMNS.map((col) => (
-              <th key={col.key}>
-                <button type="button" className={'ts-roto-sort' + (sortKey === col.key ? ' active' : '')} onClick={() => onSort(col.key)}>
-                  {col.label}{sortKey === col.key && <span className="ts-roto-sort-arrow">{sortDir === 'asc' ? '▲' : '▼'}</span>}
-                </button>
-              </th>
+              <th key={col.key}>{col.label}</th>
             ))}
             {!readOnly && <th className="ts-roto-actions-head">Actions</th>}
           </tr>
@@ -164,8 +137,14 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   // there's nothing to search for there) — open-slot placeholders aren't real cards and don't
   // match any filter, so they're hidden whenever a filter is actually narrowing the view.
   const [playerSort, setPlayerSort] = useState('position');
+  const handlePlayerSortChange = (sort) => {
+    setPlayerSort(sort);
+    setRotationIndex(0);
+    rotoScrollRef.current?.scrollTo({ left: 0 });
+  };
   const sortedStarters = sortPlayers(starters, playerSort);
   const filteredBench = sortPlayers(bench, playerSort);
+  const sortedRoster = sortPlayers(team.hand, playerSort);
   const shownBenchOpenSlots = benchOpenSlots;
   const otherHumans = state.teams.filter((t) => t.human && t.id !== team.id);
   const waitingOn = otherHumans.filter((t) => !t.lineupConfirmed);
@@ -245,7 +224,8 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   // Mobile's rotation carousel is one card per swipe (starters then bench, in that order —
   // see the JSX below) — this is how many pages it actually has, so the "more cards" chevron
   // knows when to disappear and the end-of-carousel swipe knows when it's actually at the end.
-  const mobileCardCount = starters.length + starterOpenSlots + filteredBench.length + shownBenchOpenSlots;
+  const mobileCardCount = sortedRoster.length + starterOpenSlots + shownBenchOpenSlots;
+  const currentMobileCard = sortedRoster[rotationIndex];
   const rotationTouchStartX = useRef(null);
   const rotoScrollRef = useRef(null);
   // The scroll container unmounts whenever another tab is showing (showSection below), so its
@@ -475,7 +455,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             {!readOnly && preSeason && committed > cap && <span className="alert-badge" aria-label="Team is over budget">!</span>}
           </button>
           {team.market && (
-            <button className={'ts-tab' + (tab === 'office' ? ' active' : '')} onClick={() => setTab('office')}>League</button>
+            <button className={'ts-tab' + (tab === 'office' ? ' active' : '')} onClick={() => setTab('office')}>League{!readOnly && !state.offseason?.freeAgencyClosed?.[team.id] && <span className="alert-badge" aria-label="League requires attention">!</span>}</button>
           )}
           {!isDesktop && <span className="ts-tab-underline" ref={underlineRef} aria-hidden="true" />}
         </div>
@@ -505,10 +485,11 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           {showSection('rotation') && !isDesktop && viewMode === 'list' && (
             <div className="ts-section" id="team-rotation">
               <div className="ts-heading">Players</div>
-              <PlayerFilterBar sort={playerSort} onChange={setPlayerSort} />
+              <PlayerFilterBar sort={playerSort} onChange={handlePlayerSortChange} />
               <PlayerRosterTable
                 starters={sortedStarters}
                 bench={filteredBench}
+                sort={playerSort}
                 starterOpenSlots={starterOpenSlots}
                 benchOpenSlots={shownBenchOpenSlots}
                 selectedId={selectedId}
@@ -523,8 +504,8 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
 
           {showSection('rotation') && !(!isDesktop && viewMode === 'list') && (
             <div className="ts-section ts-player-carousel" id="team-rotation">
-              {!isRotationLocked && <div className="ts-heading ts-rotation-heading">Players <span>{rotationIndex < 5 ? 'Starters' : 'Bench'}</span></div>}
-              <PlayerFilterBar sort={playerSort} onChange={setPlayerSort} />
+              {!isRotationLocked && <div className="ts-heading ts-rotation-heading">Players <span>{currentMobileCard ? (activeSet.has(currentMobileCard.id) ? 'Starters' : 'Bench') : 'Open'}</span></div>}
+              <PlayerFilterBar sort={playerSort} onChange={handlePlayerSortChange} />
               <div className="ts-roto-viewport">
                 <div
                   key={`rotation-${state.season}-${team.id}`}
@@ -538,12 +519,12 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                   onTouchEnd={!isDesktop ? handleRotationTouchEnd : undefined}
                 >
                   <div className="ts-roto-grid">
-                    {sortedStarters.map((c) => (
+                    {(isDesktop ? sortedStarters : sortedRoster).map((c) => (
                       <div className="ts-roto-slot" key={c.id}>
                         <PlayerCard
                           card={c}
                           selected={selectedId === c.id}
-                          rosterLabel={team.lineupSet ? 'Starter' : undefined}
+                          rosterLabel={team.lineupSet ? (activeSet.has(c.id) ? 'Starter' : 'Bench') : undefined}
                           onClick={canEdit ? () => handleCardClick(c) : undefined}
                           onRelease={canEdit ? handleRelease : undefined}
                           onDevelop={!readOnly && team.developmentPoints > 0 ? setDevelopPlayer : undefined}
@@ -552,18 +533,6 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                       </div>
                     ))}
                     {Array.from({ length: starterOpenSlots }, (_, i) => <div className="ts-roto-slot" key={'starter-open-' + i}><div className="ts-bench-open starter">OPEN STARTER</div></div>)}
-                    {!isDesktop && filteredBench.map((c) => (
-                      <div className="ts-roto-slot" key={c.id}>
-                        <PlayerCard
-                          card={c}
-                          selected={selectedId === c.id}
-                          onClick={canEdit ? () => handleCardClick(c) : undefined}
-                          onRelease={canEdit ? handleRelease : undefined}
-                          onDevelop={!readOnly && team.developmentPoints > 0 ? setDevelopPlayer : undefined}
-                          alwaysShowOptions
-                        />
-                      </div>
-                    ))}
                     {!isDesktop && Array.from({ length: shownBenchOpenSlots }, (_, i) => <div className="ts-roto-slot" key={'open-' + i}><div className="ts-bench-open">OPEN</div></div>)}
                   </div>
                 </div>

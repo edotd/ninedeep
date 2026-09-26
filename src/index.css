@@ -1929,7 +1929,7 @@ html[data-theme="dark"] .wordmark-ink{color:var(--file);}
 .season-breakdown-team b,.season-breakdown-final{font-family:var(--font-display);font-size:17px;font-weight:400;}.season-breakdown-row .positive{color:var(--approved-file);}.season-breakdown-row .negative{color:var(--stamp-ink);}
 .season-breakdown-note{padding:12px 16px;}
 .league-jump-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 14px;}
-.league-jump-button{min-height:48px;border:2px solid var(--franchise);background:var(--franchise);color:var(--ink);font:12px var(--font-label);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;}.league-jump-button:hover{background:#ffb455;}.league-jump-button.free-agency{background:var(--approved-file);border-color:var(--approved-file);}.league-jump-button.free-agency:hover{background:var(--approved-ink);}.league-jump-button.draft{background:var(--file);border-color:var(--file);}
+.league-jump-actions .league-jump-button{min-height:48px;border:2px solid var(--franchise);background:var(--franchise);color:var(--ink);font:12px var(--font-label);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;}.league-jump-actions .league-jump-button:hover{background:#ffb455;}
 .league-output-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
 .league-output-grid>div{display:flex;flex-direction:column;gap:4px;padding:14px;border:1px solid var(--ink-rule);background:var(--ink-deep);color:var(--file);}
 .league-output-grid span,.league-output-grid small{font:10px var(--font-mono);color:var(--ink-muted);}
