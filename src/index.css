@@ -943,6 +943,8 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .ts-hero-tally.down{color:var(--stamp-ink);background:rgba(181,67,31,.18);}
 @keyframes ts-hero-tally-in{from{transform:scale(1.5);opacity:0;}to{transform:scale(1);opacity:1;}}
 .ts-hero-metric.chemistry{padding-left:0;border-left:0;}
+.ts-hero-metric.lineup-stat{cursor:default;}
+.ts-hero-metric.lineup-stat.first{padding-left:0;border-left:0;}
 .ts-hero-metric:disabled{cursor:default;}
 .ts-hero-metric:not(:disabled):hover,.ts-hero-metric.open{background:rgba(255,255,255,.04);}
 .ts-hero-value{font-family:var(--font-display);font-size:46px;line-height:.86;color:var(--file);margin-top:5px;}

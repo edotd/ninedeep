@@ -88,7 +88,7 @@ function MiniCard({ card, selected, onClick, onRemove, dim, onHoverStart, onHove
   );
 }
 
-export default function SetLineupScreen({ state, team, actions, myTeamId, canEdit, onClose }) {
+export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onClose, onPreviewChange }) {
   const isDesktop = useIsDesktop();
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -120,6 +120,19 @@ export default function SetLineupScreen({ state, team, actions, myTeamId, canEdi
   const starters = slotOrder.map((id) => (id ? team.hand.find((c) => c.id === id) || null : null));
   const bench = team.hand.filter((c) => !activeIds.includes(c.id));
   const [selectedId, setSelectedId] = useState(null);
+
+  const previewSignature = starters.map((card) => card?.id ?? 'open').join(',');
+  useEffect(() => {
+    const stats = starters.reduce((totals, card) => {
+      if (!card) return totals;
+      for (const stat of ['SCO', 'PLM', 'REB', 'DEF']) totals[stat] += card.stats?.[stat] || 0;
+      return totals;
+    }, { SCO: 0, PLM: 0, REB: 0, DEF: 0 });
+    onPreviewChange?.({ teamId: team.id, stats });
+    // The player ids are the source of every stat total; card objects themselves remain stable.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previewSignature, team.id, onPreviewChange]);
+  useEffect(() => () => onPreviewChange?.(null), [onPreviewChange]);
 
   // A card is "held" the moment it's selected for placement (the existing tap-to-hold
   // mechanic, which is also mobile's only way to hold a card) or, on desktop only, moused

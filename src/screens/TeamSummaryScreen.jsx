@@ -171,7 +171,7 @@ function StrategyAction({ card, team, state, actions, myTeamId, readOnly }) {
 // regardless of whose file is on screen.
 // Read-only otherwise, organised by category: rotation, budget ledger, front office. No
 // nine-slot navigation here (that's the persistent bar's job on every other screen).
-export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId, onBack, focusSection, onFreeAgency }) {
+export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId, onBack, focusSection, onFreeAgency, onLineupPreviewChange }) {
   // viewTeamId lets this screen show a DIFFERENT team's file — reached by clicking a team in
   // Standings — read-only: no substitutions, releases, or front-office moves, since those
   // actions always take myTeamId regardless of which file is on screen.
@@ -804,12 +804,12 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
         )}
         {lineupScreenOpen && (
           <SetLineupScreen
-            state={state}
             team={team}
             actions={actions}
             myTeamId={myTeamId}
             canEdit={canEdit}
-            onClose={() => setLineupScreenOpen(false)}
+            onPreviewChange={onLineupPreviewChange}
+            onClose={() => { onLineupPreviewChange?.(null); setLineupScreenOpen(false); }}
           />
         )}
       </div>

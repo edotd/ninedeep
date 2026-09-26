@@ -60,8 +60,9 @@ const BREAKDOWN_NOTES = {
   defense: 'Expected Roll is the statistical average of your defense die — (die size + 1) ÷ 2 — used here to project output before any match happens. A real roll can land higher or lower.',
 };
 
-export default function FranchiseMasthead({ state, teamId }) {
+export default function FranchiseMasthead({ state, teamId, lineupPreview }) {
   const team = state.teams[teamId];
+  const lineupStats = lineupPreview?.teamId === teamId ? lineupPreview.stats : null;
   const [openMetric, setOpenMetric] = useState(null);
   const [selectedRow, setSelectedRow] = useState(null);
   // A human team's chemistry/output/offense/defense are only meaningful once they've actually
@@ -73,12 +74,12 @@ export default function FranchiseMasthead({ state, teamId }) {
   const output = lineupReady ? teamOutput(team) : null;
   // Hooks must run unconditionally, so useMetricTally is called before the `!team` bailout
   // below, even though there's nothing meaningful to tally until a team is actually resolved.
-  const { tally, pulsing } = useMetricTally({
+  const { tally, pulsing } = useMetricTally(lineupStats || {
     chemistry: synergy ? synergy.score : null,
     output: output ? output.total : null,
     offense: output ? output.off : null,
     defense: output ? output.def : null,
-  }, teamId);
+  }, `${teamId}:${lineupStats ? 'lineup' : 'franchise'}`);
   if (!team) return null;
   const seasonNum = Math.min(state.season, ERA_LENGTH);
   const outputs = state.teams.map((t) => (t.coach && t.activeIds?.length === 5 && t.lineupSet ? teamOutput(t) : null));
@@ -92,7 +93,7 @@ export default function FranchiseMasthead({ state, teamId }) {
     setSelectedRow(null);
     setOpenMetric((v) => (v === kind ? null : kind));
   };
-  const rows = openMetric && lineupReady ? breakdownRows(openMetric, team, synergy, output) : null;
+  const rows = !lineupStats && openMetric && lineupReady ? breakdownRows(openMetric, team, synergy, output) : null;
 
   const rowExplanation = (label) => {
     const explanations = {
@@ -138,10 +139,18 @@ export default function FranchiseMasthead({ state, teamId }) {
         </div>
       </div>
       <div className="ts-masthead-right persistent">
-        <button type="button" className={'ts-hero-metric chemistry' + (openMetric === 'chemistry' ? ' open' : '') + (pulsing.chemistry ? ' pulsing' : '')} onClick={synergy ? toggleMetric('chemistry') : undefined} disabled={!synergy}>{tallyBadge('chemistry')}<div className="ts-proj-label">Chemistry</div><div className="ts-hero-value">{synergy ? synergy.grade : '—'}</div><div className="ts-proj-rank">{synergy ? synergy.score : '—'}</div></button>
-        <button type="button" className={'ts-hero-metric' + (openMetric === 'output' ? ' open' : '') + (pulsing.output ? ' pulsing' : '')} onClick={output ? toggleMetric('output') : undefined} disabled={!output}>{tallyBadge('output')}<div className="ts-proj-label">Output</div><div className="ts-hero-value accent">{output ? output.total : '—'}</div><div className="ts-proj-rank">{output ? `${ordinal(rankFor('total'))} of ${rankedCount}` : '—'}</div></button>
-        <button type="button" className={'ts-hero-metric' + (openMetric === 'offense' ? ' open' : '') + (pulsing.offense ? ' pulsing' : '')} onClick={output ? toggleMetric('offense') : undefined} disabled={!output}>{tallyBadge('offense')}<div className="ts-proj-label">Offense</div><div className="ts-hero-value">{output ? output.off : '—'}</div><div className="ts-proj-rank">{output ? ordinal(rankFor('off')) : '—'}</div></button>
-        <button type="button" className={'ts-hero-metric' + (openMetric === 'defense' ? ' open' : '') + (pulsing.defense ? ' pulsing' : '')} onClick={output ? toggleMetric('defense') : undefined} disabled={!output}>{tallyBadge('defense')}<div className="ts-proj-label">Defense</div><div className="ts-hero-value">{output ? output.def : '—'}</div><div className="ts-proj-rank">{output ? ordinal(rankFor('def')) : '—'}</div></button>
+        {lineupStats ? ['SCO', 'PLM', 'REB', 'DEF'].map((stat) => (
+          <div key={stat} className={'ts-hero-metric lineup-stat' + (stat === 'SCO' ? ' first' : '') + (pulsing[stat] ? ' pulsing' : '')}>
+            {tallyBadge(stat)}<div className="ts-proj-label">{stat}</div><div className="ts-hero-value">{lineupStats[stat]}</div><div className="ts-proj-rank">Starting Five</div>
+          </div>
+        )) : (
+          <>
+            <button type="button" className={'ts-hero-metric chemistry' + (openMetric === 'chemistry' ? ' open' : '') + (pulsing.chemistry ? ' pulsing' : '')} onClick={synergy ? toggleMetric('chemistry') : undefined} disabled={!synergy}>{tallyBadge('chemistry')}<div className="ts-proj-label">Chemistry</div><div className="ts-hero-value">{synergy ? synergy.grade : '—'}</div><div className="ts-proj-rank">{synergy ? synergy.score : '—'}</div></button>
+            <button type="button" className={'ts-hero-metric' + (openMetric === 'output' ? ' open' : '') + (pulsing.output ? ' pulsing' : '')} onClick={output ? toggleMetric('output') : undefined} disabled={!output}>{tallyBadge('output')}<div className="ts-proj-label">Output</div><div className="ts-hero-value accent">{output ? output.total : '—'}</div><div className="ts-proj-rank">{output ? `${ordinal(rankFor('total'))} of ${rankedCount}` : '—'}</div></button>
+            <button type="button" className={'ts-hero-metric' + (openMetric === 'offense' ? ' open' : '') + (pulsing.offense ? ' pulsing' : '')} onClick={output ? toggleMetric('offense') : undefined} disabled={!output}>{tallyBadge('offense')}<div className="ts-proj-label">Offense</div><div className="ts-hero-value">{output ? output.off : '—'}</div><div className="ts-proj-rank">{output ? ordinal(rankFor('off')) : '—'}</div></button>
+            <button type="button" className={'ts-hero-metric' + (openMetric === 'defense' ? ' open' : '') + (pulsing.defense ? ' pulsing' : '')} onClick={output ? toggleMetric('defense') : undefined} disabled={!output}>{tallyBadge('defense')}<div className="ts-proj-label">Defense</div><div className="ts-hero-value">{output ? output.def : '—'}</div><div className="ts-proj-rank">{output ? ordinal(rankFor('def')) : '—'}</div></button>
+          </>
+        )}
       </div>
       {rows && (
         <div className="ts-masthead-breakdown">

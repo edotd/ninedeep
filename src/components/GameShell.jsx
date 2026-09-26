@@ -98,6 +98,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
   const [mobileTopHeight, setMobileTopHeight] = useState(0);
   const desktopTopRef = useRef(null);
   const [desktopTopHeight, setDesktopTopHeight] = useState(0);
+  const [lineupPreview, setLineupPreview] = useState(null);
   const persistentBarRef = useRef(null);
   const [persistentBarHeight, setPersistentBarHeight] = useState(0);
   const [overlay, setOverlay] = useState(null); // null | 'glossary' | 'settings' | 'standings' | 'team' | 'freeagency' | 'draftclass' | 'cardtypes'
@@ -297,14 +298,14 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
   if (overlay === 'glossary') overlayBody = <GlossaryScreen key={screenKey} state={state} onBack={close} />;
   else if (overlay === 'settings') overlayBody = <SettingsScreen key={screenKey} state={state} actions={actions} onBack={close} onNewEra={onNewEra} onDeleteRoom={onDeleteRoom} hostNotifications={hostNotifications} />;
   else if (overlay === 'standings') overlayBody = <LeagueScreen key={screenKey} state={state} myTeamId={myTeamId} onBack={close} onViewTeam={(id) => openTeamView(id, 'standings')} />;
-  else if (overlay === 'team') overlayBody = <TeamSummaryScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} viewTeamId={viewTeamId} onBack={closeTeamView} focusSection={teamFocus} onFreeAgency={openFreeAgency} />;
+  else if (overlay === 'team') overlayBody = <TeamSummaryScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} viewTeamId={viewTeamId} onBack={closeTeamView} focusSection={teamFocus} onFreeAgency={openFreeAgency} onLineupPreviewChange={setLineupPreview} />;
   else if (overlay === 'freeagency') overlayBody = <FreeAgencyScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
   else if (overlay === 'draftclass') overlayBody = <DraftClassScreen key={screenKey} state={state} onBack={close} />;
   else if (overlay === 'cardtypes') overlayBody = <CardOverviewScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
 
   const Screen = SCREENS[effectivePhase];
   const mainBody = overlayBody || (Screen
-    ? <Screen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onViewTeam={(id) => openTeamView(id, null)} onFreeAgency={openFreeAgency} onEndGame={onNewEra} dealProgress={dealProgress} onDealProgress={setDealProgress} onDealDone={() => setPastDeal(true)} />
+    ? <Screen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onViewTeam={(id) => openTeamView(id, null)} onFreeAgency={openFreeAgency} onEndGame={onNewEra} dealProgress={dealProgress} onDealProgress={setDealProgress} onDealDone={() => setPastDeal(true)} onLineupPreviewChange={setLineupPreview} />
     : (
       <div className="screen">
         <h1>Something broke</h1>
@@ -318,7 +319,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
       <div className="desktop-shell" style={{ '--desktop-persistent-top-height': `${desktopTopHeight}px` }}>
         <Sidebar state={state} myTeamId={myTeamId} overlay={navOverlay} pageLabel={pageLabel} viewTeamId={viewTeamId} onNav={handleNav} onViewTeam={(id) => openTeamView(id, overlay)} onAcknowledgeNav={acknowledgeNav} roomCode={roomCode} freeAgencyAlert={freeAgencyAlert} freeAgencyLocked={freeAgencyLocked} />
         <div className="desktop-content">
-          <div className="desktop-persistent-top" ref={desktopTopRef}><FranchiseMasthead state={state} teamId={mastheadTeamId} /></div>
+          <div className="desktop-persistent-top" ref={desktopTopRef}><FranchiseMasthead state={state} teamId={mastheadTeamId} lineupPreview={lineupPreview} /></div>
           {mainBody}
         </div>
         {showBar && <DesktopBar state={state} myTeamId={myTeamId} actions={actions} dealProgress={dealProgress} />}
@@ -337,7 +338,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
         '--app-safe-bottom': `${viewportPx.safeBottom}px`,
       } : {}),
     }}>
-      {showChrome && <div className="mobile-persistent-top" ref={mobileTopRef}><Header {...headerProps} /><FranchiseMasthead state={state} teamId={mastheadTeamId} /></div>}
+      {showChrome && <div className="mobile-persistent-top" ref={mobileTopRef}><Header {...headerProps} /><FranchiseMasthead state={state} teamId={mastheadTeamId} lineupPreview={lineupPreview} /></div>}
       {mainBody}
       {showBar && <PersistentBar ref={persistentBarRef} state={state} myTeamId={myTeamId} overlay={overlay} onNavigate={openTeamSection} onFreeAgency={openFreeAgency} freeAgencyLocked={freeAgencyLocked} dealProgress={dealProgress} />}
       <ScrollToTopButton />
