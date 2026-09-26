@@ -109,6 +109,10 @@ test('season roll variance is limited to plus or minus 2.5 percent', () => {
 test('incomplete rosters lose seeding rating unless the coach has More with Less', () => {
   const state = game();
   const team = state.teams[0];
+  // Coaches are drawn randomly and may land on More with Less, which would waive the very
+  // penalty this test checks for before we get a chance to assert on it — pin a coach that
+  // doesn't waive the penalty so the first assertion below is deterministic.
+  team.coach.modifier = 'Strategist';
   team.hand.forEach((player) => { if (player.skillsetId === 'skill-03') player.skillsetId = null; });
   const completeRating = effectiveRating(team);
   const benchRating = benchRatingContribution(team);
