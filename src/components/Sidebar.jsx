@@ -34,7 +34,7 @@ const SUPPORT_NAV_ITEMS = [
 // into the sidebar's vertical list. Team was dropped for a while when the persistent bar
 // alone covered the roster/front-office/matchup view, but it's the only way to reach the
 // front-office moves (fire coach or GM, invest in fanbase), so it's back.
-export default function Sidebar({ state, myTeamId, overlay, pageLabel, viewTeamId, onNav, onViewTeam, onAcknowledgeNav, roomCode, freeAgencyAlert, freeAgencyLocked }) {
+export default function Sidebar({ state, myTeamId, overlay, pageLabel, viewTeamId, onNav, onViewTeam, roomCode, freeAgencyAlert, freeAgencyLocked }) {
   const team = state.teams[myTeamId];
   const seasonNum = Math.min(state.season, ERA_LENGTH);
   // The Team overlay is showing someone else's file (opened from a standings row) when
@@ -61,12 +61,11 @@ export default function Sidebar({ state, myTeamId, overlay, pageLabel, viewTeamI
     <div className="sidebar">
       {/* Unlike the mobile topbar's logo (Header.jsx), this one doesn't open anything — the
           sidebar's nav is always visible already — so it never needs the nav-attention
-          treatment; onAcknowledgeNav still fires on click so a desktop user can dismiss the
-          same to-do state some other way. */}
-      <button type="button" className="sidebar-lockup" onClick={onAcknowledgeNav} aria-label="Nine Deep menu">
+          treatment, and there's nothing for a click here to do. */}
+      <div className="sidebar-lockup" aria-hidden="true">
         <BallMark size={36} variant="onInk" />
         <AnimatedPageLabel key={pageLabel} page={pageLabel} />
-      </button>
+      </div>
       <div className="sidebar-team">{team.name}</div>
       {roomCode && <div className="sidebar-room-code" title="Share this code so others can join this room">Room {roomCode}</div>}
       <nav className="sidebar-nav">

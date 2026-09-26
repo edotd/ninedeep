@@ -53,7 +53,6 @@ export default function FreeAgencyScreen({ state, actions, myTeamId, onBack, onG
     <div className="screen">
       <div className="screen-kicker">League Personnel Wire</div>
       <h1>Free Agency</h1>
-      <p className="lede">Free agency stays open through the draft. Review offers, sign or bid on players, then close it out before you confirm your lineup for the season.</p>
       <div className="fa-close-panel">
         {!closed && <div className="fa-close-warning"><span className="alert-badge" aria-label="Action required">!</span> Action required before the season can begin</div>}
         <button

@@ -102,14 +102,6 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
   const persistentBarRef = useRef(null);
   const [persistentBarHeight, setPersistentBarHeight] = useState(0);
   const [overlay, setOverlay] = useState(null); // null | 'glossary' | 'settings' | 'standings' | 'team' | 'freeagency' | 'draftclass' | 'cardtypes'
-  const navAttentionKey = `nine-deep-nav-seen:${state.eraId || state.teamName || state.teams?.map((team) => team.name).join('|')}:${myTeamId}`;
-  const [navNeedsAttention, setNavNeedsAttention] = useState(() => {
-    try { return localStorage.getItem(navAttentionKey) !== '1'; } catch { return true; }
-  });
-  const acknowledgeNav = () => {
-    setNavNeedsAttention(false);
-    try { localStorage.setItem(navAttentionKey, '1'); } catch { /* storage can be unavailable */ }
-  };
   // Clicking another team in Standings opens the Team overlay on THEIR file instead of the
   // caller's own (viewTeamId), remembering whatever overlay (or none, for a phase screen like
   // StandingsScreen) was showing so Back returns there rather than dumping out to the base game.
@@ -288,8 +280,13 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
     onDraftClass: () => toggleOverlay('draftclass'),
     freeAgencyAlert,
     freeAgencyLocked,
-    navNeedsAttention,
-    onAcknowledgeNav: acknowledgeNav,
+    // The hamburger/logo menu trigger itself pulses only when something inside the menu
+    // actually needs attention — right now that's exactly freeAgencyAlert, the same condition
+    // that badges the Free Agency item within the menu. This used to be a one-time "have you
+    // ever opened this menu" localStorage nudge instead, which showed on every fresh era
+    // regardless of whether anything needed doing, and then never came back once dismissed even
+    // if something later genuinely did.
+    navNeedsAttention: freeAgencyAlert,
     roomCode,
     pageLabel,
   };
@@ -320,7 +317,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
   if (isDesktop && showChrome) {
     return (
       <div className="desktop-shell" style={{ '--desktop-persistent-top-height': `${desktopTopHeight}px` }}>
-        <Sidebar state={state} myTeamId={myTeamId} overlay={navOverlay} pageLabel={pageLabel} viewTeamId={viewTeamId} onNav={handleNav} onViewTeam={(id) => openTeamView(id, overlay)} onAcknowledgeNav={acknowledgeNav} roomCode={roomCode} freeAgencyAlert={freeAgencyAlert} freeAgencyLocked={freeAgencyLocked} />
+        <Sidebar state={state} myTeamId={myTeamId} overlay={navOverlay} pageLabel={pageLabel} viewTeamId={viewTeamId} onNav={handleNav} onViewTeam={(id) => openTeamView(id, overlay)} roomCode={roomCode} freeAgencyAlert={freeAgencyAlert} freeAgencyLocked={freeAgencyLocked} />
         <div className="desktop-content">
           <div className="desktop-persistent-top" ref={desktopTopRef}><FranchiseMasthead state={state} teamId={mastheadTeamId} lineupPreview={lineupPreview} /></div>
           {mainBody}

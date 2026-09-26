@@ -184,12 +184,16 @@ p.lede{color:var(--file-body);font-size:14px;line-height:1.5;margin:0 0 14px;}
        the masthead comes after Header, so it was painting over the dropdown outright.
      - .mobile-persistent-top itself only ever matched the persistent bar's z-index:6 at the
        .mobile-shell level, so the bar could still poke through above the whole header.
-     Bumping both here (rather than a permanent, always-on z-index) keeps the normal stacking
-     order intact everywhere else, including right after the menu closes. */
-  .topbar:has(.topbar-nav.open){z-index:8;}
-  .mobile-persistent-top:has(.topbar-nav.open){z-index:50;}
-  .topbar-menu-backdrop{position:fixed;inset:0;z-index:19;background:rgba(8,18,38,.55);}
-  .topbar-nav{display:none;position:absolute;top:100%;left:16px;z-index:20;flex-direction:column;gap:0;overflow-x:visible;background:var(--ink);border:1px solid var(--ink-rule);box-shadow:0 14px 30px rgba(0,0,0,.45);padding:6px;min-width:190px;}
+     Bumped well past 540 (the highest full-screen overlay elsewhere, Set Lineup's own nested
+     modals) rather than just past the persistent bar — this menu is how you navigate AWAY from
+     whatever screen is open, including a full-screen one, so it has to paint above all of them,
+     not just the chrome underneath. Bumping both here (rather than a permanent, always-on
+     z-index) keeps the normal stacking order intact everywhere else, including right after the
+     menu closes. */
+  .topbar:has(.topbar-nav.open){z-index:600;}
+  .mobile-persistent-top:has(.topbar-nav.open){z-index:600;}
+  .topbar-menu-backdrop{position:fixed;inset:0;z-index:600;background:rgba(8,18,38,.55);}
+  .topbar-nav{display:none;position:absolute;top:100%;left:16px;z-index:601;flex-direction:column;gap:0;overflow-x:visible;background:var(--ink);border:1px solid var(--ink-rule);box-shadow:0 14px 30px rgba(0,0,0,.45);padding:6px;min-width:190px;}
   .topbar-nav.open{display:flex;}
   .topbar-nav .reset-link{width:100%;text-align:left;padding:11px 12px;}
 }
@@ -629,7 +633,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .desktop-shell{display:flex;min-height:100vh;}
 
 .sidebar{width:220px;flex-shrink:0;background:var(--ink-deep);display:flex;flex-direction:column;padding:24px 18px;box-sizing:border-box;position:sticky;top:0;height:100vh;}
-.sidebar-lockup{display:flex;align-items:center;gap:10px;margin-bottom:10px;background:none;border:0;padding:0;width:fit-content;cursor:pointer;text-align:left;color:inherit;}
+.sidebar-lockup{display:flex;align-items:center;gap:10px;margin-bottom:10px;width:fit-content;color:inherit;}
 .sidebar-team{font-family:var(--font-mono);font-size:12px;color:var(--ink-muted);margin-bottom:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sidebar-room-code{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--franchise);margin:-12px 0 16px;}
 .sidebar-nav{display:flex;flex-direction:column;gap:3px;flex:0 0 auto;}

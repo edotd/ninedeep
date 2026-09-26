@@ -869,7 +869,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                       ) : msg === 'Resolve team budget' ? (
                         <button type="button" onClick={() => { setShowSeasonIssues(false); setTab('ledger'); }}>Budget</button>
                       ) : msg.startsWith('Resolve your roster') ? (
-                        <button type="button" onClick={() => { setShowSeasonIssues(false); onFreeAgency?.(); }}>{msg}</button>
+                        <button type="button" onClick={() => { setShowSeasonIssues(false); setTab('ledger'); }}>{msg}</button>
                       ) : msg === 'Close out free agency' ? (
                         <button type="button" onClick={() => { setShowSeasonIssues(false); onFreeAgency?.(); }}>Free Agency</button>
                       ) : msg}
