@@ -6,6 +6,12 @@ import { useIsDesktop } from '../hooks/useIsDesktop';
 import PlayerCard from './PlayerCard';
 import FrontOfficeCard from './FrontOfficeCard';
 import FranchiseMasthead from './FranchiseMasthead';
+import Header from './Header';
+
+// Header's nav items (Free Agency, Standings, …) don't apply inside this modal — there's
+// nowhere for them to navigate to from here, so every callback is a no-op. The logo, page
+// name, franchise name, and era bar are the point; Back (in the footer) is the only real exit.
+const noop = () => {};
 
 // Shown once per browser — the first time anyone opens this editor, not once per team/era, so
 // re-explaining after a fresh solo game or a new room would be redundant.
@@ -249,10 +255,20 @@ export default function SetLineupScreen({ state, team, actions, myTeamId, canEdi
   return (
     <div className="tsx-overlay" role="dialog" aria-modal="true" aria-label="Your Lineup">
       <div className="slf-panel">
-        <div className="slf-head">
-          <h2 className="slf-title">Your Lineup</h2>
-        </div>
-
+        <Header
+          state={draftState}
+          myTeamId={team.id}
+          pageLabel="Your Lineup"
+          overlay={null}
+          onTeam={noop}
+          onFreeAgency={noop}
+          onDraftClass={noop}
+          onGlossary={noop}
+          onStandings={noop}
+          onSettings={noop}
+          navNeedsAttention={false}
+          onAcknowledgeNav={noop}
+        />
         <FranchiseMasthead state={draftState} teamId={team.id} />
 
         <p className="slf-note">{canEdit ? 'Set your lineup. Lines between players show how pairings affect your team’s offense and/or defense.' : 'Your lineup. Lines between players show how pairings affect your team’s offense and/or defense.'}</p>

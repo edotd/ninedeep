@@ -2158,12 +2158,11 @@ body:has(.entry-screen){padding-bottom:0;}
   background-size:6px 6px,9px 9px,11px 11px,8px 8px,13px 13px,100% 100%,100% 100vh;
   background-repeat:repeat,repeat,repeat,repeat,repeat,no-repeat,repeat-y;
 }
-.slf-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:20px 24px 12px;border-bottom:2px solid var(--franchise);}
-/* The masthead is sticky by default so it stays put while the APP's own page scrolls — nested
-   here inside this modal's own scroll area, that sticky position is exactly what earlier made
-   the (now-removed) live-projections bar overlap the app's top bar. Plain in-flow instead. */
-.slf-panel .persistent-franchise-masthead{position:relative;top:auto;border-bottom:1px solid var(--ink-rule);}
-.slf-title{font-family:var(--font-display);font-size:24px;line-height:1.1;color:var(--file);text-transform:uppercase;}
+/* The topbar/masthead are sticky by default so they stay put while the APP's own page scrolls —
+   nested here inside this modal's own scroll area, that sticky position is exactly what earlier
+   made the (now-removed) live-projections bar overlap the app's top bar. Plain in-flow instead. */
+.slf-panel .topbar,.slf-panel .persistent-franchise-masthead{position:relative;top:auto;}
+.slf-panel .persistent-franchise-masthead{border-bottom:1px solid var(--ink-rule);}
 /* Auto Set Lineup and Save Lineup sit side by side in the footer (design ask: "move the
    auto-set lineup and save lineups buttons to the bottom of the screen"), above the Back
    button rather than up in the header. */
