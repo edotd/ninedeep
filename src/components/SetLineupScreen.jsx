@@ -129,7 +129,10 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
   const [hoveredId, setHoveredId] = useState(null);
   const handleHoverStart = (cardId) => setHoveredId(cardId);
   const handleHoverEnd = (cardId) => setHoveredId((cur) => (cur === cardId ? null : cur));
-  const previewId = hoveredId ?? selectedId;
+  // Mobile has no real hover — some touch browsers still fire a synthetic mouseenter on first
+  // tap, which would otherwise pop the preview on a plain tap rather than an actual hold. Only
+  // trust hover on desktop; mobile shows the preview solely for a genuinely held (selected) card.
+  const previewId = isDesktop ? (hoveredId ?? selectedId) : selectedId;
   const previewCard = previewId != null ? team.hand.find((c) => c.id === previewId) || null : null;
 
   // Live projection against the DRAFT five, not the team's last-saved activeIds — this is what
@@ -243,6 +246,16 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
   return (
     <div className="tsx-overlay" role="dialog" aria-modal="true" aria-label="Your Lineup">
       <div className="slf-panel">
+        <div className="slf-head">
+          <h2 className="slf-title">Your Lineup</h2>
+          {canEdit && (
+            <div className="slf-head-actions">
+              <button type="button" className="slf-auto-set" onClick={handleAutoSet}><span aria-hidden="true">↻</span> Auto Set Lineup</button>
+              <button type="button" className="slf-save-btn" onClick={handleSave}>Save Lineup</button>
+            </div>
+          )}
+        </div>
+
         {!isDesktop && liveOutput && (
           <div className="slf-live-bar">
             <div className={'slf-live-metric' + (livePulsing.offense ? ' pulsing' : '')}>
@@ -263,18 +276,9 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
           </div>
         )}
 
-        <div className="slf-head">
-          <h2 className="slf-title">Your Lineup</h2>
-          <div className="slf-synergy-totals">
-            <span className="off">Offense +{synergy.skillOffense}</span>
-            <span className="def">Defense +{synergy.skillDefense}</span>
-          </div>
-          {canEdit && (
-            <div className="slf-head-actions">
-              <button type="button" className="slf-auto-set" onClick={handleAutoSet}><span aria-hidden="true">↻</span> Auto Set Lineup</button>
-              <button type="button" className="slf-save-btn" onClick={handleSave}>Save Lineup</button>
-            </div>
-          )}
+        <div className="slf-synergy-totals">
+          <span className="off">Offense +{synergy.skillOffense}</span>
+          <span className="def">Defense +{synergy.skillDefense}</span>
         </div>
 
         <p className="slf-note">{canEdit ? 'Set your lineup. Lines between players show how pairings affect your team’s offense and/or defense.' : 'Your lineup. Lines between players show how pairings affect your team’s offense and/or defense.'}</p>
@@ -294,6 +298,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
 
         <div className="slf-columns">
           <div className="slf-court-col">
+            <div className="slf-microlabel slf-starters-label">Starters</div>
             <div className="slf-court" ref={courtRef}>
               <CourtLines />
               <svg className="slf-wire-svg">
@@ -327,8 +332,23 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
 
           <div className="slf-sideline">
             <div className="slf-bench">
-              <div className="slf-microlabel">Bench</div>
+              {/* Every roster card in one grid — the starters (row one, five slots, matching
+                  the court above) followed by the bench (row two) — a flat, tappable list
+                  covering the same ground as the court diagram for whoever finds floating
+                  court positions fiddly to hit, especially on a phone. */}
+              <div className="slf-microlabel">Players</div>
               <div className="slf-bench-row">
+                {starters.map((c, i) => (
+                  <MiniCard
+                    key={c ? c.id : 'starter-open-' + i}
+                    card={c}
+                    selected={c != null && selectedId === c.id}
+                    onClick={canEdit ? () => (c && selectedId == null ? holdCard(c.id) : placeOnSlot(i)) : undefined}
+                    onRemove={canEdit && c ? () => handleRemove(c) : undefined}
+                    onHoverStart={handleHoverStart}
+                    onHoverEnd={handleHoverEnd}
+                  />
+                ))}
                 {bench.map((c) => (
                   <MiniCard
                     key={c.id}
@@ -340,7 +360,6 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
                     dim
                   />
                 ))}
-                {bench.length === 0 && <span className="slf-bench-empty">No bench players.</span>}
               </div>
             </div>
           </div>

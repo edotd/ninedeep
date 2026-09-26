@@ -2146,7 +2146,10 @@ body:has(.entry-screen){padding-bottom:0;}
 /* The only thing in the header's upper-right corner now that there's no close button
    (Save/Close live in the footer instead) — see slf-footer below. Sized and center-aligned
    against the title on the same row, not a small afterthought tucked in the corner. */
-.slf-synergy-totals{display:flex;flex-direction:row;align-items:center;gap:18px;font-family:var(--font-mono);font-size:17px;font-weight:600;white-space:nowrap;}
+/* Docked right under the live-output bar (design ask), not in the title row — the skillset
+   synergy bonus is a different number (a % modifier) from that bar's own projected totals, but
+   belongs in the same "here's your lineup's numbers" cluster at the top. */
+.slf-synergy-totals{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:18px;padding:10px 24px;border-bottom:1px solid var(--ink-rule);font-family:var(--font-mono);font-size:15px;font-weight:600;flex-wrap:wrap;}
 .slf-synergy-totals .off{color:var(--franchise);}
 .slf-synergy-totals .def{color:var(--approved-ink);}
 /* Auto Set Lineup and Save Lineup sit side by side (design ask: "move the save lineups button
@@ -2196,17 +2199,18 @@ body:has(.entry-screen){padding-bottom:0;}
 .slf-microlabel{font-family:var(--font-label);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--file-muted);margin-bottom:6px;}
 .slf-bench{flex:1;min-width:0;}
 .slf-bench-row{display:flex;gap:8px;flex-wrap:wrap;}
-.slf-bench-empty{font-family:var(--font-mono);font-size:11px;color:var(--file-muted);}
 .slf-coach{align-self:center;width:fit-content;max-width:100%;background:var(--form);border:2px solid var(--franchise);padding:8px 14px;box-sizing:border-box;text-align:center;}
 .slf-coach-name{font-family:var(--font-label);font-size:12px;text-transform:uppercase;color:var(--ink);margin-top:2px;white-space:nowrap;}
 .slf-footer{padding:18px 24px 22px;display:flex;gap:10px;}
 .slf-footer button{flex:1;}
 
-/* Persistent live-output bar, mobile only (design ask: "a persistent bar at the top of this
-   page on mobile") — the draft five's own projected Offense/Defense/Bench, reacting to every
-   swap with the same glow+tally treatment as the main franchise masthead (see
-   hooks/useMetricTally.js and .ts-hero-tally/.ts-hero-metric.pulsing, reused here). */
-.slf-live-bar{position:sticky;top:0;z-index:2;display:grid;grid-template-columns:repeat(3,1fr);background:var(--ink);border-bottom:2px solid var(--franchise);}
+/* Live-output bar, mobile only (design ask: "a persistent bar at the top of this page on
+   mobile") — the draft five's own projected Offense/Defense/Bench, reacting to every swap with
+   the same glow+tally treatment as the main franchise masthead (see hooks/useMetricTally.js and
+   .ts-hero-tally/.ts-hero-metric.pulsing, reused here). Sits right under the title, in normal
+   flow rather than pinned — a sticky position here rendered under the app's own top bar on some
+   phones instead of staying inside this modal. */
+.slf-live-bar{display:grid;grid-template-columns:repeat(3,1fr);background:var(--ink);border-bottom:2px solid var(--franchise);}
 .slf-live-metric{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 6px;border-left:1px solid var(--ink-rule);}
 .slf-live-metric:first-child{border-left:0;}
 .slf-live-metric.pulsing{animation:ts-hero-pulse 1s ease-out;}
@@ -2245,10 +2249,11 @@ body:has(.entry-screen){padding-bottom:0;}
 
 @media(max-width:999px){
   .deal-intro{display:none;}
-  /* A single scrollable row, not a wrap — "bench cards on a single row at the bottom" — since
-     up to four 104px cards don't all fit a phone-width panel without one. */
-  .slf-bench-row{flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;padding-bottom:4px;-webkit-overflow-scrolling:touch;}
-  .slf-bench-row .slf-card-wrap{flex-shrink:0;}
+  /* A wrapping grid, five per row — "Players... two rows, first row 5 cards, second row 4
+     cards" for the normal 9-man roster (5 fit the first row, the rest wrap to a second). */
+  .slf-bench-row{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;justify-content:stretch;}
+  .slf-bench-row .slf-card-wrap{width:100%;}
+  .slf-bench-row .slf-card{width:100%;}
   .ts-tabbar,.bracket-round-tabbar{position:sticky;top:var(--mobile-persistent-top-height,0px);z-index:4;box-shadow:0 3px 8px rgba(0,0,0,.22);}
   .ts-player-carousel{position:relative;}
   .ts-rotation-heading{display:flex;align-items:baseline;gap:9px;}
