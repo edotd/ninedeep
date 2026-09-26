@@ -83,6 +83,12 @@
 @media(max-width:680px){.offseason-file{margin:0 0 110px;min-height:0;border-inline:0;box-shadow:none}.of-title{font-size:25px}.of-title span{display:none}.of-index>div{padding:9px 5px;font-size:8px;text-align:center}.of-index small,.of-index em{font-size:7px}.of-content{padding:14px 16px;max-height:none;overflow:visible}.of-content h1{font-size:38px}.of-table-head,.of-table-row{grid-template-columns:1fr 78px 42px;gap:6px;padding:9px 6px}.of-ledger{font-size:8px;padding:10px;flex-wrap:wrap}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body,#root{margin:0;padding:0;background:var(--file);color:var(--ink);font-family:var(--font-mono);}
+/* Without this, any descendant that's even a few pixels wider than the viewport (a bracket
+   diagram row, a stray min-width) makes the WHOLE page pan horizontally on a swipe, not just
+   that element — the playoff bracket screens hit this on mobile. A component that genuinely
+   needs to scroll sideways (see .bracket-tree-scroll) still can: it declares its own
+   overflow-x on itself, which this rule on the page root doesn't affect. */
+html,body{overflow-x:hidden;}
 body{min-height:100vh;padding-bottom:138px;}
 @media (display-mode:standalone) and (max-width:999px){
   /* Installed iOS apps draw into the status-bar area. Reserve that inset inside the app shell
@@ -1233,13 +1239,17 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .t2-teamboard:nth-of-type(2){border-top:1px solid var(--ink-rule);}
 .t2-teamboard.active{background:rgba(240,160,61,.05);}
 .t2-teamboard.flip{flex-direction:column-reverse;}
-.t2-teamboard-meta{display:grid;grid-template-columns:220px minmax(0,1fr) 220px;align-items:center;gap:14px;min-width:0;}
-.t2-teamboard-meta>.t2-coach-dock{grid-column:1;grid-row:1;}
-.t2-teamboard.flip .t2-teamboard-meta>.t2-coach-dock{grid-column:3;}
-/* Gameplan and Adjustment form one pair opposite the coach, mirrored with the team board. */
-.t2-teamboard-meta>.t2-card-docks{grid-column:3;grid-row:1;display:flex;align-items:center;justify-content:center;gap:10px;min-width:0;}
-.t2-teamboard.flip .t2-teamboard-meta>.t2-card-docks{grid-column:1;}
-.t2-teamboard-name{grid-column:2;grid-row:1;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-width:0;}
+/* Two stacked rows: the coach+name row, and Gameplan/Adjustment below it — reversed for the
+   flipped (top) team so its cards sit above its name instead, mirroring the team board itself. */
+.t2-teamboard-meta{display:flex;flex-direction:column;gap:10px;min-width:0;}
+.t2-teamboard.flip .t2-teamboard-meta{flex-direction:column-reverse;}
+.t2-teamboard-toprow{display:grid;grid-template-columns:220px minmax(0,1fr);align-items:center;gap:14px;min-width:0;}
+.t2-teamboard-toprow>.t2-coach-dock{grid-column:1;}
+.t2-teamboard.flip .t2-teamboard-toprow{grid-template-columns:minmax(0,1fr) 220px;}
+.t2-teamboard.flip .t2-teamboard-toprow>.t2-coach-dock{grid-column:2;}
+.t2-teamboard.flip .t2-teamboard-toprow>.t2-teamboard-name{grid-column:1;}
+.t2-teamboard-meta>.t2-card-docks{display:flex;align-items:center;justify-content:center;gap:10px;min-width:0;}
+.t2-teamboard-name{text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-width:0;}
 .t2-teamboard-name-line{display:flex;align-items:center;justify-content:center;gap:12px;min-width:0;width:100%;}
 .t2-hca-tag{display:inline-block;font-family:var(--font-label);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--franchise);border:1px solid var(--franchise);padding:3px 8px;}
 .t2-teamboard-name-text{font-family:var(--font-display);font-size:26px;color:var(--file);line-height:1;}
@@ -1263,7 +1273,8 @@ button.t2-adjustment-mini.empty.pulsing{cursor:pointer;}
 .t2-coach-dock{display:flex;align-items:center;gap:5px;min-width:0;max-width:100%;position:relative;z-index:5;}
 .t2-coach-dock .nd2-coach-slot{min-width:0;flex:1 1 160px;}
 .t2-teamboard.flip .t2-coach-dock{flex-direction:row-reverse;}
-.t2-gameplan-mini{width:90px;height:90px;box-sizing:border-box;position:relative;display:flex;align-items:center;justify-content:center;border:2px solid var(--franchise);background:var(--ink);color:var(--franchise);}
+.t2-gameplan-mini{width:90px;height:90px;box-sizing:border-box;position:relative;display:flex;align-items:center;justify-content:center;border:2px solid var(--franchise);background:var(--ink);color:var(--franchise);padding:0;font:inherit;cursor:default;}
+button.t2-gameplan-mini.empty.pulsing{cursor:pointer;}
 .t2-gameplan-mini.empty,.t2-adjustment-mini.empty{border-style:dashed;border-color:var(--ink-rule);background:none;}
 /* The icon is the point of an empty slot ("this is a Gameplan/Adjustment slot") — the "+" is
    just a secondary "empty, tap to fill" cue, so it sits as a small corner badge rather than a
@@ -1492,7 +1503,9 @@ button.t2-adjustment-mini.empty.pulsing{cursor:pointer;}
 @media (max-width:480px){
   .t2-shell{padding:14px 10px;}
   .t2-teamboard{padding:12px 10px;gap:8px;}
-  .t2-teamboard-meta{grid-template-columns:112px minmax(0,1fr) 112px;gap:5px;}
+  .t2-teamboard-meta{gap:5px;}
+  .t2-teamboard-toprow{grid-template-columns:112px minmax(0,1fr);}
+  .t2-teamboard.flip .t2-teamboard-toprow{grid-template-columns:minmax(0,1fr) 112px;}
   .nd2-tile{flex-basis:58px;min-width:58px;}
   .nd2-tile.empty{min-height:88px;}
   .nd2-tile-jersey{font-size:16px;}
@@ -1542,7 +1555,8 @@ button.t2-adjustment-mini.empty.pulsing{cursor:pointer;}
   .desktop-content:has(.t2-shell) .nd2-tile{min-width:0;flex-basis:0;}
   .desktop-content:has(.t2-shell) .nd2-tile-tags{display:none;}
   .desktop-content:has(.t2-shell) .t2-teamboard-meta{gap:8px;}
-  .desktop-content:has(.t2-shell) .t2-teamboard-meta{grid-template-columns:220px minmax(0,1fr) 220px;}
+  .desktop-content:has(.t2-shell) .t2-teamboard-toprow{grid-template-columns:220px minmax(0,1fr);}
+  .desktop-content:has(.t2-shell) .t2-teamboard.flip .t2-teamboard-toprow{grid-template-columns:minmax(0,1fr) 220px;}
   .desktop-content:has(.t2-shell) .nd2-coach-slot{width:150px;flex-basis:150px;}
   .desktop-content:has(.t2-shell) .nd2-coach-body{padding:5px 8px;}
   .desktop-content:has(.t2-shell) .nd2-coach-desc{display:none;}
@@ -1610,7 +1624,10 @@ button.t2-adjustment-mini.empty.pulsing{cursor:pointer;}
    screen actually has, instead of a hardcoded height leaving empty space under it. Connector
    lines are drawn with ::before/::after on the round and its items, at percentages that stay
    correct at any height — the space-around midpoints for two items sit at 25%/75%. */
-.bracket-tree-scroll{overflow-x:auto;padding-bottom:6px;flex:1;display:flex;}
+/* min-width:0 overrides a flex item's default (fit-content) min-width — without it, .bracket-tree's
+   own 660px min-width forces this whole scroller (and everything containing it, all the way up
+   to the page) to grow past the viewport instead of staying put and scrolling internally. */
+.bracket-tree-scroll{overflow-x:auto;padding-bottom:6px;flex:1;min-width:0;display:flex;}
 .bracket-tree{display:flex;align-items:stretch;width:100%;min-width:660px;gap:32px;flex:1;}
 .bracket-half{position:relative;flex:1 1 0;min-width:230px;display:flex;align-items:stretch;gap:8%;}
 .bracket-half.right{flex-direction:row-reverse;}
@@ -2385,7 +2402,9 @@ body:has(.entry-screen){padding-bottom:0;}
   .mobile-shell:has(.t2-shell) .nd2-tile.empty{min-height:53px;}
   /* Team names and coach cards get real room now (see t2-board's scroll above — growing these
      no longer risks losing content off the bottom of the screen). */
-  .mobile-shell:has(.t2-shell) .t2-teamboard-meta{grid-template-columns:96px minmax(0,1fr) 96px;gap:6px;min-height:54px;}
+  .mobile-shell:has(.t2-shell) .t2-teamboard-meta{gap:6px;min-height:54px;}
+  .mobile-shell:has(.t2-shell) .t2-teamboard-toprow{grid-template-columns:96px minmax(0,1fr);}
+  .mobile-shell:has(.t2-shell) .t2-teamboard.flip .t2-teamboard-toprow{grid-template-columns:minmax(0,1fr) 96px;}
   .mobile-shell:has(.t2-shell) .nd2-coach-slot{width:96px;flex:1 1 96px;}
   .mobile-shell:has(.t2-shell) .nd2-coach{box-shadow:none;}
   .mobile-shell:has(.t2-shell) .nd2-coach-head{padding:4px 6px;}

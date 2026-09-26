@@ -9,6 +9,7 @@ import CompactPlayerTile from './CompactPlayerTile';
 import CompactCoachCard from './CompactCoachCard';
 import MatchupCard from './MatchupCard';
 import CardTypeMark from './CardTypeMark';
+import StrategyCard from './StrategyCard';
 
 // Decision clock for a blind matchup-card choice — long enough to read your hand, short
 // enough to put real pressure on the pick. Auto-passes on timeout so a stalled player can't
@@ -117,7 +118,7 @@ function readAutoProgress() {
 // name: below the home roster on the left, and above the away roster on the right. Gameplan
 // and Adjustment sit together on the side opposite the coach. Both always render, even with
 // nothing played yet, so the slot (and whether it is actionable) remains visible.
-function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, gameplanPlays, gameplanCanPlay, adjustmentCanPlay, onAdjustmentSlotClick, isActive, flip, contributing, timerPercent, benchContribution }) {
+function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, gameplanPlays, gameplanCanPlay, adjustmentCanPlay, onGameplanSlotClick, onAdjustmentSlotClick, isActive, flip, contributing, timerPercent, benchContribution }) {
   const hand = team.hand || [];
   const activeIds = ids || team.activeIds || [];
   const starters = activeIds.map((id) => hand.find((c) => c.id === id)).filter(Boolean);
@@ -133,9 +134,20 @@ function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, gameplan
         {chipSlots(bench, 4).map((c, i) => (c ? <CompactPlayerTile key={`b${i}`} card={c} edge={edge} /> : <div key={`b${i}`} className="nd2-tile empty" />))}
       </div>
       <div className="t2-teamboard-meta">
-        {team.coach && <div className="t2-coach-dock">
-          <div className="nd2-coach-slot"><CompactCoachCard team={team} edge={edge} /></div>
-        </div>}
+        <div className="t2-teamboard-toprow">
+          {team.coach && <div className="t2-coach-dock">
+            <div className="nd2-coach-slot"><CompactCoachCard team={team} edge={edge} /></div>
+          </div>}
+          <div className="t2-teamboard-name">
+            {hca && !flip && <span className="t2-hca-tag">Home Court</span>}
+            <div className="t2-teamboard-name-line">
+              {roleLabel && <span className={'t2-team-role ' + roleLabel.toLowerCase()}>{roleLabel}</span>}
+              <div className="t2-teamboard-name-text">{team.name}</div>
+            </div>
+            {statusLabel && <div className="t2-teamboard-status">{statusLabel}</div>}
+            {benchContribution !== null && benchContribution !== undefined && <div className="t2-teamboard-bench">Bench Contribution <strong>+{benchContribution}</strong></div>}
+          </div>
+        </div>
         <div className="t2-card-docks">
           <div className="t2-gameplan-dock">
             {hasGameplan
@@ -145,10 +157,17 @@ function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, gameplan
                 </div>
               ))
               : (
-                <div className={'t2-gameplan-mini empty' + (gameplanCanPlay ? ' pulsing' : '')} aria-hidden="true">
+                <button
+                  type="button"
+                  className={'t2-gameplan-mini empty' + (gameplanCanPlay ? ' pulsing' : '')}
+                  onClick={gameplanCanPlay ? onGameplanSlotClick : undefined}
+                  disabled={!gameplanCanPlay}
+                  aria-label={gameplanCanPlay ? 'Play a Gameplan card' : undefined}
+                  aria-hidden={!gameplanCanPlay}
+                >
                   <CardTypeMark type="gameplan" size={42} />
                   {gameplanCanPlay && <span className="t2-mini-plus">+</span>}
-                </div>
+                </button>
               )}
           </div>
           <div className="t2-adjustment-dock">
@@ -172,15 +191,6 @@ function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, gameplan
                 </button>
               )}
           </div>
-        </div>
-        <div className="t2-teamboard-name">
-          {hca && !flip && <span className="t2-hca-tag">Home Court</span>}
-          <div className="t2-teamboard-name-line">
-            {roleLabel && <span className={'t2-team-role ' + roleLabel.toLowerCase()}>{roleLabel}</span>}
-            <div className="t2-teamboard-name-text">{team.name}</div>
-          </div>
-          {statusLabel && <div className="t2-teamboard-status">{statusLabel}</div>}
-          {benchContribution !== null && benchContribution !== undefined && <div className="t2-teamboard-bench">Bench Contribution <strong>+{benchContribution}</strong></div>}
         </div>
       </div>
     </div>
@@ -211,6 +221,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
   const coinSize = isDesktop ? 100 : 64;
   const [timeLeft, setTimeLeft] = useState(CARD_TIMER_SECONDS);
   const [adjustmentPickerOpen, setAdjustmentPickerOpen] = useState(false);
+  const [gameplanPickerOpen, setGameplanPickerOpen] = useState(false);
   const [coinSpinning, setCoinSpinning] = useState(false);
   const coinTimerRef = useRef(null);
   // 'idle-off' | 'rolling-off' | 'revealed-off' | 'idle-def' | 'rolling-def' | 'revealed-def' | 'both'
@@ -302,6 +313,16 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
     }
     setSelectedAdjustment(null);
     advance({ cardId: card.id });
+  };
+
+  // Unlike an Adjustment (a hidden, simultaneous card lock resolved through advanceTurn), a
+  // Gameplan card is a direct, one-sided write — playGameplanCard's own 'playoff' branch already
+  // knows the opponent is whoever's on the other side of this match, so there's no target step.
+  const availableGameplans = (myTeam?.gameplanCards || []).filter((c) => !c.used && c.contexts.includes('playoff'));
+  const chooseGameplan = (card) => {
+    const result = actions.playGameplanCard(myTeamId, card.id, 'playoff');
+    if (result && result.ok === false) alert(result.msg);
+    setGameplanPickerOpen(false);
   };
 
   // An AI-controlled team's card decision needs this client to call advanceTurn() to actually
@@ -465,6 +486,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
   }, [cardWindowOpen, myTurnToAct, turn.exchangeIndex, cur?.team, cur?.role]);
   useEffect(() => { if (!myTurnToAct) setSelectedAdjustment(null); }, [myTurnToAct]);
   useEffect(() => { setAdjustmentPickerOpen(false); }, [myTurnToAct, turn.exchangeIndex]);
+  useEffect(() => { if (turn.stage !== 'coinflip') setGameplanPickerOpen(false); }, [turn.stage]);
 
   // Blind by convention: a card play is logged the instant it's chosen, but withheld from
   // display until its own exchange resolves — otherwise the second team to act (or a
@@ -813,6 +835,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
             statusLabel={statusFor(topSide)} roleLabel={roleFor(teamOf(topSide))}
             cardPlays={cardsOf(topSide)} gameplanPlays={gameplansOf(topSide)}
             gameplanCanPlay={gameplanCanPlayFor(teamOf(topSide))} adjustmentCanPlay={adjustmentCanPlayFor(teamOf(topSide))}
+            onGameplanSlotClick={() => setGameplanPickerOpen(true)}
             onAdjustmentSlotClick={() => setAdjustmentPickerOpen(true)}
             isActive={offenseTeam === teamOf(topSide) || defenseTeam === teamOf(topSide)} contributing={rollingSide === teamOf(topSide)}
             timerPercent={timerFor(teamOf(topSide))} benchContribution={benchVisibleFor(teamOf(topSide))}
@@ -820,6 +843,22 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
 
           <div className="t2-rollzone">
             {renderRollCircle()}
+
+            {turn.stage === 'coinflip' && gameplanPickerOpen && (
+              <div className="t2-adjustment-picker-window">
+                <div className="t2-adjustment-picker" role="dialog" aria-modal="true" aria-label="Play a Gameplan card">
+                  <div className="t2-carddecision-head">
+                    <div className="t2-carddecision-title"><span>Play A Gameplan Card</span></div>
+                    <button type="button" className="t2-carddecision-close" onClick={() => setGameplanPickerOpen(false)} aria-label="Close">×</button>
+                  </div>
+                  <div className="t2-carddecision-desc">Choose one card to run for this matchup, or close this without playing one. Only one Gameplan card can be active per team.</div>
+                  <div className="t2-adjustment-picker-cards">
+                    {availableGameplans.map((card) => <button key={card.id} className="t2-adjustment-picker-card" onClick={() => chooseGameplan(card)}><StrategyCard card={card} /></button>)}
+                    {!availableGameplans.length && <div className="t2-waiting">No Gameplan cards are available.</div>}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {turn.stage === 'card' && myTurnToAct && adjustmentPickerOpen && (
               <div className="t2-adjustment-picker-window">
@@ -860,6 +899,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
             statusLabel={statusFor(bottomSide)} roleLabel={roleFor(teamOf(bottomSide))}
             cardPlays={cardsOf(bottomSide)} gameplanPlays={gameplansOf(bottomSide)}
             gameplanCanPlay={gameplanCanPlayFor(teamOf(bottomSide))} adjustmentCanPlay={adjustmentCanPlayFor(teamOf(bottomSide))}
+            onGameplanSlotClick={() => setGameplanPickerOpen(true)}
             onAdjustmentSlotClick={() => setAdjustmentPickerOpen(true)}
             isActive={offenseTeam === teamOf(bottomSide) || defenseTeam === teamOf(bottomSide)} contributing={rollingSide === teamOf(bottomSide)}
             timerPercent={timerFor(teamOf(bottomSide))} benchContribution={benchVisibleFor(teamOf(bottomSide))}
