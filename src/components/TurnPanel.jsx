@@ -117,7 +117,7 @@ function readAutoProgress() {
 // All nine rotation tiles remain visible. The coach gets a dedicated dock beside the team
 // name: below the home roster on the left, and above the away roster on the right. The
 // Adjustment slot sits beside the coach; coach Gameplans affect play without occupying a slot.
-function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, adjustmentCanPlay, onAdjustmentSlotClick, isActive, flip, contributing, timerPercent, benchContribution }) {
+function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, adjustmentCanPlay, onAdjustmentSlotClick, canPass, onPass, isActive, flip, contributing, timerPercent, benchContribution }) {
   const hand = team.hand || [];
   const activeIds = ids || team.activeIds || [];
   const starters = activeIds.map((id) => hand.find((c) => c.id === id)).filter(Boolean);
@@ -165,6 +165,7 @@ function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, adjustme
                   <span className="t2-mini-plus">+</span>
                 </button>
               )}
+            {canPass && <button type="button" className="t2-board-pass" onClick={onPass}>Pass</button>}
           </div>
         </div>
       </div>
@@ -524,6 +525,12 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
     && (team.gameplanCards || []).some((c) => !c.used && c.contexts.includes('playoff'))
   );
   const adjustmentCanPlayFor = (team) => team === myTeam && myTurnToAct && availableAdjustments.length > 0;
+  const canPassFor = (team) => team === myTeam && myTurnToAct;
+  const passAdjustment = () => {
+    setSelectedAdjustment(null);
+    setAdjustmentPickerOpen(false);
+    advance({ pass: true });
+  };
 
   const statusFor = (side) => {
     const team = side === 'a' ? teamA : teamB;
@@ -812,6 +819,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
             gameplanCanPlay={gameplanCanPlayFor(teamOf(topSide))} adjustmentCanPlay={adjustmentCanPlayFor(teamOf(topSide))}
             onGameplanSlotClick={() => setGameplanPickerOpen(true)}
             onAdjustmentSlotClick={() => setAdjustmentPickerOpen(true)}
+            canPass={canPassFor(teamOf(topSide))} onPass={passAdjustment}
             isActive={offenseTeam === teamOf(topSide) || defenseTeam === teamOf(topSide)} contributing={rollingSide === teamOf(topSide)}
             timerPercent={timerFor(teamOf(topSide))} benchContribution={benchVisibleFor(teamOf(topSide))}
           />
@@ -876,6 +884,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
             gameplanCanPlay={gameplanCanPlayFor(teamOf(bottomSide))} adjustmentCanPlay={adjustmentCanPlayFor(teamOf(bottomSide))}
             onGameplanSlotClick={() => setGameplanPickerOpen(true)}
             onAdjustmentSlotClick={() => setAdjustmentPickerOpen(true)}
+            canPass={canPassFor(teamOf(bottomSide))} onPass={passAdjustment}
             isActive={offenseTeam === teamOf(bottomSide) || defenseTeam === teamOf(bottomSide)} contributing={rollingSide === teamOf(bottomSide)}
             timerPercent={timerFor(teamOf(bottomSide))} benchContribution={benchVisibleFor(teamOf(bottomSide))}
             flip
