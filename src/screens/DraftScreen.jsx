@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import PlayerCard from '../components/PlayerCard';
 import { cardTotal, playerGrade } from '../game/cards';
 import { formatCoins } from '../game/economy';
@@ -6,19 +7,29 @@ import { offseasonPrice } from '../game/gm';
 import { forfeitBonusForPosition, overallPickPosition } from '../game/draft';
 
 function pickLine(card) {
-  return `${playerGrade(card)} | ${card.archetype} | ${card.position}`;
+  return `${card.archetype} | ${card.position}`;
 }
 
 // Matches the border colors PlayerCard's own .pcard.rarity-* classes use (see index.css) — a
-// standalone map since this ultra-compact swatch isn't a real .pcard and can't just add the
-// rarity-* class to inherit --rarity-accent from there.
+// standalone map since this outline isn't a real .pcard and can't just add the rarity-* class
+// to inherit --rarity-accent from there.
 const RARITY_SWATCH_COLOR = { Core: '#C4715A', Prime: 'var(--stamp)', Signature: 'var(--stamp-text)', Legendary: 'var(--franchise)' };
 
-// An ultra-compact stand-in for a full player card next to a pick's name in Draft Order — just
-// the card's own rounded-corner silhouette, outlined in that card's rarity color, so a rarity
-// at a glance is available without rendering (or fitting) a real PlayerCard in a list row.
-function PickSwatch({ card }) {
-  return <span className="draft-pick-swatch" style={{ borderColor: RARITY_SWATCH_COLOR[card.rarity || 'Core'] }} aria-hidden="true" />;
+// A pick's card, collapsed to just its rounded-corner silhouette (outlined in rarity color) and
+// its grade letter centered inside — the fastest way to scan Draft Order without rendering (or
+// fitting) a real PlayerCard in every row. Click reveals the actual card in a modal.
+function DraftPickOutline({ card, onClick }) {
+  return (
+    <button
+      type="button"
+      className="draft-pick-outline"
+      style={{ borderColor: RARITY_SWATCH_COLOR[card.rarity || 'Core'] }}
+      onClick={onClick}
+      aria-label={`View full card: ${playerGrade(card)} ${card.archetype} ${card.position}`}
+    >
+      {playerGrade(card)}
+    </button>
+  );
 }
 
 export default function DraftScreen({ state, actions, myTeamId }) {
@@ -26,6 +37,7 @@ export default function DraftScreen({ state, actions, myTeamId }) {
   const myTeam = state.teams[myTeamId];
   const sortedPool = [...draft.pool].sort((a, b) => cardTotal(b) - cardTotal(a));
   const onTheClock = draft.queue[0] === myTeam;
+  const [viewedCard, setViewedCard] = useState(null);
 
   return (
     <OffseasonFile state={state} team={myTeam}>
@@ -57,7 +69,7 @@ export default function DraftScreen({ state, actions, myTeamId }) {
           {[...draft.picks].reverse().map((p, i) => (
             <div key={'picked-' + p.card.id} className={'standing-row' + (p.teamId === myTeamId ? ' you' : '')}>
               <span>#{i + 1} {p.teamName}</span>
-              <span className="standing-row-pick"><PickSwatch card={p.card} />{pickLine(p.card)}</span>
+              <span className="standing-row-pick"><DraftPickOutline card={p.card} onClick={() => setViewedCard(p.card)} />{pickLine(p.card)}</span>
             </div>
           ))}
           {draft.queue.map((t, i) => (
@@ -82,6 +94,15 @@ export default function DraftScreen({ state, actions, myTeamId }) {
           );
         })}
       </div>
+
+      {viewedCard && (
+        <div className="slf-card-modal-backdrop" onClick={() => setViewedCard(null)}>
+          <div className="slf-card-modal" role="dialog" aria-modal="true" aria-label="Player card" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="slf-picker-close" onClick={() => setViewedCard(null)} aria-label="Close">×</button>
+            <PlayerCard card={viewedCard} />
+          </div>
+        </div>
+      )}
     </OffseasonFile>
   );
 }

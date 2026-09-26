@@ -246,7 +246,8 @@ p.lede{color:var(--file-body);font-size:14px;line-height:1.5;margin:0 0 14px;}
 .standing-row-pick{display:flex;align-items:center;gap:7px;}
 /* An ultra-compact player-card stand-in (see DraftScreen.jsx's PickSwatch) — just the card's
    own rounded silhouette at a fraction of size, outlined in its rarity color. */
-.draft-pick-swatch{display:inline-block;flex-shrink:0;width:12px;height:16px;border:2px solid;border-radius:3px;background:var(--form);}
+.draft-pick-outline{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:32px;height:44px;border:2px solid;border-radius:6px;background:var(--form);color:inherit;font-family:var(--font-label);font-size:14px;font-weight:700;padding:0;cursor:pointer;}
+.draft-pick-outline:hover{background:var(--form-rule);}
 .league-standings-table{margin-top:18px;border-top:2px solid var(--ink);}
 .league-standings-row{width:100%;display:grid;grid-template-columns:minmax(180px,2fr) repeat(4,minmax(100px,1fr));align-items:center;padding:12px 10px;border:0;border-bottom:1px solid var(--form-rule);background:transparent;color:var(--ink);font:13px var(--font-mono);text-align:right;cursor:pointer;}
 .league-standings-row.head{font:10px var(--font-label);letter-spacing:.09em;text-transform:uppercase;color:var(--file-muted);cursor:default;}
