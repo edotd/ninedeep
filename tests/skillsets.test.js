@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SKILLSETS, SKILLSET_PAIRS, STAT_THRESHOLD_BONUSES, rollSkillset, teamSynergy } from '../src/game/skillsets.js';
+import { SKILLSETS, SKILLSET_PAIRS, STAT_THRESHOLD_BONUSES, POSITION_SKILLSET_BONUSES, rollSkillset, teamSynergy } from '../src/game/skillsets.js';
 import { careerMultiplier } from '../src/game/aging.js';
 import { makeCard, drawCoachCard, drawMatchupModifierCard } from '../src/game/cards.js';
 import { REPLACEMENT_TIER, COACH_MODIFIERS } from '../src/game/constants.js';
@@ -23,8 +23,13 @@ test('24 skillsets, 25 unique mutual pairings; every pairing resolves at its app
   assert(SKILLSET_PAIRS.every(p=>p.name&&p.percent>0));
   for(const pair of SKILLSET_PAIRS){
     const t=team([1,2]);t.hand.forEach((p,i)=>{p.skillsetId=pair.skills[i];});
-    assert.equal(teamSynergy(t)[pair.side],pair.percent);
-    t.hand.reverse();assert.equal(teamSynergy(t)[pair.side],pair.percent);
+    // team()'s first two slots are both position 'Guard' — a pair that happens to include a
+    // skillset with its own solo POSITION_SKILLSET_BONUSES entry at 'Guard' (e.g. Grab and Go,
+    // in the Pace and Space pairing) fires both bonuses at once here, same as it would on a
+    // real roster.
+    const extra=POSITION_SKILLSET_BONUSES.filter((b)=>b.position==='Guard'&&b.side===pair.side&&pair.skills.includes(b.skillsetId)).reduce((n,b)=>n+b.percent,0);
+    assert.equal(teamSynergy(t)[pair.side],pair.percent+extra);
+    t.hand.reverse();assert.equal(teamSynergy(t)[pair.side],pair.percent+extra);
   }
 });
 test('approved example totals +25% offense; Wise Veteran adds one percent without stacking',()=>{
@@ -69,6 +74,15 @@ test('independent caps apply and injury lineup overrides remove inactive pairing
   assert.equal(s.offense,31);assert.equal(s.defense,31);assert(s.rawOffense>30);
   assert.equal(teamSynergy(t,['p17','p18']).defense,16);
   assert.equal(teamSynergy(t,['p17']).defense,1);
+});
+test('a position-specific Skillset bonus fires solo, only at its named position',()=>{
+  const pace=POSITION_SKILLSET_BONUSES.find(b=>b.name==='Pace');
+  const t=team([16,4]); // Grab and Go at Guard (team()'s slot 0), no partner needed
+  assert.equal(teamSynergy(t).offense,pace.percent);
+  assert.equal(teamSynergy(t).positionBonuses.length,1);
+  t.hand[0].position='Forward';
+  assert.equal(teamSynergy(t).offense,0);
+  assert.equal(teamSynergy(t).positionBonuses.length,0);
 });
 test('skillset persists in generated player JSON; only player cards roll skillsets',()=>{
   const state={};

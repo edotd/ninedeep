@@ -137,6 +137,16 @@ export const STAT_THRESHOLD_BONUSES = [
   { name: 'Iron Wall', stat: 'DEF', threshold: 30, minCount: 2, side: 'defense', percent: 15 },
 ];
 
+// A third, independent path to the same Offense/Defense bonus pool — a skillset's normal role
+// in NAMED_PAIRS/STAT_THRESHOLD_BONUSES is position-agnostic, but a handful read differently
+// depending on which position a player who holds them actually plays. Grab and Go run at Guard
+// (rather than its other eligible spot, Forward) is a rebound pushed the length of the floor by
+// a ball-handler, not just a hustle play — a genuine fast break, named Pace. Only one starter
+// needs to fit a given rule; unlike STAT_THRESHOLD_BONUSES this isn't a team-wide threshold.
+export const POSITION_SKILLSET_BONUSES = [
+  { name: 'Pace', skillsetId: 'skill-16', position: 'Guard', side: 'offense', percent: 5 },
+];
+
 function effectiveStat(player, stat) {
   return (player.stats?.[stat] || 0) * careerMultiplier(player, player.careerRoll);
 }
@@ -147,15 +157,18 @@ export function teamSynergy(team, ids = team.activeIds || []) {
   const skills = new Set(starters.map((p) => p.skillsetId));
   const pairs = SKILLSET_PAIRS.filter((rule) => rule.skills.every((id) => skills.has(id)));
   const statBonuses = STAT_THRESHOLD_BONUSES.filter((rule) => starters.filter((p) => effectiveStat(p, rule.stat) >= rule.threshold).length >= rule.minCount);
+  const positionBonuses = POSITION_SKILLSET_BONUSES.filter((rule) => starters.some((p) => p.skillsetId === rule.skillsetId && p.position === rule.position));
   const rawOffense = pairs.filter((p) => p.side === 'offense').reduce((n,p) => n+p.percent, 0)
-    + statBonuses.filter((b) => b.side === 'offense').reduce((n,b) => n+b.percent, 0);
+    + statBonuses.filter((b) => b.side === 'offense').reduce((n,b) => n+b.percent, 0)
+    + positionBonuses.filter((b) => b.side === 'offense').reduce((n,b) => n+b.percent, 0);
   const rawDefense = pairs.filter((p) => p.side === 'defense').reduce((n,p) => n+p.percent, 0)
-    + statBonuses.filter((b) => b.side === 'defense').reduce((n,b) => n+b.percent, 0);
+    + statBonuses.filter((b) => b.side === 'defense').reduce((n,b) => n+b.percent, 0)
+    + positionBonuses.filter((b) => b.side === 'defense').reduce((n,b) => n+b.percent, 0);
   const leadership = (team.hand || []).some((p) => p.skillsetId === 'skill-03') ? 1 : 0;
   const skillOffense = Math.min(SYNERGY_CAP, rawOffense);
   const skillDefense = Math.min(SYNERGY_CAP, rawDefense);
   const chemistry = chemistryDetails(team, ids, skillOffense, skillDefense, leadership);
-  return { pairs, statBonuses, rawOffense, rawDefense, skillOffense, skillDefense, leadership, ...chemistry,
+  return { pairs, statBonuses, positionBonuses, rawOffense, rawDefense, skillOffense, skillDefense, leadership, ...chemistry,
     offense: skillOffense + chemistry.continuity + leadership, defense: skillDefense + chemistry.continuity + leadership };
 }
 
