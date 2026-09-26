@@ -211,6 +211,12 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   const [viewMode, setViewMode] = useState('carousel');
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
   const [showSeasonIssues, setShowSeasonIssues] = useState(false);
+  // The Players tab's card carousel takes over the whole screen on mobile — no page scroll
+  // competing with the horizontal card swipe (see ts-screen-lock in index.css). Only true in
+  // the Carousel view — List is a plain scrolling stack, same as every other tab. Declared here
+  // (rather than down by its own effect) because an earlier effect's dependency array also
+  // reads it, and a const read before its declaration in the same function throws.
+  const isRotationLocked = !isDesktop && tab === 'rotation' && viewMode === 'carousel';
   useEffect(() => { if (tab !== 'rotation') setViewMenuOpen(false); }, [tab]);
   useEffect(() => {
     if (!showSeasonIssues) return undefined;
@@ -403,10 +409,6 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
     if (res && res.ok === false) alert(res.msg);
   };
 
-  // The Players tab's card carousel takes over the whole screen on mobile — no page scroll
-  // competing with the horizontal card swipe (see ts-screen-lock in index.css). Only true in
-  // the Carousel view — List is a plain scrolling stack, same as every other tab.
-  const isRotationLocked = !isDesktop && tab === 'rotation' && viewMode === 'carousel';
   // This screen never remounts on a tab switch (unlike PlayoffSeriesScreen, which gets the same
   // fix via a mount effect), so the page can still be scrolled down from a moment ago on another
   // tab when the user swipes back to Rotation. ts-screen-lock's CSS (.mobile-shell:has(...){
