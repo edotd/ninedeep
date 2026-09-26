@@ -52,8 +52,8 @@ export default function TeamChemistry({ team, canEdit, onEditLineup }) {
         <div className="tc2-grade-block">
           <div className="ts-heading">Team Chemistry</div>
           <div className="tc2-grade-row">
-            <span className="tc2-grade">{team.lineupSet ? current.grade : '-'}</span>
-            <span className="tc2-score">{current.score}</span>
+            <span className="tc2-grade">{team.lineupSet ? current.grade : '—'}</span>
+            {team.lineupSet && <span className="tc2-score">{current.score}</span>}
           </div>
           <button className="tc2-synergy-btn" onClick={onEditLineup}>
             {canEdit === false ? 'View Lineup' : team.lineupSet ? 'Edit Lineup' : 'Set Lineup'}
