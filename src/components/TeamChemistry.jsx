@@ -55,6 +55,10 @@ export default function TeamChemistry({ team, canEdit, onEditLineup }) {
             <span className="tc2-grade">{current.grade}</span>
             <span className="tc2-score">{current.score}</span>
           </div>
+          <button className="tc2-synergy-btn" onClick={onEditLineup}>
+            {canEdit === false ? 'View Lineup' : team.lineupSet ? 'Edit Lineup' : 'Set Lineup'}
+            {canEdit !== false && !team.lineupSet && <span className="alert-badge" aria-label="Lineup not set">!</span>}
+          </button>
           <p className="tc2-note">Your team's fit, continuity and bonuses from any chemistry-related card effects</p>
         </div>
 
@@ -71,10 +75,6 @@ export default function TeamChemistry({ team, canEdit, onEditLineup }) {
       </div>
 
       <div className="tc2-pairs-panel">
-        <button className="tc2-synergy-btn" onClick={onEditLineup}>
-          {canEdit === false ? 'View Lineup' : team.lineupSet ? 'Edit Lineup' : 'Set Lineup'}
-          {canEdit !== false && !team.lineupSet && <span className="alert-badge" aria-label="Lineup not set">!</span>}
-        </button>
         {(current.pairs.length || current.statBonuses.length) ? (
           <div className="tc2-pairs-grid">
             {current.pairs.map((pair) => (
