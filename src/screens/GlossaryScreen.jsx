@@ -1,5 +1,5 @@
 import { SKILLSETS, SKILLSET_PAIRS, POSITION_SKILLSET_BONUSES } from '../game/skillsets';
-import { ARCHETYPES, POSITIONS, POSITION_MOD, TIERS, LEAGUE_ACCOLADES, COACH_ARCHETYPES, COACH_MODIFIERS, FANBASE_ARCHETYPES, FANBASE_MODS, MARKETS, GM_TYPES, GM_TRAITS, MATCHUP_MODIFIER_TYPES } from '../game/constants';
+import { ARCHETYPES, POSITIONS, POSITION_MOD, TIERS, LEAGUE_ACCOLADES, COACH_ARCHETYPES, COACH_MODIFIERS, FANBASE_ARCHETYPES, FANBASE_MODS, GM_TYPES, GM_TRAITS, MATCHUP_MODIFIER_TYPES } from '../game/constants';
 import { formatCoins } from '../game/economy';
 import { CAREER_LEVELS } from '../game/aging';
 import { matchupCardEffectNote } from '../game/summaries';
@@ -21,7 +21,7 @@ const SECTIONS = [
   ['fanbase', 'Fanbase'],
   ['season-milestones', 'Season Milestones'],
   ['fanbase-mods', 'Fanbase Mods'],
-  ['market', 'GM & Market Size'],
+  ['market', 'General Managers'],
   ['front-office-moves', 'Front Office Moves'],
   ['skillsets-chemistry', 'Player Skillsets and Team Chemistry'],
   ['matchup-modifier-cards', 'Adjustment Cards'],
@@ -177,7 +177,7 @@ export default function GlossaryScreen({ state, onBack }) {
         ))}
 
         <h2 id="fanbase">Fanbase</h2>
-        <p className="lede">Your Fanbase Archetype is drawn once and holds for the whole era, like Coach. Attendance itself is recalculated at the end of every season from your archetype's formula, your Market's floor, and how you finished — then a permanent, small baseline (built up from season milestones and any fanbase investment) is added on top. Attendance applies a small multiplier to your cap (0.9x–1.1x).</p>
+        <p className="lede">Your Fanbase Archetype is drawn once and holds for the whole era, like Coach. Attendance itself is recalculated at the end of every season from your archetype's formula and how you finished, then a permanent baseline from season milestones and fanbase investment is added on top.</p>
         {FANBASE_ARCHETYPES.map((f) => (
           <div key={f.name} className="matchup-box">
             <div className="matchup-title">{f.name}</div>
@@ -185,9 +185,9 @@ export default function GlossaryScreen({ state, onBack }) {
               <GlossaryStat label="Draw Odds" val={f.weight + 'w'} />
             </div>
             <div className="statusline" style={{ marginTop: 8 }}>
-              {f.name === 'Steady' && 'Attendance sits at your market floor plus a share of that band based on how you performed — predictable, no randomness.'}
-              {f.name === 'Fair Weather' && 'Same market floor, but the swing band widens the worse you perform, and the actual number is rolled at random within it — boom or bust.'}
-              {f.name === 'Die Hard' && 'Always a near-sellout — a flat 90–100% roll every season, regardless of market or performance.'}
+              {f.name === 'Steady' && 'Attendance starts from the shared league floor and rises based on performance — predictable, with no randomness.'}
+              {f.name === 'Fair Weather' && 'The swing band widens the worse you perform, and the actual number is rolled at random within it — boom or bust.'}
+              {f.name === 'Die Hard' && 'Always a near-sellout — a flat 90–100% roll every season, regardless of performance.'}
             </div>
           </div>
         ))}
@@ -209,23 +209,13 @@ export default function GlossaryScreen({ state, onBack }) {
           </div>
         ))}
 
-        <h2 id="market">GM &amp; Market Size</h2>
-        <p className="lede">Every card is a General Manager with a rolled rarity, market size, and trait. Rarity controls the trait's strength. Market size sets the attendance floor and budget increase.</p>
+        <h2 id="market">General Managers</h2>
+        <p className="lede">Every card is a General Manager with a rolled rarity and trait. Rarity controls the trait's strength. Cap Architect is the only GM trait that increases the franchise budget.</p>
         <div className="statusline">GM types: {GM_TYPES.join(' · ')}</div>
         <div className="statusline">Traits: {GM_TRAITS.map((trait) => trait.name).join(' · ')}</div>
-        {MARKETS.map((m) => (
-          <div key={m.name} className="matchup-box">
-            <div className="matchup-title">{m.name}</div>
-            <div className="meta-row" style={{ borderTop: 'none', paddingTop: 0 }}>
-              <GlossaryStat label="Attendance Floor" val={Math.round(m.attendanceFloor * 100) + '%'} />
-              <GlossaryStat label="Budget Increase" val={`+${formatCoins(m.capAdjMin)}–${formatCoins(m.capAdjMax)}`} />
-              <GlossaryStat label="Draw Odds" val={m.weight + 'w'} />
-            </div>
-          </div>
-        ))}
 
         <h2 id="front-office-moves">Front Office Moves</h2>
-        <p className="lede">Fire and replace your coach, fire your GM, release a player, or invest in your fanbase. Releasing or firing leaves dead cap behind: half of the outgoing party's cost, charged against your budget starting this season — for as many seasons as a released player had left on their contract, or for exactly one season for a coach or GM. Dead cap shrinks the longer you wait to cut someone, since it's based on years remaining, not the original contract length; a player already in an expired contract leaves none. Hiring a replacement coach still costs their salary this season, on top of the outgoing coach's dead cap; firing a GM draws a random GM and market size and is limited to once per season.</p>
+        <p className="lede">Fire and replace your coach, fire your GM, release a player, or invest in your fanbase. Releasing or firing leaves dead cap behind: half of the outgoing party's cost, charged against your budget starting this season — for as many seasons as a released player had left on their contract, or for exactly one season for a coach or GM. Dead cap shrinks the longer you wait to cut someone, since it's based on years remaining, not the original contract length; a player already in an expired contract leaves none. Hiring a replacement coach still costs their salary this season, on top of the outgoing coach's dead cap; firing a GM draws a random replacement and is limited to once per season.</p>
 
         <h2 id="skillsets-chemistry">Player Skillsets and Team Chemistry</h2>
         <p className="lede">Each new player rolls one permanent Skillset. Certain skillset pairings — each one a retired Adjustment card, named and valued exactly as it was when playable — grant a passive Offense or Defense bonus whenever both starting, capped at +30% on each side. Only the active five count; each distinct pairing counts once. A few skillsets also grant a solo, position-specific bonus just for starting a holder at the right spot — no partner needed. Wise Veteran can only roll on Veteran players and adds +1% Offense and Defense from anywhere on the roster, without stacking. Team Chemistry uses a 0–100 score: 50 base points, up to 30 for Skillset fit (2.5 per percentage point across both sides, capped), up to 15 for continuity (see below, doubled and capped), and 5 for Wise Veteran. Grades: A+ 97, A 93, A− 90, B+ 87, B 83, B− 80, C+ 77, C 73, C− 70, D+ 67, D 63, D− 60, F below 60. Continuity adds directly to Offense/Defense beyond the Skillset cap, from four sources: +0.5% per year any roster player has started for this team, +0.25% per year they've instead been a bench piece, +0.25% per year the current starting five's pairs have started together before (credited per pair, not per player), and +0.5% per year the current coach has been retained. Tenure resets when a player joins a different team. The experience rating stays separate. Legacy players without a Skillset remain unchanged.</p>

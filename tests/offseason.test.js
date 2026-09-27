@@ -240,15 +240,16 @@ test('season start permits fewer than seven players but rejects over-budget and 
   const state = newEraState();
   const cards = Array.from({ length: 10 }, (_, i) => ({ id: `p${i}`, position: ['Guard', 'Forward', 'Big'][i % 3], salary: 2 }));
   const team = { id: 0, human: true, hand: cards.slice(0, 6), activeIds: cards.slice(0, 5).map((card) => card.id), seasonCap: 20, coach: { salary: 0 }, lineupSet: true };
-  state.teams = [team];
-  assert.match(confirmLineup(state, 0).msg, /Close out free agency/);
+  state.teams = [team, { id: 1, human: true, hand: [], activeIds: [], lineupSet: false }];
+  assert.equal(confirmLineup(state, 0).valid, true);
+  team.lineupConfirmed = false;
   team.hand = cards.slice(0, 7);
   team.seasonCap = 10;
   assert.match(confirmLineup(state, 0).msg, /under budget/);
   team.hand = cards.slice(0, 8);
   team.seasonCap = 999;
   assert.match(confirmLineup(state, 0).msg, /8 of 7/);
-  assert.equal(team.lineupConfirmed, undefined);
+  assert.equal(team.lineupConfirmed, false);
 });
 
 test('season start allows locking in up to 3 cap points over, but no further', () => {
@@ -431,7 +432,7 @@ test('saving the lineup commits one validated five and clears prior season readi
   assert.equal(team.lineupConfirmed, false);
 });
 
-test('every human must close out free agency before the season can begin', () => {
+test('humans can begin the season without separately closing free agency', () => {
   const state = newEraState();
   startEra(state, 'Test');
   const first = state.teams[0];
@@ -441,13 +442,8 @@ test('every human must close out free agency before the season can begin', () =>
   second.seasonCap = 999;
   first.lineupSet = true;
   second.lineupSet = true;
-  state.offseason.freeAgencyClosed[first.id] = true;
-
   assert.equal(confirmLineup(state, first.id).valid, true);
-  assert.match(confirmLineup(state, second.id).msg, /Close out free agency/);
   assert.equal(state.phase, 'pullhand');
-
-  state.offseason.freeAgencyClosed[second.id] = true;
   assert.equal(confirmLineup(state, second.id).valid, true);
   assert.equal(state.phase, 'simulating');
 });

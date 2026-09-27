@@ -148,7 +148,7 @@ export default function BiddingModal({ state, actions, myTeamId, card, onClose, 
         )}
 
         {!resolved && myBid && myBid.stage === 'final' && (
-          <div className="neg-note">Your offer is final. Bidding resolves {market === 'contracts' ? 'when every human club begins the draft.' : 'after every human GM closes free agency.'}</div>
+          <div className="neg-note">Your offer is final. Bidding resolves {market === 'contracts' ? 'when every human club begins the draft.' : 'when every human franchise is ready to begin the season, or closes free agency early.'}</div>
         )}
 
         {resolved && result && (

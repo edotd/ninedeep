@@ -21,8 +21,9 @@ function buildSampleTeam() {
   team.fanbaseArchetype = weightedPick(FANBASE_ARCHETYPES);
   rollFanbaseMod(team);
   const gm = drawGM();
-  team.market = gm.market;
   team.gmType = gm.type;
+  team.gmRarity = gm.rarity;
+  team.gmTrait = gm.trait;
   initAttendance(team);
   team.advantageAvailable = team.fanbaseArchetype.name === 'Die Hard';
   return team;
@@ -146,7 +147,7 @@ export default function CardOverviewScreen({ state, actions, myTeamId = 0, onBac
 
           <CardOverviewSection
             accent="var(--stamp-text)" markType="frontoffice" eyebrow="Three Of Your Nine" title="Front Office Cards"
-            body="A standing arrangement that shapes everything else — a coach, a fanbase, a market. Coaches provide Development Points and two Gameplans in addition to their team bonuses."
+            body="A standing arrangement that shapes everything else — a coach, a fanbase, and a GM. Coaches provide Development Points and two Gameplans in addition to their team bonuses."
             howLabel="How It Plays" howText="It does not get played. It is in force from the moment it is dealt."
             costLabel="How It Ends" costText="It holds for the stated duration. Read the footer before you build around it."
             notes={FRONTOFFICE_NOTES}

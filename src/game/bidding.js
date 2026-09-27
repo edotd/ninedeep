@@ -1,5 +1,5 @@
 // Public, asynchronous free-agent bidding. Offers remain open until every human GM closes
-// free agency. Exact terms live in shared game state for server-side resolution, while the UI
+// free agency early or every franchise readies for the season. Exact terms live in shared game state for server-side resolution, while the UI
 // only reveals a team's own terms; opponents see that an opening/final offer exists.
 import { rollDie } from './rng';
 import { remainingCap } from './economy';

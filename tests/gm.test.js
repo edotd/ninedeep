@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { GM_BONUS_RATE, MARKETS, GM_TYPES } from '../src/game/constants.js';
+import { GM_BONUS_RATE, GM_TYPES } from '../src/game/constants.js';
 import { acquireOffseasonPlayer, drawGM, handsOffBonus, offseasonPrice } from '../src/game/gm.js';
-import { rosterSalary, formatCoins, gmCost } from '../src/game/economy.js';
+import { rosterSalary, formatCoins, gmCost, finalizeCap } from '../src/game/economy.js';
 import { fireGM } from '../src/game/finances.js';
 import { offenseModifier } from '../src/game/roster.js';
 
@@ -32,26 +32,37 @@ test('hands-off bonus follows coach and complete starting-five continuity', () =
   assert.equal(handsOffBonus(team), 0.12);
 });
 
-test('firing a GM draws type and market together, leaves one season of dead cap, and is once per season', () => {
-  const team = { id: 0, gmType: 'General Manager', gmRarity: 'Core', gmTrait: { name: 'Deal Maker', value: 1 }, market: { name: 'Small', capAdj: 0.5 }, seasonCap: 20, attendance: 0.5, hand: [], coach: { salary: 0 } };
+test('Cap Architect is the only GM source of additional base budget', () => {
+  const team = { hand: [], coach: { salary: 0 }, gmType: 'General Manager', gmTrait: { name: 'Deal Maker', value: 4 }, market: { name: 'Massive', capAdj: 99 }, attendance: 1 };
+  finalizeCap(team);
+  assert.equal(team.seasonCap, 20);
+  team.gmTrait = { name: 'Cap Architect', value: 4 };
+  finalizeCap(team);
+  assert.equal(team.seasonCap, 24);
+});
+
+test('firing a GM draws a new rarity and trait, leaves one season of dead cap, and is once per season', () => {
+  const team = { id: 0, gmType: 'General Manager', gmRarity: 'Core', gmTrait: { name: 'Deal Maker', value: 1 }, seasonCap: 20, attendance: 0.5, hand: [], coach: { salary: 0 } };
   const state = { season: 2, teams: [team], settings: { coachChangesEnabled: true } };
   const outgoingCost = gmCost(team.gmType);
   const result = fireGM(state, 0);
   assert.equal(result.ok, true);
   assert(GM_TYPES.includes(team.gmType));
   assert.equal(team.gmType, 'General Manager');
-  assert(MARKETS.some((m) => m.name === team.market.name));
+  assert(team.gmRarity);
+  assert(team.gmTrait?.name);
   assert.equal(team.gmChangeSeason, 2);
   assert.deepEqual(team.deadCap, [{
     amount: Math.round((outgoingCost / 2) * 100) / 100,
     seasonsLeft: 1,
     kind: 'gm',
-    label: 'General Manager GM',
-    detail: 'Small',
+    label: 'General Manager',
+    detail: 'Deal Maker',
   }]);
   assert.equal(rosterSalary(team), gmCost(team.gmType) + Math.round((outgoingCost / 2) * 100) / 100);
-  assert(team.seasonCap <= 20 + 3.5);
+  assert(team.seasonCap >= 20 && team.seasonCap <= 24);
   assert.equal(fireGM(state, 0).ok, false);
   const otherGM = drawGM();
-  assert(MARKETS.some((m) => m.name === otherGM.market.name));
+  assert.equal(otherGM.market, undefined);
+  assert(otherGM.trait?.name);
 });

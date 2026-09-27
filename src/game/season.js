@@ -188,9 +188,8 @@ export function refreshAdvantage(team) {
 
 // Runs once, right after team setup and before hands are dealt. Coach, Fanbase, and GM are
 // pulled here for AI teams and kept for the whole era. Human teams pull their own via pullCoach etc.
-// dealHands can't check budget itself — it runs before any team has a coach, GM, or market, so
-// team.seasonCap doesn't exist yet (finalizeCap needs the GM's market and, with Fanbase on, the
-// attendance multiplier, both rolled in this same function). Once the real cap is known, swap
+// dealHands can't check budget itself — it runs before any team has a coach or GM, so
+// team.seasonCap doesn't exist yet. Once the real cap is known, swap
 // out the team's priciest hand card(s) for a cheap Undrafted filler until the roster fits — no
 // dead cap, since the outgoing player never actually held the roster spot for a season. Every
 // team starts at or under budget instead of relying on the cheap-filler free agents already
@@ -224,7 +223,6 @@ export function initFrontOffice(state) {
       rollFanbaseMod(team);
     }
     const gm = drawGM();
-    team.market = gm.market;
     team.gmType = gm.type;
     team.gmRarity = gm.rarity;
     team.gmTrait = gm.trait;
@@ -515,13 +513,9 @@ export function fileContracts(state, teamIdx) {
   return { ok: true };
 }
 
-// The Free Agency turn milestone (design ask: "users must close out free agency before they
-// can begin the season") — once closed, this team can no longer sign, bid on, or release
-// players until next turn (see the freeAgencyClosed guards on signFreeAgent below and on
-// releasePlayer/hireFreeAgentCoach in finances.js, and openFreeAgentBid/raiseFreeAgentBid in
-// bidding.js). Contract renewals and the draft remain available while free agency is open;
-// the closeout is enforced only when the user starts the season. Blocked while over budget so
-// a team cannot close an invalid cap sheet.
+// Optional early Free Agency closeout. Once closed, this team can no longer sign, bid on, or
+// release players until next turn. Begin Season can be used without this step and processes
+// the shared bid board once every human is ready (see engine.js).
 export function closeFreeAgency(state, teamIdx) {
   const team = state.teams[teamIdx];
   if (!team?.human) return { ok: false, msg: 'Only a human GM closes out free agency.' };

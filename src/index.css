@@ -346,12 +346,22 @@ input.text-input.lobby-name-input{min-width:0;margin:0;padding:10px 12px;}
 /* Era opening splash (SplashScreen.jsx) — plays once before a fresh era's first deal. Total
    runtime is fixed by SPLASH_DURATION_MS in that file; every keyframe below is authored against
    that same span so the two never drift out of sync. */
-.nd-splash{position:fixed;inset:0;z-index:950;display:flex;align-items:center;justify-content:center;background:#1a2440;overflow:hidden;cursor:pointer;}
-.nd-splash.exiting{animation:nd-splash-exit .35s ease-in forwards;}
-@keyframes nd-splash-exit{to{opacity:0;}}
+.nd-splash{position:fixed;inset:0;z-index:950;display:flex;align-items:center;justify-content:center;background:#1a2440;overflow:auto;cursor:pointer;}
 .nd-splash-glow{position:absolute;inset:-20%;background:radial-gradient(circle at 30% 30%,rgba(240,160,61,.16),transparent 55%);animation:nd-splash-glow 2.5s ease-in-out forwards;pointer-events:none;}
 @keyframes nd-splash-glow{0%,60%{transform:translate(-8%,-6%);}100%{transform:translate(12%,10%);}}
-.nd-splash-body{position:relative;display:flex;flex-direction:column;align-items:center;gap:18px;}
+.nd-splash-body{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:18px;transition:transform .55s cubic-bezier(.22,.8,.26,1);}
+.nd-splash.setup-visible{cursor:default;align-items:flex-start;}
+.nd-splash.setup-visible .nd-splash-body{position:absolute;top:clamp(22px,5vh,52px);left:50%;transform:translateX(-50%) scale(.66);transform-origin:top center;}
+.nd-splash.setup-visible .nd-splash-wordmark{opacity:1;animation:none;}
+.nd-splash.setup-visible .nd-splash-rule{width:100%;animation:none;}
+.nd-splash.setup-visible .nd-splash-ring{opacity:1;animation:none;}
+.nd-splash.setup-visible .nd-splash-tagline{display:none;}
+.nd-splash-setup{width:100%;min-height:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;padding:clamp(145px,22vh,205px) 18px 28px;opacity:0;pointer-events:none;}
+.nd-splash.setup-visible .nd-splash-setup{opacity:1;pointer-events:auto;animation:nd-setup-draw .45s ease-out both;}
+@keyframes nd-setup-draw{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.nd-splash-setup .entry-screen{min-height:0;width:100%;padding:0;background:transparent;}
+.nd-splash-setup .entry-shell{max-width:640px;min-height:0;background:transparent;}
+.nd-splash-setup .entry-brand{display:none;}
 .nd-splash-ball{position:relative;}
 .nd-splash-ring{position:absolute;inset:-8px;border-radius:50%;border:2px solid var(--franchise);opacity:0;animation:nd-splash-ring 2.5s ease-out forwards;}
 @keyframes nd-splash-ring{0%,91%{opacity:0;transform:scale(1.08);}100%{opacity:1;transform:scale(1);}}
@@ -875,6 +885,44 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 @media (prefers-reduced-motion:reduce){
   .db-player-slot.flipping{transform:none;transition:none;}
   .db-player-slot.ringing,.db-player-slot.rejected,.db-sub-stamp{animation:none;}
+}
+
+/* Post-deal card guide. It uses the live card components, dims their sections, and lifts the
+   currently explained section back to full contrast with an orange interaction outline. */
+.card-onboarding-screen{position:fixed;inset:0;z-index:930;background:var(--ink);color:var(--file);overflow:auto;padding:clamp(24px,5vh,54px) 20px;box-sizing:border-box;}
+.card-onboarding-heading{text-align:center;margin-bottom:22px;}
+.card-onboarding-heading>span{font:10px var(--font-label);letter-spacing:.16em;text-transform:uppercase;color:var(--franchise);}
+.card-onboarding-heading h1{color:var(--file);margin:7px 0 0;font-size:clamp(38px,6vw,62px);}
+.card-onboarding-stage{width:min(900px,100%);margin:0 auto;display:grid;grid-template-columns:minmax(280px,440px) minmax(240px,1fr);gap:30px;align-items:center;}
+.card-onboarding-card{display:flex;justify-content:center;min-width:0;}
+.card-onboarding-card .pcard{width:min(100%,390px);}
+.card-onboarding-card .fo2-wrap{width:min(100%,440px);}
+.card-onboarding-copy{border:2px solid var(--franchise);background:var(--form);color:var(--ink);padding:24px;box-shadow:8px 8px 0 rgba(240,160,61,.22);}
+.card-onboarding-copy h2{margin:0 0 10px;font-size:30px;}
+.card-onboarding-copy p{margin:0;font:14px/1.65 var(--font-mono);}
+.card-onboarding-actions{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:22px;}
+.card-onboarding-actions .reset-link{color:var(--ink-muted);}
+.onboarding-card>*{opacity:.2;transition:opacity .2s ease,outline-color .2s ease;}
+.onboarding-card.onboarding-identity .pcard-header,.onboarding-card.onboarding-identity .pcard-name-block,
+.onboarding-card.onboarding-contract .pcard-contract,
+.onboarding-card.onboarding-stats .pcard-stats,
+.onboarding-card.onboarding-skillset .pcard-skillset,
+.onboarding-card.onboarding-rarity .pcard-accolade-block,
+.onboarding-card.onboarding-identity .fo2-header,.onboarding-card.onboarding-identity .fo2-name-row,
+.onboarding-card.onboarding-effects .fo2-effects,
+.onboarding-card.onboarding-gameplans .fo2-rarity-row,
+.onboarding-card.onboarding-detail .fo2-mod-detail{opacity:1;position:relative;z-index:2;outline:3px solid var(--franchise);outline-offset:-3px;}
+.onboarding-card .rarity-corner{opacity:.2;}
+.onboarding-card.onboarding-rarity .rarity-corner,.onboarding-card.onboarding-gameplans .rarity-corner{opacity:1;}
+@media(max-width:700px){
+  .card-onboarding-screen{padding:18px 14px 28px;}
+  .card-onboarding-heading{margin-bottom:12px;}
+  .card-onboarding-stage{display:flex;flex-direction:column;gap:14px;}
+  .card-onboarding-card{width:min(100%,360px);}
+  .card-onboarding-copy{width:min(100%,420px);box-sizing:border-box;padding:17px 18px;}
+  .card-onboarding-copy h2{font-size:24px;}
+  .card-onboarding-copy p{font-size:12px;line-height:1.5;}
+  .card-onboarding-actions{margin-top:14px;}
 }
 
 /* Full-card hover preview — position:fixed so it escapes .desktop-bar's overflow-x:auto

@@ -153,7 +153,7 @@ export const COACH_MODIFIERS = [
   { name: 'Hall of Fame', mult: 2.0, hofDie: true, weight: 8, salaryMin: 2.5, salaryMax: 3.5, ability: '', rarity: 'Legendary' },
 ];
 // Fanbase archetype — drawn once per era, like Coach. Attendance itself is computed fresh
-// each season (see game/fanbase.js) from the archetype's formula, market floor, performance,
+// each season (see game/fanbase.js) from the archetype's formula, a shared floor, performance,
 // and the team's permanent fanbaseBaseline (built up via season milestones) — attendanceBase
 // no longer lives here as a fixed number the way the old FANBASE_TYPES pool worked.
 export const FANBASE_ARCHETYPES = [
@@ -179,15 +179,6 @@ export const FANBASE_MODS = [
 ];
 export const FANBASE_ATTENDANCE_MAX_SWING = 0.10; // Invested / Corporate cap, in attendance points
 
-// Market — Small through Massive, each with an attendance floor (see game/fanbase.js) and a
-// cap-adjustment range (the actual capAdj is rolled within it at pull time — see
-// economy.js's rollMarketCapAdj). A new market is rolled with every new GM.
-export const MARKETS = [
-  { name: 'Small', weight: 25, capAdjMin: 0.5, capAdjMax: 1.0, attendanceFloor: 0.50 },
-  { name: 'Medium', weight: 40, capAdjMin: 1.0, capAdjMax: 1.75, attendanceFloor: 0.60 },
-  { name: 'Large', weight: 25, capAdjMin: 1.75, capAdjMax: 2.5, attendanceFloor: 0.70 },
-  { name: 'Massive', weight: 10, capAdjMin: 2.5, capAdjMax: 3.5, attendanceFloor: 0.80 },
-];
 export const GM_TYPES = ['General Manager'];
 export const GM_RARITIES = [
   { name: 'Core', weight: 50, min: 1, max: 1 },

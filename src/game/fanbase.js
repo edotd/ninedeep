@@ -5,7 +5,7 @@
 // so a team's attendance floor climbs across the era independent of any single season's luck.
 import {
   FANBASE_MODS, STEADY_BAND, FAIR_WEATHER_BASE_BAND, FANBASE_ATTENDANCE_MAX_SWING,
-  MARKETS, MILESTONE_PLAYOFF_BERTH, MILESTONE_HOME_COURT, MILESTONE_PLAYOFF_WIN, MILESTONE_CHAMPIONSHIP,
+  MILESTONE_PLAYOFF_BERTH, MILESTONE_HOME_COURT, MILESTONE_PLAYOFF_WIN, MILESTONE_CHAMPIONSHIP,
   MILESTONE_SEASON_END_BEST, MILESTONE_SEASON_END_WORST,
 } from './constants';
 import { weightedPick } from './rng';
@@ -21,10 +21,7 @@ export function fanbaseEnabled(state) {
 
 function clamp01(x) { return Math.max(0, Math.min(1, x)); }
 
-function marketFloorFor(team) {
-  const def = MARKETS.find((m) => team.market && m.name === team.market.name);
-  return def ? def.attendanceFloor : MARKETS[0].attendanceFloor;
-}
+const ATTENDANCE_FLOOR = 0.6;
 
 // The raw formula value for a season, before this team's permanent baseline or its current
 // mod are applied. `percentile` is this team's rank (0 = league-worst, 1 = league-best) by
@@ -42,7 +39,7 @@ function computeAttendanceFormula(team, percentile, floor) {
 // Called once, right when a team's Market is known for the first time (no season played yet,
 // so performance is neutral) — gives a starting attendance instead of leaving it undefined.
 export function initAttendance(team) {
-  team.attendance = clamp01(computeAttendanceFormula(team, 0.5, marketFloorFor(team)) + (team.fanbaseBaseline || 0));
+  team.attendance = clamp01(computeAttendanceFormula(team, 0.5, ATTENDANCE_FLOOR) + (team.fanbaseBaseline || 0));
 }
 
 export function applyMilestone(team, amount) {
@@ -75,7 +72,7 @@ export function recomputeSeasonAttendance(state) {
   const sorted = [...scores].sort((a, b) => a - b);
   teams.forEach((team, i) => {
     const percentile = teams.length > 1 ? sorted.indexOf(scores[i]) / (teams.length - 1) : 0.5;
-    const raw = computeAttendanceFormula(team, percentile, marketFloorFor(team));
+    const raw = computeAttendanceFormula(team, percentile, ATTENDANCE_FLOOR);
     const target = clamp01(raw + (team.fanbaseBaseline || 0));
     const prev = team.attendance !== undefined ? team.attendance : target;
 

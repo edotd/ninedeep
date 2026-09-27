@@ -22,7 +22,8 @@ export default function WelcomeScreen({ teamName, onContinue, cards = false }) {
             </>
           ) : (
             <>
-              <p>You've been handed the keys to <strong className="welcome-franchise-name">{teamName}</strong> and given one directive: build a powerhouse and win championships. Eight other franchises have the same goal - can you outlast the competition and cement your place in the history books?</p>
+              <h1>How It Works</h1>
+              <p>You've been handed the keys to <strong className="welcome-franchise-name">{teamName}</strong> and given one directive: win championships. Eight other franchises have the same goal - can you outlast the competition and cement your place in the history books?</p>
               <button type="button" className="primary welcome-continue" onClick={onContinue}>Continue</button>
             </>
           )}

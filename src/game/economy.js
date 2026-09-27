@@ -10,18 +10,10 @@ export function formatCoins(n) {
   return '🪙' + text;
 }
 
-// Market size only ever helps the cap — roll a concrete boost within the market's range
-// once, at pull time, so it stays fixed for the rest of the era.
-export function rollMarketCapAdj(market) {
-  const v = market.capAdjMin + Math.random() * (market.capAdjMax - market.capAdjMin);
-  return Math.round(v * 2) / 2;
-}
-
 export function finalizeCap(team) {
   const base = baseCap();
-  const attendanceMult = 0.9 + (team.attendance !== undefined ? team.attendance : 0.5) * 0.2;
   const gmBudget = team.gmTrait?.name === 'Cap Architect' ? (team.gmTrait.value || 0) : 0;
-  let cap = (base + (team.market ? team.market.capAdj : 0) + gmBudget + (team.draftTradeBonus || 0)) * attendanceMult - (team.lastOverage || 0);
+  let cap = base + gmBudget + (team.draftTradeBonus || 0) - (team.lastOverage || 0);
   cap = Math.max(cap, Math.round(base * 0.7));
   cap = Math.round(cap * 2) / 2;
   team.seasonCap = cap;

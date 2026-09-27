@@ -128,7 +128,7 @@ export default function FranchiseMasthead({ state, teamId, lineupPreview }) {
   return (
     <div className="ts-masthead persistent-franchise-masthead">
       <div className="ts-masthead-left">
-        <div className="ts-masthead-label">FRANCHISE FILE{team.market ? ` · ${team.market.name.toUpperCase()}` : ''}</div>
+        <div className="ts-masthead-label">FRANCHISE FILE</div>
         <div className="ts-masthead-name">{team.name}{team.tricode && <span className="ts-masthead-tricode">{team.tricode}</span>}</div>
         <div className="ts-franchise-history">
           <div className="ts-era">

@@ -54,17 +54,16 @@ export default function FreeAgencyScreen({ state, actions, myTeamId, onBack, onG
       <div className="screen-kicker">League Personnel Wire</div>
       <h1>Free Agency</h1>
       <div className="fa-close-panel">
-        {!closed && <div className="fa-close-warning"><span className="alert-badge" aria-label="Action required">!</span> Action required before the season can begin</div>}
         <button
           type="button"
-          className={'primary' + (!closed && !overBudget ? ' fa-close-btn-pulse' : '')}
+          className="primary"
           disabled={closed || overBudget}
           onClick={() => { setCloseError(null); setConfirmingClose(true); }}
         >
           {closed ? 'Closed For This Turn' : overBudget ? 'Over Budget — Fix Roster To Close' : 'Close Out Free Agency'}
         </button>
-        {!closed && <p>Closing out free agency locks signings and releases until next season. All users must close out free agency before the season begins.</p>}
-        {pendingDecision && !closed && <div className="fa-alert"><span className="alert-badge" aria-label="Action required">!</span> You have an open bid waiting on your raise or stand pat.</div>}
+        {!closed && <p>Close free agency when you are finished making moves. This locks signings and releases until next season and processes all open bids.</p>}
+        {pendingDecision && !closed && <div className="fa-alert">You have an open bid waiting on your raise or stand pat.</div>}
       </div>
       {state.settings?.coachChangesEnabled && (
         <>

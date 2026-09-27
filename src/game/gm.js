@@ -1,10 +1,8 @@
-import { GM_TYPES, GM_RARITIES, GM_TRAITS, MARKETS, GM_BONUS_RATE, HANDS_OFF_BONUS_CAP } from './constants';
+import { GM_TYPES, GM_RARITIES, GM_TRAITS, GM_BONUS_RATE, HANDS_OFF_BONUS_CAP } from './constants';
 import { weightedPick } from './rng';
-import { rollMarketCapAdj } from './economy';
 import { completedTeamYears, addToRoster } from './chemistry';
 
 export function drawGM() {
-  const market = weightedPick(MARKETS);
   const rarity = weightedPick(GM_RARITIES);
   const trait = GM_TRAITS[Math.floor(Math.random() * GM_TRAITS.length)];
   const value = rarity.min + Math.floor(Math.random() * (rarity.max - rarity.min + 1));
@@ -12,7 +10,6 @@ export function drawGM() {
     type: GM_TYPES[0],
     rarity: rarity.name,
     trait: { ...trait, value },
-    market: { name: market.name, capAdj: rollMarketCapAdj(market) },
   };
 }
 

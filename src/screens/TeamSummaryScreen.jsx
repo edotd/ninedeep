@@ -7,11 +7,12 @@ import { PlayerLedgerIdentity, CostBlocks } from '../components/LedgerRow';
 import { formatCoins, rosterSalary, gmCost } from '../game/economy';
 import { FANBASE_BOOST_COST, ROSTER_SIZE } from '../game/constants';
 import CoachmarkTour from '../components/CoachmarkTour';
+import Coachmark from '../components/Coachmark';
 import { teamOutput } from '../game/matchup';
 import { teamSynergy } from '../game/skillsets';
 import { jerseyNumber, playerGrade } from '../game/cards';
 
-const tabForSection = (section) => ['gameplan', 'office'].includes(section) ? 'chemistry' : section || 'office';
+const tabForSection = (section) => section === 'gameplan' ? 'chemistry' : section === 'league' ? 'office' : section || 'office';
 
 // The Team Summary screen — "the file the league keeps on you" (design brand handoff, 1a).
 // Serves two roles from the same markup: as the 'teamsummary' phase (shown once per season,
@@ -27,7 +28,7 @@ const tabForSection = (section) => ['gameplan', 'office'].includes(section) ? 'c
 // the League tab here) — this screen is organised by category: The League, Gameplan/Chemistry,
 // Budget ledger, front office. No nine-slot navigation here (that's the persistent bar's job on
 // every other screen).
-export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId, onBack, focusSection, onFreeAgency, onDraftClass, onTeamRosters, onLineupPreviewChange }) {
+export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId, onBack, focusSection, onFreeAgency, onDraftClass, onTeamRosters, onLineupPreviewChange, onboardingLeague = false, onOnboardingComplete }) {
   // viewTeamId lets this screen show a DIFFERENT team's file — reached by clicking a team in
   // Standings — read-only: no substitutions, releases, or front-office moves, since those
   // actions always take myTeamId regardless of which file is on screen.
@@ -101,6 +102,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   // "active" condition is true again) — no separate transition-tracking needed here.
   const gameplanTabRef = useRef(null);
   const beginSeasonBtnRef = useRef(null);
+  const rostersButtonRef = useRef(null);
   const [showSeasonIssues, setShowSeasonIssues] = useState(false);
   useEffect(() => {
     if (!showSeasonIssues) return undefined;
@@ -113,7 +115,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   // bubble through this body handler) — an earlier version tried gating this by requiring the
   // touch to START within ~32px of the screen edge instead, which also blocked the ordinary case
   // of swiping between tabs from the middle of the screen, where nothing actually conflicts.
-  const TAB_ORDER = [team.market ? 'office' : null, 'chemistry', 'ledger'].filter(Boolean);
+  const TAB_ORDER = [team.gmType ? 'office' : null, 'chemistry', 'ledger'].filter(Boolean);
   const bodyTouchStartX = useRef(null);
   const tabbarRef = useRef(null);
   const underlineRef = useRef(null);
@@ -135,7 +137,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
     if (isDesktop) return;
     positionUnderline(TAB_ORDER.indexOf(tab), true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, isDesktop, team.market]);
+  }, [tab, isDesktop, team.gmType]);
   const handleBodyTouchStart = (event) => {
     const ownsHorizontalGesture = event.target.closest(
       '.development-picker, .tsx-overlay, .row-scroll, .strategy-deal-row, .ts-cost-blocks, .league-standings-table',
@@ -204,15 +206,14 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   if (team.hand.length > ROSTER_SIZE) seasonIssues.push(`Resolve your roster (${team.hand.length}/${ROSTER_SIZE})`);
   if (committed > cap) seasonIssues.push('Resolve team budget');
   if (!team.lineupSet || starters.length !== 5) seasonIssues.push('Set your lineup');
-  if (!state.offseason?.freeAgencyClosed?.[team.id]) seasonIssues.push('Close out free agency');
 
   return (
     <>
       <div className="screen ts-screen">
         <div className="ts-viewing-franchise"><span>{readOnly ? 'Viewing Franchise' : 'Your Franchise'}</span><strong>{team.name}</strong></div>
         <div className="ts-tabbar" ref={tabbarRef}>
-          {team.market && (
-            <button className={'ts-tab' + (tab === 'office' ? ' active' : '')} onClick={() => setTab('office')}>The League{!readOnly && !state.offseason?.freeAgencyClosed?.[team.id] && <span className="alert-badge" aria-label="League requires attention">!</span>}</button>
+          {team.gmType && (
+            <button className={'ts-tab' + (tab === 'office' ? ' active' : '')} onClick={() => setTab('office')}>The League</button>
           )}
           <button ref={gameplanTabRef} className={'ts-tab' + (tab === 'chemistry' ? ' active' : '')} onClick={() => setTab('chemistry')}>
             Gameplan
@@ -234,8 +235,8 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             <div className="ts-section league-overview">
               <div className="ts-heading">The League</div>
               <div className="league-jump-actions">
-                {onTeamRosters && <button type="button" className="league-jump-button rosters" onClick={onTeamRosters}>Rosters</button>}
-                <button type="button" className="league-jump-button free-agency" onClick={onFreeAgency}>Free Agency{!readOnly && !state.offseason?.freeAgencyClosed?.[team.id] && <span className="alert-badge" aria-label="Free Agency requires attention">!</span>}</button>
+                {onTeamRosters && <button ref={rostersButtonRef} type="button" className="league-jump-button rosters" onClick={onTeamRosters}>Rosters</button>}
+                <button type="button" className="league-jump-button free-agency" onClick={onFreeAgency}>Free Agency</button>
                 <button type="button" className="league-jump-button draft" onClick={onDraftClass}>Draft Class</button>
               </div>
               <div className="ts-heading league-standings-heading">Scouting Report</div>
@@ -342,7 +343,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             </div>
           )}
 
-          {team.market && showSection('chemistry') && (
+          {team.gmType && showSection('chemistry') && (
             <div className="ts-section" id="team-office">
               <div className="ts-heading">Coach & GM</div>
               {/* Coach gets its own row, GM (and Fanbase, the other front-office role) a second
@@ -431,6 +432,18 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           active={!lineupScreenOpen && !readOnly && !team.lineupSet}
           steps={[{ targetRef: gameplanTabRef, title: 'Build Your Team', body: 'Set your starting five here — tap Gameplan to get started.' }]}
         />
+        {onboardingLeague && showSection('office') && (
+          <Coachmark
+            targetRef={rostersButtonRef}
+            title="League Rosters"
+            body="Open Rosters to view every franchise and inspect their full player cards. You can also add players from other teams to your scouting report."
+            step={1}
+            total={1}
+            lastLabel="Got It"
+            onDismiss={onOnboardingComplete}
+            onNext={onOnboardingComplete}
+          />
+        )}
         <CoachmarkTour
           storageKey="nine-deep-onboard-begin-season-seen"
           active={!lineupScreenOpen && !readOnly && !onBack && team.lineupSet}
@@ -481,8 +494,6 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                         <button type="button" onClick={() => { setShowSeasonIssues(false); setTab('ledger'); }}>Budget</button>
                       ) : msg.startsWith('Resolve your roster') ? (
                         <button type="button" onClick={() => { setShowSeasonIssues(false); setTab('ledger'); }}>{msg}</button>
-                      ) : msg === 'Close out free agency' ? (
-                        <button type="button" onClick={() => { setShowSeasonIssues(false); onFreeAgency?.(); }}>Free Agency</button>
                       ) : msg}
                     </li>
                   ))}

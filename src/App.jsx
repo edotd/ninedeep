@@ -8,7 +8,6 @@ import { OnboardingModeProvider } from './hooks/useOnboardingMode';
 import SplashScreen from './components/SplashScreen';
 
 function AppInner() {
-  const [entrySplashDone, setEntrySplashDone] = useState(false);
   const [mode, setMode] = useState(null); // null | 'solo' | { roomCode, uid }
   const [pendingJoinCode] = useState(() => {
     const room = new URLSearchParams(window.location.search).get('room');
@@ -24,8 +23,6 @@ function AppInner() {
     setMode(null);
   };
 
-  if (!entrySplashDone) return <SplashScreen onComplete={() => setEntrySplashDone(true)} />;
-
   if (mode === 'solo') {
     // Resets the local game state AND returns to the entry/setup screen — GameShell has no
     // screen for the freshly-reset 'setup' phase (that's EntryScreen's job, one level up), so
@@ -39,14 +36,16 @@ function AppInner() {
   }
 
   return (
-    <EntryScreen
-      pendingJoinCode={pendingJoinCode}
-      joinOnly={Boolean(pendingJoinCode)}
-      soloState={localGame.state}
-      soloActions={localGame.actions}
-      onStartSolo={() => setMode('solo')}
-      onEnterRoom={(roomCode, uid) => setMode({ roomCode, uid })}
-    />
+    <SplashScreen>
+      <EntryScreen
+        pendingJoinCode={pendingJoinCode}
+        joinOnly={Boolean(pendingJoinCode)}
+        soloState={localGame.state}
+        soloActions={localGame.actions}
+        onStartSolo={() => setMode('solo')}
+        onEnterRoom={(roomCode, uid) => setMode({ roomCode, uid })}
+      />
+    </SplashScreen>
   );
 }
 

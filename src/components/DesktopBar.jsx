@@ -118,7 +118,7 @@ export default function DesktopBar({ state, myTeamId, actions, dealProgress }) {
   const coach = foCount >= 1 ? team.coach : null;
   const activeGameplan = team.coach?.gameplans?.find((plan) => plan.id === team.activeGameplanId);
   const fanbaseArchetype = fanbaseDealt && foCount >= 2 ? team.fanbaseArchetype : null;
-  const market = foCount >= (fanbaseDealt ? 3 : 2) ? team.market : null;
+  const gm = foCount >= (fanbaseDealt ? 3 : 2) ? team.gmType : null;
   const frontOfficeTeam = foCount >= 1 ? team : null;
   const fullyDealt = !inDeal || (dealProgress ?? 0) >= rawStarters.length + rawBench.length + foTotal;
   const gameplanCards = fullyDealt ? (team.gameplanCards || []).filter((card) => !card.used) : [];
@@ -220,7 +220,7 @@ export default function DesktopBar({ state, myTeamId, actions, dealProgress }) {
             onLeave={handleLeave}
           />
           {fanbaseDealt && <FrontOfficeSlot label="Fans" value={fanbaseArchetype ? fanbaseArchetype.name : null} tone={fanbaseArchetype && fanbaseArchetype.name === 'Die Hard' ? 'notable' : null} kind="fanbase" team={frontOfficeTeam} onHover={handleHover} onLeave={handleLeave} />}
-          <FrontOfficeSlot label="GM" value={market ? (team.gmType || 'Neutral') : null} kind="market" team={frontOfficeTeam} onHover={handleHover} onLeave={handleLeave} />
+          <FrontOfficeSlot label="GM" value={gm || null} kind="market" team={frontOfficeTeam} onHover={handleHover} onLeave={handleLeave} />
         </div>
       </div>
       <div className="db-section db-slots-fixed">

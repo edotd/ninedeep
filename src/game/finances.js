@@ -73,18 +73,18 @@ export function hireFreeAgentCoach(state, teamIdx, coachId) {
 export function fireGM(state, teamIdx) {
   const team = state.teams[teamIdx];
   if (!state.settings?.coachChangesEnabled) return { ok: false, msg: 'Coach & GM Changes is off — turn it on in Settings.' };
-  if (!team?.market) return { ok: false, msg: 'No GM to fire.' };
+  if (!team?.gmType) return { ok: false, msg: 'No GM to fire.' };
   if (team.gmChangeSeason === state.season) return { ok: false, msg: 'GM already replaced this season.' };
-  const next = drawGM(team.gmType || 'Neutral');
-  const attendanceMult = 0.9 + (team.attendance ?? 0.5) * 0.2;
-  const capChange = Math.round((next.market.capAdj - team.market.capAdj) * attendanceMult * 2) / 2;
+  const next = drawGM();
+  const oldCapBonus = team.gmTrait?.name === 'Cap Architect' ? (team.gmTrait.value || 0) : 0;
+  const newCapBonus = next.trait?.name === 'Cap Architect' ? (next.trait.value || 0) : 0;
+  const capChange = newCapBonus - oldCapBonus;
   addDeadCap(team, gmCost(team.gmType) / 2, 1, {
-    kind: 'gm', label: `${team.gmType || 'Neutral'} GM`, detail: team.market?.name || '',
+    kind: 'gm', label: team.gmType || 'General Manager', detail: team.gmTrait?.name || '',
   });
   team.gmType = next.type;
   team.gmRarity = next.rarity;
   team.gmTrait = next.trait;
-  team.market = next.market;
   team.seasonCap += capChange;
   team.gmChangeSeason = state.season;
   return { ok: true };

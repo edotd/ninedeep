@@ -32,6 +32,7 @@ export function rehydrateState(state) {
     if (!team.gmTrait) team.gmTrait = { name: 'Neutral', value: 0, description: 'No additional front-office effect.' };
     team.gmType = team.gmType ? 'General Manager' : team.gmType;
     team.gmRarity ||= 'Core';
+    delete team.market;
     if (!team.sixthManId) team.sixthManId = (team.hand || []).find((card) => !(team.activeIds || []).includes(card.id))?.id || null;
     team.developmentCards ||= [];
     team.gameplanCards ||= [];

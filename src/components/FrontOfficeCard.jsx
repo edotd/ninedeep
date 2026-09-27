@@ -83,14 +83,25 @@ function fanbaseContent(team) {
 }
 
 function marketContent(team) {
-  const m = team.market;
   const type = 'General Manager';
   const trait = team.gmTrait || { name: 'Neutral', value: 0, description: 'No additional front-office effect.' };
+  const percentValue = (trait.value || 0) * 2;
   const traitValue = trait.name === 'Third Eye'
     ? 'Peak projection'
     : trait.name === 'Cap Architect' ? `+${formatCoins(trait.value)}`
       : trait.name === 'Talent Hawk' ? `+${trait.value} scouted`
         : `+${trait.value * 2}%`;
+  const traitDetail = trait.name === 'Cap Architect'
+    ? `${trait.name} — Increases the franchise budget by ${formatCoins(trait.value || 0)}.`
+    : trait.name === 'Third Eye'
+      ? `${trait.name} — Reveals a scouted player's projected peak-prime stats.`
+      : trait.name === 'Talent Hawk'
+        ? `${trait.name} — Increases scouting capacity by ${trait.value || 0} player${trait.value === 1 ? '' : 's'}.`
+        : trait.name === 'Hands-Off'
+          ? `${trait.name} — Adds ${percentValue}% for every year the coach or starting five remains with the franchise.`
+          : trait.name === 'Deal Maker'
+            ? `${trait.name} — Reduces bidding and negotiation requests by ${percentValue}%.`
+            : `${trait.name} — ${trait.description}`;
   return {
     name: type,
     qualifier: team.gmRarity || 'Core',
@@ -98,22 +109,21 @@ function marketContent(team) {
     dispositionTone: 'approved-ink',
     effects: [
       { label: 'Cost', value: formatCoins(gmCost(type)), tone: 'file' },
-      { label: 'Budget Increase', value: `+${formatCoins(m.capAdj)}`, tone: 'approved-ink' },
-      { label: 'Market Size', value: m.name, tone: 'file' },
+      { label: 'Budget Increase', value: trait.name === 'Cap Architect' ? `+${formatCoins(trait.value)}` : '—', tone: trait.name === 'Cap Architect' ? 'approved-ink' : 'file' },
       { label: 'Trait', value: traitValue, tone: 'approved-ink' },
     ],
-    detail: trait.description,
+    detail: traitDetail,
     duration: 'Holds Until Fired',
   };
 }
 
-export default function FrontOfficeCard({ kind, team }) {
+export default function FrontOfficeCard({ kind, team, onboardingFocus }) {
   const meta = KIND_META[kind];
   const content = kind === 'coach' ? coachContent(team) : kind === 'fanbase' ? fanbaseContent(team) : marketContent(team);
   const coachRarity = kind === 'coach' ? (team.coach.rarity || 'Core') : kind === 'market' ? (team.gmRarity || 'Core') : null;
   return (
     <div className="fo2-wrap">
-      <div className={'fo2-card' + (coachRarity ? ` rarity-${coachRarity}` : '')}>
+      <div className={'fo2-card' + (coachRarity ? ` rarity-${coachRarity}` : '') + (onboardingFocus ? ` onboarding-card onboarding-${onboardingFocus}` : '')}>
         {coachRarity && (RARITY_CORNERS[coachRarity] || []).map((c) => <span key={c} className={'rarity-corner ' + c} />)}
         <CardTypeMark type="frontoffice" className="fo2-watermark" color="var(--ink-rule)" size={190} />
         <div className="fo2-logo-mark"><BallMark size={44} variant="onInk" /></div>

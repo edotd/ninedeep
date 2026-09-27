@@ -24,6 +24,7 @@ import { applyPlayoffWinMilestone, fanbaseEnabled } from './fanbase';
 import { activeCoachGameplan, applyGameplanToTurn, setCoachGameplan, syncSeasonGameplan } from './strategyCards';
 import { beginTurn as initializeTurn } from './turn';
 import { scoutingLimit } from './gm';
+import { forceFinalizeTeamBids, resolveAllFreeAgentBidding } from './bidding';
 
 function humanTeams(state) {
   return state.teams.filter((t) => t.human);
@@ -73,7 +74,7 @@ export function proceedFromCardOverview(state) {
 // Continue button calls this directly.
 export function proceedToSeason1(state) {
   const needsFanbase = fanbaseEnabled(state);
-  if (!allHumansReady(state, (t) => t.coach && t.market && (!needsFanbase || t.fanbaseArchetype))) return;
+  if (!allHumansReady(state, (t) => t.coach && t.gmType && (!needsFanbase || t.fanbaseArchetype))) return;
   initSeasonModifierCards(state);
 }
 
@@ -113,10 +114,24 @@ export function confirmLineup(state, teamIdx) {
   if (!team.lineupSet) return { valid: false, msg: 'Set your lineup before the season begins.' };
   const v = validateLineup(team);
   if (!v.valid) return v;
-  if (!state.offseason?.freeAgencyClosed?.[team.id]) return { valid: false, msg: 'Close out free agency before the season begins.' };
   team.lineupConfirmed = true;
   team.overBudgetLastSeason = overBudget;
   if (allHumansReady(state, (t) => t.lineupConfirmed)) {
+    // Begin Season is also the market deadline. Closing Free Agency remains available as an
+    // optional early lock, but every human can ready up without using it; once all are ready,
+    // finalize and resolve the shared bid board exactly once before validating awarded rosters.
+    humanTeams(state).forEach((candidate) => forceFinalizeTeamBids(state, candidate));
+    resolveAllFreeAgentBidding(state);
+    const invalidTeams = humanTeams(state).filter((candidate) => candidate.hand.length > ROSTER_SIZE || rosterSalary(candidate) > candidate.seasonCap + MAX_CAP_OVERAGE);
+    if (invalidTeams.length) {
+      invalidTeams.forEach((candidate) => { candidate.lineupConfirmed = false; });
+      if (invalidTeams.includes(team)) {
+        return { valid: false, msg: team.hand.length > ROSTER_SIZE
+          ? `Resolve your roster before the season begins. You currently have ${team.hand.length} of ${ROSTER_SIZE} players.`
+          : `Get under budget before the season begins. You are using ${rosterSalary(team)} of ${team.seasonCap} (up to ${MAX_CAP_OVERAGE} over is allowed).` };
+      }
+      return { valid: true, msg: 'Waiting for another franchise to resolve its roster or budget.' };
+    }
     state.teams.filter((t) => !t.human).forEach((t) => { t.activeIds = autoSelectFive(t.hand); assignSixthMan(t); t.lineupSet = true; });
     lockSeasonAndSeed(state);
   }
