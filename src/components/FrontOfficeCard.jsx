@@ -35,7 +35,10 @@ function coachContent(team) {
   return {
     name: coach.archetype,
     qualifier: team.retainedStreak ? `Retained ${team.retainedStreak} season${team.retainedStreak === 1 ? '' : 's'}` : 'League appointment',
-    disposition: null,
+    // The modifier name is the card's headline trait (same big teal-word slot every other kind
+    // uses for its own — Casual/Steady/Die Hard for Fanbase) — it needs its own description
+    // underneath regardless, so that stays in `detail` rather than repeating the name there too.
+    disposition: coach.modifier,
     dispositionTone: 'approved-ink',
     effects: [
       { label: 'Cost', value: formatCoins(coach.salary), tone: 'file' },
@@ -44,7 +47,7 @@ function coachContent(team) {
       { label: 'Player Relations', value: coach.playerRelationship, tone: 'file' },
       { label: 'Development Points', value: team.developmentPoints || 0, tone: 'approved-ink' },
     ],
-    detail: `${coach.modifier} — ${coach.ability || 'Improves the coach’s base Offense and Defense bonuses.'}`,
+    detail: coach.ability || 'Improves the coach’s base Offense and Defense bonuses.',
     rarityLead: { label: 'Gameplans', value: [primaryGameplan?.name, secondaryGameplan?.name].filter(Boolean).join(' · ') || 'None' },
     duration: 'Holds Through Era 01',
   };

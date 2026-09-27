@@ -268,11 +268,18 @@ html[data-theme="dark"] .coachmark-skip:hover{color:var(--file);}
 .standing-row.you{color:var(--stamp);font-weight:500;}
 .standing-row:hover{background:var(--form-rule);}
 .standing-row-pick{display:flex;align-items:center;gap:7px;}
+/* Draft Order's rows are plain flex(space-between) at the base .standing-row level, which lets
+   the second column drift left/right per row depending on how long that row's team name is —
+   a fixed grid keeps both columns aligned across every row regardless of name length. Scoped to
+   this modifier rather than the base class, which several other screens (Results, Era End,
+   Lobby) also use with layouts that don't have this problem. */
+.standing-row.draft-order-row{display:grid;grid-template-columns:minmax(150px,1.3fr) minmax(150px,1fr);align-items:center;gap:10px;}
+.standing-row.draft-order-row>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 /* An ultra-compact player-card stand-in (see DraftScreen.jsx's PickSwatch) — just the card's
    own rounded silhouette at a fraction of size, outlined in its rarity color. */
 .draft-pick-outline{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:32px;height:44px;border:2px solid;border-radius:6px;background:var(--form);color:inherit;font-family:var(--font-label);font-size:14px;font-weight:700;padding:0;cursor:pointer;}
 .draft-pick-outline:hover{background:var(--form-rule);}
-.league-standings-table{margin-top:18px;border-top:2px solid var(--ink);}
+.league-standings-table{margin-top:18px;border-top:2px solid var(--ink);background:var(--form);}
 .league-standings-row{width:100%;display:grid;grid-template-columns:minmax(180px,2fr) repeat(4,minmax(100px,1fr));align-items:center;padding:12px 10px;border:0;border-bottom:1px solid var(--form-rule);background:transparent;color:var(--ink);font:13px var(--font-mono);text-align:right;cursor:pointer;}
 .league-standings-row.head{font:10px var(--font-label);letter-spacing:.09em;text-transform:uppercase;color:var(--file-muted);cursor:default;}
 .league-standings-row span:first-child{text-align:left;}.league-standings-row:not(.head):hover{background:var(--form-rule);}.league-standings-row.you{color:var(--stamp-text);}.league-standings-row:disabled{cursor:default;}
@@ -948,8 +955,8 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .ec-team-name{font-family:var(--font-label);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:8px;}
 .ec-team-tricode{margin-left:6px;color:var(--franchise);}
 .ec-row{display:flex;gap:14px;overflow-x:auto;padding-bottom:6px;}
-.ec-card{flex:0 0 180px;}
-.ec-card .pcard{width:180px;max-width:none;margin:0;}
+.ec-card{flex:0 0 264px;}
+.ec-card .pcard{width:264px;max-width:none;margin:0;}
 
 /* ================= Team Summary (1a, "the file") — brand handoff Screen: Team Summary.
    Filed once per season, right after the hand is dealt. ================= */
@@ -1112,12 +1119,12 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .ts-ledger-person.releasable{grid-template-columns:minmax(170px,1fr) minmax(220px,2fr) auto;}
 .ts-ledger-release{background:none;border:1px solid var(--stamp);color:var(--stamp);font:12px var(--font-label);letter-spacing:.08em;text-transform:uppercase;padding:8px 10px;white-space:nowrap;cursor:pointer;}
 .ts-ledger-release:hover{background:var(--stamp);color:var(--form);}
-.ts-ledger-identity{display:flex;align-items:center;gap:8px;min-width:0;font:13px var(--font-mono);color:var(--file-body);}.ts-ledger-identity strong{font:26px var(--font-display);font-weight:400;color:var(--stamp);}.ts-ledger-identity .ts-ledger-grade{font:19px var(--font-label);color:var(--ink);}.ts-ledger-identity>span:not(.ts-ledger-grade){white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.ts-ledger-identity em{font-style:normal;text-transform:uppercase;font-size:11px;letter-spacing:.08em;color:var(--file-muted);border:1px solid var(--form-rule);padding:2px 5px;white-space:nowrap;}
+.ts-ledger-identity{display:flex;align-items:center;gap:8px;min-width:0;font:16px var(--font-mono);color:var(--file-body);}.ts-ledger-identity strong{font:30px var(--font-display);font-weight:400;color:var(--stamp);}.ts-ledger-identity .ts-ledger-grade{font:22px var(--font-label);color:var(--ink);}.ts-ledger-identity>span:not(.ts-ledger-grade){white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.ts-ledger-identity em{font-style:normal;text-transform:uppercase;font-size:11px;letter-spacing:.08em;color:var(--file-muted);border:1px solid var(--form-rule);padding:2px 5px;white-space:nowrap;}
 .ts-cost-blocks{display:flex;gap:4px;justify-content:flex-start;overflow-x:auto;padding-bottom:2px;}.ts-cost-block{min-width:64px;height:42px;background:var(--ink);color:var(--file);border-radius:2px;padding:4px 6px;display:flex;flex-direction:column;justify-content:center;}.ts-cost-block span{font:13px var(--font-mono);white-space:nowrap;}.ts-cost-block small{font:10px var(--font-mono);letter-spacing:.08em;color:var(--ink-muted);}
 .ts-team-costs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}.ts-team-costs>div{background:var(--form);border:1px solid var(--form-rule);padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:12px;}.ts-team-costs span{font:13px var(--font-label);text-transform:uppercase;color:var(--file-body);}.ts-team-costs strong{font:19px var(--font-mono);font-weight:500;color:var(--ink);}
 .ts-ledger-group.expiring .ts-cost-block,.ts-ledger-group.dead-cap .ts-cost-block{background:var(--stamp);}.ts-ledger-empty{padding:12px 0;font:14px var(--font-mono);color:var(--file-muted);}
 .ts-empty-coach{height:100%;min-height:250px;border:2px dashed var(--depth-nontext);background:var(--form);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;}.ts-empty-coach span{font:9px var(--font-label);letter-spacing:.12em;text-transform:uppercase;color:var(--file-muted);}.ts-empty-coach strong{font:32px var(--font-display);font-weight:400;color:var(--ink);margin:7px 0;}.ts-empty-coach small{font:10px var(--font-mono);color:var(--file-muted);max-width:180px;}
-@media(max-width:700px){.ts-ledger-person,.ts-ledger-person.releasable{grid-template-columns:1fr;gap:7px;}.ts-team-costs{grid-template-columns:1fr;}.ts-ledger-topline strong{font-size:32px;}.ts-ledger-identity{flex-wrap:wrap;}.ts-ledger .ts-ledger-identity{font-size:10px;}.ts-ledger .ts-ledger-identity strong{font-size:16px;}.ts-ledger .ts-ledger-identity .ts-ledger-grade{font-size:13px;}.ts-budget-seg span{display:none;}.ts-ledger-release{width:100%;}}
+@media(max-width:700px){.ts-ledger-person,.ts-ledger-person.releasable{grid-template-columns:1fr;gap:7px;}.ts-team-costs{grid-template-columns:1fr;}.ts-ledger-topline strong{font-size:32px;}.ts-ledger-identity{flex-wrap:wrap;}.ts-ledger .ts-ledger-identity{font-size:14px;}.ts-ledger .ts-ledger-identity strong{font-size:24px;}.ts-ledger .ts-ledger-identity .ts-ledger-grade{font-size:18px;}.ts-budget-seg span{display:none;}.ts-ledger-release{width:100%;}}
 .ts-ledger-row{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:15px;color:var(--ink);border-bottom:1px solid var(--form-rule);padding-bottom:5px;margin-top:5px;}
 .ts-ledger-row span:first-child{color:var(--file-muted);}
 .ts-ledger-row span.bad{color:var(--stamp-text);}
@@ -1959,17 +1966,22 @@ html[data-theme="dark"] .wordmark-ink{color:var(--file);}
 .slf-set-gameplan{margin:12px 24px 0;width:calc(100% - 48px);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:2px solid var(--franchise);background:var(--ink-deep);color:var(--file);cursor:pointer;text-align:left;}
 .slf-set-gameplan span{font:11px var(--font-label);letter-spacing:.1em;text-transform:uppercase;}.slf-set-gameplan strong{font:20px var(--font-display);font-weight:400;color:var(--franchise);}
 .slf-gameplan-modal-backdrop{position:fixed;inset:0;z-index:720;background:rgba(11,17,30,.88);display:flex;align-items:center;justify-content:center;padding:20px;}
-.slf-gameplan-modal{width:min(520px,100%);padding:18px;background:var(--ink);border:2px solid var(--franchise);box-shadow:0 22px 60px rgba(0,0,0,.55);}
-.slf-gameplan-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;}.slf-gameplan-modal-head h3{margin:3px 0 0;font:28px var(--font-display);color:var(--file);font-weight:400;}
-.slf-gameplan-options{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:7px;}
-.slf-gameplan-options button{display:flex;flex-direction:column;gap:3px;padding:10px;text-align:left;border:1px solid var(--ink-rule);background:transparent;color:var(--file);}
+.slf-gameplan-modal{width:min(520px,100%);height:min(640px,90vh);padding:18px;background:var(--ink);border:2px solid var(--franchise);box-shadow:0 22px 60px rgba(0,0,0,.55);display:flex;flex-direction:column;box-sizing:border-box;}
+.slf-gameplan-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;flex-shrink:0;}.slf-gameplan-modal-head h3{margin:3px 0 0;font:28px var(--font-display);color:var(--file);font-weight:400;}
+/* Each option (None/Primary/Secondary) is an equal-height flex item nearly filling the modal —
+   was a 2-up grid with height driven by whichever option had the most text, so None (no
+   description) looked visibly smaller than the other two. */
+.slf-gameplan-options{display:flex;flex-direction:column;gap:10px;margin-top:7px;flex:1;min-height:0;}
+.slf-gameplan-options button{flex:1;display:flex;flex-direction:column;justify-content:center;gap:6px;padding:18px;text-align:left;border:1px solid var(--ink-rule);background:transparent;color:var(--file);}
 .slf-gameplan-options button.active{border:2px solid var(--franchise);background:rgba(240,160,61,.1);}
-.slf-gameplan-options span,.slf-gameplan-options small{font:9px var(--font-mono);color:var(--ink-muted);}.slf-gameplan-options strong{font:17px var(--font-display);color:var(--franchise);font-weight:400;}
+.slf-gameplan-options span{font:11px var(--font-mono);color:var(--ink-muted);}
+.slf-gameplan-options small{font:12px var(--font-mono);color:var(--ink-muted);line-height:1.4;}
+.slf-gameplan-options strong{font:24px var(--font-display);color:var(--franchise);font-weight:400;}
 .development-points-summary{display:flex;flex-direction:column;gap:4px;width:100%;}.development-points-summary strong{font:44px var(--font-display);color:var(--approved-file);}.development-points-summary span,.development-points-summary small{font:11px var(--font-mono);}
 .development-stat-button{padding:16px;border:2px solid var(--approved-file);background:transparent;color:var(--approved-file);font-family:var(--font-label);}
 .tc2-bonus-row button.tc2-bonus{appearance:none;text-align:left;color:inherit;cursor:pointer;background:transparent;border:1px solid transparent;padding:9px;}
 .tc2-bonus-row button.tc2-bonus.selected{border-color:var(--approved-file);background:rgba(70,137,103,.12);}
-@media(max-width:700px){.league-output-grid{grid-template-columns:1fr 1fr}.league-jump-actions{grid-template-columns:1fr}.slf-gameplan-options{grid-template-columns:1fr}}
+@media(max-width:700px){.league-output-grid{grid-template-columns:1fr 1fr}.league-jump-actions{grid-template-columns:1fr}}
 .standings-table{max-width:1000px;}
 .standings-head-row,.standings-row{display:grid;grid-template-columns:1fr 100px 100px 90px;gap:10px;align-items:center;padding:12px;}
 .standings-head-row{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-muted);border-bottom:1px solid var(--ink-rule);text-align:right;}

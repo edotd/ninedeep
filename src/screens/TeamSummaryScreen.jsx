@@ -340,7 +340,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   }, [tab, isDesktop, team.market]);
   const handleBodyTouchStart = (event) => {
     const ownsHorizontalGesture = event.target.closest(
-      '.ts-roto-scroll, .development-picker, .tsx-overlay, .row-scroll, .strategy-deal-row, .ts-cost-blocks',
+      '.ts-roto-scroll, .development-picker, .tsx-overlay, .row-scroll, .strategy-deal-row, .ts-cost-blocks, .league-standings-table',
     );
     if (ownsHorizontalGesture) {
       bodyTouchStartX.current = null;

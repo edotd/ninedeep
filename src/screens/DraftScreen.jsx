@@ -77,13 +77,13 @@ export default function DraftScreen({ state, actions, myTeamId }) {
         <>
           <h2>Draft Order</h2>
           {[...draft.picks].reverse().map((p, i) => (
-            <div key={'picked-' + p.card.id} className={'standing-row' + (p.teamId === myTeamId ? ' you' : '')}>
+            <div key={'picked-' + p.card.id} className={'standing-row draft-order-row' + (p.teamId === myTeamId ? ' you' : '')}>
               <span>#{i + 1} {p.teamName}</span>
               <span className="standing-row-pick"><DraftPickOutline card={p.card} onClick={() => setViewedCard(p.card)} />{pickLine(p.card)}</span>
             </div>
           ))}
           {draft.queue.map((t, i) => (
-            <div key={'pending-' + t.id} className={'standing-row' + (t === myTeam ? ' you' : '')}>
+            <div key={'pending-' + t.id} className={'standing-row draft-order-row' + (t === myTeam ? ' you' : '')}>
               <span>#{draft.picks.length + i + 1} {t.name}</span>
               <span>{i === 0 ? 'On the clock' : 'Pending'}</span>
             </div>
