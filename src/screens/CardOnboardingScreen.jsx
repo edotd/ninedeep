@@ -27,15 +27,18 @@ const TOURS = {
 export default function CardOnboardingScreen({ type, team, onComplete }) {
   const [step, setStep] = useState(0);
   const tour = TOURS[type] || TOURS.player;
-  const item = tour[step];
-  const last = step === tour.length - 1;
-  const next = () => last ? onComplete() : setStep((value) => value + 1);
+  const safeStep = Math.min(Math.max(0, step), tour.length - 1);
+  const item = tour[safeStep] || TOURS.player[0];
+  const last = safeStep >= tour.length - 1;
+  // Use the rendered step rather than a functional increment. Two taps before the next render
+  // now both request the same next index instead of advancing twice and escaping the tour.
+  const next = () => last ? onComplete() : setStep(Math.min(safeStep + 1, tour.length - 1));
   const card = team.hand?.[0];
 
   return (
     <main className="card-onboarding-screen">
       <div className="card-onboarding-heading">
-        <span>Card Guide · {step + 1} of {tour.length}</span>
+        <span>Card Guide · {safeStep + 1} of {tour.length}</span>
         <h1>{type === 'player' ? 'Player Card' : type === 'coach' ? 'Coach Card' : 'GM Card'}</h1>
       </div>
       <div className="card-onboarding-stage">
