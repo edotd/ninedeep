@@ -152,6 +152,14 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
   };
   const isDesktop = useIsDesktop();
   const showChrome = state.teams && state.teams.length > 0;
+  // splashDone is in every dependency array below purely so these retry once the splash
+  // finishes: while it's showing, GameShell's early return means .mobile-persistent-top/
+  // .desktop-persistent-top/the persistent bar don't exist yet, so the ref is null, the effect
+  // bails out immediately, and — since neither isDesktop nor showChrome changes when the splash
+  // finishes — it would otherwise never run again, permanently stranding the matching CSS
+  // variable at 0px (this is exactly what threw off WelcomeScreen's centering: its mobile
+  // min-height subtracts --mobile-persistent-top-height, which never left 0 once the real,
+  // ~160px header actually mounted after the splash).
   useEffect(() => {
     if (isDesktop || !mobileTopRef.current) return undefined;
     const updateHeight = () => setMobileTopHeight(mobileTopRef.current?.getBoundingClientRect().height || 0);
@@ -159,7 +167,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
     const observer = new ResizeObserver(updateHeight);
     observer.observe(mobileTopRef.current);
     return () => observer.disconnect();
-  }, [isDesktop, showChrome]);
+  }, [isDesktop, showChrome, splashDone]);
 
   useEffect(() => {
     if (!isDesktop || !desktopTopRef.current) return undefined;
@@ -168,7 +176,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
     const observer = new ResizeObserver(updateHeight);
     observer.observe(desktopTopRef.current);
     return () => observer.disconnect();
-  }, [isDesktop, showChrome]);
+  }, [isDesktop, showChrome, splashDone]);
 
   // The Rotation tab's locked carousel now keeps the persistent bar on screen (it used to hide
   // it entirely), so it needs this bar's real height to reserve space for it, the same way it
@@ -180,7 +188,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
     const observer = new ResizeObserver(updateHeight);
     observer.observe(persistentBarRef.current);
     return () => observer.disconnect();
-  }, [isDesktop, showChrome]);
+  }, [isDesktop, showChrome, splashDone]);
 
   // The live match board and the Rotation tab's locked carousel both need to know the TRUE
   // visible viewport height and the real safe-area inset sizes, in px, to fit their content
