@@ -52,7 +52,7 @@ export default function TeamChemistry({ team, canEdit, onEditLineup }) {
     <section className="tc2-panel">
       <div className="tc2-grid">
         <div className="tc2-grade-block">
-          <div className="ts-heading">Team Chemistry</div>
+          <div className="ts-heading">Your team's fit and continuity.</div>
           <div className="tc2-grade-row">
             <span className="tc2-grade">{team.lineupSet ? current.grade : '—'}</span>
             {team.lineupSet && <span className="tc2-score">{current.score}</span>}
@@ -61,10 +61,9 @@ export default function TeamChemistry({ team, canEdit, onEditLineup }) {
             {canEdit === false ? 'View Lineup' : team.lineupSet ? 'Edit Lineup' : 'Set Lineup'}
             {canEdit !== false && !team.lineupSet && <span className="alert-badge" aria-label="Lineup not set">!</span>}
           </button>
-          <p className="tc2-note">Your team's fit, continuity and bonuses from any chemistry-related card effects</p>
         </div>
 
-        {team.lineupSet ? (
+        {team.lineupSet && (
           <div className="tc2-bonus-row">
             <button type="button" className={'tc2-bonus' + (expanded === 'offense' ? ' selected' : '')} onClick={() => setExpanded(expanded === 'offense' ? null : 'offense')}>
               <div className="tc2-bonus-label">Offensive Bonus</div>
@@ -79,8 +78,6 @@ export default function TeamChemistry({ team, canEdit, onEditLineup }) {
               <div className="tc2-bonus-value">{bonusValue(current.continuity)}</div>
             </button>
           </div>
-        ) : (
-          <p className="tc2-note tc2-bonus-row-empty">Set your lineup to see your Offense, Defense and Continuity bonuses.</p>
         )}
       </div>
 

@@ -166,10 +166,6 @@ p.lede{color:var(--file-body);font-size:14px;line-height:1.5;margin:0 0 14px;}
 .reset-link{background:none;border:none;color:var(--ink-muted);font-family:var(--font-label);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:8px 10px;white-space:nowrap;}
 .reset-link.active{color:var(--ink);background:var(--file);}
 .topbar-menu-btn{background:none;border:1px solid transparent;padding:2px;line-height:0;cursor:pointer;}
-.nav-attention{position:relative;animation:nav-attention-pulse .8s ease-in-out infinite alternate;}
-.nav-attention::after{content:'!';position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--stamp);color:#fff;border:2px solid var(--file);font:700 13px/1 var(--font-label);}
-@keyframes nav-attention-pulse{from{transform:scale(1);}to{transform:scale(1.08);}}
-@media(prefers-reduced-motion:reduce){.nav-attention{animation:none;}}
 
 /* On mobile the logo doubles as the Team/Free Agency/Standings/Glossary/Settings menu's
    trigger instead of that row sitting permanently under the era bar — real vertical space
@@ -332,17 +328,17 @@ input.text-input.lobby-name-input{min-width:0;margin:0;padding:10px 12px;}
    need transform-box:fill-box or a scale() transform pivots on the SVG viewport's origin, not
    the dot's own center. */
 .nd-ball-animate .nd-ball-body{opacity:0;animation:nd-ball-fade-scale .5s ease-out .05s forwards;}
-.nd-ball-animate .nd-ball-seam{opacity:0;animation:nd-ball-fade .5s ease-out .75s forwards;}
-.nd-ball-animate .nd-ball-dot{opacity:0;transform-box:fill-box;transform-origin:center;animation:nd-ball-dot-in .4s cubic-bezier(.34,1.56,.64,1) forwards;}
-.nd-ball-animate .nd-ball-dot:nth-child(1){animation-delay:.35s;}
-.nd-ball-animate .nd-ball-dot:nth-child(2){animation-delay:.42s;}
-.nd-ball-animate .nd-ball-dot:nth-child(3){animation-delay:.49s;}
-.nd-ball-animate .nd-ball-dot:nth-child(4){animation-delay:.56s;}
-.nd-ball-animate .nd-ball-dot:nth-child(5){animation-delay:.68s;}
-.nd-ball-animate .nd-ball-dot:nth-child(6){animation-delay:.63s;}
-.nd-ball-animate .nd-ball-dot:nth-child(7){animation-delay:.70s;}
-.nd-ball-animate .nd-ball-dot:nth-child(8){animation-delay:.77s;}
-.nd-ball-animate .nd-ball-dot:nth-child(9){animation-delay:.84s;}
+.nd-ball-animate .nd-ball-seam{opacity:0;animation:nd-ball-fade .3s ease-out .28s forwards;}
+.nd-ball-animate .nd-ball-dot{opacity:0;transform-box:fill-box;transform-origin:center;animation:nd-ball-dot-in .25s cubic-bezier(.34,1.56,.64,1) forwards;}
+.nd-ball-animate .nd-ball-dot:nth-child(1){animation-delay:.13s;}
+.nd-ball-animate .nd-ball-dot:nth-child(2){animation-delay:.16s;}
+.nd-ball-animate .nd-ball-dot:nth-child(3){animation-delay:.19s;}
+.nd-ball-animate .nd-ball-dot:nth-child(4){animation-delay:.21s;}
+.nd-ball-animate .nd-ball-dot:nth-child(5){animation-delay:.26s;}
+.nd-ball-animate .nd-ball-dot:nth-child(6){animation-delay:.24s;}
+.nd-ball-animate .nd-ball-dot:nth-child(7){animation-delay:.27s;}
+.nd-ball-animate .nd-ball-dot:nth-child(8){animation-delay:.29s;}
+.nd-ball-animate .nd-ball-dot:nth-child(9){animation-delay:.32s;}
 @keyframes nd-ball-fade-scale{from{opacity:0;transform:scale(.7);}to{opacity:1;transform:scale(1);}}
 @keyframes nd-ball-fade{to{opacity:1;}}
 @keyframes nd-ball-dot-in{from{opacity:0;transform:scale(0);}to{opacity:1;transform:scale(1);}}
@@ -353,21 +349,21 @@ input.text-input.lobby-name-input{min-width:0;margin:0;padding:10px 12px;}
 .nd-splash{position:fixed;inset:0;z-index:950;display:flex;align-items:center;justify-content:center;background:#1a2440;overflow:hidden;cursor:pointer;}
 .nd-splash.exiting{animation:nd-splash-exit .35s ease-in forwards;}
 @keyframes nd-splash-exit{to{opacity:0;}}
-.nd-splash-glow{position:absolute;inset:-20%;background:radial-gradient(circle at 30% 30%,rgba(240,160,61,.16),transparent 55%);animation:nd-splash-glow 9.5s ease-in-out forwards;pointer-events:none;}
+.nd-splash-glow{position:absolute;inset:-20%;background:radial-gradient(circle at 30% 30%,rgba(240,160,61,.16),transparent 55%);animation:nd-splash-glow 3.6s ease-in-out forwards;pointer-events:none;}
 @keyframes nd-splash-glow{0%,60%{transform:translate(-8%,-6%);}100%{transform:translate(12%,10%);}}
 .nd-splash-body{position:relative;display:flex;flex-direction:column;align-items:center;gap:18px;}
 .nd-splash-ball{position:relative;}
-.nd-splash-ring{position:absolute;inset:-8px;border-radius:50%;border:2px solid var(--franchise);opacity:0;animation:nd-splash-ring 9.5s ease-out forwards;}
+.nd-splash-ring{position:absolute;inset:-8px;border-radius:50%;border:2px solid var(--franchise);opacity:0;animation:nd-splash-ring 3.6s ease-out forwards;}
 @keyframes nd-splash-ring{0%,91%{opacity:0;transform:scale(1.08);}100%{opacity:1;transform:scale(1);}}
-.nd-splash-wordmark{display:flex;flex-direction:column;align-items:center;gap:10px;opacity:0;animation:nd-splash-wordmark 9.5s ease-out forwards;}
+.nd-splash-wordmark{display:flex;flex-direction:column;align-items:center;gap:10px;opacity:0;animation:nd-splash-wordmark 3.6s ease-out forwards;}
 @keyframes nd-splash-wordmark{0%,21%{opacity:0;transform:translateY(6px);}30%,82%{opacity:1;transform:translateY(0);}91%,100%{opacity:0;transform:translateY(-4px);}}
 .nd-splash-lockup{font-family:var(--font-display);font-size:44px;letter-spacing:.02em;white-space:nowrap;}
 .nd-splash-lockup b{color:var(--file);font-weight:400;}
 .nd-splash-lockup i{color:var(--franchise);font-style:normal;font-weight:400;}
-.nd-splash-rule{width:0;height:1px;background:var(--file-muted);animation:nd-splash-rule 9.5s ease-out forwards;}
+.nd-splash-rule{width:0;height:1px;background:var(--file-muted);animation:nd-splash-rule 3.6s ease-out forwards;}
 @keyframes nd-splash-rule{0%,24%{width:0;}33%,82%{width:100%;}91%,100%{width:0;}}
 .nd-splash-tagline{font-family:var(--font-label);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--franchise);white-space:nowrap;}
-.nd-splash-skip{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);font-family:var(--font-label);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--file-muted);opacity:0;animation:nd-splash-skip 9.5s ease-out forwards;}
+.nd-splash-skip{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);font-family:var(--font-label);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--file-muted);opacity:0;animation:nd-splash-skip 3.6s ease-out forwards;}
 @keyframes nd-splash-skip{0%,60%{opacity:0;}75%,100%{opacity:.7;}}
 @media(prefers-reduced-motion:reduce){
   .nd-splash-glow,.nd-splash-ring,.nd-splash-wordmark,.nd-splash-rule,.nd-splash-skip,.nd-ball-animate .nd-ball-body,.nd-ball-animate .nd-ball-seam,.nd-ball-animate .nd-ball-dot{animation:none;opacity:1;}
@@ -904,7 +900,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .fo2-header{display:flex;justify-content:space-between;align-items:center;padding:10px 13px;border-bottom:1px solid var(--ink-rule);}
 .fo2-kind-group{display:inline-flex;align-items:center;gap:8px;color:var(--file);}
 .fo2-kind-label{font-family:var(--font-display);font-size:26px;line-height:1;letter-spacing:.02em;text-transform:uppercase;color:var(--file);}
-.fo2-dice{font-family:var(--font-mono);font-size:14px;letter-spacing:.03em;color:#F5D033;white-space:nowrap;}
+.fo2-dice{font-family:var(--font-display);font-size:19px;letter-spacing:.02em;color:#F5D033;white-space:nowrap;}
 .fo2-kind-badge{font-family:var(--font-label);font-size:9px;letter-spacing:.06em;}
 .fo2-kind-badge.franchise{color:var(--franchise);}
 .fo2-kind-badge.approved-ink{color:var(--approved-ink);}
@@ -1060,6 +1056,13 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .ts-viewing-franchise{display:none;background:var(--file);border-bottom:1px solid var(--form-rule);padding:10px 16px;}
 .ts-viewing-franchise span{display:block;font:8px var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--file-muted);}
 .ts-viewing-franchise strong{display:block;margin-top:2px;font:26px/1 var(--font-display);font-weight:400;text-transform:uppercase;color:var(--ink);}
+.team-roster-switcher{display:flex;gap:6px;overflow-x:auto;padding:12px 16px;border-bottom:1px solid var(--form-rule);}
+.team-roster-pill{flex-shrink:0;border:1px solid var(--ink-rule);background:transparent;color:var(--file-muted);font:11px var(--font-label);letter-spacing:.08em;text-transform:uppercase;padding:8px 12px;cursor:pointer;white-space:nowrap;}
+.team-roster-pill.active{background:var(--franchise);border-color:var(--franchise);color:var(--ink);}
+.team-roster-heading-row{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.team-roster-view-toggle{display:flex;gap:4px;}
+.team-roster-view-toggle button{background:none;border:1px solid var(--ink-rule);color:var(--file-muted);font:10px var(--font-mono);letter-spacing:.06em;text-transform:uppercase;padding:5px 9px;cursor:pointer;}
+.team-roster-view-toggle button.active{color:var(--franchise);border-color:var(--franchise);}
 .ts-tab{flex:1;background:none;border:none;border-bottom:2px solid transparent;padding:12px 6px;font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-muted);cursor:pointer;}
 .ts-tab.active{color:var(--franchise);}
 /* The one warning indicator, used everywhere something needs the user's attention before they
@@ -2004,7 +2007,8 @@ html[data-theme="dark"] .wordmark-ink{color:var(--file);}
 .season-breakdown-team b,.season-breakdown-final{font-family:var(--font-display);font-size:17px;font-weight:400;}.season-breakdown-row .positive{color:var(--approved-file);}.season-breakdown-row .negative{color:var(--stamp-ink);}
 .season-breakdown-note{padding:12px 16px;}
 .league-jump-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 14px;}
-.league-jump-actions .league-jump-button{min-height:48px;border:2px solid var(--franchise);background:var(--franchise);color:var(--ink);font:12px var(--font-label);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;}.league-jump-actions .league-jump-button:hover{background:#ffb455;}
+.league-jump-actions .league-jump-button{min-height:48px;border:2px solid var(--ink);background:var(--ink);color:#F5D033;font:12px var(--font-label);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;}.league-jump-actions .league-jump-button:hover{background:var(--ink-deep);}
+.league-standings-heading{margin:18px 0 0;}
 .league-output-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
 .league-output-grid>div{display:flex;flex-direction:column;gap:4px;padding:14px;border:1px solid var(--ink-rule);background:var(--ink-deep);color:var(--file);}
 .league-output-grid span,.league-output-grid small{font:10px var(--font-mono);color:var(--ink-muted);}

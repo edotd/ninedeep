@@ -90,7 +90,7 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
     finishDealing();
   };
 
-  if (phase === 'welcome') return <WelcomeScreen onContinue={onDealDone} />;
+  if (phase === 'welcome') return <WelcomeScreen teamName={team.name} onContinue={onDealDone} />;
 
   // This guards the one-frame window on an instant mount before its effect moves to welcome.
   if (phase === 'review') return null;

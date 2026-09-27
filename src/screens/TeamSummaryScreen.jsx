@@ -2,22 +2,17 @@ import { useEffect, useRef, useState } from 'react';
 import { useIsDesktop } from '../hooks/useIsDesktop';
 import TeamChemistry from '../components/TeamChemistry';
 import SetLineupScreen from '../components/SetLineupScreen';
-import PlayerCard from '../components/PlayerCard';
 import FrontOfficeCard from '../components/FrontOfficeCard';
 import { PlayerLedgerIdentity, CostBlocks } from '../components/LedgerRow';
 import { formatCoins, rosterSalary, gmCost } from '../game/economy';
-import { jerseyNumber, playerGrade } from '../game/cards';
 import { FANBASE_BOOST_COST } from '../game/constants';
-import { sortPlayers } from '../game/playerFilters';
 import MatchupCard from '../components/MatchupCard';
 import CardBack from '../components/CardBack';
-import PlayerFilterBar from '../components/PlayerFilterBar';
 import CoachmarkTour from '../components/CoachmarkTour';
 import { teamOutput } from '../game/matchup';
 import { teamSynergy } from '../game/skillsets';
-import { DEVELOPMENT_STATS_BY_STYLE } from '../game/strategyCards';
 
-const tabForSection = (section) => ['gameplan', 'office', 'adjustment'].includes(section) ? 'chemistry' : section || 'rotation';
+const tabForSection = (section) => ['gameplan', 'office', 'adjustment'].includes(section) ? 'chemistry' : section || 'office';
 
 // Front Office / Development / Gameplan / Adjustment each render as one horizontally-scrolling
 // row of same-kind cards on mobile. Two or fewer fit the screen outright (no scrolling needed,
@@ -43,70 +38,6 @@ function RowSwipeHint({ row }) {
   return <div className="row-swipe-hint" aria-hidden="true"><span className="row-swipe-hint-chevron">›</span></div>;
 }
 
-const ROSTER_TABLE_COLUMNS = [
-  { key: 'role', label: 'Role' },
-  { key: 'position', label: 'Pos' },
-  { key: 'number', label: '#' },
-  { key: 'grade', label: 'Grd' },
-  { key: 'SCO', label: 'SCO' },
-  { key: 'PLM', label: 'PLM' },
-  { key: 'REB', label: 'REB' },
-  { key: 'DEF', label: 'DEF' },
-  { key: 'cost', label: 'Cost' },
-];
-
-// Mobile's "List" view for the Players tab — a dense, sortable table instead of a stack of
-// full player cards, so a whole nine-man roster can be scanned and compared at a glance.
-// Sort is client-local UI state, not game state — it never affects the underlying activeIds
-// order. Open roster slots always render last, unsorted, same placement as before this became
-// a table.
-function PlayerRosterTable({ starters, bench, sort, starterOpenSlots, benchOpenSlots, selectedId, canEdit, readOnly, onCardClick, onRelease, onDevelop }) {
-  const starterIds = new Set(starters.map((card) => card.id));
-  const sorted = sortPlayers(starters.concat(bench), sort).map((card) => ({ card, role: starterIds.has(card.id) ? 'Starter' : 'Bench' }));
-
-  return (
-    <div className="ts-roto-table-wrap">
-      <table className="ts-roto-table">
-        <thead>
-          <tr>
-            {ROSTER_TABLE_COLUMNS.map((col) => (
-              <th key={col.key}>{col.label}</th>
-            ))}
-            {!readOnly && <th className="ts-roto-actions-head">Actions</th>}
-          </tr>
-        </thead>
-        <tbody>
-          {sorted.map(({ card, role }) => (
-            <tr key={card.id} className={'ts-roto-row' + (selectedId === card.id ? ' selected' : '')} onClick={canEdit ? () => onCardClick(card) : undefined}>
-              <td className={'ts-roto-role ' + role.toLowerCase()}>{role}</td>
-              <td>{card.position[0]}</td>
-              <td>{jerseyNumber(card)}</td>
-              <td>{playerGrade(card)}</td>
-              <td>{card.stats.SCO}</td>
-              <td>{card.stats.PLM}</td>
-              <td>{card.stats.REB}</td>
-              <td>{card.stats.DEF}</td>
-              <td>{formatCoins(card.salary)}</td>
-              {!readOnly && (
-                <td className="ts-roto-actions">
-                  {canEdit && <button type="button" onClick={(e) => { e.stopPropagation(); onRelease(card); }}>Release</button>}
-                  {onDevelop && <button type="button" onClick={(e) => { e.stopPropagation(); onDevelop(card); }}>Dev</button>}
-                </td>
-              )}
-            </tr>
-          ))}
-          {Array.from({ length: starterOpenSlots }, (_, i) => (
-            <tr className="ts-roto-row open" key={'starter-open-' + i}><td className="ts-roto-role starter">Starter</td><td colSpan={ROSTER_TABLE_COLUMNS.length - 1 + (readOnly ? 0 : 1)}>OPEN</td></tr>
-          ))}
-          {Array.from({ length: benchOpenSlots }, (_, i) => (
-            <tr className="ts-roto-row open" key={'bench-open-' + i}><td className="ts-roto-role bench">Bench</td><td colSpan={ROSTER_TABLE_COLUMNS.length - 1 + (readOnly ? 0 : 1)}>OPEN</td></tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
 // The Team Summary screen — "the file the league keeps on you" (design brand handoff, 1a).
 // Serves two roles from the same markup: as the 'teamsummary' phase (shown once per season,
 // after the Adjustment Cards pull and the Constructing loading beat — its own button confirms
@@ -117,9 +48,11 @@ function PlayerRosterTable({ starters, bench, sort, starterOpenSlots, benchOpenS
 // `viewTeamId` (set by clicking another team in Standings) shows that team's file instead of
 // the caller's own — fully read-only, since every mutation here always targets `myTeamId`
 // regardless of whose file is on screen.
-// Read-only otherwise, organised by category: rotation, budget ledger, front office. No
-// nine-slot navigation here (that's the persistent bar's job on every other screen).
-export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId, onBack, focusSection, onFreeAgency, onDraftClass, onLineupPreviewChange }) {
+// Browsing a specific player's card lives on the separate Team Rosters screen (reached from
+// the League tab here) — this screen is organised by category: The League, Gameplan/Chemistry,
+// Budget ledger, front office. No nine-slot navigation here (that's the persistent bar's job on
+// every other screen).
+export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId, onBack, focusSection, onFreeAgency, onDraftClass, onTeamRosters, onLineupPreviewChange }) {
   // viewTeamId lets this screen show a DIFFERENT team's file — reached by clicking a team in
   // Standings — read-only: no substitutions, releases, or front-office moves, since those
   // actions always take myTeamId regardless of which file is on screen.
@@ -132,22 +65,6 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   const deadCapDue = (team.deadCap || []).reduce((s, c) => s + c.amount, 0);
   const activeSet = new Set(team.activeIds || []);
   const starters = team.hand.filter((c) => activeSet.has(c.id));
-  const bench = team.hand.filter((c) => !activeSet.has(c.id));
-  const starterOpenSlots = Math.max(0, 5 - starters.length);
-  const benchOpenSlots = Math.max(0, 4 - bench.length);
-  // Filters only ever narrow the bench pool (starters are few and already committed, so
-  // there's nothing to search for there) — open-slot placeholders aren't real cards and don't
-  // match any filter, so they're hidden whenever a filter is actually narrowing the view.
-  const [playerSort, setPlayerSort] = useState('position');
-  const handlePlayerSortChange = (sort) => {
-    setPlayerSort(sort);
-    setRotationIndex(0);
-    rotoScrollRef.current?.scrollTo({ left: 0 });
-  };
-  const sortedStarters = sortPlayers(starters, playerSort);
-  const filteredBench = sortPlayers(bench, playerSort);
-  const sortedRoster = sortPlayers(team.hand, playerSort);
-  const shownBenchOpenSlots = benchOpenSlots;
   const otherHumans = state.teams.filter((t) => t.human && t.id !== team.id);
   const waitingOn = otherHumans.filter((t) => !t.lineupConfirmed);
   const readyHumans = state.teams.filter((t) => t.human && t.lineupConfirmed);
@@ -174,9 +91,9 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   const preSeason = state.phase === 'teamsummary' || state.phase === 'pullhand';
   const canEdit = !readOnly && preSeason && !team.lineupConfirmed;
 
-  // Mobile-only tab bar (per the brand handoff's mobile Team File — Rotation/Chemistry/
-  // Office/Ledger) — on desktop every section still shows stacked in one scroll, same as
-  // before; `isDesktop` just decides whether `tab` actually filters anything.
+  // Mobile-only tab bar (per the brand handoff's mobile Team File — The League/Gameplan/
+  // Budget) — on desktop every section still shows stacked in one scroll, same as before;
+  // `isDesktop` just decides whether `tab` actually filters anything.
   const isDesktop = useIsDesktop();
   const [tab, setTab] = useState(() => tabForSection(focusSection?.section));
   const showSection = (key) => isDesktop || tab === key;
@@ -199,123 +116,26 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
     }));
   }, [focusSection]);
 
-  // Substitutions: click a starter then a bench player (either order) to swap them, click the
-  // same card again to deselect, or a different card in the same group to move the selection
-  // instead. If a starting slot is actually open (activeIds under 5 — only reachable right
-  // after releasing an active starter), there's no outgoing player to pick, so a bare click on
-  // any bench card fills it directly via promoteToStarter instead of requiring a selection.
-  const [selectedId, setSelectedId] = useState(null);
-  const [developPlayer, setDevelopPlayer] = useState(null);
   const [lineupScreenOpen, setLineupScreenOpen] = useState(false);
-  const [rotationIndex, setRotationIndex] = useState(0);
   // Onboarding anchors: the Gameplan tab (opens Team Chemistry, where Set Lineup lives) before
   // a lineup has ever been set, and Begin Season once one has. Both coachmarks are gated by
   // their own CoachmarkTour storageKey (shown once ever, ignoring later seasons where the same
   // "active" condition is true again) — no separate transition-tracking needed here.
   const gameplanTabRef = useRef(null);
   const beginSeasonBtnRef = useRef(null);
-  // Players tab view — 'carousel' is the existing one-card-per-swipe locked view; 'list' is a
-  // plain scrolling stack of full cards (Release/Develop shown inline instead of behind a
-  // hold/expand, since there's no scale-to-fit height to protect outside the carousel).
-  const [viewMode, setViewMode] = useState('carousel');
-  const [viewMenuOpen, setViewMenuOpen] = useState(false);
   const [showSeasonIssues, setShowSeasonIssues] = useState(false);
-  // The Players tab's card carousel takes over the whole screen on mobile — no page scroll
-  // competing with the horizontal card swipe (see ts-screen-lock in index.css). Only true in
-  // the Carousel view — List is a plain scrolling stack, same as every other tab. Declared here
-  // (rather than down by its own effect) because an earlier effect's dependency array also
-  // reads it, and a const read before its declaration in the same function throws.
-  const isRotationLocked = !isDesktop && tab === 'rotation' && viewMode === 'carousel';
-  useEffect(() => { if (tab !== 'rotation') setViewMenuOpen(false); }, [tab]);
   useEffect(() => {
     if (!showSeasonIssues) return undefined;
     const timer = window.setTimeout(() => setShowSeasonIssues(false), 4000);
     return () => window.clearTimeout(timer);
   }, [showSeasonIssues]);
-  useEffect(() => {
-    setSelectedId(null);
-    setRotationIndex(0);
-  }, [state.season, team.id, canEdit]);
-  // Mobile's rotation carousel is one card per swipe (starters then bench, in that order —
-  // see the JSX below) — this is how many pages it actually has, so the "more cards" chevron
-  // knows when to disappear and the end-of-carousel swipe knows when it's actually at the end.
-  const mobileCardCount = sortedRoster.length + starterOpenSlots + shownBenchOpenSlots;
-  const currentMobileCard = sortedRoster[rotationIndex];
-  const rotationTouchStartX = useRef(null);
-  const rotoScrollRef = useRef(null);
-  // The scroll container unmounts whenever another tab is showing (showSection below), so its
-  // native scrollLeft is gone by the time you swipe back — landing back on card one instead of
-  // wherever you left off. Re-derive it from the persisted rotationIndex every time this tab
-  // becomes active again, whether that's a tap on the Hand tab or a swipe back into it.
-  useEffect(() => {
-    if (isDesktop || tab !== 'rotation' || !rotoScrollRef.current) return;
-    rotoScrollRef.current.scrollLeft = rotationIndex * (rotoScrollRef.current.scrollWidth / mobileCardCount);
-    // Only ever needs to run when this tab becomes active, not on every rotationIndex tick
-    // (that would fight the user's own in-progress swipe).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, isDesktop]);
-  // A card sits at its own natural, capped width (see .ts-roto-slot in index.css) — but its
-  // natural HEIGHT can land on either side of the space the locked screen actually has for it
-  // (a dev-card note, an all-league tag, a longer bio all add up on the tall side; a bare-bones
-  // card with no accolade/development text falls short on the other), so measure every card's
-  // content height against what's available and scale the WHOLE card uniformly (never just one
-  // axis, which would distort it) to nearly fill it either way — 96%, not exactly edge to edge.
-  // Each card gets its OWN scale rather than one shared worst-case value. The card already fills
-  // the slot at its natural width, so only shrink cards that need it. Upscaling from the taller
-  // standalone viewport can push the action row underneath the persistent bottom bar.
-  // scrollHeight preserves the
-  // natural content height even with a transform already applied, and offsetHeight/clientHeight
-  // are unaffected by one either, so this is safe to re-run without resetting first.
-  useEffect(() => {
-    if (isDesktop || tab !== 'rotation' || !rotoScrollRef.current) return undefined;
-    const FILL_RATIO = 0.96;
-    const MAX_UPSCALE = 1;
-    const container = rotoScrollRef.current;
-    const applyScales = () => {
-      const containerRect = container.getBoundingClientRect();
-      const lowerChrome = [document.querySelector('.persistent-bar'), document.querySelector('.bottombar')]
-        .filter(Boolean)
-        .map((element) => element.getBoundingClientRect().top)
-        .filter((top) => top > containerRect.top);
-      const visibleBottom = lowerChrome.length ? Math.min(...lowerChrome) : containerRect.bottom;
-      const available = Math.min(container.clientHeight, visibleBottom - containerRect.top);
-      if (!available) return;
-      container.querySelectorAll('.ts-roto-grid .pcard').forEach((el) => {
-        const natural = Math.max(el.scrollHeight, el.offsetHeight);
-        if (!natural) return;
-        const scale = Math.min(MAX_UPSCALE, (available * FILL_RATIO) / natural);
-        el.style.transform = Math.abs(scale - 1) < 0.001 ? 'none' : `scale(${scale})`;
-      });
-    };
-    applyScales();
-    const firstFrame = requestAnimationFrame(() => requestAnimationFrame(applyScales));
-    const observer = new ResizeObserver(applyScales);
-    observer.observe(container);
-    return () => { cancelAnimationFrame(firstFrame); observer.disconnect(); };
-  }, [isDesktop, isRotationLocked, tab, team.hand, state.season, mobileCardCount]);
-  const handleRotationTouchStart = (event) => { rotationTouchStartX.current = event.touches[0].clientX; };
-  // Swiping further forward while already on the carousel's last card reads as "done with the
-  // rotation" — hand it off to the Chemistry tab (the next one in the bar) instead of just
-  // bouncing off the end of the scroll the way a native carousel would.
-  const handleRotationTouchEnd = (event) => {
-    const startX = rotationTouchStartX.current;
-    rotationTouchStartX.current = null;
-    if (startX == null) return;
-    const el = event.currentTarget;
-    const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 4;
-    if (!atEnd) return;
-    const deltaX = startX - event.changedTouches[0].clientX;
-    if (deltaX > 70) setTab('chemistry');
-  };
-  // Swipe anywhere in the body to move between tabs, on any tab except Rotation (that one
-  // already owns left/right for its own card-to-card carousel, including the hand-off into
-  // Chemistry past the last card — see handleRotationTouchStart/End above). Bails out for a
-  // touch that starts inside a child modal or horizontal scroller (their gestures belong to
-  // that surface, even though they bubble through this body handler) — an earlier
-  // version tried gating this by requiring the touch to START within ~32px of the screen edge
-  // instead, which also blocked the ordinary case of swiping back to Rotation from the middle
-  // of the Chemistry tab, where nothing actually conflicts.
-  const TAB_ORDER = ['rotation', 'chemistry', 'ledger', team.market ? 'office' : null].filter(Boolean);
+
+  // Swipe anywhere in the body to move between tabs. Bails out for a touch that starts inside a
+  // child modal or horizontal scroller (their gestures belong to that surface, even though they
+  // bubble through this body handler) — an earlier version tried gating this by requiring the
+  // touch to START within ~32px of the screen edge instead, which also blocked the ordinary case
+  // of swiping between tabs from the middle of the screen, where nothing actually conflicts.
+  const TAB_ORDER = [team.market ? 'office' : null, 'chemistry', 'ledger'].filter(Boolean);
   const bodyTouchStartX = useRef(null);
   const tabbarRef = useRef(null);
   const underlineRef = useRef(null);
@@ -340,7 +160,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   }, [tab, isDesktop, team.market]);
   const handleBodyTouchStart = (event) => {
     const ownsHorizontalGesture = event.target.closest(
-      '.ts-roto-scroll, .development-picker, .tsx-overlay, .row-scroll, .strategy-deal-row, .ts-cost-blocks, .league-standings-table',
+      '.development-picker, .tsx-overlay, .row-scroll, .strategy-deal-row, .ts-cost-blocks, .league-standings-table',
     );
     if (ownsHorizontalGesture) {
       bodyTouchStartX.current = null;
@@ -381,26 +201,6 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
     else positionUnderline(idx, true);
   };
 
-  const handleCardClick = (card) => {
-    if (!canEdit) return;
-    const isStarter = activeSet.has(card.id);
-    if (activeSet.size < 5 && !isStarter) {
-      setSelectedId(null);
-      const res = actions.promoteToStarter(myTeamId, card.id);
-      if (res && res.ok === false) alert(res.msg);
-      return;
-    }
-    if (selectedId == null) { setSelectedId(card.id); return; }
-    if (selectedId === card.id) { setSelectedId(null); return; }
-    const selectedIsStarter = activeSet.has(selectedId);
-    if (selectedIsStarter === isStarter) { setSelectedId(card.id); return; }
-    const outgoingId = selectedIsStarter ? selectedId : card.id;
-    const incomingId = selectedIsStarter ? card.id : selectedId;
-    setSelectedId(null);
-    const res = actions.swapStarter(myTeamId, outgoingId, incomingId);
-    if (res && res.ok === false) alert(res.msg);
-  };
-
   const handleRelease = (card) => {
     if (card.freeAgentSignedSeason === state.season) {
       alert('You cannot release a free agent you signed this season.');
@@ -418,14 +218,6 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
     if (res && res.ok === false) alert(res.msg);
   };
 
-  // This screen never remounts on a tab switch (unlike PlayoffSeriesScreen, which gets the same
-  // fix via a mount effect), so the page can still be scrolled down from a moment ago on another
-  // tab when the user swipes back to Rotation. ts-screen-lock's CSS (.mobile-shell:has(...){
-  // position:fixed;...}) is meant to pin the locked screen to the viewport regardless, but
-  // leaving a real scroll reset here too means the card can't ever render high/offset behind a
-  // leftover scroll position no matter how that CSS holds up.
-  useEffect(() => { if (isRotationLocked) window.scrollTo(0, 0); }, [isRotationLocked]);
-
   // The Begin Season button always reads "Begin Season" now — what used to be separate button
   // labels (Hire A Coach, Resolve Budget, ...) are collected here instead and surfaced as a
   // list on click, so the button itself never changes shape.
@@ -438,32 +230,12 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
 
   return (
     <>
-      <div className={'screen ts-screen' + (isRotationLocked ? ' ts-screen-lock' : '')}>
+      <div className="screen ts-screen">
         <div className="ts-viewing-franchise"><span>{readOnly ? 'Viewing Franchise' : 'Your Franchise'}</span><strong>{team.name}</strong></div>
         <div className="ts-tabbar" ref={tabbarRef}>
-          <div className={'ts-tab ts-tab-players' + (tab === 'rotation' ? ' active' : '')}>
-            <button className="ts-tab-main" onClick={() => { setTab('rotation'); setViewMenuOpen(false); }}>Players</button>
-            {tab === 'rotation' && !isDesktop && (
-              <button
-                type="button"
-                className="ts-tab-caret"
-                aria-label="Choose view"
-                aria-expanded={viewMenuOpen}
-                onClick={(event) => { event.stopPropagation(); setViewMenuOpen((v) => !v); }}
-              >
-                <span className={'ts-tab-caret-icon' + (viewMenuOpen ? ' open' : '')}>▾</span>
-              </button>
-            )}
-            {viewMenuOpen && (
-              <>
-                <div className="ts-view-menu-backdrop" onClick={() => setViewMenuOpen(false)} />
-                <div className="ts-view-menu" onClick={(event) => event.stopPropagation()}>
-                  <button className={viewMode === 'carousel' ? 'active' : ''} onClick={() => { setViewMode('carousel'); setViewMenuOpen(false); }}>Carousel</button>
-                  <button className={viewMode === 'list' ? 'active' : ''} onClick={() => { setViewMode('list'); setViewMenuOpen(false); }}>List</button>
-                </div>
-              </>
-            )}
-          </div>
+          {team.market && (
+            <button className={'ts-tab' + (tab === 'office' ? ' active' : '')} onClick={() => setTab('office')}>The League{!readOnly && !state.offseason?.freeAgencyClosed?.[team.id] && <span className="alert-badge" aria-label="League requires attention">!</span>}</button>
+          )}
           <button ref={gameplanTabRef} className={'ts-tab' + (tab === 'chemistry' ? ' active' : '')} onClick={() => setTab('chemistry')}>
             Gameplan
             {!readOnly && !team.lineupSet && <span className="alert-badge" aria-label="Lineup not set">!</span>}
@@ -472,9 +244,6 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             Budget
             {!readOnly && preSeason && committed > cap && <span className="alert-badge" aria-label="Team is over budget">!</span>}
           </button>
-          {team.market && (
-            <button className={'ts-tab' + (tab === 'office' ? ' active' : '')} onClick={() => setTab('office')}>League{!readOnly && !state.offseason?.freeAgencyClosed?.[team.id] && <span className="alert-badge" aria-label="League requires attention">!</span>}</button>
-          )}
           {!isDesktop && <span className="ts-tab-underline" ref={underlineRef} aria-hidden="true" />}
         </div>
 
@@ -485,10 +254,11 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
 
           {showSection('office') && (
             <div className="ts-section league-overview">
-              <div className="ts-heading">League</div>
+              <div className="ts-heading">The League</div>
               <div className="league-jump-actions">
                 <button type="button" className="league-jump-button free-agency" onClick={onFreeAgency}>Free Agency{!readOnly && !state.offseason?.freeAgencyClosed?.[team.id] && <span className="alert-badge" aria-label="Free Agency requires attention">!</span>}</button>
                 <button type="button" className="league-jump-button draft" onClick={onDraftClass}>Draft Class</button>
+                {onTeamRosters && <button type="button" className="league-jump-button rosters" onClick={onTeamRosters}>Team Rosters</button>}
               </div>
               <div className="league-output-grid">
                 <div><span>League Output</span><strong>{Math.round(leagueTotal * 100) / 100}</strong><small>Total collective output from all teams</small></div>
@@ -496,6 +266,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                 <div><span>Best Defense</span><strong>{bestFor('def').output.def}</strong><small>{bestFor('def').team.name}</small></div>
                 <div><span>Best Bench</span><strong>{bestFor('bench').output.bench}</strong><small>{bestFor('bench').team.name}</small></div>
               </div>
+              <div className="ts-heading league-standings-heading">Standings</div>
               <div className="league-standings-table">
                 <div className="league-standings-row head">
                   <span>Team</span><span>Chemistry</span><span>Projected Output</span><span>Offense</span><span>Defense</span>
@@ -510,97 +281,6 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                   </div>
                 ))}
               </div>
-            </div>
-          )}
-
-          {showSection('rotation') && !isDesktop && viewMode === 'list' && (
-            <div className="ts-section" id="team-rotation">
-              <div className="ts-heading">Players</div>
-              <PlayerFilterBar sort={playerSort} onChange={handlePlayerSortChange} />
-              <PlayerRosterTable
-                starters={sortedStarters}
-                bench={filteredBench}
-                sort={playerSort}
-                starterOpenSlots={starterOpenSlots}
-                benchOpenSlots={shownBenchOpenSlots}
-                selectedId={selectedId}
-                canEdit={canEdit}
-                readOnly={readOnly}
-                onCardClick={handleCardClick}
-                onRelease={handleRelease}
-                onDevelop={!readOnly && team.developmentPoints > 0 ? setDevelopPlayer : undefined}
-              />
-            </div>
-          )}
-
-          {showSection('rotation') && !(!isDesktop && viewMode === 'list') && (
-            <div className="ts-section ts-player-carousel" id="team-rotation">
-              {!isRotationLocked && <div className="ts-heading ts-rotation-heading">Players <span>{currentMobileCard ? (activeSet.has(currentMobileCard.id) ? 'Starters' : 'Bench') : 'Open'}</span></div>}
-              <PlayerFilterBar sort={playerSort} onChange={handlePlayerSortChange} />
-              <div className="ts-roto-viewport">
-                <div
-                  key={`rotation-${state.season}-${team.id}`}
-                  className="ts-roto-scroll"
-                  ref={rotoScrollRef}
-                  onScroll={!isDesktop ? (event) => {
-                    const width = event.currentTarget.scrollWidth / mobileCardCount;
-                    if (width) setRotationIndex(Math.round(event.currentTarget.scrollLeft / width));
-                  } : undefined}
-                  onTouchStart={!isDesktop ? handleRotationTouchStart : undefined}
-                  onTouchEnd={!isDesktop ? handleRotationTouchEnd : undefined}
-                >
-                  <div className="ts-roto-grid">
-                    {(isDesktop ? sortedStarters : sortedRoster).map((c) => (
-                      <div className="ts-roto-slot" key={c.id}>
-                        <PlayerCard
-                          card={c}
-                          selected={selectedId === c.id}
-                          rosterLabel={team.lineupSet ? (activeSet.has(c.id) ? 'Starter' : 'Bench') : undefined}
-                          onClick={canEdit ? () => handleCardClick(c) : undefined}
-                          onRelease={canEdit ? handleRelease : undefined}
-                          onDevelop={!readOnly && team.developmentPoints > 0 ? setDevelopPlayer : undefined}
-                          alwaysShowOptions={!isDesktop}
-                        />
-                      </div>
-                    ))}
-                    {Array.from({ length: starterOpenSlots }, (_, i) => <div className="ts-roto-slot" key={'starter-open-' + i}><div className="ts-bench-open starter">OPEN STARTER</div></div>)}
-                    {!isDesktop && Array.from({ length: shownBenchOpenSlots }, (_, i) => <div className="ts-roto-slot" key={'open-' + i}><div className="ts-bench-open">OPEN</div></div>)}
-                  </div>
-                </div>
-                {!isDesktop && (() => {
-                  const onLastCard = rotationIndex >= mobileCardCount - 1;
-                  if (onLastCard) return null;
-                  return (
-                    <div className="ts-hand-peek-tab" aria-hidden="true">
-                      <span className="ts-hand-peek-chevron">›</span>
-                    </div>
-                  );
-                })()}
-              </div>
-            </div>
-          )}
-
-          {isDesktop && showSection('rotation') && (
-            <div className="ts-section ts-player-carousel" id="team-bench">
-              <div className="ts-heading">Bench</div>
-              <div className="ts-roto-scroll">
-                <div className="ts-roto-grid">
-                  {filteredBench.map((c) => (
-                    <PlayerCard
-                      key={c.id}
-                      card={c}
-                      selected={selectedId === c.id}
-                      onClick={canEdit ? () => handleCardClick(c) : undefined}
-                      onRelease={canEdit ? handleRelease : undefined}
-                      onDevelop={!readOnly && team.developmentPoints > 0 ? setDevelopPlayer : undefined}
-                    />
-                  ))}
-                  {Array.from({ length: shownBenchOpenSlots }, (_, i) => (
-                    <div key={'open' + i} className="ts-bench-open">OPEN</div>
-                  ))}
-                </div>
-              </div>
-              {filteredBench.length + shownBenchOpenSlots > 1 && <div className="ts-card-stack-cue" aria-hidden="true"><i /><i /><i /></div>}
             </div>
           )}
 
@@ -755,29 +435,13 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           )}
         </div>
 
-        {/* Hidden while the Rotation carousel owns the screen — as a flex sibling of .ts-body
-            these would eat into its flex:1 share of the available height, which is exactly the
-            space the carousel needs every pixel of. They still show on every other tab. */}
-        {!isRotationLocked && preSeason && team.hand.length > 9 && (
+        {preSeason && team.hand.length > 9 && (
           <div className="statusline" style={{ marginTop: 16 }}>
             Resolve your roster before the season begins: release {team.hand.length - 9} player{team.hand.length - 9 === 1 ? '' : 's'}.
           </div>
         )}
-        {!isRotationLocked && preSeason && team.hand.length === 9 && committed > cap && (
+        {preSeason && team.hand.length === 9 && committed > cap && (
           <div className="statusline" style={{ marginTop: 16 }}>Get under budget before the season begins. Reduce committed costs by {formatCoins(committed - cap)}.</div>
-        )}
-        {developPlayer && (
-          <div className="development-picker-backdrop" onClick={() => setDevelopPlayer(null)}>
-            <div className="development-picker" role="dialog" aria-modal="true" aria-label={`Develop ${developPlayer.archetype}`} onClick={(event) => event.stopPropagation()}>
-              <div className="development-picker-head"><div><div className="ts-heading">Develop Player</div><div className="development-picker-player">#{developPlayer.id} · {developPlayer.position} · {developPlayer.archetype}</div></div><button className="secondary" onClick={() => setDevelopPlayer(null)}>Close</button></div>
-              <div className="development-picker-cards">
-                <div className="development-points-summary"><strong>{team.developmentPoints || 0}</strong><span>Development Points Available</span><small>{team.coach?.archetype} coaches develop {DEVELOPMENT_STATS_BY_STYLE[team.coach?.archetype]?.join(' or ')}.</small></div>
-                {(DEVELOPMENT_STATS_BY_STYLE[team.coach?.archetype] || []).map((stat) => (
-                  <button key={stat} className="development-stat-button" disabled={!team.developmentPoints} onClick={() => { const result = actions.applyDevelopmentPoint(myTeamId, developPlayer.id, stat); if (result?.ok === false) alert(result.msg); else setDevelopPlayer(null); }}>+1 {stat}</button>
-                ))}
-              </div>
-            </div>
-          </div>
         )}
         {lineupScreenOpen && (
           <SetLineupScreen

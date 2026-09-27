@@ -26,6 +26,7 @@ import ContractsScreen from '../screens/ContractsScreen';
 import FreeAgencyScreen from '../screens/FreeAgencyScreen';
 import ScrollToTopButton from './ScrollToTopButton';
 import DraftClassScreen from '../screens/DraftClassScreen';
+import TeamRostersScreen from '../screens/TeamRostersScreen';
 import FranchiseMasthead from './FranchiseMasthead';
 import { rosterSalary } from '../game/economy';
 import { hasPendingBidDecision } from '../game/bidding';
@@ -78,6 +79,7 @@ const PAGE_LABELS = {
   team: 'Franchise',
   freeagency: 'Free Agency',
   draftclass: 'Draft Class',
+  teamrosters: 'Team Rosters',
   cardtypes: 'Card Types',
   glossary: 'Glossary',
   settings: 'Settings',
@@ -113,7 +115,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
   const [lineupPreview, setLineupPreview] = useState(null);
   const persistentBarRef = useRef(null);
   const [persistentBarHeight, setPersistentBarHeight] = useState(0);
-  const [overlay, setOverlay] = useState(null); // null | 'glossary' | 'settings' | 'standings' | 'team' | 'freeagency' | 'draftclass' | 'cardtypes'
+  const [overlay, setOverlay] = useState(null); // null | 'glossary' | 'settings' | 'standings' | 'team' | 'freeagency' | 'draftclass' | 'teamrosters' | 'cardtypes'
   // Clicking another team in Standings opens the Team overlay on THEIR file instead of the
   // caller's own (viewTeamId), remembering whatever overlay (or none, for a phase screen like
   // StandingsScreen) was showing so Back returns there rather than dumping out to the base game.
@@ -296,14 +298,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
     onSettings: () => toggleOverlay('settings'),
     onTeam: () => handleNav('team'),
     // Free Agency, Draft Class and Standings no longer have their own entries in this menu —
-    // all three are reachable from the Franchise page's League tab instead. The hamburger/logo
-    // menu trigger itself still pulses when something needs attention (right now, exactly
-    // freeAgencyAlert) even though Free Agency isn't a direct menu item anymore, since the
-    // Franchise page it does open is still where that gets resolved. This used to be a one-time
-    // "have you ever opened this menu" localStorage nudge instead, which showed on every fresh
-    // era regardless of whether anything needed doing, and never came back once dismissed even
-    // if something later genuinely did.
-    navNeedsAttention: freeAgencyAlert,
+    // all three are reachable from the Franchise page's League tab instead.
     roomCode,
     pageLabel,
   };
@@ -315,14 +310,15 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
   if (overlay === 'glossary') overlayBody = <GlossaryScreen key={screenKey} state={state} onBack={close} />;
   else if (overlay === 'settings') overlayBody = <SettingsScreen key={screenKey} state={state} actions={actions} onBack={close} onNewEra={onNewEra} onDeleteRoom={onDeleteRoom} hostNotifications={hostNotifications} />;
   else if (overlay === 'standings') overlayBody = <LeagueScreen key={screenKey} state={state} myTeamId={myTeamId} onBack={close} onViewTeam={(id) => openTeamView(id, 'standings')} />;
-  else if (overlay === 'team') overlayBody = <TeamSummaryScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} viewTeamId={viewTeamId} onBack={closeTeamView} focusSection={teamFocus} onFreeAgency={openFreeAgency} onDraftClass={() => setOverlay('draftclass')} onLineupPreviewChange={setLineupPreview} />;
+  else if (overlay === 'team') overlayBody = <TeamSummaryScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} viewTeamId={viewTeamId} onBack={closeTeamView} focusSection={teamFocus} onFreeAgency={openFreeAgency} onDraftClass={() => setOverlay('draftclass')} onTeamRosters={() => setOverlay('teamrosters')} onLineupPreviewChange={setLineupPreview} />;
   else if (overlay === 'freeagency') overlayBody = <FreeAgencyScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onBack={close} onGoToFranchise={() => setOverlay(effectivePhase === 'teamsummary' ? null : 'team')} />;
   else if (overlay === 'draftclass') overlayBody = <DraftClassScreen key={screenKey} state={state} onBack={close} />;
+  else if (overlay === 'teamrosters') overlayBody = <TeamRostersScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
   else if (overlay === 'cardtypes') overlayBody = <CardOverviewScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
 
   const Screen = SCREENS[effectivePhase];
   const mainBody = overlayBody || (Screen
-    ? <Screen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onViewTeam={(id) => openTeamView(id, null)} onFreeAgency={openFreeAgency} onDraftClass={() => setOverlay('draftclass')} onEndGame={onNewEra} dealProgress={dealProgress} onDealProgress={setDealProgress} onDealDone={() => setPastDeal(true)} onLineupPreviewChange={setLineupPreview} />
+    ? <Screen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onViewTeam={(id) => openTeamView(id, null)} onFreeAgency={openFreeAgency} onDraftClass={() => setOverlay('draftclass')} onTeamRosters={() => setOverlay('teamrosters')} onEndGame={onNewEra} dealProgress={dealProgress} onDealProgress={setDealProgress} onDealDone={() => setPastDeal(true)} onLineupPreviewChange={setLineupPreview} />
     : (
       <div className="screen">
         <h1>Something broke</h1>

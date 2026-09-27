@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import BallMark from './BallMark';
 
-// Keep in lockstep with every `9.5s` in index.css's nd-splash-* keyframes — there's no single
+// Keep in lockstep with every `3.6s` in index.css's nd-splash-* keyframes — there's no single
 // shared constant between CSS and JS, so a change to the animation's length has to be made in
-// both places together.
-const SPLASH_DURATION_MS = 9500;
-const REDUCED_MOTION_DURATION_MS = 900;
+// both places together. Total including the 350ms exit fade must stay under 4s.
+const SPLASH_DURATION_MS = 3600;
+const REDUCED_MOTION_DURATION_MS = 700;
 
 // The era's opening splash — the ball mark assembling itself dot by dot, the wordmark and
 // tagline holding, then fading back down to just the mark before the real deal begins

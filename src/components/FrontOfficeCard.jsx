@@ -32,12 +32,13 @@ function coachContent(team) {
   // not what's currently active.
   ensureCoachSystems(team);
   const [primaryGameplan, secondaryGameplan] = coach.gameplans || [];
+  const gameplanText = [
+    primaryGameplan && `Primary: ${primaryGameplan.name}`,
+    secondaryGameplan && `Secondary: ${secondaryGameplan.name}`,
+  ].filter(Boolean).join(' · ');
   return {
     name: coach.archetype,
-    qualifier: team.retainedStreak ? `Retained ${team.retainedStreak} season${team.retainedStreak === 1 ? '' : 's'}` : 'League appointment',
-    // The modifier name is the card's headline trait (same big teal-word slot every other kind
-    // uses for its own — Casual/Steady/Die Hard for Fanbase) — it needs its own description
-    // underneath regardless, so that stays in `detail` rather than repeating the name there too.
+    qualifier: team.retainedStreak ? `Retained ${team.retainedStreak} season${team.retainedStreak === 1 ? '' : 's'}` : null,
     disposition: coach.modifier,
     dispositionTone: 'approved-ink',
     effects: [
@@ -47,8 +48,8 @@ function coachContent(team) {
       { label: 'Player Relations', value: coach.playerRelationship, tone: 'file' },
       { label: 'Development Points', value: team.developmentPoints || 0, tone: 'approved-ink' },
     ],
-    detail: coach.ability || 'Improves the coach’s base Offense and Defense bonuses.',
-    rarityLead: { label: 'Gameplans', value: [primaryGameplan?.name, secondaryGameplan?.name].filter(Boolean).join(' · ') || 'None' },
+    detail: `${coach.modifier} — ${coach.ability || 'Improves the coach’s base Offense and Defense bonuses.'}`,
+    rarityLead: { label: 'Gameplans', value: gameplanText || 'None' },
     duration: 'Holds Through Era 01',
   };
 }
@@ -78,7 +79,7 @@ function fanbaseContent(team) {
     // The archetype itself holds for the whole era, like Coach — only attendance and the
     // season mod (shown above) actually re-evaluate every season.
     duration: 'Holds Through Era 01',
-    detail: mod?.flavor,
+    detail: mod ? `${mod.name} — ${mod.flavor}` : null,
   };
 }
 
@@ -121,7 +122,7 @@ export default function FrontOfficeCard({ kind, team }) {
         <div className="fo2-name-row">
           <div className="fo2-name-col">
             <div className="fo2-name">{content.name}</div>
-            <div className="fo2-qualifier">{content.qualifier}</div>
+            {content.qualifier && <div className="fo2-qualifier">{content.qualifier}</div>}
           </div>
           {content.disposition && <div className={'fo2-disposition ' + content.dispositionTone}>{content.disposition}</div>}
         </div>
