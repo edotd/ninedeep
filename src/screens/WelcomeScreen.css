@@ -47,3 +47,20 @@
   .welcome-copy h1{font-size:42px;}
   .welcome-copy p{font-size:13px;line-height:1.65;}
 }
+
+/* Laid over the League page itself for the era's first turn (see GameShell) rather than gating
+   it behind a separate full screen — the League page beneath stays mounted and real, just
+   dimmed, so Continue reveals a franchise that's already there instead of an empty shell. */
+.welcome-overlay-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:900;
+  background:rgba(11,17,30,.72);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  overflow-y:auto;
+  box-sizing:border-box;
+}
+.welcome-overlay-backdrop .welcome-screen{min-height:auto;padding:0;width:100%;}

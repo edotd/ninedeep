@@ -3,7 +3,6 @@ import PlayerCard from '../components/PlayerCard';
 import FrontOfficeCard from '../components/FrontOfficeCard';
 import MatchupCard from '../components/MatchupCard';
 import BallMark from '../components/BallMark';
-import WelcomeScreen from './WelcomeScreen';
 
 const ALL_FO_KINDS = ['coach', 'fanbase', 'market'];
 
@@ -45,7 +44,9 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
   const total = starters.length + bench.length + FO_KINDS.length + matchupCards.length;
   const instant = state.settings.actionLogSpeed === 'instant' || reducedMotion();
 
-  // 'deck' -> 'dealing' -> 'welcome'
+  // 'deck' -> 'dealing' -> 'review'. The Welcome-to-Nine-Deep message no longer gates this flow
+  // — it's shown as its own overlay on top of the League page instead (see GameShell), so this
+  // review grid's own Continue button goes straight to onDealDone.
   const [phase, setPhase] = useState(instant ? 'review' : 'deck');
   const [dealt, setDealt] = useState(instant ? total : 0);
   const [tokens, setTokens] = useState([]); // transient flying-card visuals, purely decorative
@@ -60,7 +61,7 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
 
   const clearTimers = () => { timersRef.current.forEach(clearTimeout); timersRef.current = []; };
 
-  const finishDealing = () => setPhase('welcome');
+  const finishDealing = () => setPhase('review');
 
   useEffect(() => {
     if (instant) { onDealProgress(total); finishDealing(); return undefined; }
@@ -89,11 +90,6 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
     setTokens([]);
     finishDealing();
   };
-
-  if (phase === 'welcome') return <WelcomeScreen teamName={team.name} onContinue={onDealDone} />;
-
-  // This guards the one-frame window on an instant mount before its effect moves to welcome.
-  if (phase === 'review') return null;
 
   if (phase !== 'review') {
     return (

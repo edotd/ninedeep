@@ -27,6 +27,7 @@ import FreeAgencyScreen from '../screens/FreeAgencyScreen';
 import ScrollToTopButton from './ScrollToTopButton';
 import DraftClassScreen from '../screens/DraftClassScreen';
 import TeamRostersScreen from '../screens/TeamRostersScreen';
+import WelcomeScreen from '../screens/WelcomeScreen';
 import FranchiseMasthead from './FranchiseMasthead';
 import { rosterSalary } from '../game/economy';
 import { hasPendingBidDecision } from '../game/bidding';
@@ -107,6 +108,19 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
     if (state.phase !== 'pullhand') return true;
     try { return localStorage.getItem(splashKey) === '1'; } catch { return true; }
   });
+  // "Welcome to Nine Deep" used to be its own full-screen stop inside the deal — now it's a
+  // one-time overlay shown on top of the League page for the era's very first turn instead, so
+  // a new player lands somewhere real (their own franchise) rather than on a screen with nothing
+  // behind it. Same per-device, not-shared-state reasoning as the splash: each client decides for
+  // itself whether it's already seen this era's welcome.
+  const welcomeKey = `nine-deep-welcome-seen:${state.eraId}`;
+  const [welcomeDone, setWelcomeDone] = useState(() => {
+    try { return localStorage.getItem(welcomeKey) === '1'; } catch { return true; }
+  });
+  const dismissWelcome = () => {
+    try { localStorage.setItem(welcomeKey, '1'); } catch { /* ignore */ }
+    setWelcomeDone(true);
+  };
   const myTeam = myTeamId != null ? state.teams?.[myTeamId] : null;
   const mobileTopRef = useRef(null);
   const [mobileTopHeight, setMobileTopHeight] = useState(0);
@@ -334,6 +348,16 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
     }} />;
   }
 
+  // The era's very first turn: land on the League page itself (see TeamSummaryScreen's own tab
+  // default) and lay the Welcome message over it, rather than gating the League page behind a
+  // separate full-screen stop the way the deal flow used to.
+  const showWelcomeOverlay = onOwnTeamPage && state.season === 1 && !welcomeDone;
+  const welcomeOverlay = showWelcomeOverlay && (
+    <div className="welcome-overlay-backdrop">
+      <WelcomeScreen teamName={myTeam?.name} onContinue={dismissWelcome} />
+    </div>
+  );
+
   if (isDesktop && showChrome) {
     return (
       <div className="desktop-shell" style={{ '--desktop-persistent-top-height': `${desktopTopHeight}px` }}>
@@ -344,6 +368,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
         </div>
         {showBar && <DesktopBar state={state} myTeamId={myTeamId} actions={actions} dealProgress={dealProgress} />}
         <ScrollToTopButton />
+        {welcomeOverlay}
       </div>
     );
   }
@@ -362,6 +387,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
       {mainBody}
       {showBar && <PersistentBar ref={persistentBarRef} state={state} myTeamId={myTeamId} overlay={overlay} onNavigate={openTeamSection} onFreeAgency={openFreeAgency} freeAgencyLocked={freeAgencyLocked} dealProgress={dealProgress} />}
       <ScrollToTopButton />
+      {welcomeOverlay}
     </div>
   );
 }
