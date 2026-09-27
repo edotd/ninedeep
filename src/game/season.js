@@ -3,9 +3,9 @@ import { TIERS, LEAGUE_ACCOLADES, REPLACEMENT_TIER, FREE_AGENT_TIER, BARGAIN_FRE
 import { drawGM, acquireOffseasonPlayer } from './gm';
 import { advanceCareer } from './aging';
 import { shuffle, weightedPick } from './rng';
-import { makeCard, randomArch, randomArchForTier, neededPosition, drawCoachCard, applyCoachRetention, drawMatchupModifierCard, resetMatchupDeck } from './cards';
+import { makeCard, randomArch, randomArchForTier, neededPosition, drawCoachCard, applyCoachRetention } from './cards';
 import { finalizeCap, rosterSalary } from './economy';
-import { autoSelectFive, effectiveRating, activeStatSum, benchRatingContribution, validateLineup, matchupCardCountFor } from './roster';
+import { autoSelectFive, effectiveRating, activeStatSum, benchRatingContribution, validateLineup } from './roster';
 import { retentionBonus, relationshipBonus } from './cards';
 import { handsOffBonus } from './gm';
 import { startDraft, prepareDraftClass } from './draft';
@@ -224,24 +224,20 @@ export function initFrontOffice(state) {
 export function initSeasonModifierCards(state) {
   state.bar = undefined;
   state.leagueAvg = undefined;
-  // Fanbase mods are re-rolled every season for every team, independent of the Matchup
-  // Cards setting — they're a fanbase mechanic, not a matchup one. Skipped entirely when the
-  // Fanbase system itself is off for this era.
+  // Fanbase mods are re-rolled every season for every team, independent of the In-Game
+  // Adjustments setting — they're a fanbase mechanic, not a matchup one. Skipped entirely when
+  // the Fanbase system itself is off for this era.
   const fbEnabled = fanbaseEnabled(state);
   state.teams.forEach((team) => {
     if (fbEnabled && (state.season > 1 || !team.fanbaseMod)) rollFanbaseMod(team);
     dealStrategyCards(state, team);
+    // In-Game Adjustments are rolled fresh at the start of each match now (see roster.js's
+    // rollAdjustmentCards), not dealt for the whole season — clear out whatever's left from last
+    // season's final match so the new season's first match actually rolls a fresh hand instead
+    // of finding a non-empty one and skipping the roll.
+    team.matchupCards = [];
   });
-  if (state.settings && state.settings.matchupCardsEnabled === false) {
-    state.teams.forEach((team) => { team.matchupCards = []; });
-    state.phase = 'constructing';
-    return;
-  }
-  resetMatchupDeck(state);
-  state.phase = 'pullmodifier';
-  state.teams.forEach((team) => {
-    team.matchupCards = Array.from({ length: matchupCardCountFor(team) }, () => drawMatchupModifierCard(state));
-  });
+  state.phase = 'constructing';
 }
 
 // Runs at the start of every season after the first. Cards are already kept — this just refreshes
@@ -551,5 +547,5 @@ export function signFreeAgent(state, cardId, teamIdx) {
 // judged on.
 export function proceedFromSeasonTransition(state) {
   if (state.phase !== 'seasontransition') return;
-  state.phase = 'pullmodifier';
+  state.phase = 'constructing';
 }

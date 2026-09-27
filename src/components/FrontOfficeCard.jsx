@@ -4,7 +4,7 @@ import CardTypeMark from './CardTypeMark';
 import BallMark from './BallMark';
 import { GM_BONUS_RATE, HANDS_OFF_BONUS_CAP } from '../game/constants';
 import { handsOffBonus } from '../game/gm';
-import { offenseDieSize, defenseDieSize } from '../game/roster';
+import { offenseDieSize, defenseDieSize, matchupCardCountFor } from '../game/roster';
 import { RARITY_CORNERS } from '../game/constants';
 import RarityBadge from './RarityBadge';
 import { ensureCoachSystems } from '../game/strategyCards';
@@ -47,6 +47,7 @@ function coachContent(team) {
       { label: 'Def Bonus', value: `+${Math.round((coach.defBonus + bonus) * 100)}%`, tone: 'approved-ink' },
       { label: 'Player Relations', value: coach.playerRelationship, tone: 'file' },
       { label: 'Development Points', value: team.developmentPoints || 0, tone: 'approved-ink' },
+      { label: 'In-Game Adjustments', value: `${matchupCardCountFor(team)} per match`, tone: 'approved-ink' },
     ],
     detail: `${coach.modifier} — ${coach.ability || 'Improves the coach’s base Offense and Defense bonuses.'}`,
     rarityLead: { label: 'Gameplans', value: gameplanText || 'None' },

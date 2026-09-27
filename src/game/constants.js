@@ -216,9 +216,10 @@ export const AI_TRICODES = {
 export const CHAMPIONSHIP_BAR_MULT = 1.10;
 export const INJURY_CHANCE = 0.03;
 
-// How many Matchup Modifier cards a team pulls per season, when Matchup Cards are enabled
-// (see settings.matchupCardsEnabled in game/season.js's newEraState).
-export const MATCHUP_CARD_DRAW_COUNT = 3;
+// How many In-Game Adjustments a coach rolls fresh at the start of each match, when Adjustment
+// Cards are enabled (see settings.matchupCardsEnabled in game/season.js's newEraState). Rolled
+// per match, not dealt once per season — see roster.js's rollAdjustmentCards.
+export const MATCHUP_CARD_DRAW_COUNT = 2;
 
 // Off/Def percentage bonus for Home Court Advantage — a top-4 seed gets it in every playoff
 // matchup they play, except against another top-4 seed, where only the higher (numerically

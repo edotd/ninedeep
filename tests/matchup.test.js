@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { MATCHUP_MODIFIER_TYPES as deck, SEEDING_GAMEPLAN_TYPES } from '../src/game/supplementalCards.js';
 import { drawMatchupModifierCard, resetMatchupDeck } from '../src/game/cards.js';
 import { applySupplementalCard, supplementalRoll } from '../src/game/supplementalEffects.js';
-import { newEraState, lockSeasonAndSeed, initSeasonModifierCards, startPlayoffs } from '../src/game/season.js';
+import { newEraState, lockSeasonAndSeed, startPlayoffs } from '../src/game/season.js';
 import { startEra, rollCurrentMatchup, openSeries, simulateOneMatch } from '../src/game/engine.js';
 import { beginTurn, advanceTurn } from '../src/game/turn.js';
 import { rehydrateState } from '../src/game/rehydrate.js';
@@ -72,11 +72,23 @@ test('player targets validated; stat changes remain temporary and cover all four
   }
 });
 
-test('three Adjustment cards per team (four for a Strategist coach) contain no seeding effects; disabling cards clears hands', () => {
-  const state=game(); assert(state.teams.every(t=>t.matchupCards.length===matchupCardCountFor(t)));
-  assert(state.teams.every(t=>t.matchupCards.every(c=>c.effectType!=='SEEDING_PERCENT')));
-  state.settings.matchupCardsEnabled=false; initSeasonModifierCards(state);
-  assert(state.teams.every(t=>t.matchupCards.length===0)); assert.equal(state.phase,'constructing');
+test('coaches roll their In-Game Adjustments fresh at the start of each match (two per team, three for a Strategist coach), with no seeding effects; disabling the setting keeps hands empty', () => {
+  const state=game();
+  // No longer dealt at season start — each team's hand stays empty until a match actually begins.
+  assert(state.teams.every(t=>(t.matchupCards||[]).length===0));
+  lockSeasonAndSeed(state); startPlayoffs(state); state.playoff.activeMatchIndex=0;
+  let m=state.playoff.matches[0]; m.a.human=true; m.b.human=true;
+  beginTurn(state); m=state.playoff.matches[0];
+  assert.equal(m.a.matchupCards.length,matchupCardCountFor(m.a));
+  assert.equal(m.b.matchupCards.length,matchupCardCountFor(m.b));
+  assert(m.a.matchupCards.every(c=>c.effectType!=='SEEDING_PERCENT'));
+  assert(m.b.matchupCards.every(c=>c.effectType!=='SEEDING_PERCENT'));
+
+  const off=game(); off.settings.matchupCardsEnabled=false;
+  lockSeasonAndSeed(off); startPlayoffs(off); off.playoff.activeMatchIndex=0;
+  let mOff=off.playoff.matches[0]; mOff.a.human=true; mOff.b.human=true;
+  beginTurn(off); mOff=off.playoff.matches[0];
+  assert.equal(mOff.a.matchupCards.length,0); assert.equal(mOff.b.matchupCards.length,0);
 });
 
 test('season seeding saves a player-facing breakdown for every team', () => {

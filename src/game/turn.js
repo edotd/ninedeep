@@ -12,7 +12,7 @@ import { applySupplementalCard, supplementalRoll } from './supplementalEffects';
 // produced, and who rolls against whom, has changed.
 import { HOME_COURT_BONUS, ON_THE_FLY_CHANCE } from './constants';
 import { rollDie } from './rng';
-import { offenseDieSize, defenseDieSize } from './roster';
+import { offenseDieSize, defenseDieSize, rollAdjustmentCards } from './roster';
 import { drawMatchupModifierCard } from './cards';
 import {
   checkInjury, playCardEffect, playableCards,
@@ -51,6 +51,8 @@ export function beginTurn(state) {
     m.a = state.playoff.matches[m.from[0]].result.winner;
     m.b = state.playoff.matches[m.from[1]].result.winner;
   }
+  rollAdjustmentCards(state, m.a);
+  rollAdjustmentCards(state, m.b);
   const advA = wantsAdvantage(m.a, state.playoff);
   const advB = wantsAdvantage(m.b, state.playoff);
   if (advA) m.a.advantageAvailable = false;

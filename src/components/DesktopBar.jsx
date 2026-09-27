@@ -1,12 +1,8 @@
 import { useRef, useState } from 'react';
-import { playableCards } from '../game/matchup';
-import { PLAYER_STATS, eligibleStatTargets } from '../game/supplementalEffects';
 import { cardTier, jerseyNumber } from '../game/cards';
 import { validateLineup } from '../game/roster';
-import { MATCHUP_CARD_DRAW_COUNT } from '../game/constants';
 import PlayerCard from './PlayerCard';
 import FrontOfficeCard from './FrontOfficeCard';
-import MatchupCard from './MatchupCard';
 import StrategyCard from './StrategyCard';
 import CardTypeMark from './CardTypeMark';
 
@@ -72,21 +68,6 @@ function FrontOfficeSlot({ label, value, tone, kind, team, onHover, onLeave }) {
   );
 }
 
-function MatchupSlot({ card, onHover, onLeave, onSelect, playable, picking }) {
-  if (!card) return <div className="db-slot db-matchup-slot empty"><span className="db-slot-empty-plus">+</span></div>;
-  return (
-    <div
-      className={'db-slot db-matchup-slot' + (card.used ? ' used' : '') + (playable ? ' playable' : '') + (picking ? ' picking' : '')}
-      onMouseEnter={(e) => onHover(e.currentTarget, 'matchup', <MatchupCard card={card} />)}
-      onMouseLeave={onLeave}
-      onClick={playable ? (e) => onSelect(e.currentTarget, card) : undefined}
-    >
-      <div className="db-matchup-label">{card.used ? 'Used' : playable ? 'Play' : 'Card'}</div>
-      <div className="db-matchup-value">{card.name}</div>
-    </div>
-  );
-}
-
 function StrategySlot({ card, onHover, onLeave, onSelect, picking }) {
   if (!card) return <div className="db-slot db-strategy-slot empty"><span className="db-slot-empty-plus">+</span></div>;
   return (
@@ -116,7 +97,6 @@ export default function DesktopBar({ state, myTeamId, actions, dealProgress }) {
   const rawActiveIds = team.activeIds || [];
   const rawStarters = rawActiveIds.map((id) => rawHand.find((c) => c.id === id)).filter(Boolean);
   const rawBench = rawHand.filter((c) => !rawActiveIds.includes(c.id));
-  const rawMatchup = team.matchupCards || [];
 
   let remaining = inDeal ? (dealProgress ?? 0) : Infinity;
   const take = (arr) => {
@@ -133,7 +113,6 @@ export default function DesktopBar({ state, myTeamId, actions, dealProgress }) {
   const fanbaseDealt = state.settings.fanbaseCardsEnabled !== false;
   const foTotal = fanbaseDealt ? 3 : 2;
   const foCount = (() => { const n = Math.max(0, Math.min(foTotal, remaining === Infinity ? foTotal : remaining)); if (remaining !== Infinity) remaining -= n; return n; })();
-  const matchupCards = take(rawMatchup);
 
   const activeIds = rawActiveIds;
   const coach = foCount >= 1 ? team.coach : null;
@@ -141,47 +120,17 @@ export default function DesktopBar({ state, myTeamId, actions, dealProgress }) {
   const fanbaseArchetype = fanbaseDealt && foCount >= 2 ? team.fanbaseArchetype : null;
   const market = foCount >= (fanbaseDealt ? 3 : 2) ? team.market : null;
   const frontOfficeTeam = foCount >= 1 ? team : null;
-  const fullyDealt = !inDeal || (dealProgress ?? 0) >= rawStarters.length + rawBench.length + foTotal + rawMatchup.length;
+  const fullyDealt = !inDeal || (dealProgress ?? 0) >= rawStarters.length + rawBench.length + foTotal;
   const gameplanCards = fullyDealt ? (team.gameplanCards || []).filter((card) => !card.used) : [];
 
   const [preview, setPreview] = useState(null); // { rect, type, content }
   const handleHover = (el, type, content) => setPreview({ rect: el.getBoundingClientRect(), type, content });
   const handleLeave = () => setPreview(null);
 
-  // Matchup cards double as the "play a card" UI during a live turn-by-turn match — the board
-  // itself just prompts "play a card or pass", the actual pick happens here in the bar. Found
-  // independently from state rather than passed down from TurnPanel, since the two components
-  // are siblings under GameShell, not parent/child.
-  const liveMatch = (state.playoff?.matches || []).find((m) => m.turn && !m.result && (m.a === team || m.b === team));
-  const liveTurn = liveMatch?.turn;
-  const liveCur = liveTurn?.current;
-  const actingTeam = liveCur ? (liveCur.team === 'a' ? liveMatch.a : liveMatch.b) : null;
-  const myCardTurn = !!(liveTurn && liveTurn.stage === 'card' && actingTeam === team && team.human);
-  const playableIds = new Set(myCardTurn ? playableCards(team).map((c) => c.id) : []);
-
-  // targetPicker: null | { card, rect } — set when a targeting card (e.g. Injury Minor) is
-  // clicked, cleared on pick or on clicking the same card again.
-  const [targetPicker, setTargetPicker] = useState(null);
-  const targetTeam = targetPicker && liveMatch
-    ? (targetPicker.card.target === 'self' ? team : (actingTeam === liveMatch.a ? liveMatch.b : liveMatch.a))
-    : null;
-  const targetIds = targetPicker && targetTeam ? (targetTeam === liveMatch.a ? liveTurn.idsA : liveTurn.idsB) : [];
-  const targetPlayers = targetPicker && targetTeam ? eligibleStatTargets(targetTeam, targetIds, targetPicker.card) : [];
-
-  const handleMatchupClick = (el, card) => {
-    if (!myCardTurn || !playableIds.has(card.id)) return;
-    if (card.targetsPlayer) {
-      setTargetPicker((tp) => (tp && tp.card.id === card.id ? null : { card, rect: el.getBoundingClientRect() }));
-      return;
-    }
-    setTargetPicker(null);
-    actions.advanceTurn({ cardId: card.id });
-  };
-
   const [strategyPicker, setStrategyPicker] = useState(null);
   const handleStrategyClick = (el, card) => {
     const playoffReady = liveTurn && ['coinflip', 'coinflipped'].includes(liveTurn.stage);
-    const seasonOpen = ['pullhand', 'pullmodifier', 'constructing', 'teamsummary'].includes(state.phase);
+    const seasonOpen = ['pullhand', 'constructing', 'teamsummary'].includes(state.phase);
     const context = playoffReady ? 'playoff' : seasonOpen && card.effects?.seedingPercent ? 'season' : null;
     if (!context) return;
     if (card.target === 'opponent' && context === 'season') {
@@ -301,29 +250,6 @@ export default function DesktopBar({ state, myTeamId, actions, dealProgress }) {
         );
       })()}
 
-      {targetPicker && (() => {
-        const width = 280;
-        const halfWidth = width / 2;
-        const desiredLeft = targetPicker.rect.left + targetPicker.rect.width / 2;
-        const left = Math.min(Math.max(desiredLeft, halfWidth + 8), window.innerWidth - halfWidth - 8);
-        const bottom = window.innerHeight - targetPicker.rect.top + 12;
-        const card = targetPicker.card;
-        return (
-          <div className="db-target-picker" style={{ left, bottom, width }}>
-            <div className="db-target-picker-head">Choose a target — {card.name}</div>
-            {targetPlayers.length === 0 && <div className="db-target-picker-empty">No eligible starter.</div>}
-            {targetPlayers.flatMap((oc) => (card.targetsPlayer && card.effectType ? PLAYER_STATS : [null]).map((stat) => (
-              <button
-                key={`${oc.id}-${stat}`}
-                className="db-target-btn"
-                onClick={() => { actions.advanceTurn({ cardId: card.id, targetId: oc.id, stat }); setTargetPicker(null); }}
-              >
-                {oc.position} · {oc.archetype}{stat ? ` · ${stat} (${oc.stats[stat]})` : ''}{card.effectType === 'CAP_HIT_STAT' ? ` · +${oc.salary}` : ''}
-              </button>
-            )))}
-          </div>
-        );
-      })()}
       {strategyPicker && (() => {
         const width = 300;
         const halfWidth = width / 2;

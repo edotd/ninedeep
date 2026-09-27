@@ -1,6 +1,6 @@
 import { applySynergy, teamSynergy } from './skillsets';
 import { POSITIONS, MATCHUP_CARD_DRAW_COUNT } from './constants';
-import { cardTotal, retentionBonus, retentionDieBump, relationshipBonus } from './cards';
+import { cardTotal, retentionBonus, retentionDieBump, relationshipBonus, drawMatchupModifierCard } from './cards';
 import { handsOffBonus } from './gm';
 import { careerMultiplier } from './aging';
 
@@ -127,9 +127,20 @@ export function offenseModifier(team, idsOverride) {
 export function defenseModifier(team, idsOverride) {
   return modifierBreakdown(team, idsOverride, 'defense').base;
 }
-// A Strategist coach deals one extra Adjustment card every season on top of the league-wide base.
+// A Strategist coach rolls one extra In-Game Adjustment on top of the coach's base per-match roll.
 export function matchupCardCountFor(team) {
   return MATCHUP_CARD_DRAW_COUNT + (team.coach?.modifier === 'Strategist' ? 1 : 0);
+}
+
+// In-Game Adjustments (formerly "Adjustment Cards") are rolled fresh for each match rather than
+// dealt once per season — a no-op if the team already carries cards into this call, so mid-match
+// code (a coach mod drawing an extra card, etc.) and tests that pin an exact hand before a match
+// begins are left alone. A genuinely new match always finds an empty hand here, since nothing
+// deals into matchupCards between matches any more.
+export function rollAdjustmentCards(state, team) {
+  if (!team || (team.matchupCards && team.matchupCards.length > 0)) return;
+  if (state.settings && state.settings.matchupCardsEnabled === false) { team.matchupCards = []; return; }
+  team.matchupCards = Array.from({ length: matchupCardCountFor(team) }, () => drawMatchupModifierCard(state));
 }
 
 export function offenseDieSize(team) { return team.coach.offDie + retentionDieBump(team); }

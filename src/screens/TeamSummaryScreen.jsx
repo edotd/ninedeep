@@ -6,43 +6,17 @@ import FrontOfficeCard from '../components/FrontOfficeCard';
 import { PlayerLedgerIdentity, CostBlocks } from '../components/LedgerRow';
 import { formatCoins, rosterSalary, gmCost } from '../game/economy';
 import { FANBASE_BOOST_COST } from '../game/constants';
-import MatchupCard from '../components/MatchupCard';
-import CardBack from '../components/CardBack';
 import CoachmarkTour from '../components/CoachmarkTour';
 import { teamOutput } from '../game/matchup';
 import { teamSynergy } from '../game/skillsets';
 
-const tabForSection = (section) => ['gameplan', 'office', 'adjustment'].includes(section) ? 'chemistry' : section || 'office';
-
-// Front Office / Development / Gameplan / Adjustment each render as one horizontally-scrolling
-// row of same-kind cards on mobile. Two or fewer fit the screen outright (no scrolling needed,
-// so no hint either) — more than that scrolls, with the same peek-style chevron hint used
-// elsewhere in the Team File so it's clear there's more to swipe to. atEnd starts true for a
-// row that never needed scrolling in the first place. threshold defaults to 2 (Front Office's
-// three-distinct-kind row, which stretches to fit 1-2 cards evenly and only scrolls past that);
-// Development/Gameplan/Adjustments pass 1 instead, since those rows are always one-card-at-a-
-// time now (see ts-swipe-row) — any more than a single card of the same kind means there's
-// something to swipe to.
-function useRowEnd(count, threshold = 2) {
-  const [atEnd, setAtEnd] = useState(count <= threshold);
-  useEffect(() => { setAtEnd(count <= threshold); }, [count, threshold]);
-  const onScroll = (event) => {
-    const el = event.currentTarget;
-    setAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 4);
-  };
-  return { atEnd, onScroll, scrolls: count > threshold };
-}
-
-function RowSwipeHint({ row }) {
-  if (!row.scrolls || row.atEnd) return null;
-  return <div className="row-swipe-hint" aria-hidden="true"><span className="row-swipe-hint-chevron">›</span></div>;
-}
+const tabForSection = (section) => ['gameplan', 'office'].includes(section) ? 'chemistry' : section || 'office';
 
 // The Team Summary screen — "the file the league keeps on you" (design brand handoff, 1a).
 // Serves two roles from the same markup: as the 'teamsummary' phase (shown once per season,
-// after the Adjustment Cards pull and the Constructing loading beat — its own button confirms
-// the season on the auto-selected five, the last stop before the season locks), and — when
-// passed `onBack` — as the "Team" overlay reachable from the sidebar/top bar on any phase,
+// after the Constructing loading beat — its own button confirms the season on the auto-selected
+// five, the last stop before the season locks), and — when passed `onBack` — as the "Team"
+// overlay reachable from the sidebar/top bar on any phase,
 // where the button instead just closes the overlay and the front-office moves (fire/hire
 // coach, fire GM, invest in fanbase — all funded out of budget room) are available. Passing
 // `viewTeamId` (set by clicking another team in Standings) shows that team's file instead of
@@ -97,8 +71,6 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   const isDesktop = useIsDesktop();
   const [tab, setTab] = useState(() => tabForSection(focusSection?.section));
   const showSection = (key) => isDesktop || tab === key;
-  const showStaffCards = isDesktop || tab === 'chemistry';
-  const adjRow = useRowEnd((team.matchupCards || []).length, 1);
   const leagueOutputs = state.teams.map((candidate) => ({ team: candidate, output: candidate.coach ? teamOutput(candidate) : { total: 0, off: 0, def: 0, bench: 0 } }));
   const leagueTotal = leagueOutputs.reduce((sum, entry) => sum + entry.output.total, 0);
   const bestFor = (key) => leagueOutputs.reduce((best, entry) => entry.output[key] > best.output[key] ? entry : best, leagueOutputs[0]);
@@ -363,8 +335,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
               {/* Coach gets its own row, GM (and Fanbase, the other front-office role) a second
                   row below it — kept apart rather than sharing one swipeable row of up to three
                   cards. Neither row ever holds more than two cards, so both stay a plain
-                  stretch-to-fit row (see useRowEnd's own "1-2 cards" comment) with no scroll
-                  tracking needed. */}
+                  stretch-to-fit row with no scroll tracking needed. */}
               <div className="fo-deal-row row-fit" style={{ margin: 0 }}>
                 <div className="ts-fo-col" id="team-coach-card">
                   {team.coach ? <FrontOfficeCard kind="coach" team={team} /> : <div className="ts-empty-coach"><span>Coach</span><strong>Open Slot</strong><small>Choose a replacement in Free Agency.</small></div>}
@@ -422,17 +393,6 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             </div>
           )}
 
-          {(team.matchupCards || []).length > 0 && showStaffCards && (
-            <div className="ts-section" id="team-adjustment-cards">
-              <div className="ts-heading">Adjustments</div>
-              <div className="row-swipe-wrap">
-              <div className={'mu-deal-row ts-swipe-row' + (adjRow.scrolls ? ' row-scroll' : ' row-fit')} style={{ margin: 0 }} onScroll={adjRow.scrolls ? adjRow.onScroll : undefined}>
-                {team.matchupCards.map((c) => readOnly ? <CardBack key={c.id} shape="adjustment" /> : <MatchupCard key={c.id} card={c} />)}
-              </div>
-              <RowSwipeHint row={adjRow} />
-              </div>
-            </div>
-          )}
         </div>
 
         {preSeason && team.hand.length > 9 && (

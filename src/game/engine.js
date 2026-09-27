@@ -9,9 +9,8 @@ import { applySupplementalCard } from './supplementalEffects';
 // instead of assuming state.teams[0] — in solo mode the caller always passes 0; in a shared
 // room, the caller resolves teamIdx from the acting player's own seat (ownerUid) first. See
 // game/useLocalGame.js and game/useRoomGame.js for the two callers.
-import { drawMatchupModifierCard } from './cards';
 import { HOME_COURT_BONUS, MAX_CAP_OVERAGE } from './constants';
-import { autoSelectFive, autoValidFive, validateLineup, matchupCardCountFor } from './roster';
+import { autoSelectFive, autoValidFive, validateLineup, rollAdjustmentCards } from './roster';
 import {
   buildStarPool, buildTeams, defaultSoloSeats, dealHands, initFrontOffice,
   initSeasonModifierCards, lockSeasonAndSeed, startPlayoffs,
@@ -32,18 +31,17 @@ function allHumansReady(state, predicate) {
   return humanTeams(state).every(predicate);
 }
 
-// The Deal (design ref 4A): hand, Front Office, and the first season's Matchup Cards are all
-// dealt together here, synchronously, instead of across three separate pull screens — see
-// DealScreen.jsx, the one screen that shows all of it. Moving on from there (past DealScreen,
-// to Team Summary) is a purely local per-client decision now (see GameShell's pastDeal) —
-// state.phase just stays 'pullhand' the whole time every player is reviewing their own roster,
-// so nobody's Continue click yanks anyone else's screen; confirmLineup is what actually
-// advances the shared game once every human is ready. initFrontOffice and
-// initSeasonModifierCards still do the real per-team dealing work exactly as before (and
-// still run this same way every season after the first, via startNewSeasonRoster — only
-// Matchup Cards refresh season to season, so that's the only one with a recurring pull
-// screen); called back to back here, each one's own phase assignment is simply overridden by
-// the next line rather than shown.
+// The Deal (design ref 4A): hand and Front Office are dealt together here, synchronously,
+// instead of across separate pull screens — see DealScreen.jsx, the one screen that shows all of
+// it. In-Game Adjustments are no longer part of this deal at all — a coach rolls those fresh at
+// the start of each match instead (see roster.js's rollAdjustmentCards). Moving on from there
+// (past DealScreen, to Team Summary) is a purely local per-client decision now (see GameShell's
+// pastDeal) — state.phase just stays 'pullhand' the whole time every player is reviewing their
+// own roster, so nobody's Continue click yanks anyone else's screen; confirmLineup is what
+// actually advances the shared game once every human is ready. initFrontOffice and
+// initSeasonModifierCards still do the real per-team dealing work exactly as before (and still
+// run this same way every season after the first, via startNewSeasonRoster); called back to back
+// here, each one's own phase assignment is simply overridden by the next line rather than shown.
 export function startEra(state, teamNameRaw) {
   const val = (teamNameRaw || '').trim();
   if (!val.length) return false;
@@ -76,33 +74,6 @@ export function proceedToSeason1(state) {
   const needsFanbase = fanbaseEnabled(state);
   if (!allHumansReady(state, (t) => t.coach && t.market && (!needsFanbase || t.fanbaseArchetype))) return;
   initSeasonModifierCards(state);
-}
-
-export function pullMatchupCard(state, teamIdx) {
-  const team = state.teams[teamIdx];
-  team.matchupCards ||= [];
-  if (team.matchupCards.length >= matchupCardCountFor(team)) return;
-  const card = drawMatchupModifierCard(state);
-  if (card) team.matchupCards.push(card);
-}
-// One-click Matchup Cards pull — deals all matchupCardCountFor(team) at once.
-export function pullAllMatchupCards(state, teamIdx) {
-  const team = state.teams[teamIdx];
-  team.matchupCards ||= [];
-  while (team.matchupCards.length < matchupCardCountFor(team)) {
-    const card = drawMatchupModifierCard(state);
-    if (!card) break;
-    team.matchupCards.push(card);
-  }
-}
-
-// Only moves on once every human-controlled team has pulled all its cards — into the
-// "constructing" loading screen, not straight to the lineup, so there's a beat before the
-// persistent bar (which stays empty through the whole Front Office / Hand / Matchup Cards
-// sequence) populates with the finished roster.
-export function proceedToLineupFromModifier(state) {
-  if (!allHumansReady(state, (t) => (t.matchupCards || []).length >= matchupCardCountFor(t))) return;
-  state.phase = 'constructing';
 }
 
 // Called automatically by the constructing screen's loading sequence once it finishes —
@@ -265,6 +236,8 @@ export function rollCurrentMatchup(state, matchIndex = state.playoff.activeMatch
     m.a = state.playoff.matches[m.from[0]].result.winner;
     m.b = state.playoff.matches[m.from[1]].result.winner;
   }
+  rollAdjustmentCards(state, m.a);
+  rollAdjustmentCards(state, m.b);
   const advA = wantsAdvantage(m.a, state.playoff);
   const advB = wantsAdvantage(m.b, state.playoff);
   if (advA) m.a.advantageAvailable = false;

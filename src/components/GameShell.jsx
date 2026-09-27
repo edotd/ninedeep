@@ -11,7 +11,6 @@ import CardOverviewScreen from '../screens/CardOverviewScreen';
 import PullCardsScreen from '../screens/PullCardsScreen';
 import DealScreen from '../screens/DealScreen';
 import TeamSummaryScreen from '../screens/TeamSummaryScreen';
-import PullModifierScreen from '../screens/PullModifierScreen';
 import StandingsScreen from '../screens/StandingsScreen';
 import PlayoffsScreen from '../screens/PlayoffsScreen';
 import ResultsScreen from '../screens/ResultsScreen';
@@ -37,7 +36,6 @@ const SCREENS = {
   cardoverview: CardOverviewScreen,
   pullcards: PullCardsScreen,
   pullhand: DealScreen,
-  pullmodifier: PullModifierScreen,
   seasontransition: SeasonTransitionScreen,
   constructing: ConstructingScreen,
   teamsummary: TeamSummaryScreen,
@@ -64,7 +62,6 @@ const PAGE_LABELS = {
   cardoverview: 'Card Types',
   pullcards: 'Front Office',
   pullhand: 'Your Deal',
-  pullmodifier: 'Adjustment Cards',
   seasontransition: 'Next Season',
   constructing: 'Building Season',
   teamsummary: 'Franchise',

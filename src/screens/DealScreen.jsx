@@ -1,7 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import PlayerCard from '../components/PlayerCard';
 import FrontOfficeCard from '../components/FrontOfficeCard';
-import MatchupCard from '../components/MatchupCard';
 import BallMark from '../components/BallMark';
 
 const ALL_FO_KINDS = ['coach', 'fanbase', 'market'];
@@ -20,15 +19,13 @@ function reducedMotion() {
   return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 }
 
-// The Deal (design ref 4A): nine player cards, three Front Office cards, and this era's
-// Adjustment Cards all dealt together in one animated beat, rather than across three separate
-// pull screens. Adjustment Cards still get their own PullModifierScreen every season after the
-// first (only they refresh season to season — Hand and Front Office are dealt once for the
-// whole era), so that screen stays untouched; this one only ever runs once, at the very start
-// of an era.
+// The Deal (design ref 4A): nine player cards and three Front Office cards, dealt together in
+// one animated beat. In-Game Adjustments (formerly "Adjustment Cards") no longer get dealt here
+// at all — a coach now rolls those fresh at the start of each match instead (see roster.js's
+// rollAdjustmentCards); this screen only ever runs once, at the very start of an era.
 //
 // Moving on from here (onDealDone) is purely a LOCAL, per-client decision — it does not touch
-// shared game state at all. Every player's hand/Front Office/Adjustment Cards are already dealt
+// shared game state at all. Every player's hand/Front Office cards are already dealt
 // in the shared doc the instant the era starts, so there is nothing left to synchronize:
 // each player watches their own deal animation and continues to their own Team File on their
 // own schedule, same as GameShell's overlay screens never yank other players around. On
@@ -39,9 +36,8 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
   const activeSet = new Set(team.activeIds || []);
   const starters = team.hand.filter((c) => activeSet.has(c.id));
   const bench = team.hand.filter((c) => !activeSet.has(c.id));
-  const matchupCards = team.matchupCards || [];
   const FO_KINDS = state.settings.fanbaseCardsEnabled === false ? ALL_FO_KINDS.filter((k) => k !== 'fanbase') : ALL_FO_KINDS;
-  const total = starters.length + bench.length + FO_KINDS.length + matchupCards.length;
+  const total = starters.length + bench.length + FO_KINDS.length;
   const instant = state.settings.actionLogSpeed === 'instant' || reducedMotion();
 
   // 'deck' -> 'dealing' -> 'review'. The Welcome-to-Nine-Deep message no longer gates this flow
@@ -96,7 +92,7 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
       <div className="screen deal-screen">
         <div className="deal-intro">
           <h1>Your Deal — Season {state.season}</h1>
-          <p className="lede" style={{ marginBottom: 14 }}>Your 9-card hand, Front Office, and this season's Adjustment Cards — dealt together.</p>
+          <p className="lede" style={{ marginBottom: 14 }}>Your 9-card hand and Front Office — dealt together.</p>
         </div>
         <div className="deal-stage">
           <div className="deal-deck">
@@ -117,7 +113,7 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
       <div className="screen deal-screen">
         <div className="deal-intro">
           <h1>Your Deal — Season {state.season}</h1>
-          <p className="lede" style={{ marginBottom: 14 }}>Your 9-card hand, Front Office, and this season's Adjustment Cards — all dealt together. Review everything here before heading to your Franchise file.</p>
+          <p className="lede" style={{ marginBottom: 14 }}>Your 9-card hand and Front Office — dealt together. Review everything here before heading to your Franchise file.</p>
         </div>
         <div className="deal-centered">
           <div className="deal-heading">Starters ({starters.length}/5)</div>
@@ -131,10 +127,6 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
           <div className="deal-heading">Front Office</div>
           <div className="fo-deal-row">
             {FO_KINDS.map((kind) => <div key={kind} className="card-deal-in"><FrontOfficeCard kind={kind} team={team} /></div>)}
-          </div>
-          <div className="deal-heading">Adjustment Cards</div>
-          <div className="mu-deal-row">
-            {matchupCards.map((c) => <div key={c.id} className="card-deal-in"><MatchupCard card={c} justDealt={c.rarity === 'Legendary'} /></div>)}
           </div>
         </div>
       </div>
