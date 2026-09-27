@@ -78,7 +78,9 @@ export const MIN_GM_COST = 0.5;
 // confirmLineup, engine.js) rather than being forced to cut down to the exact number — the
 // tradeoff is a bench-roll penalty scaled to how far over (see BENCH_OVERAGE_STEP below), so a
 // team can keep its stars at the cost of its depth instead of always being turned away outright.
-export const MAX_CAP_OVERAGE = 2;
+// Never two seasons running, though — confirmLineup also blocks a team from going over budget
+// again the season right after it already did.
+export const MAX_CAP_OVERAGE = 3;
 // Every this many cap points over, the bench score loses 1 — 0.5 over is -1, 1.0 over is -2.
 export const BENCH_OVERAGE_STEP = 0.5;
 

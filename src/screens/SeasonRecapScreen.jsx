@@ -1,4 +1,3 @@
-import { teamOutput } from '../game/matchup';
 import { ERA_LENGTH } from '../game/constants';
 import { teamSynergy } from '../game/skillsets';
 import { PlayerLedgerIdentity, CostBlocks } from '../components/LedgerRow';
@@ -14,7 +13,12 @@ export default function SeasonRecapScreen({ state, actions, myTeamId }) {
   const team = state.teams[myTeamId];
   const history = team.seasonHistory || [];
   const latest = history[history.length - 1];
-  const output = team.coach && team.activeIds && team.activeIds.length > 0 ? teamOutput(team) : null;
+  // teamSynergy(team) below is a live read, same as it's always been — Team Chemistry doesn't
+  // carry a per-season history the way seasonHistory's cap/roster/output figures do. `output`
+  // specifically needs to be last season's frozen snapshot (see season.js's proceedFromResults),
+  // not live-recomputed here, since by the time this screen renders, contracts have already
+  // decremented and players may have already expired off the roster for the new season.
+  const output = latest?.output ?? null;
   const chemistry = team.coach ? teamSynergy(team).grade : null;
 
   const years = Array.from({ length: ERA_LENGTH }, (_, i) => i + 1);

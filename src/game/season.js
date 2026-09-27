@@ -428,7 +428,10 @@ export function proceedFromResults(state) {
   state.teams.forEach((team) => { team.lastSeasonAvgScore = seasonAvgScoreForTeam(state, team); });
   if (fanbaseEnabled(state)) recomputeSeasonAttendance(state);
   // Filed once, before contracts move — captures the season exactly as it was played
-  // (result reached, full committed cap, all nine still on the roster).
+  // (result reached, full committed cap, all nine still on the roster). `output` is this same
+  // freeze-frame for the roster's projected rating — Season Recap reads it back instead of
+  // recomputing teamOutput live, which by the time that screen renders reflects contracts
+  // already decremented/players already expired for the NEW season, not the one just finished.
   state.teams.forEach((team) => {
     team.seasonHistory ||= [];
     team.seasonHistory.push({
@@ -436,6 +439,7 @@ export function proceedFromResults(state) {
       result: seasonResultForTeam(state, team),
       capUsed: team.total9Salary !== undefined ? team.total9Salary : rosterSalary(team),
       underContract: team.hand.length,
+      output: team.coach && team.activeIds?.length ? teamOutput(team) : null,
     });
   });
   state.lastExpiredPlayers = [];

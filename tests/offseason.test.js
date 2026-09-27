@@ -6,6 +6,7 @@ import { openFreeAgentBid } from '../src/game/bidding.js';
 import { rosterSalary } from '../src/game/economy.js';
 import { FORFEIT_BONUS_MAX, FORFEIT_BONUS_MIN, LEAGUE_TEAM_COUNT } from '../src/game/constants.js';
 import { startEra, confirmLineup, markLineupSet, saveLineup } from '../src/game/engine.js';
+import { teamOutput } from '../src/game/matchup.js';
 import { fireCoach, fireGM, hireFreeAgentCoach, releasePlayer } from '../src/game/finances.js';
 import { LEAGUE_ACCOLADES, TIERS } from '../src/game/constants.js';
 import { rehydrateState } from '../src/game/rehydrate.js';
@@ -232,22 +233,63 @@ test('season start permits fewer than nine players but rejects over-budget and o
   assert.equal(team.lineupConfirmed, undefined);
 });
 
-test('season start allows locking in up to 2 cap points over, but no further', () => {
+test('season start allows locking in up to 3 cap points over, but no further', () => {
   const state = newEraState();
   const cards = Array.from({ length: 9 }, (_, i) => ({ id: `p${i}`, position: ['Guard', 'Forward', 'Big'][i % 3], salary: 2 }));
   // 9 * 2 = 18 committed.
-  const team = { id: 0, human: true, hand: cards, activeIds: cards.slice(0, 5).map((c) => c.id), seasonCap: 16, coach: { salary: 0 }, lineupSet: true, deadCap: [] };
+  const team = { id: 0, human: true, hand: cards, activeIds: cards.slice(0, 5).map((c) => c.id), seasonCap: 15, coach: { salary: 0 }, lineupSet: true, deadCap: [] };
   // A second, not-yet-confirmed human keeps allHumansReady false — confirmLineup would
   // otherwise cascade into lockSeasonAndSeed on a real success, which this minimal fake team
   // isn't built out enough to survive (no matchupCards/gmType/market/etc).
   const other = { id: 1, human: true, hand: [], activeIds: [], seasonCap: 20, coach: { salary: 0 }, lineupSet: true, deadCap: [] };
   state.teams = [team, other];
   state.offseason = { freeAgencyClosed: { 0: true, 1: true } };
-  // 18 committed vs a 16 cap is exactly 2.0 over — right at MAX_CAP_OVERAGE, still allowed.
+  // 18 committed vs a 15 cap is exactly 3.0 over — right at MAX_CAP_OVERAGE, still allowed.
   assert.equal(confirmLineup(state, 0).valid, true);
+  assert.equal(team.overBudgetLastSeason, true);
+  // Reset the just-set flag so this next check is isolated to the absolute cap, not the
+  // separate consecutive-season restriction (covered in its own test below).
   team.lineupConfirmed = false;
-  team.seasonCap = 15; // 3.0 over now — past the allowance.
+  team.overBudgetLastSeason = false;
+  team.seasonCap = 14; // 4.0 over now — past the allowance.
   assert.match(confirmLineup(state, 0).msg, /under budget/);
+});
+
+test('a team cannot go over budget in consecutive seasons', () => {
+  const state = newEraState();
+  const cards = Array.from({ length: 9 }, (_, i) => ({ id: `p${i}`, position: ['Guard', 'Forward', 'Big'][i % 3], salary: 2 }));
+  // 18 committed vs a 17 cap is only 1.0 over — comfortably within MAX_CAP_OVERAGE on its own.
+  const team = { id: 0, human: true, hand: cards, activeIds: cards.slice(0, 5).map((c) => c.id), seasonCap: 17, coach: { salary: 0 }, lineupSet: true, deadCap: [], overBudgetLastSeason: true };
+  const other = { id: 1, human: true, hand: [], activeIds: [], seasonCap: 20, coach: { salary: 0 }, lineupSet: true, deadCap: [] };
+  state.teams = [team, other];
+  state.offseason = { freeAgencyClosed: { 0: true, 1: true } };
+  const res = confirmLineup(state, 0);
+  assert.equal(res.valid, false);
+  assert.match(res.msg, /consecutive/);
+  // Getting back under the cap clears the restriction for next time.
+  team.seasonCap = 18;
+  assert.equal(confirmLineup(state, 0).valid, true);
+  assert.equal(team.overBudgetLastSeason, false);
+});
+
+test('Season Recap reads last season\'s frozen output, not a live recompute', () => {
+  const state = newEraState();
+  startEra(state, 'Test');
+  lockSeasonAndSeed(state);
+  startPlayoffs(state);
+  state.playoffTeams = [];
+  const team = state.teams[0];
+  const playedOutput = teamOutput(team);
+  state.phase = 'results';
+  proceedFromResults(state);
+  const filed = team.seasonHistory.at(-1).output;
+  assert.deepEqual(filed, playedOutput);
+  // Changing the roster after the season is filed (contracts already moved some players to
+  // free agency by this point in the real flow) must not retroactively change what's on record
+  // for the season that already happened.
+  team.hand.pop();
+  assert.notDeepEqual(teamOutput(team), filed);
+  assert.deepEqual(team.seasonHistory.at(-1).output, playedOutput);
 });
 
 test('season start rejects a franchise with an open coach slot', () => {

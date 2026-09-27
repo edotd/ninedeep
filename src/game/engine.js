@@ -133,11 +133,17 @@ export function confirmLineup(state, teamIdx) {
   // Up to MAX_CAP_OVERAGE over is allowed — see benchScore (matchup.js) for the bench-roll
   // penalty that scales with how far over a team actually locks in.
   if (committed > team.seasonCap + MAX_CAP_OVERAGE) return { valid: false, msg: `Get under budget before the season begins. You are using ${committed} of ${team.seasonCap} (up to ${MAX_CAP_OVERAGE} over is allowed).` };
+  const overBudget = committed > team.seasonCap;
+  // Not two seasons running — a team already over budget last season has to get back under the
+  // cap this time before it's allowed to go over again (team.overBudgetLastSeason is set below,
+  // read back here the next time this team confirms).
+  if (overBudget && team.overBudgetLastSeason) return { valid: false, msg: 'You were over budget last season — get under the cap before the season begins. A team cannot go over budget in consecutive seasons.' };
   if (!team.lineupSet) return { valid: false, msg: 'Set your lineup before the season begins.' };
   const v = validateLineup(team);
   if (!v.valid) return v;
   if (!state.offseason?.freeAgencyClosed?.[team.id]) return { valid: false, msg: 'Close out free agency before the season begins.' };
   team.lineupConfirmed = true;
+  team.overBudgetLastSeason = overBudget;
   if (allHumansReady(state, (t) => t.lineupConfirmed)) {
     state.teams.filter((t) => !t.human).forEach((t) => { t.activeIds = autoSelectFive(t.hand); t.lineupSet = true; });
     lockSeasonAndSeed(state);
