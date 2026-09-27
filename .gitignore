@@ -27,3 +27,13 @@ dist-ssr
 .vercel
 .env*
 .claude/
+
+# iOS (Capacitor) — the Xcode project itself is checked in; these are regenerated/local-only
+ios/App/Pods/
+ios/App/build/
+ios/App/output/
+ios/App/App.xcworkspace/xcuserdata/
+ios/App/App.xcodeproj/xcuserdata/
+ios/App/App.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcuserstate
+DerivedData/
