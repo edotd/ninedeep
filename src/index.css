@@ -917,7 +917,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 @media(max-width:700px){
   .nd-splash.setup-visible .nd-splash-body{top:clamp(52px,7vh,78px);}
   .nd-splash-setup{padding-top:clamp(175px,24vh,220px);}
-  .card-onboarding-screen{padding:18px 14px 28px;}
+  .card-onboarding-screen{padding:18px 14px 28px;display:flex;flex-direction:column;justify-content:center;}
   .card-onboarding-heading{margin-bottom:12px;}
   .card-onboarding-stage{display:flex;flex-direction:column;gap:14px;}
   .card-onboarding-card{width:min(100%,360px);}
@@ -925,6 +925,9 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
   .card-onboarding-copy h2{font-size:24px;}
   .card-onboarding-copy p{font-size:12px;line-height:1.5;}
   .card-onboarding-actions{margin-top:14px;}
+}
+@media(max-width:700px) and (max-height:760px){
+  .card-onboarding-screen{justify-content:flex-start;}
 }
 
 /* Full-card hover preview — position:fixed so it escapes .desktop-bar's overflow-x:auto
