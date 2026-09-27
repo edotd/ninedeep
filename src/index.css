@@ -351,12 +351,12 @@ input.text-input.lobby-name-input{min-width:0;margin:0;padding:10px 12px;}
 @keyframes nd-splash-glow{0%,60%{transform:translate(-8%,-6%);}100%{transform:translate(12%,10%);}}
 .nd-splash-body{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:18px;transition:transform .55s cubic-bezier(.22,.8,.26,1);}
 .nd-splash.setup-visible{cursor:default;align-items:flex-start;}
-.nd-splash.setup-visible .nd-splash-body{position:absolute;top:clamp(22px,5vh,52px);left:50%;transform:translateX(-50%) scale(.66);transform-origin:top center;}
+.nd-splash.setup-visible .nd-splash-body{position:absolute;top:clamp(64px,9vh,108px);left:50%;transform:translateX(-50%) scale(.66);transform-origin:top center;}
 .nd-splash.setup-visible .nd-splash-wordmark{opacity:1;animation:none;}
 .nd-splash.setup-visible .nd-splash-rule{width:100%;animation:none;}
 .nd-splash.setup-visible .nd-splash-ring{opacity:1;animation:none;}
 .nd-splash.setup-visible .nd-splash-tagline{display:none;}
-.nd-splash-setup{width:100%;min-height:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;padding:clamp(145px,22vh,205px) 18px 28px;opacity:0;pointer-events:none;}
+.nd-splash-setup{position:absolute;inset:0;width:100%;min-height:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;padding:clamp(205px,28vh,275px) 18px 28px;opacity:0;pointer-events:none;}
 .nd-splash.setup-visible .nd-splash-setup{opacity:1;pointer-events:auto;animation:nd-setup-draw .45s ease-out both;}
 @keyframes nd-setup-draw{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
 .nd-splash-setup .entry-screen{min-height:0;width:100%;padding:0;background:transparent;}
@@ -915,6 +915,8 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .onboarding-card .rarity-corner{opacity:.2;}
 .onboarding-card.onboarding-rarity .rarity-corner,.onboarding-card.onboarding-gameplans .rarity-corner{opacity:1;}
 @media(max-width:700px){
+  .nd-splash.setup-visible .nd-splash-body{top:clamp(52px,7vh,78px);}
+  .nd-splash-setup{padding-top:clamp(175px,24vh,220px);}
   .card-onboarding-screen{padding:18px 14px 28px;}
   .card-onboarding-heading{margin-bottom:12px;}
   .card-onboarding-stage{display:flex;flex-direction:column;gap:14px;}
