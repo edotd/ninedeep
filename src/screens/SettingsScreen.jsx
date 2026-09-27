@@ -1,5 +1,6 @@
 import EraSettingsFields from '../components/EraSettingsFields';
 import { useDarkMode } from '../hooks/useDarkMode';
+import { useOnboardingMode } from '../hooks/useOnboardingMode';
 import HostNotificationsButton from '../components/HostNotificationsButton';
 
 const ACTION_LOG_SPEED_OPTIONS = [
@@ -9,10 +10,17 @@ const ACTION_LOG_SPEED_OPTIONS = [
   { value: 'instant', label: 'Instant' },
 ];
 
+const ONBOARDING_MODE_OPTIONS = [
+  { value: 'off', label: 'Off' },
+  { value: 'always', label: 'Always' },
+  { value: 'first', label: 'First Time Only' },
+];
+
 export default function SettingsScreen({ state, actions, onBack, onNewEra, onDeleteRoom, hostNotifications }) {
   const s = state.settings;
   const winCondition = s.winCondition || 'bar';
   const { darkMode, setDarkMode } = useDarkMode();
+  const { mode: onboardingMode, setMode: setOnboardingMode } = useOnboardingMode();
   return (
     <>
       <div className="screen">
@@ -28,6 +36,22 @@ export default function SettingsScreen({ state, actions, onBack, onNewEra, onDel
             {darkMode ? 'Dark Mode — On' : 'Dark Mode — Off'}
           </button>
           <div className="pull-extra">A darker app background — this device only, doesn't sync to other players in a room.</div>
+        </div>
+        <div className="pull-slot">
+          <div className="pull-label">Onboarding Tips</div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {ONBOARDING_MODE_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                className={onboardingMode === opt.value ? 'primary' : 'secondary'}
+                style={{ flex: 1, padding: '10px 6px', fontSize: 13 }}
+                onClick={() => setOnboardingMode(opt.value)}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          <div className="pull-extra">Controls the coachmark tips shown while building a team — this device only. Always replays every tip each time you revisit that screen; First Time Only (the default) shows each one once, ever.</div>
         </div>
         <EraSettingsFields settings={s} actions={actions} />
         <HostNotificationsButton notifications={hostNotifications} />

@@ -4,6 +4,7 @@ import OnlineGame from './OnlineGame';
 import EntryScreen from './screens/EntryScreen';
 import { useLocalGame } from './game/useLocalGame';
 import { DarkModeProvider } from './hooks/useDarkMode';
+import { OnboardingModeProvider } from './hooks/useOnboardingMode';
 
 function AppInner() {
   const [mode, setMode] = useState(null); // null | 'solo' | { roomCode, uid }
@@ -48,7 +49,9 @@ function AppInner() {
 export default function App() {
   return (
     <DarkModeProvider>
-      <AppInner />
+      <OnboardingModeProvider>
+        <AppInner />
+      </OnboardingModeProvider>
     </DarkModeProvider>
   );
 }

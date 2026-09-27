@@ -1,24 +1,46 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Coachmark from './Coachmark';
+import { useOnboardingMode } from '../hooks/useOnboardingMode';
 
-// Shown once per browser, gated by `storageKey` — a single step or a short sequence, each
-// anchored to a real ref the caller supplies (`steps: [{ targetRef, title, body }]`). `active`
-// lets the caller decide the tour is even relevant right now (e.g. only before a lineup has
-// ever been set) without that decision affecting the seen/not-seen flag itself.
+// A short anchored onboarding sequence, each step a real ref the caller supplies
+// (`steps: [{ targetRef, title, body }]`). Behavior depends on the device-level Settings choice
+// (useOnboardingMode): 'off' never shows anything; 'first' shows once ever per `storageKey`
+// (the original behavior); 'always' replays the whole tour every time `active` next becomes
+// true (e.g. navigating back to this screen), ignoring whether it's ever been dismissed before.
 export default function CoachmarkTour({ steps, storageKey, active = true }) {
-  const [seen, setSeen] = useState(() => {
-    try { return localStorage.getItem(storageKey) === '1'; } catch { return true; }
-  });
+  const { mode } = useOnboardingMode();
   const [index, setIndex] = useState(0);
+  const [hiddenThisVisit, setHiddenThisVisit] = useState(false);
+  const wasActiveRef = useRef(active);
 
-  const finish = () => {
-    setSeen(true);
-    try { localStorage.setItem(storageKey, '1'); } catch { /* storage can be unavailable */ }
-  };
+  // A fresh activation (this tour's `active` condition just turned true) restarts the tour and
+  // clears any earlier-this-visit dismissal — the only way 'always' mode actually replays on
+  // each visit instead of just staying hidden forever after its first dismiss.
+  useEffect(() => {
+    if (active && !wasActiveRef.current) {
+      setIndex(0);
+      setHiddenThisVisit(false);
+    }
+    wasActiveRef.current = active;
+  }, [active]);
 
-  if (seen || !active || !steps.length) return null;
+  if (mode === 'off' || !active || hiddenThisVisit || !steps.length) return null;
+
+  if (mode === 'first') {
+    let seenEver = true;
+    try { seenEver = localStorage.getItem(storageKey) === '1'; } catch { seenEver = true; }
+    if (seenEver) return null;
+  }
+
   const current = steps[index];
   if (!current?.targetRef) return null;
+
+  const finish = () => {
+    setHiddenThisVisit(true);
+    if (mode === 'first') {
+      try { localStorage.setItem(storageKey, '1'); } catch { /* storage can be unavailable */ }
+    }
+  };
 
   return (
     <Coachmark
