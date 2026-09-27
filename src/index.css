@@ -198,6 +198,26 @@ p.lede{color:var(--file-body);font-size:14px;line-height:1.5;margin:0 0 14px;}
   .topbar-nav .reset-link{width:100%;text-align:left;padding:11px 12px;}
 }
 
+/* Onboarding coachmarks — a fixed dim layer with a cutout (via an oversized box-shadow rather
+   than an SVG mask, so a plain rounded div works) around whatever real element is being taught,
+   plus a callout box positioned above or below it. z-index 900 clears every other overlay in
+   the app (the highest of the rest, the nav menu, is 601) so a coachmark can point at anything,
+   including something inside an already-open full-screen screen like Set Lineup. */
+.coachmark-layer{position:fixed;inset:0;z-index:900;pointer-events:none;}
+.coachmark-spotlight{position:fixed;border-radius:10px;box-shadow:0 0 0 9999px rgba(8,14,28,.72);pointer-events:none;transition:top .2s ease,left .2s ease,width .2s ease,height .2s ease;}
+.coachmark-tooltip{position:fixed;left:50%;transform:translateX(-50%);width:min(320px,calc(100vw - 32px));background:var(--file);color:var(--ink);border:2px solid var(--franchise);border-radius:10px;padding:14px 16px;box-sizing:border-box;box-shadow:0 14px 34px rgba(0,0,0,.5);pointer-events:auto;font-family:var(--font-mono);}
+.coachmark-step{font-family:var(--font-label);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:4px;}
+.coachmark-tooltip h4{margin:0 0 6px;font-family:var(--font-label);font-size:15px;letter-spacing:.02em;color:var(--ink);}
+.coachmark-tooltip p{margin:0;font-size:13px;line-height:1.5;color:var(--ink);}
+.coachmark-actions{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;}
+.coachmark-skip{background:none;border:none;padding:6px 2px;font-family:var(--font-label);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);cursor:pointer;}
+.coachmark-skip:hover{color:var(--ink);}
+.coachmark-next{padding:8px 16px;font-size:11px;}
+html[data-theme="dark"] .coachmark-tooltip{background:var(--ink);color:var(--file);border-color:var(--franchise);}
+html[data-theme="dark"] .coachmark-tooltip h4,html[data-theme="dark"] .coachmark-tooltip p{color:var(--file);}
+html[data-theme="dark"] .coachmark-skip{color:var(--file-muted);}
+html[data-theme="dark"] .coachmark-skip:hover{color:var(--file);}
+
 /* ---------- Front office summary row (used on Lineup/Team screens) ---------- */
 .frontoffice{display:flex;gap:8px;margin-bottom:14px;}
 .fo-card{flex:1;background:var(--form);border:1px solid var(--form-rule);padding:10px 8px;text-align:center;}
@@ -2300,13 +2320,6 @@ body:has(.entry-screen){padding-bottom:0;}
 .slf-card-modal{position:relative;width:100%;max-width:280px;}
 .slf-card-modal .slf-picker-close{position:absolute;top:-38px;right:0;color:var(--file);font-size:26px;}
 
-/* One-time explainer, first visit only (see LINEUP_INTRO_KEY) — its own lighter backdrop so it
-   reads as a quick tip, not another full modal stacked on the lineup editor. */
-.slf-intro-backdrop{position:fixed;inset:0;z-index:530;background:rgba(11,17,30,.72);display:flex;align-items:center;justify-content:center;padding:24px;}
-.slf-intro{max-width:340px;background:var(--form);border:2px solid var(--franchise);padding:22px;box-sizing:border-box;text-align:center;}
-.slf-intro h3{margin:0 0 10px;font-family:var(--font-display);font-size:22px;text-transform:uppercase;color:var(--ink);}
-.slf-intro p{margin:0 0 16px;font-family:var(--font-mono);font-size:12px;line-height:1.5;color:var(--file-body);}
-.slf-intro button{width:100%;}
 @media(max-width:520px){
   .tsx-overlay:has(.slf-panel){padding:0;align-items:stretch;}
   .slf-panel{max-width:100%;height:100%;}

@@ -7,11 +7,14 @@ import { useIsDesktop } from '../hooks/useIsDesktop';
 import PlayerCard from './PlayerCard';
 import FrontOfficeCard from './FrontOfficeCard';
 import PlayerFilterBar from './PlayerFilterBar';
+import CoachmarkTour from './CoachmarkTour';
 import { gameplanEffects } from '../game/strategyCards';
 
 // Shown once per browser — the first time anyone opens this editor, not once per team/era, so
-// re-explaining after a fresh solo game or a new room would be redundant.
-const LINEUP_INTRO_KEY = 'nine-deep-lineup-intro-seen';
+// re-explaining after a fresh solo game or a new room would be redundant. v2: a short anchored
+// coachmark tour replaced the old single static modal (LINEUP_INTRO_KEY) — a new key so returning
+// players who already dismissed the old text-only version still get the more useful one once.
+const LINEUP_TOUR_KEY = 'nine-deep-lineup-coachmark-v2-seen';
 
 // "The Floor" (design ref 1a) — the starting five placed on a half-court diagram, wired
 // together wherever two of them share a live Skillset pairing (game/skillsets.js's
@@ -126,16 +129,6 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
     };
   }, []);
 
-  // A one-time explainer, the first time anyone on this browser opens this editor — not
-  // gated per-team/era, so a new solo game or room never re-shows it.
-  const [showIntro, setShowIntro] = useState(() => {
-    try { return localStorage.getItem(LINEUP_INTRO_KEY) !== '1'; } catch { return false; }
-  });
-  const dismissIntro = () => {
-    setShowIntro(false);
-    try { localStorage.setItem(LINEUP_INTRO_KEY, '1'); } catch { /* storage can be unavailable */ }
-  };
-
   // Everything in this editor is a local draft. The shared team — and therefore the
   // Franchise page underneath this modal — is changed exactly once, by Save Lineup. A fresh
   // season still opens empty because the generated active five is only a placeholder until a
@@ -210,6 +203,8 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
   const [centeredCard, setCenteredCard] = useState(null);
 
   const courtRef = useRef(null);
+  const gameplanBtnRef = useRef(null);
+  const saveBtnRef = useRef(null);
   const slotRefs = useRef([]);
   const [wires, setWires] = useState([]);
   const starterKey = starters.map((c) => c?.id ?? 'x').join(',');
@@ -311,7 +306,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
         )}
 
         {team.coach?.gameplans?.length > 0 && (
-          <button type="button" className="slf-set-gameplan" disabled={!canEdit} onClick={() => setGameplanPickerOpen(true)}>
+          <button type="button" ref={gameplanBtnRef} className="slf-set-gameplan" disabled={!canEdit} onClick={() => setGameplanPickerOpen(true)}>
             <span>Set Gameplan</span>
             <strong>{team.coach.gameplans.find((plan) => plan.id === selectedGameplanId)?.name || 'None'}</strong>
           </button>
@@ -399,7 +394,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
           {canEdit && (
             <div className="slf-footer-actions">
               <button type="button" className="slf-auto-set" onClick={handleAutoSet}><span aria-hidden="true">↻</span> Auto Set Lineup</button>
-              <button type="button" className="slf-save-btn" onClick={handleSave}>Save Lineup</button>
+              <button type="button" ref={saveBtnRef} className="slf-save-btn" onClick={handleSave}>Save Lineup</button>
             </div>
           )}
           <button type="button" className={canEdit ? 'secondary' : 'primary'} onClick={onClose}>Back</button>
@@ -464,14 +459,15 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
         </div>
       )}
 
-      {showIntro && (
-        <div className="slf-intro-backdrop" onClick={dismissIntro}>
-          <div className="slf-intro" onClick={(e) => e.stopPropagation()}>
-            <h3>Set Your Lineup</h3>
-            <p>Pair specific skillsets for offensive/defensive bonuses. Hold a card to view the full player card.</p>
-            <button type="button" className="primary" onClick={dismissIntro}>Got It</button>
-          </div>
-        </div>
+      {canEdit && (
+        <CoachmarkTour
+          storageKey={LINEUP_TOUR_KEY}
+          steps={[
+            { targetRef: courtRef, title: 'Set Your Lineup', body: 'Tap an open slot to add a starter. You need at least one Guard, one Forward, and one Big among your five.' },
+            ...(team.coach?.gameplans?.length > 0 ? [{ targetRef: gameplanBtnRef, title: 'Pick a Gameplan', body: 'Choose your coach’s primary or secondary Gameplan for a team-wide bonus this season.' }] : []),
+            { targetRef: saveBtnRef, title: 'Save Your Lineup', body: 'Two starters sharing a Skillset pairing light up a bonus — look for the lines between them. When you’re happy with your five, Save Lineup to lock it in.' },
+          ]}
+        />
       )}
     </div>
   );

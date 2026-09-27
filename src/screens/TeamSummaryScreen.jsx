@@ -12,6 +12,7 @@ import { sortPlayers } from '../game/playerFilters';
 import MatchupCard from '../components/MatchupCard';
 import CardBack from '../components/CardBack';
 import PlayerFilterBar from '../components/PlayerFilterBar';
+import CoachmarkTour from '../components/CoachmarkTour';
 import { teamOutput } from '../game/matchup';
 import { teamSynergy } from '../game/skillsets';
 import { DEVELOPMENT_STATS_BY_STYLE } from '../game/strategyCards';
@@ -207,6 +208,12 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   const [developPlayer, setDevelopPlayer] = useState(null);
   const [lineupScreenOpen, setLineupScreenOpen] = useState(false);
   const [rotationIndex, setRotationIndex] = useState(0);
+  // Onboarding anchors: the Gameplan tab (opens Team Chemistry, where Set Lineup lives) before
+  // a lineup has ever been set, and Begin Season once one has. Both coachmarks are gated by
+  // their own CoachmarkTour storageKey (shown once ever, ignoring later seasons where the same
+  // "active" condition is true again) — no separate transition-tracking needed here.
+  const gameplanTabRef = useRef(null);
+  const beginSeasonBtnRef = useRef(null);
   // Players tab view — 'carousel' is the existing one-card-per-swipe locked view; 'list' is a
   // plain scrolling stack of full cards (Release/Develop shown inline instead of behind a
   // hold/expand, since there's no scale-to-fit height to protect outside the carousel).
@@ -457,7 +464,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
               </>
             )}
           </div>
-          <button className={'ts-tab' + (tab === 'chemistry' ? ' active' : '')} onClick={() => setTab('chemistry')}>
+          <button ref={gameplanTabRef} className={'ts-tab' + (tab === 'chemistry' ? ' active' : '')} onClick={() => setTab('chemistry')}>
             Gameplan
             {!readOnly && !team.lineupSet && <span className="alert-badge" aria-label="Lineup not set">!</span>}
           </button>
@@ -782,6 +789,16 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             onClose={() => { onLineupPreviewChange?.(null); setLineupScreenOpen(false); }}
           />
         )}
+        <CoachmarkTour
+          storageKey="nine-deep-onboard-gameplan-tab-seen"
+          active={!lineupScreenOpen && !readOnly && !team.lineupSet}
+          steps={[{ targetRef: gameplanTabRef, title: 'Build Your Team', body: 'Set your starting five here — tap Gameplan to get started.' }]}
+        />
+        <CoachmarkTour
+          storageKey="nine-deep-onboard-begin-season-seen"
+          active={!lineupScreenOpen && !readOnly && !onBack && team.lineupSet}
+          steps={[{ targetRef: beginSeasonBtnRef, title: 'Lineup Set', body: 'Free Agency stays open if you want to upgrade — Begin Season locks it in when you’re ready.' }]}
+        />
       </div>
       <div className="bottombar">
         {onBack ? (
@@ -795,6 +812,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
               </div>
             )}
             <button
+              ref={beginSeasonBtnRef}
               className={'primary' + (!lineupScreenOpen && !team.lineupConfirmed && seasonIssues.length > 0 ? ' needs-attention' : '')}
               disabled={!lineupScreenOpen && team.lineupConfirmed}
               aria-expanded={showSeasonIssues}
