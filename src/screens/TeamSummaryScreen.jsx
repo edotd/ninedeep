@@ -13,6 +13,7 @@ import MatchupCard from '../components/MatchupCard';
 import CardBack from '../components/CardBack';
 import PlayerFilterBar from '../components/PlayerFilterBar';
 import { teamOutput } from '../game/matchup';
+import { teamSynergy } from '../game/skillsets';
 import { DEVELOPMENT_STATS_BY_STYLE } from '../game/strategyCards';
 
 const tabForSection = (section) => ['gameplan', 'office', 'adjustment'].includes(section) ? 'chemistry' : section || 'rotation';
@@ -117,7 +118,7 @@ function PlayerRosterTable({ starters, bench, sort, starterOpenSlots, benchOpenS
 // regardless of whose file is on screen.
 // Read-only otherwise, organised by category: rotation, budget ledger, front office. No
 // nine-slot navigation here (that's the persistent bar's job on every other screen).
-export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId, onBack, focusSection, onFreeAgency, onStandings, onDraftClass, onLineupPreviewChange }) {
+export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId, onBack, focusSection, onFreeAgency, onDraftClass, onLineupPreviewChange }) {
   // viewTeamId lets this screen show a DIFFERENT team's file — reached by clicking a team in
   // Standings — read-only: no substitutions, releases, or front-office moves, since those
   // actions always take myTeamId regardless of which file is on screen.
@@ -183,6 +184,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   const leagueOutputs = state.teams.map((candidate) => ({ team: candidate, output: candidate.coach ? teamOutput(candidate) : { total: 0, off: 0, def: 0, bench: 0 } }));
   const leagueTotal = leagueOutputs.reduce((sum, entry) => sum + entry.output.total, 0);
   const bestFor = (key) => leagueOutputs.reduce((best, entry) => entry.output[key] > best.output[key] ? entry : best, leagueOutputs[0]);
+  const leagueStandings = [...leagueOutputs].sort((a, b) => b.output.total - a.output.total);
   useEffect(() => {
     if (!focusSection) return;
     setTab(tabForSection(focusSection.section));
@@ -478,7 +480,6 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             <div className="ts-section league-overview">
               <div className="ts-heading">League</div>
               <div className="league-jump-actions">
-                <button type="button" className="league-jump-button standings" onClick={onStandings}>Standings</button>
                 <button type="button" className="league-jump-button free-agency" onClick={onFreeAgency}>Free Agency{!readOnly && !state.offseason?.freeAgencyClosed?.[team.id] && <span className="alert-badge" aria-label="Free Agency requires attention">!</span>}</button>
                 <button type="button" className="league-jump-button draft" onClick={onDraftClass}>Draft Class</button>
               </div>
@@ -487,6 +488,20 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                 <div><span>Best Offense</span><strong>{bestFor('off').output.off}</strong><small>{bestFor('off').team.name}</small></div>
                 <div><span>Best Defense</span><strong>{bestFor('def').output.def}</strong><small>{bestFor('def').team.name}</small></div>
                 <div><span>Best Bench</span><strong>{bestFor('bench').output.bench}</strong><small>{bestFor('bench').team.name}</small></div>
+              </div>
+              <div className="league-standings-table">
+                <div className="league-standings-row head">
+                  <span>Team</span><span>Chemistry</span><span>Projected Output</span><span>Offense</span><span>Defense</span>
+                </div>
+                {leagueStandings.map(({ team: t, output }, index) => (
+                  <div key={t.id} className={'league-standings-row' + (t.id === team.id ? ' you' : '')}>
+                    <span className="league-team"><i>{index + 1}</i><b>{t.name}</b></span>
+                    <span>{teamSynergy(t).grade}</span>
+                    <span className="league-output">{output.total}</span>
+                    <span>{output.off}</span>
+                    <span>{output.def}</span>
+                  </div>
+                ))}
               </div>
             </div>
           )}
