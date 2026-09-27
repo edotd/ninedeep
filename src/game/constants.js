@@ -4,6 +4,9 @@
 export const POSITIONS = ['Guard', 'Forward', 'Big'];
 export const ERA_LENGTH = 9;
 export const LEAGUE_TEAM_COUNT = 9;
+export const ROSTER_SIZE = 7;
+export const STARTER_COUNT = 5;
+export const BENCH_SIZE = ROSTER_SIZE - STARTER_COUNT;
 
 // Forfeiting a pick's cap bonus scales from FORFEIT_BONUS_MAX (1st overall) down to
 // FORFEIT_BONUS_MIN (last) — see draft.js's forfeitBonusForPosition.
@@ -15,7 +18,6 @@ export const ARCHETYPES = {
   'Scorer':     { base: { SCO: 10, PLM: 4, REB: 3, DEF: 4 }, peak: 'SCO' },
   'Playmaker':  { base: { SCO: 6, PLM: 9, REB: 2, DEF: 4 }, peak: 'PLM' },
   'Balanced':   { base: { SCO: 6, PLM: 6, REB: 6, DEF: 6 }, peak: 'SCO' },
-  'Marksman':   { base: { SCO: 9, PLM: 2, REB: 2, DEF: 4 }, peak: 'SCO' },
   'Rebounder':  { base: { SCO: 3, PLM: 2, REB: 10, DEF: 5 }, peak: 'REB' },
   'Defender':   { base: { SCO: 2, PLM: 3, REB: 5, DEF: 10 }, peak: 'DEF' },
 };
@@ -47,9 +49,16 @@ export const RARITY_CORNERS = {
 // Base Player Modifiers — quality/trait tiers with no age restriction on who can roll them.
 export const TIERS = [
   { name: 'Role Player', uniform: 1.00, peak: 1.00, contract: 7, count: 7, rarity: 'Core' },
-  { name: 'Journeyman', uniform: 1.05, peak: 1.10, contract: 6, count: 4, rarity: 'Core' },
+  { name: 'Pure Scorer', uniform: 1.05, peak: 1.25, contract: 5, count: 3, forceStat: 'SCO', rarity: 'Prime' },
+  { name: 'Ball Hawk', uniform: 1.05, peak: 1.25, contract: 5, count: 3, forceStat: 'REB', rarity: 'Prime' },
+  { name: 'Disruptive', uniform: 1.05, peak: 1.25, contract: 5, count: 3, forceStat: 'DEF', rarity: 'Prime' },
+  { name: 'Attacking', uniform: 1.05, peak: 1.18, contract: 5, count: 3, forceStats: ['SCO', 'PLM'], rarity: 'Prime' },
+  { name: 'Two-Way', uniform: 1.05, peak: 1.18, contract: 5, count: 3, forceStats: ['SCO', 'DEF'], rarity: 'Prime' },
+  { name: 'Interior Force', uniform: 1.05, peak: 1.18, contract: 5, count: 3, forceStats: ['SCO', 'REB'], rarity: 'Prime' },
+  { name: 'Commanding', uniform: 1.05, peak: 1.18, contract: 5, count: 3, forceStats: ['PLM', 'DEF'], rarity: 'Prime' },
+  { name: 'Enforcing', uniform: 1.05, peak: 1.18, contract: 5, count: 3, forceStats: ['PLM', 'REB'], rarity: 'Prime' },
   { name: 'High IQ', uniform: 1.10, peak: 1.20, contract: 4, count: 4, forceStat: 'PLM', rarity: 'Prime' },
-  { name: 'Hustler', uniform: 1.10, peak: 1.20, contract: 4, count: 4, forceStats: ['DEF', 'REB'], rarity: 'Prime' },
+  { name: 'High Motor', uniform: 1.10, peak: 1.20, contract: 4, count: 4, forceStats: ['DEF', 'REB'], rarity: 'Prime' },
   // Peak 1.65 is the single highest of any tier or accolade below (MVP's is 1.55) — the
   // rarest, most powerful Base Player Modifier earns the top rarity outright.
   { name: 'Generational Talent', uniform: 1.30, peak: 1.65, contract: 2, count: 2, rarity: 'Legendary' },
@@ -179,7 +188,20 @@ export const MARKETS = [
   { name: 'Large', weight: 25, capAdjMin: 1.75, capAdjMax: 2.5, attendanceFloor: 0.70 },
   { name: 'Massive', weight: 10, capAdjMin: 2.5, capAdjMax: 3.5, attendanceFloor: 0.80 },
 ];
-export const GM_TYPES = ['Aggressive', 'Hands-Off', 'Neutral'];
+export const GM_TYPES = ['General Manager'];
+export const GM_RARITIES = [
+  { name: 'Core', weight: 50, min: 1, max: 1 },
+  { name: 'Prime', weight: 30, min: 1, max: 2 },
+  { name: 'Signature', weight: 15, min: 2, max: 3 },
+  { name: 'Legendary', weight: 5, min: 3, max: 4 },
+];
+export const GM_TRAITS = [
+  { name: 'Cap Architect', description: 'Increases the franchise budget.', unit: 'budget' },
+  { name: 'Third Eye', description: "Reveals a scouted player's projected peak-prime stats.", unit: 'vision' },
+  { name: 'Talent Hawk', description: 'Increases the number of players the franchise can scout.', unit: 'players' },
+  { name: 'Hands-Off', description: 'Increases player and coach tenure bonuses.', unit: 'percent' },
+  { name: 'Deal Maker', description: 'Reduces salary requests in bidding and negotiations.', unit: 'percent' },
+];
 export const GM_BONUS_RATE = 0.02;
 export const HANDS_OFF_BONUS_CAP = 0.12;
 

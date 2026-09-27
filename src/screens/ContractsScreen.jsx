@@ -64,7 +64,7 @@ export default function ContractsScreen({ state, actions, myTeamId }) {
                   {isMine ? (
                     <button
                       className="pcard-renew"
-                      disabled={filed || team.hand.length >= 9}
+                      disabled={filed}
                       onClick={() => {
                         const res = actions.openNegotiation(myTeamId, c.id);
                         if (res && res.ok === false) alert(res.msg);

@@ -43,11 +43,11 @@ const PersistentBar = forwardRef(function PersistentBar({ state, myTeamId, overl
   return (
     <div className="persistent-bar" ref={ref}>
       <button className="persistent-bar-section persistent-bar-coach" onClick={() => onNavigate('office')}>
-        <span>Coach{activeGameplan && <span className="persistent-bar-gameplan-active" title={`${activeGameplan.name} is active`}><CardTypeMark type="gameplan" size={12} color="var(--franchise)" /></span>}</span>
+        <span className="persistent-bar-box-heading"><CardTypeMark type="frontoffice" size={15} color="var(--franchise)" /> Coach{activeGameplan && <span className="persistent-bar-gameplan-active" title={`${activeGameplan.name} is active`} />}</span>
         <b>{coachDealt ? team.coach?.archetype || 'Open Slot' : 'Pending'}</b>
         {coachDealt && team.coach && <small>{team.coach.modifier}</small>}
       </button>
-      <button className="persistent-bar-section persistent-card-count gameplan" onClick={() => onNavigate('gameplan')} aria-label="Active Gameplan"><CardTypeMark type="gameplan" size={16} /><b>{fullyDealt ? activeGameplan?.name || '—' : '—'}</b></button>
+      <button className="persistent-bar-section persistent-card-count gameplan" onClick={() => onNavigate('gameplan')} aria-label="Active Gameplan"><span className="persistent-bar-box-heading"><CardTypeMark type="gameplan" size={15} /> Gameplan</span><b>{fullyDealt ? activeGameplan?.name || '—' : '—'}</b></button>
     </div>
   );
 });

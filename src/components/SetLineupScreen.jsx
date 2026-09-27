@@ -148,6 +148,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
   }));
   const [selectedId, setSelectedId] = useState(null);
   const [selectedGameplanId, setSelectedGameplanId] = useState('');
+  const [sixthManId, setSixthManId] = useState(() => team.sixthManId || bench[0]?.id || '');
   const [gameplanPickerOpen, setGameplanPickerOpen] = useState(false);
 
   const previewSignature = starters.map((card) => card?.id ?? 'open').join(',');
@@ -277,7 +278,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
     // Close in the same event as the single shared write. React batches these updates, so the
     // saved lineup first appears on the Franchise page only after the editor is gone.
     onClose();
-    actions.saveLineup(myTeamId, ids, selectedGameplanId);
+    actions.saveLineup(myTeamId, ids, selectedGameplanId, sixthManId);
   };
 
   // A valid five, never the strongest one (see roster.js's autoValidFive) — an escape hatch
@@ -311,6 +312,14 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
             <strong>{team.coach.gameplans.find((plan) => plan.id === selectedGameplanId)?.name || 'None'}</strong>
           </button>
         )}
+
+        <label className="slf-sixth-man">
+          <span className="slf-microlabel">Sixth Man</span>
+          <select value={bench.some((card) => card.id === sixthManId) ? sixthManId : (bench[0]?.id || '')} disabled={!canEdit || !bench.length} onChange={(event) => setSixthManId(event.target.value)}>
+            {bench.map((card) => <option key={card.id} value={card.id}>#{jerseyNumber(card)} · {playerGrade(card)} · {card.archetype}</option>)}
+          </select>
+          <small>Primary bench contributor: 75% of card value. The other reserve contributes 25%.</small>
+        </label>
 
         <div className="slf-columns">
           <div className="slf-court-col">

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import CardTypeMark from '../components/CardTypeMark';
 import { benchRatingContribution, effectiveRating } from '../game/roster';
+import { ROSTER_SIZE } from '../game/constants';
 
 function ordinal(n) {
   const s = ['th', 'st', 'nd', 'rd'];
@@ -33,7 +34,7 @@ export default function StandingsScreen({ state, actions, myTeamId, onViewTeam }
       seedingCardPct: oldSeedingPct,
       favorableSchedulePct: 0,
       benchRating: benchRatingContribution(t),
-      incompleteRosterPenalty: t.coach?.modifier === 'More with Less' ? 0 : Math.max(0, 9 - t.hand.length) * 40,
+      incompleteRosterPenalty: t.coach?.modifier === 'More with Less' ? 0 : Math.max(0, ROSTER_SIZE - t.hand.length) * 40,
       finalRating: Math.round(seed.val),
     };
   });

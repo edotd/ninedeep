@@ -1,5 +1,5 @@
 import { rosterSalary, formatCoins } from '../game/economy';
-import { ERA_LENGTH } from '../game/constants';
+import { ERA_LENGTH, ROSTER_SIZE } from '../game/constants';
 
 const STEPS = [['contracts', 'Negotiations'], ['draft', 'Draft']];
 
@@ -13,6 +13,6 @@ export default function OffseasonFile({ state, team, children }) {
       {STEPS.map(([phase, name], i) => <div key={phase} className={i === current ? 'current' : i < current ? 'filed' : ''}><small>0{i + 1}</small>{name}<em>{i < current ? 'FILED' : i === current ? 'OPEN' : 'PENDING'}</em></div>)}
     </nav>
     <div className="of-content">{children}</div>
-    <div className="of-ledger"><span>ROSTER <b>{team.hand.length}/9</b></span><span>BUDGET <b>{formatCoins(used)} / {formatCoins(team.seasonCap || 0)}</b></span><span>ROOM <b className={used > team.seasonCap ? 'negative' : ''}>{formatCoins((team.seasonCap || 0) - used)}</b></span></div>
+    <div className="of-ledger"><span>ROSTER <b>{team.hand.length}/{ROSTER_SIZE}</b></span><span>BUDGET <b>{formatCoins(used)} / {formatCoins(team.seasonCap || 0)}</b></span><span>ROOM <b className={used > team.seasonCap ? 'negative' : ''}>{formatCoins((team.seasonCap || 0) - used)}</b></span></div>
   </div>;
 }

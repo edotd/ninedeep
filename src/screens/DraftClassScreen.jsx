@@ -5,7 +5,7 @@ import { cardTotal } from '../game/cards';
 // will use once the season plays out (see game/draft.js's prepareDraftClass), not a throwaway
 // guess, so scouting a prospect here is real prep, not flavor. Reachable from the sidebar/menu
 // at any time, same as Free Agency; there's nothing to click here since no pick has opened yet.
-export default function DraftClassScreen({ state, onBack }) {
+export default function DraftClassScreen({ state, actions, myTeamId, onBack }) {
   const pool = state.upcomingDraftPool || [];
   const sorted = [...pool].sort((a, b) => cardTotal(b) - cardTotal(a));
   return (
@@ -19,7 +19,7 @@ export default function DraftClassScreen({ state, onBack }) {
           <p className="lede">This year's actual prospects, set the moment the season began. Scout now — the pool won't change before the draft opens.</p>
           {sorted.length ? (
             <div className="fa-grid">
-              {sorted.map((card) => <PlayerCard key={card.id} card={card} />)}
+              {sorted.map((card) => <PlayerCard key={card.id} card={card} scouted={state.teams[myTeamId].scoutingReport?.includes(card.id)} revealPeak={state.teams[myTeamId].gmTrait?.name === 'Third Eye' && state.teams[myTeamId].scoutingReport?.includes(card.id)} onScout={() => { const result = actions.toggleScouting(myTeamId, card.id); if (result?.ok === false) alert(result.msg); }} />)}
             </div>
           ) : <p className="lede">The next class hasn't been drawn yet.</p>}
         </>

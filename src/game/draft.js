@@ -1,7 +1,7 @@
 import { acquireOffseasonPlayer } from './gm';
-import { TIERS, POSITIONS, REPLACEMENT_TIER, ERA_LENGTH, LEAGUE_TEAM_COUNT, FORFEIT_BONUS_MAX, FORFEIT_BONUS_MIN } from './constants';
+import { TIERS, POSITIONS, REPLACEMENT_TIER, ERA_LENGTH, LEAGUE_TEAM_COUNT, FORFEIT_BONUS_MAX, FORFEIT_BONUS_MIN, ROSTER_SIZE } from './constants';
 import { makeCard, randomArch, randomArchForTier, cardTotal, neededPosition } from './cards';
-import { autoSelectFive } from './roster';
+import { autoSelectFive, assignSixthMan } from './roster';
 import { startNewSeasonRoster } from './season';
 import { recordFreeAgencyActivity } from './freeAgencyActivity';
 import { shuffle } from './rng';
@@ -11,19 +11,13 @@ import { shuffle } from './rng';
 const DRAFT_POOL_PADDING = 5;
 
 // TIERS' `count` is each tier's actual quantity in a class, not a per-pick probability weight —
-// a fixed bag of exactly 7 Role Player / 4 Journeyman / 4 High IQ / 4 Hustler / 2 Generational
-// Talent (21 cards) shuffled and drawn from without replacement. Drawing each pick independently
+// a fixed bag using each modifier's configured count, shuffled and drawn without replacement. Drawing each pick independently
 // with `count` as a weight (the previous approach) gave the same ~9.5% average odds per
 // Generational Talent slot, but with no cap — a class could occasionally draw three, four, or
 // more by chance, when the whole point of "2 Generational Talents" is that there are only ever
 // two to be had.
 //
-// Draft prospects never roll Journeyman — every prospect enters the league Young (see
-// buildDraftPool below), and "journeyman" describes a well-traveled veteran, not a rookie who
-// hasn't played a season yet. This bag drops those 4 slots entirely rather than redistributing
-// them, so the remaining tiers' own counts stay exactly what they are everywhere else — only the
-// total shrinks (21 -> 17).
-const ROOKIE_TIERS = TIERS.filter((tier) => tier.name !== 'Journeyman');
+const ROOKIE_TIERS = TIERS;
 
 function buildTierBag(tierPool = TIERS) {
   const bag = tierPool.flatMap((tier) => Array(tier.count).fill(tier));
@@ -94,7 +88,7 @@ function assignPick(state, team, card) {
 function finishDraftIfDone(state) {
   if (state.draft.queue.length === 0 || state.draft.pool.length === 0) {
     state.teams.filter((team) => !team.human).forEach((team) => {
-      while (team.hand.length > 9) {
+      while (team.hand.length > ROSTER_SIZE) {
         const released = team.hand.reduce((worst, card) => (cardTotal(card) < cardTotal(worst) ? card : worst), team.hand[0]);
         team.hand.splice(team.hand.indexOf(released), 1);
         team.activeIds = (team.activeIds || []).filter((id) => id !== released.id);
@@ -102,7 +96,7 @@ function finishDraftIfDone(state) {
         state.freeAgents.push(available);
         recordFreeAgencyActivity(state, 'released', available, team);
       }
-      while (team.hand.length < 9) {
+      while (team.hand.length < ROSTER_SIZE) {
         const need = neededPosition(team);
         const candidates = need ? state.freeAgents.filter((c) => c.position === need) : state.freeAgents;
         const card = candidates.length
@@ -114,11 +108,13 @@ function finishDraftIfDone(state) {
         recordFreeAgencyActivity(state, 'signed', signed, team);
       }
       team.activeIds = autoSelectFive(team.hand);
+      assignSixthMan(team);
       team.lineupConfirmed = false;
       team.lineupSet = true;
     });
     state.teams.filter((team) => team.human).forEach((team) => {
       team.activeIds = autoSelectFive(team.hand);
+      assignSixthMan(team);
       team.lineupConfirmed = false;
       team.lineupSet = false;
     });

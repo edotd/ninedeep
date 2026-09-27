@@ -41,7 +41,7 @@ const PLAYER_NOTES = [
   { key: 'name', selector: '.pcard-name-block', label: 'Number and archetype', side: 'left',
     text: "No portraits in this game, so this block is the card. The number is how the persistent bar shows this player in their slot." },
   { key: 'stats', selector: '.pcard-stats', label: 'Stat block', side: 'left',
-    text: 'Four fixed cells so all nine cards scan as one table. These drive offense, defense, and rebounding rolls.' },
+    text: 'Four fixed cells so all seven player cards scan as one table. These drive offense, defense, and rebounding rolls.' },
   { key: 'footer', selector: '.pcard-accolade-block', label: 'League accolades', side: 'left',
     text: 'A rare league honor, independent of tier — shown as a single icon (hover or hold it to see which one) when this player has one, or "None" when they don’t.' },
   { key: 'budgethit', selector: '.pcard-budgethit-row', circleSelector: '.pcard-budgethit', circle: true, label: 'Cost', side: 'right',

@@ -5,10 +5,11 @@ import SetLineupScreen from '../components/SetLineupScreen';
 import FrontOfficeCard from '../components/FrontOfficeCard';
 import { PlayerLedgerIdentity, CostBlocks } from '../components/LedgerRow';
 import { formatCoins, rosterSalary, gmCost } from '../game/economy';
-import { FANBASE_BOOST_COST } from '../game/constants';
+import { FANBASE_BOOST_COST, ROSTER_SIZE } from '../game/constants';
 import CoachmarkTour from '../components/CoachmarkTour';
 import { teamOutput } from '../game/matchup';
 import { teamSynergy } from '../game/skillsets';
+import { jerseyNumber, playerGrade } from '../game/cards';
 
 const tabForSection = (section) => ['gameplan', 'office'].includes(section) ? 'chemistry' : section || 'office';
 
@@ -75,6 +76,11 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   const leagueTotal = leagueOutputs.reduce((sum, entry) => sum + entry.output.total, 0);
   const bestFor = (key) => leagueOutputs.reduce((best, entry) => entry.output[key] > best.output[key] ? entry : best, leagueOutputs[0]);
   const leagueStandings = [...leagueOutputs].sort((a, b) => b.output.total - a.output.total);
+  const scoutingRows = (state.teams[myTeamId]?.scoutingReport || []).map((cardId) => {
+    const current = state.teams.flatMap((candidate) => candidate.hand || []).concat(state.freeAgents || [], state.upcomingDraftPool || []).find((card) => card.id === cardId);
+    const history = (state.teams[myTeamId]?.scoutingHistory || []).filter((entry) => entry.cardId === cardId);
+    return { cardId, card: current || history.at(-1)?.card, history };
+  }).filter((entry) => entry.card);
   useEffect(() => {
     if (!focusSection) return;
     setTab(tabForSection(focusSection.section));
@@ -195,7 +201,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   // list on click, so the button itself never changes shape.
   const seasonIssues = [];
   if (!team.coach) seasonIssues.push('Hire a coach');
-  if (team.hand.length > 9) seasonIssues.push(`Resolve your roster (${team.hand.length}/9)`);
+  if (team.hand.length > ROSTER_SIZE) seasonIssues.push(`Resolve your roster (${team.hand.length}/${ROSTER_SIZE})`);
   if (committed > cap) seasonIssues.push('Resolve team budget');
   if (!team.lineupSet || starters.length !== 5) seasonIssues.push('Set your lineup');
   if (!state.offseason?.freeAgencyClosed?.[team.id]) seasonIssues.push('Close out free agency');
@@ -228,10 +234,17 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             <div className="ts-section league-overview">
               <div className="ts-heading">The League</div>
               <div className="league-jump-actions">
+                {onTeamRosters && <button type="button" className="league-jump-button rosters" onClick={onTeamRosters}>Rosters</button>}
                 <button type="button" className="league-jump-button free-agency" onClick={onFreeAgency}>Free Agency{!readOnly && !state.offseason?.freeAgencyClosed?.[team.id] && <span className="alert-badge" aria-label="Free Agency requires attention">!</span>}</button>
                 <button type="button" className="league-jump-button draft" onClick={onDraftClass}>Draft Class</button>
-                {onTeamRosters && <button type="button" className="league-jump-button rosters" onClick={onTeamRosters}>Team Rosters</button>}
               </div>
+              <div className="ts-heading league-standings-heading">Scouting Report</div>
+              {scoutingRows.length ? <div className="scouting-report-list">{scoutingRows.map(({ cardId, card, history }) => (
+                <div className="scouting-report-row" key={cardId}>
+                  <strong>#{jerseyNumber(card)} · {playerGrade(card)} · {card.archetype} · {card.position}</strong>
+                  {history.length ? history.map((entry) => <small key={`${entry.season}-${entry.game}`}>Season {entry.season}: Starter {entry.starterOutput} · Sixth Man {entry.sixthManOutput} · Depth {entry.depthOutput}</small>) : <small>Tracking begins with your next season simulation.</small>}
+                </div>
+              ))}</div> : <div className="ts-ledger-empty">Add players from Rosters, Free Agency, or Draft Class.</div>}
               <div className="league-output-grid">
                 <div><span>League Output</span><strong>{Math.round(leagueTotal * 100) / 100}</strong><small>Total collective output from all teams</small></div>
                 <div><span>Best Offense</span><strong>{bestFor('off').output.off}</strong><small>{bestFor('off').team.name}</small></div>
@@ -282,7 +295,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                 <div className="ts-ledger-list">
                   {team.hand.filter((card) => activeSet.has(card.id)).map((card) => (
                     <div className={'ts-ledger-person' + (canEdit ? ' releasable' : '')} key={card.id}>
-                      <PlayerLedgerIdentity card={card} />
+                      <PlayerLedgerIdentity card={card} role="Starter" />
                       <CostBlocks turns={card.contract} amount={card.salary} />
                       {canEdit && <button className="ts-ledger-release" onClick={() => handleRelease(card)}>Release</button>}
                     </div>
@@ -292,7 +305,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                 <div className="ts-ledger-list">
                   {team.hand.filter((card) => !activeSet.has(card.id)).map((card) => (
                     <div className={'ts-ledger-person' + (canEdit ? ' releasable' : '')} key={card.id}>
-                      <PlayerLedgerIdentity card={card} />
+                      <PlayerLedgerIdentity card={card} role={card.id === team.sixthManId ? 'Sixth Man' : 'Depth'} />
                       <CostBlocks turns={card.contract} amount={card.salary} />
                       {canEdit && <button className="ts-ledger-release" onClick={() => handleRelease(card)}>Release</button>}
                     </div>
@@ -395,12 +408,12 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
 
         </div>
 
-        {preSeason && team.hand.length > 9 && (
+        {preSeason && team.hand.length > ROSTER_SIZE && (
           <div className="statusline" style={{ marginTop: 16 }}>
-            Resolve your roster before the season begins: release {team.hand.length - 9} player{team.hand.length - 9 === 1 ? '' : 's'}.
+            Resolve your roster before the season begins: release {team.hand.length - ROSTER_SIZE} player{team.hand.length - ROSTER_SIZE === 1 ? '' : 's'}.
           </div>
         )}
-        {preSeason && team.hand.length === 9 && committed > cap && (
+        {preSeason && team.hand.length === ROSTER_SIZE && committed > cap && (
           <div className="statusline" style={{ marginTop: 16 }}>Get under budget before the season begins. Reduce committed costs by {formatCoins(committed - cap)}.</div>
         )}
         {lineupScreenOpen && (
@@ -446,7 +459,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                   setShowSeasonIssues(true);
                   return;
                 }
-                if (team.hand.length < 9 && !window.confirm(`Start the season with an incomplete roster (${team.hand.length}/9)? This will negatively affect your franchise's output`)) return;
+                if (team.hand.length < ROSTER_SIZE && !window.confirm(`Start the season with an incomplete roster (${team.hand.length}/${ROSTER_SIZE})? This will negatively affect your franchise's output`)) return;
                 const res = actions.confirmLineup(myTeamId);
                 if (res && res.valid === false) alert(res.msg);
               }}

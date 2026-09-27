@@ -4,7 +4,7 @@ import BallMark from './BallMark';
 // Keep in lockstep with every `3.6s` in index.css's nd-splash-* keyframes — there's no single
 // shared constant between CSS and JS, so a change to the animation's length has to be made in
 // both places together. Total including the 350ms exit fade must stay under 4s.
-const SPLASH_DURATION_MS = 3600;
+const SPLASH_DURATION_MS = 2500;
 const REDUCED_MOTION_DURATION_MS = 700;
 
 // The era's opening splash — the ball mark assembling itself dot by dot, the wordmark and
@@ -44,7 +44,7 @@ export default function SplashScreen({ onComplete }) {
         <div className="nd-splash-wordmark">
           <div className="nd-splash-lockup" aria-label="Nine Deep"><b>NINE</b> <i>DEEP</i></div>
           <div className="nd-splash-rule" aria-hidden="true" />
-          <div className="nd-splash-tagline">Nine Men. Eight Years.</div>
+          <div className="nd-splash-tagline">Nine Cards. Nine Seasons.</div>
         </div>
       </div>
       <div className="nd-splash-skip">Tap to skip</div>

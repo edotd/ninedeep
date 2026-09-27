@@ -101,7 +101,7 @@ export default function FreeAgencyScreen({ state, actions, myTeamId, onBack, onG
             const sign = () => setBiddingCard(card);
             return (
               <div key={card.id}>
-                <PlayerCard card={card} contractLabel="Requested Contract Length" signingNote={`VALUES ${freeAgentPriority(card).toUpperCase()} · ${offerCount ? `${offerCount} OFFER${offerCount === 1 ? '' : 'S'} MADE` : 'NO OFFERS'}`} />
+                <PlayerCard card={card} contractLabel="Requested Contract Length" signingNote={`VALUES ${freeAgentPriority(card).toUpperCase()} · ${offerCount ? `${offerCount} OFFER${offerCount === 1 ? '' : 'S'} MADE` : 'NO OFFERS'}`} scouted={team.scoutingReport?.includes(card.id)} revealPeak={team.gmTrait?.name === 'Third Eye' && team.scoutingReport?.includes(card.id)} onScout={() => { const result = actions.toggleScouting(myTeamId, card.id); if (result?.ok === false) alert(result.msg); }} />
                 <button className="pcard-renew" disabled={releasedHere || closed} onClick={sign}>
                   {releasedHere ? 'Released This Season' : bid ? `Bidding — ${formatCoins(bid.salary)}` : `Offer — ${formatCoins(card.salary)}`}
                 </button>

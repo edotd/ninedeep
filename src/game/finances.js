@@ -8,7 +8,7 @@
 // contract would have, but it isn't free. See economy.js's finalizeCap for where these
 // charges count down each season transition. Hiring the replacement coach still costs its
 // own salary this season on top of the outgoing coach's dead cap.
-import { FANBASE_BOOST_COST, FANBASE_BOOST_AMOUNT } from './constants';
+import { FANBASE_BOOST_COST, FANBASE_BOOST_AMOUNT, ROSTER_SIZE } from './constants';
 import { rosterSalary, gmCost } from './economy';
 import { drawGM } from './gm';
 import { recordFreeAgencyActivity } from './freeAgencyActivity';
@@ -82,6 +82,8 @@ export function fireGM(state, teamIdx) {
     kind: 'gm', label: `${team.gmType || 'Neutral'} GM`, detail: team.market?.name || '',
   });
   team.gmType = next.type;
+  team.gmRarity = next.rarity;
+  team.gmTrait = next.trait;
   team.market = next.market;
   team.seasonCap += capChange;
   team.gmChangeSeason = state.season;
@@ -98,7 +100,7 @@ export function fireGM(state, teamIdx) {
 // at all unless activeIds.length === 5.
 export function releasePlayer(state, teamIdx, cardId) {
   const team = state.teams[teamIdx];
-  if (state.offseason?.freeAgencyClosed?.[team.id] && team.hand.length <= 9) return { ok: false, msg: 'You have closed out free agency this turn.' };
+  if (state.offseason?.freeAgencyClosed?.[team.id] && team.hand.length <= ROSTER_SIZE) return { ok: false, msg: 'You have closed out free agency this turn.' };
   const idx = team.hand.findIndex((c) => c.id === cardId);
   if (idx < 0) return { ok: false, msg: 'Player not found on this roster.' };
   const card = team.hand[idx];
@@ -110,6 +112,7 @@ export function releasePlayer(state, teamIdx, cardId) {
     team.lineupSet = false;
     team.lineupConfirmed = false;
   }
+  if (team.sixthManId === cardId) team.sixthManId = null;
   addDeadCap(team, card.salary / 2, card.contract, {
     kind: 'player',
     label: card.archetype,

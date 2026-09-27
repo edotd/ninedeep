@@ -113,10 +113,10 @@ test('each open roster spot costs one Offense and Defense unless the coach has M
   assert(COACH_MODIFIERS.some((modifier)=>modifier.name==='More with Less'));
   const short=team([6,1,10,9,2]);
   const exempt=structuredClone(short);exempt.coach.modifier='More with Less';
-  assert.equal(offenseModifier(exempt)-offenseModifier(short),4);
-  assert.equal(defenseModifier(exempt)-defenseModifier(short),4);
-  assert.equal(teamOutput(exempt).off-teamOutput(short).off,4);
-  assert.equal(teamOutput(exempt).def-teamOutput(short).def,4);
+  assert.equal(offenseModifier(exempt)-offenseModifier(short),2);
+  assert.equal(defenseModifier(exempt)-defenseModifier(short),2);
+  assert.equal(teamOutput(exempt).off-teamOutput(short).off,2);
+  assert.equal(teamOutput(exempt).def-teamOutput(short).def,2);
 });
 // Subs are no longer phase/lock-gated — the persistent bar lets a player substitute any time
 // (see engine.js's swapStarter), same as "slot drag reorders within a group and moves players

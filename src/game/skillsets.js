@@ -47,7 +47,7 @@ export const skillsetFor = (player) => SKILLSETS.find((s) => s.id === player?.sk
 // nominal SCO peak.
 const ARCHETYPE_FAMILY = {
   'Pass-First': 'PLM', 'Scorer': 'SCO', 'Playmaker': 'PLM', 'Balanced': 'ANY',
-  'Marksman': 'SCO', 'Rebounder': 'REB', 'Defender': 'DEF',
+  'Rebounder': 'REB', 'Defender': 'DEF',
 };
 
 export function rollSkillset(position, archetype, careerStage) {

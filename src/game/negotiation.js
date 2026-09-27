@@ -64,7 +64,6 @@ export function openNegotiation(state, teamIdx, cardId) {
   if (state.phase !== 'contracts' || !team?.human || state.offseason?.contractsFiled?.[team.id]) {
     return { ok: false, msg: 'Contract decisions are closed.' };
   }
-  if (team.hand.length >= 9) return { ok: false, msg: 'Your roster is full.' };
   state.offseason.negotiations ||= {};
   const existing = state.offseason.negotiations[cardId];
   if (existing && existing.status === 'active') return { ok: true, session: existing };

@@ -19,9 +19,9 @@ const ROSTER_TABLE_COLUMNS = [
   { key: 'cost', label: 'Cost' },
 ];
 
-function PlayerRosterTable({ starters, bench, sort, starterOpenSlots, benchOpenSlots, showActions, onRelease, onDevelop }) {
+function PlayerRosterTable({ starters, bench, sixthManId, sort, starterOpenSlots, benchOpenSlots, showActions, onRelease, onDevelop }) {
   const starterIds = new Set(starters.map((card) => card.id));
-  const sorted = sortPlayers(starters.concat(bench), sort).map((card) => ({ card, role: starterIds.has(card.id) ? 'Starter' : 'Bench' }));
+  const sorted = sortPlayers(starters.concat(bench), sort).map((card) => ({ card, role: starterIds.has(card.id) ? 'Starter' : card.id === sixthManId ? 'Sixth Man' : 'Depth' }));
   const openColSpan = ROSTER_TABLE_COLUMNS.length - 1 + (showActions ? 1 : 0);
   return (
     <div className="ts-roto-table-wrap">
@@ -64,7 +64,7 @@ function PlayerRosterTable({ starters, bench, sort, starterOpenSlots, benchOpenS
   );
 }
 
-// A league-wide roster browser reached from the League page's "Team Rosters" button — the same
+// A league-wide roster browser reached from the League page's "Rosters" button — the same
 // card carousel/list that used to live on the Team File's own Players tab, but not tied to any
 // one team: a switcher up top lets you page through every team in the league. Only the viewer's
 // own team can Release/Develop (still gated by the same pre-season/lineup-unconfirmed window as
@@ -77,12 +77,17 @@ export default function TeamRostersScreen({ state, actions, myTeamId, onBack }) 
   const isOwnTeam = team.id === myTeamId;
   const preSeason = state.phase === 'teamsummary' || state.phase === 'pullhand';
   const canEdit = isOwnTeam && preSeason && !team.lineupConfirmed;
+  const viewerTeam = state.teams[myTeamId];
+  const toggleScout = (card) => {
+    const result = actions.toggleScouting(myTeamId, card.id);
+    if (result?.ok === false) alert(result.msg);
+  };
 
   const activeSet = new Set(team.activeIds || []);
   const starters = team.hand.filter((c) => activeSet.has(c.id));
   const bench = team.hand.filter((c) => !activeSet.has(c.id));
   const starterOpenSlots = Math.max(0, 5 - starters.length);
-  const benchOpenSlots = Math.max(0, 4 - bench.length);
+  const benchOpenSlots = Math.max(0, 2 - bench.length);
 
   const [playerSort, setPlayerSort] = useState('position');
   const [viewMode, setViewMode] = useState('carousel');
@@ -141,7 +146,7 @@ export default function TeamRostersScreen({ state, actions, myTeamId, onBack }) 
 
   return (
     <div className="screen ts-screen">
-      <div className="ts-viewing-franchise"><span>Team Rosters</span><strong>{team.name}</strong></div>
+      <div className="ts-viewing-franchise"><span>Rosters</span><strong>{team.name}</strong></div>
 
       <div className="team-roster-switcher">
         {state.teams.map((t) => (
@@ -172,6 +177,7 @@ export default function TeamRostersScreen({ state, actions, myTeamId, onBack }) 
           <PlayerRosterTable
             starters={starters}
             bench={bench}
+            sixthManId={team.sixthManId}
             sort={playerSort}
             starterOpenSlots={starterOpenSlots}
             benchOpenSlots={benchOpenSlots}
@@ -194,10 +200,13 @@ export default function TeamRostersScreen({ state, actions, myTeamId, onBack }) 
                   <div className="ts-roto-slot" key={c.id}>
                     <PlayerCard
                       card={c}
-                      rosterLabel={activeSet.has(c.id) ? 'Starter' : 'Bench'}
+                      rosterLabel={activeSet.has(c.id) ? 'Starter' : c.id === team.sixthManId ? 'Sixth Man' : 'Depth'}
                       onRelease={canEdit ? handleRelease : undefined}
                       onDevelop={canEdit && team.developmentPoints > 0 ? setDevelopPlayer : undefined}
                       alwaysShowOptions={!isDesktop}
+                      onScout={!isOwnTeam ? toggleScout : undefined}
+                      scouted={viewerTeam.scoutingReport?.includes(c.id)}
+                      revealPeak={!isOwnTeam && viewerTeam.gmTrait?.name === 'Third Eye' && viewerTeam.scoutingReport?.includes(c.id)}
                     />
                   </div>
                 ))}

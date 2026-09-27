@@ -20,7 +20,8 @@ export function rollMarketCapAdj(market) {
 export function finalizeCap(team) {
   const base = baseCap();
   const attendanceMult = 0.9 + (team.attendance !== undefined ? team.attendance : 0.5) * 0.2;
-  let cap = (base + (team.market ? team.market.capAdj : 0) + (team.draftTradeBonus || 0)) * attendanceMult - (team.lastOverage || 0);
+  const gmBudget = team.gmTrait?.name === 'Cap Architect' ? (team.gmTrait.value || 0) : 0;
+  let cap = (base + (team.market ? team.market.capAdj : 0) + gmBudget + (team.draftTradeBonus || 0)) * attendanceMult - (team.lastOverage || 0);
   cap = Math.max(cap, Math.round(base * 0.7));
   cap = Math.round(cap * 2) / 2;
   team.seasonCap = cap;
@@ -37,7 +38,7 @@ export function finalizeCap(team) {
 // Every GM costs at least MIN_GM_COST — a Neutral GM used to be free, but firing one now
 // leaves dead cap behind (see finances.js), and a free GM would make that charge meaningless.
 export function gmCost(gmType) {
-  return gmType === 'Aggressive' || gmType === 'Hands-Off' ? 1 : MIN_GM_COST;
+  return gmType ? MIN_GM_COST : 0;
 }
 
 // Dead cap owed this season — half the salary of a player cut (or coach/GM fired) with time

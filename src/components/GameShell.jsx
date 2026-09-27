@@ -30,7 +30,6 @@ import WelcomeScreen from '../screens/WelcomeScreen';
 import FranchiseMasthead from './FranchiseMasthead';
 import { rosterSalary } from '../game/economy';
 import { hasPendingBidDecision } from '../game/bidding';
-import SplashScreen from './SplashScreen';
 
 const SCREENS = {
   cardoverview: CardOverviewScreen,
@@ -77,7 +76,7 @@ const PAGE_LABELS = {
   team: 'Franchise',
   freeagency: 'Free Agency',
   draftclass: 'Draft Class',
-  teamrosters: 'Team Rosters',
+  teamrosters: 'Rosters',
   cardtypes: 'Card Types',
   glossary: 'Glossary',
   settings: 'Settings',
@@ -94,29 +93,14 @@ const PAGE_LABELS = {
 // brand handoff, instead of the phone-width top bar + collapsed bottom bar. Same
 // `overlay`/`Screen` resolution feeds both shells so the two never drift out of sync.
 export default function GameShell({ state, actions, myTeamId, onNewEra, onDeleteRoom, hostNotifications, roomCode }) {
-  // The opening splash plays once per era, right before its first deal — gated on state.eraId
-  // (shared, so a genuinely new era always gets a fresh key) plus a per-device localStorage
-  // flag (deliberately NOT shared game state: in an online room each player's client decides
-  // for itself whether it's already shown this device the splash, rather than one player's
-  // dismissal hiding it for everyone else mid-watch). Committed once on mount — a later phase
-  // change past 'pullhand' (e.g. resuming a save already mid-deal) never retroactively shows it.
-  const splashKey = `nine-deep-splash-seen:${state.eraId}`;
-  const [splashDone, setSplashDone] = useState(() => {
-    if (state.phase !== 'pullhand') return true;
-    try { return localStorage.getItem(splashKey) === '1'; } catch { return true; }
-  });
-  // "Welcome to Nine Deep" used to be its own full-screen stop inside the deal — now it's a
-  // one-time overlay shown on top of the League page for the era's very first turn instead, so
-  // a new player lands somewhere real (their own franchise) rather than on a screen with nothing
-  // behind it. Same per-device, not-shared-state reasoning as the splash: each client decides for
-  // itself whether it's already seen this era's welcome.
   const welcomeKey = `nine-deep-welcome-seen:${state.eraId}`;
-  const [welcomeDone, setWelcomeDone] = useState(() => {
-    try { return localStorage.getItem(welcomeKey) === '1'; } catch { return true; }
+  const [welcomeStep, setWelcomeStep] = useState(() => {
+    if (state.phase !== 'pullhand' || state.season !== 1) return 'done';
+    try { return localStorage.getItem(welcomeKey) === '1' ? 'done' : 'welcome'; } catch { return 'welcome'; }
   });
-  const dismissWelcome = () => {
+  const finishWelcome = () => {
     try { localStorage.setItem(welcomeKey, '1'); } catch { /* ignore */ }
-    setWelcomeDone(true);
+    setWelcomeStep('done');
   };
   const myTeam = myTeamId != null ? state.teams?.[myTeamId] : null;
   const mobileTopRef = useRef(null);
@@ -180,7 +164,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
     const observer = new ResizeObserver(updateHeight);
     observer.observe(mobileTopRef.current);
     return () => observer.disconnect();
-  }, [isDesktop, showChrome, splashDone]);
+  }, [isDesktop, showChrome, welcomeStep]);
 
   useEffect(() => {
     if (!isDesktop || !desktopTopRef.current) return undefined;
@@ -189,7 +173,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
     const observer = new ResizeObserver(updateHeight);
     observer.observe(desktopTopRef.current);
     return () => observer.disconnect();
-  }, [isDesktop, showChrome, splashDone]);
+  }, [isDesktop, showChrome, welcomeStep]);
 
   // The Rotation tab's locked carousel now keeps the persistent bar on screen (it used to hide
   // it entirely), so it needs this bar's real height to reserve space for it, the same way it
@@ -201,7 +185,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
     const observer = new ResizeObserver(updateHeight);
     observer.observe(persistentBarRef.current);
     return () => observer.disconnect();
-  }, [isDesktop, showChrome, splashDone]);
+  }, [isDesktop, showChrome, welcomeStep]);
 
   // The live match board and the Rotation tab's locked carousel both need to know the TRUE
   // visible viewport height and the real safe-area inset sizes, in px, to fit their content
@@ -323,7 +307,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
   else if (overlay === 'standings') overlayBody = <LeagueScreen key={screenKey} state={state} myTeamId={myTeamId} onBack={close} onViewTeam={(id) => openTeamView(id, 'standings')} />;
   else if (overlay === 'team') overlayBody = <TeamSummaryScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} viewTeamId={viewTeamId} onBack={closeTeamView} focusSection={teamFocus} onFreeAgency={openFreeAgency} onDraftClass={() => setOverlay('draftclass')} onTeamRosters={() => setOverlay('teamrosters')} onLineupPreviewChange={setLineupPreview} />;
   else if (overlay === 'freeagency') overlayBody = <FreeAgencyScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onBack={close} onGoToFranchise={() => setOverlay(effectivePhase === 'teamsummary' ? null : 'team')} />;
-  else if (overlay === 'draftclass') overlayBody = <DraftClassScreen key={screenKey} state={state} onBack={close} />;
+  else if (overlay === 'draftclass') overlayBody = <DraftClassScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
   else if (overlay === 'teamrosters') overlayBody = <TeamRostersScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
   else if (overlay === 'cardtypes') overlayBody = <CardOverviewScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
 
@@ -338,20 +322,9 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
       </div>
     ));
 
-  if (!splashDone) {
-    return <SplashScreen onComplete={() => {
-      try { localStorage.setItem(splashKey, '1'); } catch { /* storage can be unavailable */ }
-      setSplashDone(true);
-    }} />;
-  }
-
-  // The era's very first turn: land on the League page itself (see TeamSummaryScreen's own tab
-  // default) and lay the Welcome message over it, rather than gating the League page behind a
-  // separate full-screen stop the way the deal flow used to.
-  const showWelcomeOverlay = onOwnTeamPage && state.season === 1 && !welcomeDone;
-  const welcomeOverlay = showWelcomeOverlay && (
-    <div className="welcome-overlay-backdrop">
-      <WelcomeScreen teamName={myTeam?.name} onContinue={dismissWelcome} />
+  if (welcomeStep !== 'done') return (
+    <div className="welcome-onboarding">
+      <WelcomeScreen teamName={myTeam?.name} cards={welcomeStep === 'cards'} onContinue={welcomeStep === 'welcome' ? () => setWelcomeStep('cards') : finishWelcome} />
     </div>
   );
 
@@ -365,7 +338,6 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
         </div>
         {showBar && <DesktopBar state={state} myTeamId={myTeamId} actions={actions} dealProgress={dealProgress} />}
         <ScrollToTopButton />
-        {welcomeOverlay}
       </div>
     );
   }
@@ -384,7 +356,6 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
       {mainBody}
       {showBar && <PersistentBar ref={persistentBarRef} state={state} myTeamId={myTeamId} overlay={overlay} onNavigate={openTeamSection} onFreeAgency={openFreeAgency} freeAgencyLocked={freeAgencyLocked} dealProgress={dealProgress} />}
       <ScrollToTopButton />
-      {welcomeOverlay}
     </div>
   );
 }

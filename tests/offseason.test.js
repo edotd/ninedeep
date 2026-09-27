@@ -18,17 +18,35 @@ test('Generational Talent is a modifier while All-Star and Most Valuable Player 
   assert(LEAGUE_ACCOLADES.some((tier) => tier.name === 'Most Valuable Player'));
 });
 
-test('Journeyman replaces the legacy Bench Player tier in new and saved games', () => {
-  assert(TIERS.some((tier) => tier.name === 'Journeyman'));
+test('legacy Bench Player and Journeyman labels migrate out of the current modifier pool', () => {
+  assert(!TIERS.some((tier) => tier.name === 'Journeyman'));
   assert(!TIERS.some((tier) => tier.name === 'Bench Player'));
   const state = rehydrateState({
     teams: [{ id: 0, hand: [{ id: 'legacy', archetype: 'Bench Player', tierName: 'Bench Player' }] }],
   });
-  assert.equal(state.teams[0].hand[0].archetype, 'Journeyman');
-  assert.equal(state.teams[0].hand[0].tierName, 'Journeyman');
+  assert.equal(state.teams[0].hand[0].archetype, 'Balanced');
+  assert.equal(state.teams[0].hand[0].tierName, 'Role Player');
 });
 
-test('draft prospects never roll Journeyman — every rookie is Young, and journeyman means veteran', () => {
+test('the current modifier pool includes each permanent stat emphasis', () => {
+  const expected = {
+    'Pure Scorer': ['SCO'],
+    'Ball Hawk': ['REB'],
+    Disruptive: ['DEF'],
+    Attacking: ['SCO', 'PLM'],
+    'Two-Way': ['SCO', 'DEF'],
+    'Interior Force': ['SCO', 'REB'],
+    Commanding: ['PLM', 'DEF'],
+    Enforcing: ['PLM', 'REB'],
+  };
+  for (const [name, stats] of Object.entries(expected)) {
+    const tier = TIERS.find((candidate) => candidate.name === name);
+    assert(tier, `${name} should be available`);
+    assert.deepEqual(tier.forceStats || [tier.forceStat], stats);
+  }
+});
+
+test('draft prospects are Young and never use the removed Journeyman modifier', () => {
   const state = newEraState();
   for (let i = 0; i < 20; i++) {
     for (const card of buildDraftPool(state, 21)) {
@@ -142,13 +160,13 @@ test('every team drafts a Young non-accolade player and resolves an oversized ro
   assert.equal(state.season, 3);
   finishDraftTransition(state);
   assert.equal(state.phase, 'teamsummary');
-  assert.equal(team.hand.length, 10);
+  assert.equal(team.hand.length, 8);
   assert.equal(team.activeIds.length, 5);
-  const releasedCard = team.hand[9];
+  const releasedCard = team.hand[7];
   const releasedSalary = releasedCard.salary;
   const releasedYears = releasedCard.contract;
-  assert.equal(releasePlayer(state, 0, team.hand[9].id).ok, true);
-  assert.equal(team.hand.length, 9);
+  assert.equal(releasePlayer(state, 0, team.hand[7].id).ok, true);
+  assert.equal(team.hand.length, 7);
   const charge = team.deadCap.find((c) => c.seasonsLeft === releasedYears);
   assert(charge, 'expected a dead cap charge for the released player');
   assert.equal(charge.amount, Math.round((releasedSalary / 2) * 100) / 100);
@@ -193,11 +211,11 @@ test('a newly signed free agent cannot be released in the same season', () => {
   team.seasonCap = 999;
   const freeAgent = state.freeAgents[0];
   assert.equal(signFreeAgent(state, freeAgent.id, team.id).ok, true);
-  assert.equal(team.hand.length, 10);
+  assert.equal(team.hand.length, 8);
   assert.match(releasePlayer(state, team.id, freeAgent.id).msg, /signed this season/);
   state.offseason.freeAgencyClosed[team.id] = true;
   assert.equal(releasePlayer(state, team.id, team.hand.find((card) => card.id !== freeAgent.id).id).ok, true);
-  assert.equal(team.hand.length, 9);
+  assert.equal(team.hand.length, 7);
   assert.match(releasePlayer(state, team.id, freeAgent.id).msg, /closed out free agency/);
   state.season += 1;
   state.offseason.freeAgencyClosed[team.id] = false;
@@ -218,48 +236,48 @@ test('releasing a starter reopens lineup review even though an incomplete roster
   assert.match(confirmLineup(state, team.id).msg, /Set your lineup/);
 });
 
-test('season start permits fewer than nine players but rejects over-budget and oversized rosters', () => {
+test('season start permits fewer than seven players but rejects over-budget and oversized rosters', () => {
   const state = newEraState();
   const cards = Array.from({ length: 10 }, (_, i) => ({ id: `p${i}`, position: ['Guard', 'Forward', 'Big'][i % 3], salary: 2 }));
-  const team = { id: 0, human: true, hand: cards.slice(0, 8), activeIds: cards.slice(0, 5).map((card) => card.id), seasonCap: 20, coach: { salary: 0 }, lineupSet: true };
+  const team = { id: 0, human: true, hand: cards.slice(0, 6), activeIds: cards.slice(0, 5).map((card) => card.id), seasonCap: 20, coach: { salary: 0 }, lineupSet: true };
   state.teams = [team];
   assert.match(confirmLineup(state, 0).msg, /Close out free agency/);
-  team.hand = cards.slice(0, 9);
+  team.hand = cards.slice(0, 7);
   team.seasonCap = 10;
   assert.match(confirmLineup(state, 0).msg, /under budget/);
-  team.hand = cards;
+  team.hand = cards.slice(0, 8);
   team.seasonCap = 999;
-  assert.match(confirmLineup(state, 0).msg, /10 of 9/);
+  assert.match(confirmLineup(state, 0).msg, /8 of 7/);
   assert.equal(team.lineupConfirmed, undefined);
 });
 
 test('season start allows locking in up to 3 cap points over, but no further', () => {
   const state = newEraState();
-  const cards = Array.from({ length: 9 }, (_, i) => ({ id: `p${i}`, position: ['Guard', 'Forward', 'Big'][i % 3], salary: 2 }));
-  // 9 * 2 = 18 committed.
-  const team = { id: 0, human: true, hand: cards, activeIds: cards.slice(0, 5).map((c) => c.id), seasonCap: 15, coach: { salary: 0 }, lineupSet: true, deadCap: [] };
+  const cards = Array.from({ length: 7 }, (_, i) => ({ id: `p${i}`, position: ['Guard', 'Forward', 'Big'][i % 3], salary: 2 }));
+  // 7 * 2 = 14 committed.
+  const team = { id: 0, human: true, hand: cards, activeIds: cards.slice(0, 5).map((c) => c.id), seasonCap: 11, coach: { salary: 0 }, lineupSet: true, deadCap: [] };
   // A second, not-yet-confirmed human keeps allHumansReady false — confirmLineup would
   // otherwise cascade into lockSeasonAndSeed on a real success, which this minimal fake team
   // isn't built out enough to survive (no matchupCards/gmType/market/etc).
   const other = { id: 1, human: true, hand: [], activeIds: [], seasonCap: 20, coach: { salary: 0 }, lineupSet: true, deadCap: [] };
   state.teams = [team, other];
   state.offseason = { freeAgencyClosed: { 0: true, 1: true } };
-  // 18 committed vs a 15 cap is exactly 3.0 over — right at MAX_CAP_OVERAGE, still allowed.
+  // 14 committed vs an 11 cap is exactly 3.0 over — right at MAX_CAP_OVERAGE, still allowed.
   assert.equal(confirmLineup(state, 0).valid, true);
   assert.equal(team.overBudgetLastSeason, true);
   // Reset the just-set flag so this next check is isolated to the absolute cap, not the
   // separate consecutive-season restriction (covered in its own test below).
   team.lineupConfirmed = false;
   team.overBudgetLastSeason = false;
-  team.seasonCap = 14; // 4.0 over now — past the allowance.
+  team.seasonCap = 10; // 4.0 over now — past the allowance.
   assert.match(confirmLineup(state, 0).msg, /under budget/);
 });
 
 test('a team cannot go over budget in consecutive seasons', () => {
   const state = newEraState();
-  const cards = Array.from({ length: 9 }, (_, i) => ({ id: `p${i}`, position: ['Guard', 'Forward', 'Big'][i % 3], salary: 2 }));
-  // 18 committed vs a 17 cap is only 1.0 over — comfortably within MAX_CAP_OVERAGE on its own.
-  const team = { id: 0, human: true, hand: cards, activeIds: cards.slice(0, 5).map((c) => c.id), seasonCap: 17, coach: { salary: 0 }, lineupSet: true, deadCap: [], overBudgetLastSeason: true };
+  const cards = Array.from({ length: 7 }, (_, i) => ({ id: `p${i}`, position: ['Guard', 'Forward', 'Big'][i % 3], salary: 2 }));
+  // 14 committed vs a 13 cap is only 1.0 over — comfortably within MAX_CAP_OVERAGE on its own.
+  const team = { id: 0, human: true, hand: cards, activeIds: cards.slice(0, 5).map((c) => c.id), seasonCap: 13, coach: { salary: 0 }, lineupSet: true, deadCap: [], overBudgetLastSeason: true };
   const other = { id: 1, human: true, hand: [], activeIds: [], seasonCap: 20, coach: { salary: 0 }, lineupSet: true, deadCap: [] };
   state.teams = [team, other];
   state.offseason = { freeAgencyClosed: { 0: true, 1: true } };
@@ -267,7 +285,7 @@ test('a team cannot go over budget in consecutive seasons', () => {
   assert.equal(res.valid, false);
   assert.match(res.msg, /consecutive/);
   // Getting back under the cap clears the restriction for next time.
-  team.seasonCap = 18;
+  team.seasonCap = 14;
   assert.equal(confirmLineup(state, 0).valid, true);
   assert.equal(team.overBudgetLastSeason, false);
 });

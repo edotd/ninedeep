@@ -7,8 +7,9 @@ import { ensureCoachSystems } from './strategyCards';
 // stable `id` set in season.js's buildTeams), so the rest of the codebase — which was written
 // assuming object identity — keeps working unmodified.
 function migratePlayerTier(card) {
-  if (card?.archetype === 'Bench Player') card.archetype = 'Journeyman';
-  if (card?.tierName === 'Bench Player') card.tierName = 'Journeyman';
+  if (card?.archetype === 'Bench Player' || card?.archetype === 'Marksman') card.archetype = card?.archetype === 'Marksman' ? 'Scorer' : 'Balanced';
+  if (card?.tierName === 'Bench Player' || card?.tierName === 'Journeyman') card.tierName = 'Role Player';
+  if (card?.tierName === 'Hustler') card.tierName = 'High Motor';
 }
 
 export function rehydrateState(state) {
@@ -26,6 +27,12 @@ export function rehydrateState(state) {
   state.freeAgentCoachCounter ||= 0;
   state.freeAgentCoaches ||= [];
   state.teams.forEach((team) => {
+    team.scoutingReport ||= [];
+    team.scoutingHistory ||= [];
+    if (!team.gmTrait) team.gmTrait = { name: 'Neutral', value: 0, description: 'No additional front-office effect.' };
+    team.gmType = team.gmType ? 'General Manager' : team.gmType;
+    team.gmRarity ||= 'Core';
+    if (!team.sixthManId) team.sixthManId = (team.hand || []).find((card) => !(team.activeIds || []).includes(card.id))?.id || null;
     team.developmentCards ||= [];
     team.gameplanCards ||= [];
     team.seasonGameplanEffects ||= { offPercent: 0, defPercent: 0, benchBonus: 0, seedingPercent: 0 };

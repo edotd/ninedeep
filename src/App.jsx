@@ -5,8 +5,10 @@ import EntryScreen from './screens/EntryScreen';
 import { useLocalGame } from './game/useLocalGame';
 import { DarkModeProvider } from './hooks/useDarkMode';
 import { OnboardingModeProvider } from './hooks/useOnboardingMode';
+import SplashScreen from './components/SplashScreen';
 
 function AppInner() {
+  const [entrySplashDone, setEntrySplashDone] = useState(false);
   const [mode, setMode] = useState(null); // null | 'solo' | { roomCode, uid }
   const [pendingJoinCode] = useState(() => {
     const room = new URLSearchParams(window.location.search).get('room');
@@ -21,6 +23,8 @@ function AppInner() {
     window.history.replaceState({}, '', window.location.pathname);
     setMode(null);
   };
+
+  if (!entrySplashDone) return <SplashScreen onComplete={() => setEntrySplashDone(true)} />;
 
   if (mode === 'solo') {
     // Resets the local game state AND returns to the entry/setup screen — GameShell has no

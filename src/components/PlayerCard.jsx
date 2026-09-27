@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { skillsetFor } from '../game/skillsets';
 import { formatCoins } from '../game/economy';
-import { careerLevel } from '../game/aging';
+import { careerLevel, careerMultiplier } from '../game/aging';
 import { cardTier, jerseyNumber, playerGrade } from '../game/cards';
 import { LEAGUE_ACCOLADES, RARITY_CORNERS } from '../game/constants';
 import CardTypeMark from './CardTypeMark';
@@ -20,7 +20,7 @@ const LEGACY_DEVELOPMENT_CHANGES = {
 // that a normal card-select tap never trips it, short enough that it doesn't feel unresponsive.
 const LONG_PRESS_MS = 500;
 
-export default function PlayerCard({ card, onClick, selected, rosterLabel, compact, onRelease, onDevelop, alwaysShowOptions, contractLabel, signingNote }) {
+export default function PlayerCard({ card, onClick, selected, rosterLabel, compact, onRelease, onDevelop, onScout, scouted, revealPeak, alwaysShowOptions, contractLabel, signingNote }) {
   const tier = cardTier(card);
   const skillset = skillsetFor(card);
   const level = careerLevel(card);
@@ -123,10 +123,14 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
           terms for an open free agent (see ContractsScreen/FreeAgencyScreen). Not shown at all
           for a roster card with nothing to negotiate. */}
       {!compact && signingNote && <div className="pcard-signing-note">{signingNote}</div>}
+      {!compact && scouted && <div className="pcard-scouted-mark" title="On your scouting report" aria-label="On your scouting report">⌖</div>}
       {!compact && (
         <div className="pcard-stats">
           {['SCO', 'PLM', 'REB', 'DEF'].map((stat) => <div className="pcard-stat" key={stat}><div className="pcard-stat-value"><b>{card.stats[stat]}</b>{developmentChanges[stat] > 0 && <em>+{developmentChanges[stat]}</em>}</div><span>{stat}</span></div>)}
         </div>
+      )}
+      {!compact && revealPeak && (
+        <div className="pcard-peak-projection"><span>Peak Prime Projection</span><strong>{['SCO', 'PLM', 'REB', 'DEF'].map((stat) => `${stat} ${Math.round(card.stats[stat] * careerMultiplier({ ...card, careerStage: 'Prime' }, card.careerRoll))}`).join(' · ')}</strong></div>
       )}
       {/* Skillset module (brand handoff, Player Card §5) — a permanent trait rolled once at
           creation, never a stat. Sits below the stat block on the real card so it reads as
@@ -226,6 +230,7 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
           )}
         </>
       )}
+      {!compact && onScout && <button type="button" className={'pcard-scout' + (scouted ? ' active' : '')} onClick={(event) => { event.stopPropagation(); onScout(card); }}>{scouted ? 'Remove From Report' : 'Add To Scouting Report'}</button>}
     </div>
   );
 }

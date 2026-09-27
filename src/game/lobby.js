@@ -3,7 +3,7 @@
 // outside game/actionMap.js (which is shared with solo mode, which has no lobby at all).
 import { AI_NAMES, LEAGUE_TEAM_COUNT } from './constants';
 import { newEraState, buildStarPool, buildTeams, dealHands, initFrontOffice, initSeasonModifierCards } from './season';
-import { autoSelectFive } from './roster';
+import { autoSelectFive, assignSixthMan } from './roster';
 
 // One browser identity can only hold one seat. A player must explicitly leave their current
 // seat before choosing another, so an accidental click cannot silently move their franchise.
@@ -57,7 +57,7 @@ export function startEraOnline(state, hostUid) {
   buildStarPool(state);
   buildTeams(state, seats);
   dealHands(state);
-  state.teams.forEach((t) => { t.activeIds = autoSelectFive(t.hand); if (!t.human) t.lineupSet = true; });
+  state.teams.forEach((t) => { t.activeIds = autoSelectFive(t.hand); assignSixthMan(t); if (!t.human) t.lineupSet = true; });
   // Same one-time opening-era sequence engine.js's startEra runs for solo — hand and Front
   // Office dealt together into the consolidated Deal screen (phase 'pullhand'), not the old
   // three-separate-screens flow. initFrontOffice and initSeasonModifierCards each set their own

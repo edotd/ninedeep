@@ -131,7 +131,7 @@ test('incomplete rosters lose seeding rating unless the coach has More with Less
   team.hand = team.hand.filter((player) => team.activeIds.includes(player.id));
   // Floating-point arithmetic on randomly generated roster stats can land a ULP off an exact
   // value, so compare with a tolerance rather than ===.
-  assert(Math.abs(effectiveRating(team) - Math.max(0, completeRating - benchRating - 160)) < 1e-9);
+  assert(Math.abs(effectiveRating(team) - Math.max(0, completeRating - benchRating - 80)) < 1e-9);
   team.coach.modifier = 'More with Less';
   assert(Math.abs(effectiveRating(team) - (completeRating - benchRating)) < 1e-9);
 });

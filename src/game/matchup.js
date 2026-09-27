@@ -77,7 +77,9 @@ export function checkInjury(team, chance = INJURY_CHANCE) {
 export function benchScore(team, idsOverride, includeSeasonGameplan = true) {
   const activeIds = idsOverride || team.activeIds;
   const benchCards = team.hand.filter((c) => !activeIds.includes(c.id));
-  let sum = benchCards.reduce((s, c) => s + cardTotal(c), 0);
+  const sixth = benchCards.find((card) => card.id === team.sixthManId) || benchCards[0];
+  const depth = benchCards.find((card) => card.id !== sixth?.id);
+  let sum = (sixth ? cardTotal(sixth) * 0.75 : 0) + (depth ? cardTotal(depth) * 0.25 : 0);
   if ((team.matchupCards || []).some((c) => c.name === 'Team Chemistry')) { sum *= 1.5; }
   const base = Math.round(sum / 20) + (includeSeasonGameplan ? (team.seasonGameplanEffects?.benchBonus || 0) : 0);
   return base - capOveragePenalty(team);

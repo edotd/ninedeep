@@ -8,7 +8,7 @@ import { recordFreeAgencyActivity } from './freeAgencyActivity';
 import { cardTotal, neededPosition } from './cards';
 import { teamOutput } from './matchup';
 import { wasReleasedByTeamThisSeason } from './season';
-import { MAX_CONTRACT_YEARS } from './constants';
+import { MAX_CONTRACT_YEARS, ROSTER_SIZE } from './constants';
 
 export const BID_SALARY_STEP = 0.5;
 export const BID_PRIORITIES = ['Salary', 'Contract', 'Winning'];
@@ -88,7 +88,7 @@ function makeBid(session, team, salary, years, stage) {
 
 function aiWantsCard(team, card) {
   if (!team.hand.length) return true;
-  if (team.hand.length >= 9) return false;
+  if (team.hand.length >= ROSTER_SIZE) return false;
   const worst = team.hand.reduce((w, c) => (cardTotal(c) < cardTotal(w) ? c : w), team.hand[0]);
   const eager = neededPosition(team) === card.position;
   return cardTotal(card) > cardTotal(worst) * (eager ? 0.75 : 0.95);
@@ -98,7 +98,7 @@ function resolveAiBidsForSession(state, session, card) {
   state.teams.filter((team) => !team.human).forEach((team) => {
     if (session.bids[team.id] || wasReleasedByTeamThisSeason(card, team, state.season) || !aiWantsCard(team, card)) return;
     const room = remainingCap(team) - pendingFaHoldTotal(state, team, session.cardId);
-    if (room < session.minSalary || team.hand.length + pendingBidCount(state, team, session.cardId) >= 9) return;
+    if (room < session.minSalary || team.hand.length + pendingBidCount(state, team, session.cardId) >= ROSTER_SIZE) return;
     const eager = neededPosition(team) === card.position;
     const salary = eager && room >= session.minSalary + BID_SALARY_STEP ? round1(session.minSalary + BID_SALARY_STEP) : session.minSalary;
     session.bids[team.id] = makeBid(session, team, salary, session.minYears, 'final');

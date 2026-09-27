@@ -1,7 +1,7 @@
 import BallMark from '../components/BallMark';
 import './WelcomeScreen.css';
 
-export default function WelcomeScreen({ teamName, onContinue }) {
+export default function WelcomeScreen({ teamName, onContinue, cards = false }) {
   return (
     <main className="welcome-screen">
       <section className="welcome-file">
@@ -9,9 +9,23 @@ export default function WelcomeScreen({ teamName, onContinue }) {
           <BallMark size={54} variant="onInk" />
         </div>
         <div className="welcome-copy">
-          <h1>Welcome to Nine Deep!</h1>
-          <p>You've been handed the keys to {teamName} and given one directive: build a powerhouse and win championships. You'll be competing with eight other teams who're constructed in completely different ways.</p>
-          <button type="button" className="primary welcome-continue" onClick={onContinue}>Continue</button>
+          {cards ? (
+            <>
+              <h1>The Cards</h1>
+              <p>At the start of the game each player receives nine cards.</p>
+              <div className="welcome-card-fan" aria-label="Seven player cards, one coach card, and one general manager card">
+                {Array.from({ length: 7 }, (_, index) => <div key={index} className="welcome-mini-card player" style={{ '--fan-index': index }}><BallMark size={18} variant="onInk" /></div>)}
+                <div className="welcome-mini-card office coach">Coach</div>
+                <div className="welcome-mini-card office gm">GM</div>
+              </div>
+              <button type="button" className="primary welcome-continue" onClick={onContinue}>Deal My Hand</button>
+            </>
+          ) : (
+            <>
+              <p>You've been handed the keys to <strong className="welcome-franchise-name">{teamName}</strong> and given one directive: build a powerhouse and win championships. Eight other franchises have the same goal - can you outlast the competition and cement your place in the history books?</p>
+              <button type="button" className="primary welcome-continue" onClick={onContinue}>Continue</button>
+            </>
+          )}
         </div>
       </section>
     </main>

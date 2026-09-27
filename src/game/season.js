@@ -1,11 +1,11 @@
 import { addToRoster, creditTeamSeason } from './chemistry';
-import { TIERS, LEAGUE_ACCOLADES, REPLACEMENT_TIER, FREE_AGENT_TIER, BARGAIN_FREE_AGENT_TIER, BARGAIN_FREE_AGENT_COUNT, FREE_AGENT_POOL_SIZE, AI_NAMES, AI_TRICODES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_ARCHETYPES, LEAGUE_TEAM_COUNT } from './constants';
+import { TIERS, LEAGUE_ACCOLADES, REPLACEMENT_TIER, FREE_AGENT_TIER, BARGAIN_FREE_AGENT_TIER, BARGAIN_FREE_AGENT_COUNT, FREE_AGENT_POOL_SIZE, AI_NAMES, AI_TRICODES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_ARCHETYPES, LEAGUE_TEAM_COUNT, ROSTER_SIZE } from './constants';
 import { drawGM, acquireOffseasonPlayer } from './gm';
 import { advanceCareer } from './aging';
 import { shuffle, weightedPick } from './rng';
-import { makeCard, randomArch, randomArchForTier, neededPosition, drawCoachCard, applyCoachRetention } from './cards';
+import { makeCard, randomArch, randomArchForTier, neededPosition, drawCoachCard, applyCoachRetention, cardTotal } from './cards';
 import { finalizeCap, rosterSalary } from './economy';
-import { autoSelectFive, effectiveRating, activeStatSum, benchRatingContribution, validateLineup } from './roster';
+import { autoSelectFive, effectiveRating, activeStatSum, benchRatingContribution, validateLineup, assignSixthMan } from './roster';
 import { retentionBonus, relationshipBonus } from './cards';
 import { handsOffBonus } from './gm';
 import { startDraft, prepareDraftClass } from './draft';
@@ -142,6 +142,8 @@ export function buildTeams(state, teamSeats) {
     // One entry pushed per season in proceedFromResults, feeding the Season Recap screen's
     // era ledger (result reached, cap used, players under contract) — see seasonResultForTeam.
     seasonHistory: [],
+    scoutingReport: [],
+    scoutingHistory: [],
   }));
 }
 
@@ -149,8 +151,8 @@ export function defaultSoloSeats(teamName) {
   return [{ name: teamName, human: true }, ...AI_NAMES.slice(0, LEAGUE_TEAM_COUNT - 1).map((n) => ({ name: n, human: false }))];
 }
 
-// Shuffles the star pool and deals it out evenly (extras distributed randomly), then tops
-// every team up to 9 cards with generic Undrafted fillers.
+// Shuffles the star pool and deals up to the roster limit, then tops short hands up with
+// generic Undrafted fillers. Any surplus star cards remain outside the opening hands.
 export function dealHands(state) {
   const teamCount = state.teams.length;
   const order = [...Array(teamCount).keys()];
@@ -159,12 +161,23 @@ export function dealHands(state) {
   const extraCount = state.starPool.length % teamCount;
   const extraSet = new Set(order.slice(0, extraCount));
   state.teams.forEach((team, idx) => {
-    const count = base + (extraSet.has(idx) ? 1 : 0);
+    const count = Math.min(ROSTER_SIZE, base + (extraSet.has(idx) ? 1 : 0));
     for (let i = 0; i < count; i++) { addToRoster(team, state.starPool.pop()); }
   });
   state.teams.forEach((team) => {
-    while (team.hand.length < 9) {
+    while (team.hand.length < ROSTER_SIZE) {
       addToRoster(team, makeCard(state, randomArch(), neededPosition(team) || POSITIONS[Math.floor(Math.random() * 3)], REPLACEMENT_TIER));
+    }
+    // A seven-card hand is small enough that an even star-pool deal can omit a position.
+    // Replace one surplus-position card for each gap so every opening roster can form a
+    // legal starting five without immediately entering free agency.
+    for (const position of POSITIONS) {
+      if (team.hand.some((card) => card.position === position)) continue;
+      const counts = Object.fromEntries(POSITIONS.map((pos) => [pos, team.hand.filter((card) => card.position === pos).length]));
+      const replaceIndex = team.hand.findIndex((card) => counts[card.position] > 1 && !(team.activeIds || []).includes(card.id));
+      const fallbackIndex = team.hand.findIndex((card) => counts[card.position] > 1);
+      const index = replaceIndex >= 0 ? replaceIndex : fallbackIndex;
+      if (index >= 0) team.hand.splice(index, 1, makeCard(state, randomArch(), position, REPLACEMENT_TIER));
     }
   });
 }
@@ -193,7 +206,7 @@ function enforceStartingBudget(state, team) {
     const need = neededPosition(team);
     addToRoster(team, makeCard(state, randomArch(), need || POSITIONS[Math.floor(Math.random() * 3)], REPLACEMENT_TIER));
   }
-  if (guard > 0) team.activeIds = autoSelectFive(team.hand);
+  if (guard > 0) { team.activeIds = autoSelectFive(team.hand); assignSixthMan(team); }
 }
 
 export function initFrontOffice(state) {
@@ -213,6 +226,8 @@ export function initFrontOffice(state) {
     const gm = drawGM();
     team.market = gm.market;
     team.gmType = gm.type;
+    team.gmRarity = gm.rarity;
+    team.gmTrait = gm.trait;
     if (fbEnabled) initAttendance(team);
     refreshAdvantage(team);
     finalizeCap(team);
@@ -248,6 +263,7 @@ export function startNewSeasonRoster(state) {
     refreshAdvantage(team);
     finalizeCap(team);
     if (!team.activeIds || !validateLineup(team).valid) team.activeIds = autoSelectFive(team.hand);
+    assignSixthMan(team);
     team.lineupConfirmed = false;
     // Human teams must revisit Set Lineup each season; AI teams' auto-selected five never
     // gets (or needs) manual review, so treat it as already set.
@@ -277,6 +293,15 @@ export function lockSeasonAndSeed(state) {
     const sim = simulateSeasonOutput(team);
     team.simOffenseAvg = sim.off;
     team.simDefenseAvg = sim.def;
+  });
+  state.teams.forEach((viewer) => {
+    viewer.scoutingHistory ||= [];
+    for (const cardId of viewer.scoutingReport || []) {
+      const card = state.teams.flatMap((candidate) => candidate.hand || []).concat(state.freeAgents || [], state.upcomingDraftPool || []).find((candidate) => candidate.id === cardId);
+      if (!card) continue;
+      const value = cardTotal(card);
+      viewer.scoutingHistory.push({ cardId, season: state.season, game: 'Regular Season', starterOutput: Math.round((value / 20) * 100) / 100, sixthManOutput: Math.round((value * 0.75 / 20) * 100) / 100, depthOutput: Math.round((value * 0.25 / 20) * 100) / 100, card: { ...card } });
+    }
   });
 
   // Seeding logging — effectiveRating (below) now folds in the same Team Chemistry/Skillset
@@ -311,7 +336,7 @@ export function lockSeasonAndSeed(state) {
         synergyOffensePct: synergy?.offense ?? null,
         synergyDefensePct: synergy?.defense ?? null,
         benchRating: benchRatingContribution(t),
-        incompleteRosterPenalty: t.coach?.modifier === 'More with Less' ? 0 : Math.max(0, 9 - t.hand.length) * 40,
+        incompleteRosterPenalty: t.coach?.modifier === 'More with Less' ? 0 : Math.max(0, ROSTER_SIZE - t.hand.length) * 40,
         baseRating: Math.round(base * 10) / 10,
         seasonRollPct: Math.round((randomMult - 1) * 1000) / 10,
         gameplanSeedingPct: t.seasonGameplanEffects?.seedingPercent || 0,
@@ -513,7 +538,7 @@ export function closeFreeAgency(state, teamIdx) {
 export function renewExpiredContract(state, teamIdx, cardId) {
   const team = state.teams[teamIdx];
   if (state.phase !== 'contracts' || !team?.human || state.offseason?.contractsFiled?.[team.id]) return { ok: false, msg: 'Contract decisions are closed.' };
-  if (team.hand.length >= 9) return { ok: false, msg: 'Your roster is full.' };
+  if (team.hand.length >= ROSTER_SIZE) return { ok: false, msg: 'Your roster is full.' };
   const index = state.freeAgents.findIndex((c) => c.id === cardId && c.lastTeamId === team.id);
   if (index < 0) return { ok: false, msg: 'Player is not available for renewal.' };
   const [card] = state.freeAgents.splice(index, 1);

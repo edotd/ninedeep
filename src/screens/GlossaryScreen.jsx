@@ -1,5 +1,5 @@
 import { SKILLSETS, SKILLSET_PAIRS, POSITION_SKILLSET_BONUSES } from '../game/skillsets';
-import { ARCHETYPES, POSITIONS, POSITION_MOD, TIERS, LEAGUE_ACCOLADES, COACH_ARCHETYPES, COACH_MODIFIERS, FANBASE_ARCHETYPES, FANBASE_MODS, MARKETS, GM_TYPES, GM_BONUS_RATE, HANDS_OFF_BONUS_CAP, MATCHUP_MODIFIER_TYPES } from '../game/constants';
+import { ARCHETYPES, POSITIONS, POSITION_MOD, TIERS, LEAGUE_ACCOLADES, COACH_ARCHETYPES, COACH_MODIFIERS, FANBASE_ARCHETYPES, FANBASE_MODS, MARKETS, GM_TYPES, GM_TRAITS, MATCHUP_MODIFIER_TYPES } from '../game/constants';
 import { formatCoins } from '../game/economy';
 import { CAREER_LEVELS } from '../game/aging';
 import { matchupCardEffectNote } from '../game/summaries';
@@ -71,9 +71,9 @@ export default function GlossaryScreen({ state, onBack }) {
           <ol>{SECTIONS.map(([id, label]) => <li key={id}><a href={`#${id}`}>{label}</a></li>)}</ol>
         </nav>
         <p className="lede">Base stats shown are before position adjustment and tier multiplier. Each stat gets a small ±1 roll applied after the tier bonus, so the tier's effect always comes through. Coach bonuses and Hall of Fame's die size are rolled fresh within their range each time the card is pulled. Coach, Fanbase, and GM are pulled once and kept for the whole era.</p>
-        <p className="lede">Every 9-card hand splits into 5 starters and 4 bench players. The first hand is dealt automatically; later seasons include an offseason draft.</p>
+        <p className="lede">Every seven-player roster splits into five starters, a designated Sixth Man, and one depth player. The Sixth Man contributes 75% of their card value to bench output; the depth player contributes 25%.</p>
         <p className="lede">Before every playoff matchup, each team has a small independent chance ({injuryPct}%, adjustable in Settings) that a random active player is injured for that game. A same-position bench card subs in automatically if you have one; otherwise the team plays that matchup one player short.</p>
-        <p className="lede">Each team's 4 bench players also contribute directly to that matchup's score — their combined stat total (scaled down, same as the Offense/Defense modifiers) is added on top of the dice roll. A deep bench is worth points even when it isn't on the floor.</p>
+        <p className="lede">Each team designates a Sixth Man. That player supplies 75% of their card value to bench output, while the remaining depth player supplies 25%.</p>
 
         <h2 id="matchup-scoring">How Matchup Scoring Works</h2>
         <p className="lede">Every playoff matchup comes down to one number per team: the higher score wins (an exact tie is a coin flip). Each side's score is built from four pieces:</p>
@@ -89,7 +89,7 @@ export default function GlossaryScreen({ state, onBack }) {
         </div>
         <div className="matchup-box">
           <div className="matchup-title">🪑 Bench</div>
-          <p className="lede" style={{ margin: '0 0 8px' }}>round(combined stat total of your 4 bench players ÷ 20) — added flat, no dice involved. Team Chemistry boosts this 50%.</p>
+          <p className="lede" style={{ margin: '0 0 8px' }}>round((75% of Sixth Man value + 25% of depth value) ÷ 20) — added flat, no dice involved.</p>
         </div>
         <div className="matchup-box">
           <div className="matchup-title">Total Score</div>
@@ -210,8 +210,9 @@ export default function GlossaryScreen({ state, onBack }) {
         ))}
 
         <h2 id="market">GM &amp; Market Size</h2>
-        <p className="lede">Each GM card rolls a market size that sets the attendance floor and budget increase. Firing a GM draws a new type and market together. Aggressive reduces offseason player salary requests by {GM_BONUS_RATE * 100}% and costs +1 budget. Hands-Off adds {GM_BONUS_RATE * 100}% Offense and Defense for each completed year of coach tenure and starting-five continuity, capped at {HANDS_OFF_BONUS_CAP * 100}%, and costs +1 budget. Neutral has no bonus or extra budget hit.</p>
+        <p className="lede">Every card is a General Manager with a rolled rarity, market size, and trait. Rarity controls the trait's strength. Market size sets the attendance floor and budget increase.</p>
         <div className="statusline">GM types: {GM_TYPES.join(' · ')}</div>
+        <div className="statusline">Traits: {GM_TRAITS.map((trait) => trait.name).join(' · ')}</div>
         {MARKETS.map((m) => (
           <div key={m.name} className="matchup-box">
             <div className="matchup-title">{m.name}</div>

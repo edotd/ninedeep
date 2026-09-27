@@ -9,8 +9,8 @@ import { applySupplementalCard } from './supplementalEffects';
 // instead of assuming state.teams[0] — in solo mode the caller always passes 0; in a shared
 // room, the caller resolves teamIdx from the acting player's own seat (ownerUid) first. See
 // game/useLocalGame.js and game/useRoomGame.js for the two callers.
-import { HOME_COURT_BONUS, MAX_CAP_OVERAGE } from './constants';
-import { autoSelectFive, autoValidFive, validateLineup, rollAdjustmentCards } from './roster';
+import { HOME_COURT_BONUS, MAX_CAP_OVERAGE, ROSTER_SIZE } from './constants';
+import { autoSelectFive, autoValidFive, validateLineup, rollAdjustmentCards, assignSixthMan } from './roster';
 import {
   buildStarPool, buildTeams, defaultSoloSeats, dealHands, initFrontOffice,
   initSeasonModifierCards, lockSeasonAndSeed, startPlayoffs,
@@ -23,6 +23,7 @@ import { rosterSalary } from './economy';
 import { applyPlayoffWinMilestone, fanbaseEnabled } from './fanbase';
 import { activeCoachGameplan, applyGameplanToTurn, setCoachGameplan, syncSeasonGameplan } from './strategyCards';
 import { beginTurn as initializeTurn } from './turn';
+import { scoutingLimit } from './gm';
 
 function humanTeams(state) {
   return state.teams.filter((t) => t.human);
@@ -50,7 +51,7 @@ export function startEra(state, teamNameRaw) {
   buildStarPool(state);
   buildTeams(state, defaultSoloSeats(state.teamName));
   dealHands(state);
-  state.teams.forEach((t) => { t.activeIds = autoSelectFive(t.hand); if (!t.human) t.lineupSet = true; });
+  state.teams.forEach((t) => { t.activeIds = autoSelectFive(t.hand); assignSixthMan(t); if (!t.human) t.lineupSet = true; });
   initFrontOffice(state);
   initSeasonModifierCards(state);
   state.phase = 'pullhand';
@@ -62,7 +63,7 @@ export function startEra(state, teamNameRaw) {
 export function proceedFromCardOverview(state) {
   if (state.phase !== 'cardoverview') return;
   dealHands(state);
-  state.teams.forEach((t) => { t.activeIds = autoSelectFive(t.hand); if (!t.human) t.lineupSet = true; });
+  state.teams.forEach((t) => { t.activeIds = autoSelectFive(t.hand); assignSixthMan(t); if (!t.human) t.lineupSet = true; });
   state.phase = 'pullhand';
 }
 
@@ -99,7 +100,7 @@ export function finishSeasonSimulation(state) {
 export function confirmLineup(state, teamIdx) {
   const team = state.teams[teamIdx];
   if (!team.coach) return { valid: false, msg: 'Hire a coach before the season begins.' };
-  if (team.hand.length > 9) return { valid: false, msg: `Resolve your roster before the season begins. You currently have ${team.hand.length} of 9 players.` };
+  if (team.hand.length > ROSTER_SIZE) return { valid: false, msg: `Resolve your roster before the season begins. You currently have ${team.hand.length} of ${ROSTER_SIZE} players.` };
   const committed = rosterSalary(team);
   // Up to MAX_CAP_OVERAGE over is allowed — see benchScore (matchup.js) for the bench-roll
   // penalty that scales with how far over a team actually locks in.
@@ -116,7 +117,7 @@ export function confirmLineup(state, teamIdx) {
   team.lineupConfirmed = true;
   team.overBudgetLastSeason = overBudget;
   if (allHumansReady(state, (t) => t.lineupConfirmed)) {
-    state.teams.filter((t) => !t.human).forEach((t) => { t.activeIds = autoSelectFive(t.hand); t.lineupSet = true; });
+    state.teams.filter((t) => !t.human).forEach((t) => { t.activeIds = autoSelectFive(t.hand); assignSixthMan(t); t.lineupSet = true; });
     lockSeasonAndSeed(state);
   }
   return { valid: true };
@@ -138,7 +139,7 @@ export function markLineupSet(state, teamIdx) {
 // Commits the Set Lineup screen's local draft in one write. Individual editor interactions
 // never touch shared room state, preventing multiplayer snapshots from replaying Auto Set and
 // keeping the Franchise page's chemistry/output unchanged until Save Lineup is pressed.
-export function saveLineup(state, teamIdx, activeIds, activeGameplanId) {
+export function saveLineup(state, teamIdx, activeIds, activeGameplanId, sixthManId = null) {
   const team = state.teams[teamIdx];
   if (!team || !Array.isArray(activeIds)) return { valid: false, msg: 'Nothing to save yet.' };
   const uniqueIds = [...new Set(activeIds)];
@@ -148,6 +149,8 @@ export function saveLineup(state, teamIdx, activeIds, activeGameplanId) {
   const validation = validateLineup({ ...team, activeIds: uniqueIds });
   if (!validation.valid) return validation;
   team.activeIds = uniqueIds;
+  const eligibleBench = team.hand.filter((card) => !uniqueIds.includes(card.id));
+  team.sixthManId = eligibleBench.some((card) => card.id === sixthManId) ? sixthManId : (eligibleBench[0]?.id || null);
   if (activeGameplanId) {
     const gameplanResult = setCoachGameplan(state, teamIdx, activeGameplanId);
     if (gameplanResult.ok === false) return { valid: false, msg: gameplanResult.msg };
@@ -180,6 +183,22 @@ export function autoSetLineup(state, teamIdx) {
   if (!team) return { ok: false, msg: 'Nothing to set yet.' };
   team.activeIds = autoValidFive(team.hand);
   return { ok: true };
+}
+
+export function toggleScouting(state, teamIdx, cardId) {
+  const team = state.teams[teamIdx];
+  if (!team) return { ok: false, msg: 'Team not found.' };
+  if (team.hand.some((card) => card.id === cardId)) return { ok: false, msg: 'Players on your roster do not need a scouting report.' };
+  team.scoutingReport ||= [];
+  const existing = team.scoutingReport.indexOf(cardId);
+  if (existing >= 0) {
+    team.scoutingReport.splice(existing, 1);
+    return { ok: true, removed: true };
+  }
+  const limit = scoutingLimit(team);
+  if (team.scoutingReport.length >= limit) return { ok: false, msg: `Your GM can track ${limit} players at a time.` };
+  team.scoutingReport.push(cardId);
+  return { ok: true, added: true };
 }
 
 export function beginPlayoffs(state) {

@@ -2,8 +2,6 @@ import { formatCoins, gmCost } from '../game/economy';
 import { retentionBonus, relationshipBonus } from '../game/cards';
 import CardTypeMark from './CardTypeMark';
 import BallMark from './BallMark';
-import { GM_BONUS_RATE, HANDS_OFF_BONUS_CAP } from '../game/constants';
-import { handsOffBonus } from '../game/gm';
 import { offenseDieSize, defenseDieSize, matchupCardCountFor } from '../game/roster';
 import { RARITY_CORNERS } from '../game/constants';
 import RarityBadge from './RarityBadge';
@@ -86,19 +84,25 @@ function fanbaseContent(team) {
 
 function marketContent(team) {
   const m = team.market;
-  const type = team.gmType || 'Neutral';
+  const type = 'General Manager';
+  const trait = team.gmTrait || { name: 'Neutral', value: 0, description: 'No additional front-office effect.' };
+  const traitValue = trait.name === 'Third Eye'
+    ? 'Peak projection'
+    : trait.name === 'Cap Architect' ? `+${formatCoins(trait.value)}`
+      : trait.name === 'Talent Hawk' ? `+${trait.value} scouted`
+        : `+${trait.value * 2}%`;
   return {
     name: type,
-    qualifier: 'General Manager',
-    disposition: null,
+    qualifier: team.gmRarity || 'Core',
+    disposition: trait.name,
     dispositionTone: 'approved-ink',
     effects: [
-      { label: 'Cost', value: formatCoins(gmCost(type)), tone: type === 'Neutral' ? 'file' : 'stamp-ink' },
+      { label: 'Cost', value: formatCoins(gmCost(type)), tone: 'file' },
       { label: 'Budget Increase', value: `+${formatCoins(m.capAdj)}`, tone: 'approved-ink' },
       { label: 'Market Size', value: m.name, tone: 'file' },
-      { label: 'GM Bonus', value: type === 'Aggressive' ? `${GM_BONUS_RATE * 100}% off offseason requests` : type === 'Hands-Off' ? `+${Math.round(handsOffBonus(team) * 100)}% continuity` : 'None', tone: type === 'Neutral' ? 'file' : 'approved-ink' },
+      { label: 'Trait', value: traitValue, tone: 'approved-ink' },
     ],
-    detail: type === 'Hands-Off' ? `Coach tenure + starting-five continuity: +${GM_BONUS_RATE * 100}% per year, capped at ${HANDS_OFF_BONUS_CAP * 100}%.` : null,
+    detail: trait.description,
     duration: 'Holds Until Fired',
   };
 }
@@ -106,7 +110,7 @@ function marketContent(team) {
 export default function FrontOfficeCard({ kind, team }) {
   const meta = KIND_META[kind];
   const content = kind === 'coach' ? coachContent(team) : kind === 'fanbase' ? fanbaseContent(team) : marketContent(team);
-  const coachRarity = kind === 'coach' ? (team.coach.rarity || 'Core') : null;
+  const coachRarity = kind === 'coach' ? (team.coach.rarity || 'Core') : kind === 'market' ? (team.gmRarity || 'Core') : null;
   return (
     <div className="fo2-wrap">
       <div className={'fo2-card' + (coachRarity ? ` rarity-${coachRarity}` : '')}>

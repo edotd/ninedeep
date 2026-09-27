@@ -19,7 +19,7 @@ function reducedMotion() {
   return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 }
 
-// The Deal (design ref 4A): nine player cards and three Front Office cards, dealt together in
+// The Deal (design ref 4A): seven player cards and three Front Office cards, dealt together in
 // one animated beat. In-Game Adjustments (formerly "Adjustment Cards") no longer get dealt here
 // at all — a coach now rolls those fresh at the start of each match instead (see roster.js's
 // rollAdjustmentCards); this screen only ever runs once, at the very start of an era.
@@ -92,7 +92,7 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
       <div className="screen deal-screen">
         <div className="deal-intro">
           <h1>Your Deal — Season {state.season}</h1>
-          <p className="lede" style={{ marginBottom: 14 }}>Your 9-card hand and Front Office — dealt together.</p>
+          <p className="lede" style={{ marginBottom: 14 }}>Your 7-player roster and Front Office — dealt together.</p>
         </div>
         <div className="deal-stage">
           <div className="deal-deck">
@@ -113,14 +113,14 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
       <div className="screen deal-screen">
         <div className="deal-intro">
           <h1>Your Deal — Season {state.season}</h1>
-          <p className="lede" style={{ marginBottom: 14 }}>Your 9-card hand and Front Office — dealt together. Review everything here before heading to your Franchise file.</p>
+          <p className="lede" style={{ marginBottom: 14 }}>Your 7-player roster and Front Office — dealt together. Review everything here before heading to your Franchise file.</p>
         </div>
         <div className="deal-centered">
           <div className="deal-heading">Starters ({starters.length}/5)</div>
           <div className="deal-row-5">
             {starters.map((c) => <div key={c.id} className="card-deal-in"><PlayerCard card={c} /></div>)}
           </div>
-          <div className="deal-heading">Bench ({bench.length}/4)</div>
+          <div className="deal-heading">Bench ({bench.length}/2)</div>
           <div className="deal-row-4">
             {bench.map((c) => <div key={c.id} className="card-deal-in"><PlayerCard card={c} /></div>)}
           </div>

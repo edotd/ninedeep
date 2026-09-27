@@ -37,6 +37,14 @@
 .welcome-copy h1{font-size:clamp(42px,8vw,68px);margin:0 0 20px;}
 .welcome-copy p{max-width:570px;margin:0 auto;font:clamp(14px,2.2vw,17px)/1.75 var(--font-mono);color:var(--file-body);}
 .welcome-continue{width:100%;margin-top:32px;}
+.welcome-onboarding{position:fixed;inset:0;z-index:925;background:var(--ink);overflow:auto;display:grid;place-items:center;}
+.welcome-onboarding .welcome-screen{width:100%;min-height:100dvh;}
+.welcome-franchise-name{color:var(--franchise);font-weight:inherit;}
+.welcome-card-fan{position:relative;height:250px;max-width:520px;margin:24px auto 0;}
+.welcome-mini-card{position:absolute;left:50%;top:38px;width:72px;height:102px;margin-left:-36px;border:2px solid var(--ink);background:var(--form);display:grid;place-items:center;font:13px var(--font-display);color:var(--ink);transform-origin:50% 190px;box-shadow:0 4px 10px rgba(11,17,30,.2);}
+.welcome-mini-card.player{transform:rotate(calc((var(--fan-index) - 3) * 10deg)) translateY(-18px);}
+.welcome-mini-card.office{top:145px;width:92px;height:58px;background:var(--ink);border-color:var(--franchise);color:var(--file);}
+.welcome-mini-card.coach{margin-left:-100px}.welcome-mini-card.gm{margin-left:8px}
 
 @media(max-width:600px){
   .welcome-screen{min-height:calc(var(--app-vh,100dvh) - var(--mobile-persistent-top-height,0px) - var(--mobile-persistent-bar-height,0px));padding:18px 14px;}

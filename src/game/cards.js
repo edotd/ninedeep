@@ -67,7 +67,9 @@ export function makeCard(state, archName, position, tier, forcedCareerStage = nu
   const stats = {};
   let total = 0;
   ['SCO', 'PLM', 'REB', 'DEF'].forEach((k) => {
-    const base = arch.base[k] + POSITION_MOD[position][k];
+    // Balanced means genuinely balanced: every printed stat remains within its 5–7 roll
+    // band regardless of position. Other archetypes still receive the position adjustment.
+    const base = arch.base[k] + (archName === 'Balanced' ? 0 : POSITION_MOD[position][k]);
     let v = base * shaper.uniform;
     if (peakKeys.includes(k)) v *= shaper.peak;
     v = Math.round(v);
@@ -112,14 +114,14 @@ export function randomArch() {
 // stats are flat across the board, so it's a plausible fit for any stat and is included
 // everywhere rather than just under SCO.
 const STAT_ARCHETYPES = {
-  SCO: ['Scorer', 'Marksman', 'Balanced'],
+  SCO: ['Scorer', 'Balanced'],
   PLM: ['Pass-First', 'Playmaker', 'Balanced'],
   REB: ['Rebounder', 'Balanced'],
   DEF: ['Defender', 'Balanced'],
 };
 
 // A tier's forceStat/forceStats (Scoring Champion, Rebounding Champion, All-League Defensive
-// Team, the High IQ/Hustler base tiers, etc.) names the stat the card is built around — so the
+// Team, the High IQ/High Motor base tiers, etc.) names the stat the card is built around — so the
 // archetype drawn for it should actually be good at that stat too, instead of randomArch()
 // occasionally handing a Scoring Champion card to a Pass-First archetype. Tiers with no forced
 // stat (All-League 1st/2nd Team, Most Valuable Player, Generational Talent, Role Player, ...) stay

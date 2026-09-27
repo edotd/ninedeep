@@ -1,5 +1,5 @@
 import { applySynergy, teamSynergy } from './skillsets';
-import { POSITIONS, MATCHUP_CARD_DRAW_COUNT } from './constants';
+import { POSITIONS, MATCHUP_CARD_DRAW_COUNT, ROSTER_SIZE } from './constants';
 import { cardTotal, retentionBonus, retentionDieBump, relationshipBonus, drawMatchupModifierCard } from './cards';
 import { handsOffBonus } from './gm';
 import { careerMultiplier } from './aging';
@@ -16,6 +16,12 @@ export function autoSelectFive(hand) {
     chosen.push(c);
   }
   return chosen.slice(0, 5).map((c) => c.id);
+}
+
+export function assignSixthMan(team) {
+  const bench = (team.hand || []).filter((card) => !(team.activeIds || []).includes(card.id));
+  if (!bench.some((card) => card.id === team.sixthManId)) team.sixthManId = bench.sort((a, b) => cardTotal(b) - cardTotal(a))[0]?.id || null;
+  return team.sixthManId;
 }
 
 // Deliberately not "best five" — autoSelectFive above is the highest-cardTotal pick per
@@ -59,8 +65,11 @@ export function activeStatSum(team) {
 // Synergy multipliers.
 export function benchRatingContribution(team) {
   const active = new Set(team.activeIds || []);
-  const benchTotal = (team.hand || []).filter((card) => !active.has(card.id)).reduce((sum, card) => sum + cardTotal(card), 0);
-  const benchOutput = Math.round(benchTotal / 20) + (team.seasonGameplanEffects?.benchBonus || 0);
+  const bench = (team.hand || []).filter((card) => !active.has(card.id));
+  const sixth = bench.find((card) => card.id === team.sixthManId) || bench[0];
+  const depth = bench.find((card) => card.id !== sixth?.id);
+  const weightedTotal = (sixth ? cardTotal(sixth) * 0.75 : 0) + (depth ? cardTotal(depth) * 0.25 : 0);
+  const benchOutput = Math.round(weightedTotal / 20) + (team.seasonGameplanEffects?.benchBonus || 0);
   return benchOutput * 20;
 }
 // Seeding needs to see the same Team Chemistry/Skillset synergy that Proj Offense/Defense
@@ -78,7 +87,7 @@ export function effectiveRating(team) {
   // modifierBreakdown below. Seeding is expressed on the underlying four-stat scale, where
   // one output point equals 20 stat points, so mirror that visible two-sided penalty here:
   // 2 output × 20 = 40 rating per open roster spot. More with Less waives both versions.
-  const missingPlayers = team.coach?.modifier === 'More with Less' ? 0 : Math.max(0, 9 - team.hand.length);
+  const missingPlayers = team.coach?.modifier === 'More with Less' ? 0 : Math.max(0, ROSTER_SIZE - team.hand.length);
   const starterRating = activeStatSum(team) * (1 + (team.coach.offBonus + bonus + team.coach.defBonus + bonus) / 2 + synergyAvg + planAvg);
   return Math.max(0, starterRating + benchRatingContribution(team) - missingPlayers * 40);
 }
@@ -117,7 +126,7 @@ export function modifierBreakdown(team, idsOverride, kind) {
   const gameplan = (team.seasonGameplanEffects?.[off ? 'offPercent' : 'defPercent'] || 0) / 100;
   const preSynergyBase = Math.round((statSum * (1 + coachBonus + retention + relationship + handsOff + gameplan)) / 20);
   const synergyPct = teamSynergy(team, idsOverride)[kind];
-  const incompleteRosterPenalty = team.coach?.modifier === 'More with Less' ? 0 : Math.max(0, 9 - team.hand.length);
+  const incompleteRosterPenalty = team.coach?.modifier === 'More with Less' ? 0 : Math.max(0, ROSTER_SIZE - team.hand.length);
   const base = applySynergy(preSynergyBase, team, idsOverride, kind) - incompleteRosterPenalty;
   return { statSum, coachBonus, retention, relationship, handsOff, gameplan, preSynergyBase, synergyPct, incompleteRosterPenalty, base };
 }
