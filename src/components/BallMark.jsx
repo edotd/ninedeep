@@ -8,7 +8,12 @@ const VARIANTS = {
   monoReversed: { body: '#1E2B47', seam: '#E6DCC4', centre: '#E6DCC4' },
 };
 
-export default function BallMark({ size = 40, variant = 'onFile', spinning = false }) {
+// animateIn plays a one-shot staggered entrance (body fades/scales in, seams fade in, then the
+// nine dots pop in one by one) instead of the mark's normal static render — used for the era
+// opening splash (SplashScreen.jsx), which assembles this exact mark from nothing before
+// settling into place. Every other caller (Header, Sidebar, ...) renders the mark as it always
+// has; the animation classes only exist under .nd-ball-animate (see index.css).
+export default function BallMark({ size = 40, variant = 'onFile', spinning = false, animateIn = false }) {
   const c = VARIANTS[variant] || VARIANTS.onFile;
   const S = 100; // internal unit square, scaled by the SVG viewport
   const maskId = `nd-ball-mask-${variant}`;
@@ -18,7 +23,7 @@ export default function BallMark({ size = 40, variant = 'onFile', spinning = fal
   const dotStart = S / 2 - dotStep;
 
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${S} ${S}`} aria-hidden="true">
+    <svg width={size} height={size} viewBox={`0 0 ${S} ${S}`} aria-hidden="true" className={animateIn ? 'nd-ball-animate' : undefined}>
       <defs>
         <radialGradient id={maskId} cx="50%" cy="50%" r="50%">
           <stop offset="68%" stopColor="white" stopOpacity="0" />
@@ -29,10 +34,11 @@ export default function BallMark({ size = 40, variant = 'onFile', spinning = fal
           <rect width={S} height={S} fill={`url(#${maskId})`} />
         </mask>
       </defs>
-      <circle cx={S / 2} cy={S / 2} r={S / 2} fill={c.body} />
+      <circle className={animateIn ? 'nd-ball-body' : undefined} cx={S / 2} cy={S / 2} r={S / 2} fill={c.body} />
       {c.ring && <circle cx={S / 2} cy={S / 2} r={S / 2 - 1} fill="none" stroke={c.ring} strokeWidth="2" />}
       {showSeams && (
         <g
+          className={animateIn ? 'nd-ball-seam' : undefined}
           stroke={c.seam} strokeWidth={S * 0.022} fill="none" mask={`url(#${maskId}-m)`}
           style={spinning ? { transformOrigin: '50% 50%', animation: 'ball-seam-spin 1.6s linear infinite' } : undefined}
         >
@@ -57,6 +63,7 @@ export default function BallMark({ size = 40, variant = 'onFile', spinning = fal
             return (
               <circle
                 key={`${row}-${col}`}
+                className={animateIn ? 'nd-ball-dot' : undefined}
                 cx={dotStart + col * dotStep}
                 cy={dotStart + row * dotStep}
                 r={S * 0.05}

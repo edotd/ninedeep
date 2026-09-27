@@ -29,6 +29,7 @@ import DraftClassScreen from '../screens/DraftClassScreen';
 import FranchiseMasthead from './FranchiseMasthead';
 import { rosterSalary } from '../game/economy';
 import { hasPendingBidDecision } from '../game/bidding';
+import SplashScreen from './SplashScreen';
 
 const SCREENS = {
   cardoverview: CardOverviewScreen,
@@ -93,6 +94,17 @@ const PAGE_LABELS = {
 // brand handoff, instead of the phone-width top bar + collapsed bottom bar. Same
 // `overlay`/`Screen` resolution feeds both shells so the two never drift out of sync.
 export default function GameShell({ state, actions, myTeamId, onNewEra, onDeleteRoom, hostNotifications, roomCode }) {
+  // The opening splash plays once per era, right before its first deal — gated on state.eraId
+  // (shared, so a genuinely new era always gets a fresh key) plus a per-device localStorage
+  // flag (deliberately NOT shared game state: in an online room each player's client decides
+  // for itself whether it's already shown this device the splash, rather than one player's
+  // dismissal hiding it for everyone else mid-watch). Committed once on mount — a later phase
+  // change past 'pullhand' (e.g. resuming a save already mid-deal) never retroactively shows it.
+  const splashKey = `nine-deep-splash-seen:${state.eraId}`;
+  const [splashDone, setSplashDone] = useState(() => {
+    if (state.phase !== 'pullhand') return true;
+    try { return localStorage.getItem(splashKey) === '1'; } catch { return true; }
+  });
   const myTeam = myTeamId != null ? state.teams?.[myTeamId] : null;
   const mobileTopRef = useRef(null);
   const [mobileTopHeight, setMobileTopHeight] = useState(0);
@@ -310,6 +322,13 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
         <button className="secondary" style={{ width: '100%', marginTop: 14 }} onClick={onNewEra}>Reset Game</button>
       </div>
     ));
+
+  if (!splashDone) {
+    return <SplashScreen onComplete={() => {
+      try { localStorage.setItem(splashKey, '1'); } catch { /* storage can be unavailable */ }
+      setSplashDone(true);
+    }} />;
+  }
 
   if (isDesktop && showChrome) {
     return (
