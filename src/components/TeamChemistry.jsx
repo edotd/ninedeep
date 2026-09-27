@@ -121,16 +121,20 @@ export default function TeamChemistry({ team, canEdit, onEditLineup }) {
         </div>
       )}
 
-      <div className="tc2-profile">
-        <div className="tc2-profile-column strengths">
-          <div className="ts-heading">Strengths</div>
-          <ul>{profile.strengths.map((item) => <li key={item}>{item}</li>)}</ul>
+      {team.lineupSet ? (
+        <div className="tc2-profile">
+          <div className="tc2-profile-column strengths">
+            <div className="ts-heading">Strengths</div>
+            <ul>{profile.strengths.map((item) => <li key={item}>{item}</li>)}</ul>
+          </div>
+          <div className="tc2-profile-column weaknesses">
+            <div className="ts-heading">Weaknesses</div>
+            <ul>{profile.weaknesses.map((item) => <li key={item}>{item}</li>)}</ul>
+          </div>
         </div>
-        <div className="tc2-profile-column weaknesses">
-          <div className="ts-heading">Weaknesses</div>
-          <ul>{profile.weaknesses.map((item) => <li key={item}>{item}</li>)}</ul>
-        </div>
-      </div>
+      ) : (
+        <p className="tc2-note tc2-bonus-row-empty">Set your lineup to see your team's strengths and weaknesses.</p>
+      )}
     </section>
   );
 }

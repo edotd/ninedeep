@@ -273,18 +273,15 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
     myTeamId,
     overlay: navOverlay,
     onGlossary: () => toggleOverlay('glossary'),
-    onStandings: () => toggleOverlay('standings'),
     onSettings: () => toggleOverlay('settings'),
     onTeam: () => handleNav('team'),
-    onFreeAgency: openFreeAgency,
-    onDraftClass: () => toggleOverlay('draftclass'),
-    freeAgencyAlert,
-    freeAgencyLocked,
-    // The hamburger/logo menu trigger itself pulses only when something inside the menu
-    // actually needs attention — right now that's exactly freeAgencyAlert, the same condition
-    // that badges the Free Agency item within the menu. This used to be a one-time "have you
-    // ever opened this menu" localStorage nudge instead, which showed on every fresh era
-    // regardless of whether anything needed doing, and then never came back once dismissed even
+    // Free Agency, Draft Class and Standings no longer have their own entries in this menu —
+    // all three are reachable from the Franchise page's League tab instead. The hamburger/logo
+    // menu trigger itself still pulses when something needs attention (right now, exactly
+    // freeAgencyAlert) even though Free Agency isn't a direct menu item anymore, since the
+    // Franchise page it does open is still where that gets resolved. This used to be a one-time
+    // "have you ever opened this menu" localStorage nudge instead, which showed on every fresh
+    // era regardless of whether anything needed doing, and never came back once dismissed even
     // if something later genuinely did.
     navNeedsAttention: freeAgencyAlert,
     roomCode,
