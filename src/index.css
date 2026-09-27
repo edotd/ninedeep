@@ -1155,6 +1155,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .ts-budget-figures .limit{font-family:var(--font-display);font-size:36px;color:var(--file-body);}
 .ts-budget-room{font-family:var(--font-mono);font-size:12px;color:var(--approved-file);margin-left:6px;}
 .ts-budget-room.bad{color:var(--stamp-text);}
+.ts-ledger{background:var(--form);border:1px solid var(--form-rule);padding:18px;}
 .ts-ledger-topline{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:12px;}
 .ts-ledger-topline .ts-heading{margin-bottom:4px;}.ts-ledger-topline strong{font-family:var(--font-display);font-size:40px;font-weight:400;line-height:1;color:var(--ink);}
 .ts-ledger-room{text-align:right;display:flex;flex-direction:column;gap:3px;}.ts-ledger-room span{font:12px var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--file-muted);}.ts-ledger-room strong{font-size:15px;color:var(--approved);}.ts-ledger-room.bad strong{color:var(--stamp);}
