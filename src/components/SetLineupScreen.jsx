@@ -20,12 +20,18 @@ const LINEUP_INTRO_KEY = 'nine-deep-lineup-intro-seen';
 // (this game only tracks Guard/Forward/Big, not five true positions) so a starter can occupy
 // any of the five spots — nothing here enforces which slot a given position "belongs" in
 // beyond what confirmLineup already requires (one of each Guard/Forward/Big among the five).
+// `number` is the slot's real, meaningful label — 1/2 for the two lowest (deepest, corner)
+// slots, 3/4 for the two middle (wing) slots, 5 for the lone top slot nearest the rim
+// (CourtLines' basket sits at the low-y end of its viewBox, i.e. visually near the top of this
+// diagram) — not just a cosmetic court-diagram position. Whoever's rostered here belongs to a
+// real slot identity a Skillset can react to (see POSITION_SLOT_BONUSES in skillsets.js), the
+// same way position ('Guard'/'Forward'/'Big') already does.
 const COURT_SLOTS = [
-  { left: '50%', top: '16%' },
-  { left: '14%', top: '46%' },
-  { left: '86%', top: '46%' },
-  { left: '30%', top: '80%' },
-  { left: '70%', top: '80%' },
+  { left: '50%', top: '16%', number: 5 },
+  { left: '14%', top: '46%', number: 3 },
+  { left: '86%', top: '46%', number: 4 },
+  { left: '30%', top: '80%', number: 1 },
+  { left: '70%', top: '80%', number: 2 },
 ];
 
 // team.activeIds has no slot concept at all — it's just an unordered array, and
@@ -332,6 +338,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
               ))}
               {COURT_SLOTS.map((pos, i) => (
                 <div className="slf-slot" style={{ left: pos.left, top: pos.top }} key={i} ref={(el) => { slotRefs.current[i] = el; }}>
+                  <span className="slf-slot-number" aria-hidden="true">{pos.number}</span>
                   <MiniCard
                     card={starters[i]}
                     selected={starters[i] && selectedId === starters[i].id}

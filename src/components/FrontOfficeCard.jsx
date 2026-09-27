@@ -7,6 +7,7 @@ import { handsOffBonus } from '../game/gm';
 import { offenseDieSize, defenseDieSize } from '../game/roster';
 import { RARITY_CORNERS } from '../game/constants';
 import RarityBadge from './RarityBadge';
+import { ensureCoachSystems } from '../game/strategyCards';
 
 // Front Office card, per the brand handoff's "Components: Front Office & Matchup Cards" —
 // landscape, ink ground, told apart from a Player card by shape alone. One component covers
@@ -24,7 +25,13 @@ const KIND_META = {
 function coachContent(team) {
   const coach = team.coach;
   const bonus = retentionBonus(team) + relationshipBonus(team);
-  const activeGameplan = (coach.gameplans || []).find((plan) => plan.id === team.activeGameplanId);
+  // Every coach permanently rolls exactly two gameplans (see ensureCoachSystems) — this card
+  // always shows those two, not whichever one (if any) the user has actively selected for the
+  // current lineup via team.activeGameplanId. That's a separate, per-season choice shown
+  // elsewhere (Set Lineup's own Gameplan picker); the coach's own card is about who they are,
+  // not what's currently active.
+  ensureCoachSystems(team);
+  const [primaryGameplan, secondaryGameplan] = coach.gameplans || [];
   return {
     name: coach.archetype,
     qualifier: team.retainedStreak ? `Retained ${team.retainedStreak} season${team.retainedStreak === 1 ? '' : 's'}` : 'League appointment',
@@ -38,7 +45,7 @@ function coachContent(team) {
       { label: 'Development Points', value: team.developmentPoints || 0, tone: 'approved-ink' },
     ],
     detail: `${coach.modifier} — ${coach.ability || 'Improves the coach’s base Offense and Defense bonuses.'}`,
-    rarityLead: { label: 'Gameplan', value: activeGameplan?.name || 'None' },
+    rarityLead: { label: 'Gameplans', value: [primaryGameplan?.name, secondaryGameplan?.name].filter(Boolean).join(' · ') || 'None' },
     duration: 'Holds Through Era 01',
   };
 }
