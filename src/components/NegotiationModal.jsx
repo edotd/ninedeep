@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { jerseyNumber } from '../game/cards';
 import { formatCoins, remainingCap } from '../game/economy';
 import { negotiationBand, negotiationAcceptThreshold, negotiationAcceptChance, MAX_NEGOTIATION_ROLLS } from '../game/negotiation';
+import { MAX_CONTRACT_YEARS } from '../game/constants';
 import DieFaceStrip from './DieFaceStrip';
 
-const YEAR_OPTIONS = [1, 2, 3, 4, 5, 6, 7];
+const YEAR_OPTIONS = Array.from({ length: MAX_CONTRACT_YEARS }, (_, i) => i + 1);
 
 // Game 1, "Re-signing" — a full-screen takeover over the Contracts file, per the design
 // handoff. One negotiation session per card (state.offseason.negotiations[card.id]), driven

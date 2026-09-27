@@ -59,6 +59,11 @@ export const TIERS = [
 // every one of them locked into a 5-7 season deal, so a fresh bench was always long-contract
 // players. The wider spread mixes real short deals (as low as 3) into the same pool.
 export const REPLACEMENT_TIER = { name: 'Undrafted', uniform: 1, peak: 1, contract: 6, contractVariance: 3, rarity: 'Core' };
+// The longest contract any card can actually roll — REPLACEMENT_TIER's 6±3 tops out highest
+// (Role Player's 7±1 is next at 8). Bidding/negotiation year inputs (bidding.js, negotiation.js)
+// and their modals must accept up to this many years, or a long-rolled card's own minimum
+// becomes impossible to meet.
+export const MAX_CONTRACT_YEARS = 9;
 
 // Cheap, low-output fillers seeded into free agency at era start. dealHands doesn't check
 // budget, so some teams start over cap — these give every team an immediate, low-commitment

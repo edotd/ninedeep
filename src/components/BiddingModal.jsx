@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { jerseyNumber } from '../game/cards';
 import { formatCoins, remainingCap } from '../game/economy';
 import { freeAgentPriority, pendingFaHoldTotal, winningValue } from '../game/bidding';
+import { MAX_CONTRACT_YEARS } from '../game/constants';
 
-const YEAR_OPTIONS = [1, 2, 3, 4, 5, 6, 7];
+const YEAR_OPTIONS = Array.from({ length: MAX_CONTRACT_YEARS }, (_, i) => i + 1);
 const BONUS_LABEL = {
   Salary: (min, tier) => `${formatCoins(min + tier * 0.5)}${tier === 3 ? '+' : ''}`,
   Contract: (min, tier) => `${min + tier}${tier === 3 ? '+' : ''} yr${min + tier === 1 ? '' : 's'}`,

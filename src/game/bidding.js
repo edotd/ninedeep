@@ -8,6 +8,7 @@ import { recordFreeAgencyActivity } from './freeAgencyActivity';
 import { cardTotal, neededPosition } from './cards';
 import { teamOutput } from './matchup';
 import { wasReleasedByTeamThisSeason } from './season';
+import { MAX_CONTRACT_YEARS } from './constants';
 
 export const BID_SALARY_STEP = 0.5;
 export const BID_PRIORITIES = ['Salary', 'Contract', 'Winning'];
@@ -73,7 +74,7 @@ function pendingBidCount(state, team, excludeCardId) {
 
 function validateBid(state, team, session, salary, years) {
   salary = round1(salary);
-  years = Math.max(1, Math.min(7, Math.round(years)));
+  years = Math.max(1, Math.min(MAX_CONTRACT_YEARS, Math.round(years)));
   if (salary < session.minSalary) return { ok: false, msg: `Minimum bid is ${session.minSalary}.` };
   if (years < session.minYears) return { ok: false, msg: `Minimum contract is ${session.minYears} year${session.minYears === 1 ? '' : 's'}.` };
   const room = remainingCap(team) - pendingFaHoldTotal(state, team, session.cardId);
@@ -187,7 +188,7 @@ export function raiseFreeAgentBid(state, teamIdx, cardId, salary, years) {
   const current = session.bids[team.id];
   if (!current || current.stage !== 'opening') return { ok: false, msg: 'You have no open bid to raise.' };
   salary = round1(salary);
-  years = Math.max(1, Math.min(7, Math.round(years)));
+  years = Math.max(1, Math.min(MAX_CONTRACT_YEARS, Math.round(years)));
   if (salary < current.salary || years < current.years) return { ok: false, msg: 'A raise cannot lower salary or years.' };
   if (salary === current.salary && years === current.years) return { ok: false, msg: 'Raise salary, years, or both.' };
   const check = validateBid(state, team, session, salary, years);

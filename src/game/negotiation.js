@@ -9,7 +9,7 @@ import { rollDie } from './rng';
 import { remainingCap } from './economy';
 import { acquireOffseasonPlayer } from './gm';
 import { recordFreeAgencyActivity } from './freeAgencyActivity';
-import { MIN_PLAYER_SALARY } from './constants';
+import { MIN_PLAYER_SALARY, MAX_CONTRACT_YEARS } from './constants';
 
 export const SALARY_STEP = 0.5;
 export const MAX_NEGOTIATION_ROLLS = 3;
@@ -98,7 +98,7 @@ export function submitNegotiationOffer(state, teamIdx, cardId, salary, years) {
     return { ok: false, msg: 'No rolls remaining — accept the counter or let him walk.' };
   }
   salary = round1(salary);
-  years = Math.max(1, Math.min(7, Math.round(years)));
+  years = Math.max(1, Math.min(MAX_CONTRACT_YEARS, Math.round(years)));
   if (salary < session.minSalary) return { ok: false, msg: `Offers below ${session.minSalary} are not permitted.` };
   if (session.pendingCounter) {
     const floor = session.offer;
