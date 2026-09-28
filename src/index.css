@@ -49,16 +49,6 @@
 
 /* Offseason personnel file */
 .offseason-file{max-width:1040px;margin:16px auto 110px;background:var(--form);border:1px solid var(--file-rule);box-shadow:8px 8px 0 rgba(30,43,71,.08);min-height:calc(100vh - 170px)}
-.of-kicker{display:flex;justify-content:space-between;gap:12px;background:var(--ink);color:var(--file);padding:12px 20px;font:10px var(--font-mono);letter-spacing:.13em;text-transform:uppercase}
-.of-title{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:16px 20px 11px;font:32px var(--font-display);border-bottom:2px solid var(--ink);text-transform:uppercase}
-.of-title span{font:10px var(--font-label);letter-spacing:.12em;color:var(--file-muted)}
-.of-index{display:grid;grid-template-columns:repeat(2,1fr);border-bottom:2px solid var(--ink)}
-.of-index>div{padding:10px 12px;border-right:1px solid var(--file-rule);font:11px var(--font-label);text-transform:uppercase;min-width:0}
-.of-index>div:last-child{border-right:0}
-.of-index small,.of-index em{display:block;font:9px var(--font-mono);letter-spacing:.08em;color:var(--file-muted);font-style:normal}
-.of-index small{margin-bottom:6px}.of-index em{margin-top:6px}
-.of-index .current{background:var(--ink);color:var(--form)}.of-index .current small,.of-index .current em{color:var(--franchise)}
-.of-index .filed em{color:var(--approved)}
 .fa-ticker{display:flex;align-items:stretch;background:var(--file);border-bottom:1px solid var(--file-rule);min-height:38px;overflow:hidden}
 .persistent-ticker{position:fixed;left:0;right:0;bottom:0;height:38px;z-index:11;border-top:1px solid var(--file-rule)}
 .persistent-ticker.with-bar{bottom:72px}
@@ -73,14 +63,13 @@
 @media(prefers-reduced-motion:reduce){.fa-ticker-track{animation:none}}
 .of-content{padding:22px 24px 30px;max-height:calc(100vh - 340px);overflow:auto}
 .of-content h1{font-size:46px;margin:8px 0 18px}.of-content .lede{max-width:680px}
-.of-section-label{font:10px var(--font-label);letter-spacing:.14em;color:var(--stamp);margin:14px 0 8px;text-transform:uppercase}
 .of-table-head,.of-table-row{display:grid;grid-template-columns:1fr 120px 85px;gap:12px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--form-rule)}
 .of-table-head{background:var(--ink);color:var(--form);font:9px var(--font-label);letter-spacing:.1em}
 .of-table-row{font:13px var(--font-mono)}.of-table-row small{display:block;font-size:10px;color:var(--file-muted);margin-top:3px}.of-table-row strong{font:10px var(--font-label);color:var(--approved)}
 .of-table-row.expired{color:var(--file-muted)}.of-table-row.expired strong{color:var(--stamp)}
 .of-action-wrap{margin-top:18px}.of-action{margin-top:20px;width:100%}.of-action:disabled{opacity:.55;cursor:default}
 .of-ledger{display:flex;justify-content:space-between;gap:12px;background:var(--ink);color:var(--file);padding:12px 20px;font:10px var(--font-mono);letter-spacing:.06em;position:sticky;bottom:0}.of-ledger b{color:var(--franchise);font-weight:500}.of-ledger .negative{color:var(--stamp-ink)}
-@media(max-width:680px){.offseason-file{margin:0 0 110px;min-height:0;border-inline:0;box-shadow:none}.of-title{font-size:25px}.of-title span{display:none}.of-index>div{padding:9px 5px;font-size:8px;text-align:center}.of-index small,.of-index em{font-size:7px}.of-content{padding:14px 16px;max-height:none;overflow:visible}.of-content h1{font-size:38px}.of-table-head,.of-table-row{grid-template-columns:1fr 78px 42px;gap:6px;padding:9px 6px}.of-ledger{font-size:8px;padding:10px;flex-wrap:wrap}}
+@media(max-width:680px){.offseason-file{margin:0 0 110px;min-height:0;border-inline:0;box-shadow:none}.of-content{padding:14px 16px;max-height:none;overflow:visible}.of-content h1{font-size:38px}.of-table-head,.of-table-row{grid-template-columns:1fr 78px 42px;gap:6px;padding:9px 6px}.of-ledger{font-size:8px;padding:10px;flex-wrap:wrap}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body,#root{margin:0;padding:0;background:var(--file);color:var(--ink);font-family:var(--font-mono);}
 /* Without this, any descendant that's even a few pixels wider than the viewport (a bracket
@@ -263,6 +252,13 @@ html[data-theme="dark"] .coachmark-skip:hover{color:var(--file);}
 .standing-row{display:flex;justify-content:space-between;padding:9px 10px;border-bottom:1px solid var(--form-rule);font-size:14px;font-family:var(--font-mono);}
 .standing-row.you{color:var(--stamp);font-weight:500;}
 .standing-row:hover{background:var(--form-rule);}
+/* Results' own standings list — a colored panel (scoped here, not on the shared .standing-row
+   base other screens also use) with a proper head row labeling the swapping right-hand column. */
+.results-standings{background:var(--form);border:2px solid var(--ink);margin-bottom:10px;}
+.results-standings .standing-row{border-bottom-color:var(--form-rule);}
+.results-standings .standing-row:last-child{border-bottom:none;}
+.results-standings .standing-row.head{font-family:var(--font-label);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--file-muted);border-bottom:2px solid var(--ink);}
+.results-standings .standing-row.head:hover{background:none;}
 .standing-row-pick{display:flex;align-items:center;gap:7px;}
 /* Draft Order's rows are plain flex(space-between) at the base .standing-row level, which lets
    the second column drift left/right per row depending on how long that row's team name is —
@@ -1080,11 +1076,10 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
    name, each group a single horizontally-scrolling row rather than a wrapping grid, since the
    league can have many more expiring players at once than one team's own free-agent pool. */
 .ec-team-group{margin-bottom:22px;}
-.ec-team-name{font-family:var(--font-label);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:8px;}
+.ec-team-name{font-family:var(--font-label);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--file);background:var(--ink);padding:8px 12px;margin-bottom:8px;}
 .ec-team-tricode{margin-left:6px;color:var(--franchise);}
-.ec-row{display:flex;gap:14px;overflow-x:auto;padding-bottom:6px;}
-.ec-card{flex:0 0 264px;}
-.ec-card .pcard{width:264px;max-width:none;margin:0;}
+.ec-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;max-width:840px;}
+.ec-card .pcard{width:100%;max-width:none;margin:0;}
 
 /* ================= Team Summary (1a, "the file") — brand handoff Screen: Team Summary.
    Filed once per season, right after the hand is dealt. ================= */
@@ -2450,6 +2445,14 @@ body:has(.entry-screen){padding-bottom:0;}
 .slf-footer{padding:18px 24px 22px;display:flex;flex-direction:column;gap:10px;}
 .slf-footer-actions button{flex:1;}
 .slf-footer>button{width:100%;}
+.slf-embedded{width:100%;margin:0 0 24px;}
+.slf-embedded .slf-panel{max-width:none;max-height:none;overflow:visible;box-shadow:none;border:1px solid var(--ink-rule);}
+.slf-embedded .slf-footer{padding-top:12px;}
+.slf-reserve-slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:14px;background:rgba(30,43,71,.8);border:1px solid var(--ink-rule);}
+.slf-reserve-slot{display:flex;flex-direction:column;align-items:center;min-width:0;}
+.slf-reserve-slot .slf-microlabel{align-self:stretch;text-align:center;color:var(--file);}
+.slf-reserve-slot .slf-card-wrap,.slf-reserve-slot .slf-card{width:100%;max-width:150px;}
+.slf-reserve-slot small{margin-top:6px;color:var(--file-muted);font:9px var(--font-mono);letter-spacing:.06em;text-transform:uppercase;}
 
 /* In-window carousel opened by tapping an empty court slot on mobile (design ask) — the same
    full PlayerCard used everywhere else, not a scaled-down stand-in, so the stats a GM needs to
@@ -2820,7 +2823,7 @@ body:has(.trans-screen){padding-bottom:0;}
 }
 @media (prefers-reduced-motion: reduce){.fa-close-btn-pulse{animation:none;}}
 .fa-close-dialog{max-width:520px;}
-.fa-close-dialog p{margin:0;color:var(--file);font-family:var(--font-mono);font-size:12px;line-height:1.6;}
+.fa-close-dialog p{margin:0;color:var(--file);font-family:var(--font-mono);font-size:16px;line-height:1.6;}
 .fa-close-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;}
 .fa-close-actions.fa-close-actions-single{grid-template-columns:1fr;}
 .fa-close-actions button{width:100%;}

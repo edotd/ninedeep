@@ -95,7 +95,6 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
     }));
   }, [focusSection]);
 
-  const [lineupScreenOpen, setLineupScreenOpen] = useState(false);
   // Onboarding anchors: the Gameplan tab (opens Team Chemistry, where Set Lineup lives) before
   // a lineup has ever been set, and Begin Season once one has. Both coachmarks are gated by
   // their own CoachmarkTour storageKey (shown once ever, ignoring later seasons where the same
@@ -228,7 +227,17 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
 
         <div className="ts-body" onTouchStart={!isDesktop ? handleBodyTouchStart : undefined} onTouchMove={!isDesktop ? handleBodyTouchMove : undefined} onTouchEnd={!isDesktop ? handleBodyTouchEnd : undefined}>
           {showSection('chemistry') && (
-            <TeamChemistry team={team} canEdit={canEdit} onEditLineup={() => setLineupScreenOpen(true)} />
+            <>
+              <SetLineupScreen
+                embedded
+                team={team}
+                actions={actions}
+                myTeamId={myTeamId}
+                canEdit={canEdit}
+                onPreviewChange={onLineupPreviewChange}
+              />
+              <TeamChemistry team={team} canEdit={canEdit} showLineupButton={false} />
+            </>
           )}
 
           {showSection('office') && (
@@ -417,19 +426,9 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
         {preSeason && team.hand.length === ROSTER_SIZE && committed > cap && (
           <div className="statusline" style={{ marginTop: 16 }}>Get under budget before the season begins. Reduce committed costs by {formatCoins(committed - cap)}.</div>
         )}
-        {lineupScreenOpen && (
-          <SetLineupScreen
-            team={team}
-            actions={actions}
-            myTeamId={myTeamId}
-            canEdit={canEdit}
-            onPreviewChange={onLineupPreviewChange}
-            onClose={() => { onLineupPreviewChange?.(null); setLineupScreenOpen(false); }}
-          />
-        )}
         <CoachmarkTour
           storageKey="nine-deep-onboard-gameplan-tab-seen"
-          active={!lineupScreenOpen && !readOnly && !team.lineupSet}
+          active={!readOnly && !team.lineupSet}
           steps={[{ targetRef: gameplanTabRef, title: 'Build Your Team', body: 'Set your starting five here — tap Gameplan to get started.' }]}
         />
         {onboardingLeague && showSection('office') && (
@@ -446,7 +445,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
         )}
         <CoachmarkTour
           storageKey="nine-deep-onboard-begin-season-seen"
-          active={!lineupScreenOpen && !readOnly && !onBack && team.lineupSet}
+          active={!readOnly && !onBack && team.lineupSet}
           steps={[{ targetRef: beginSeasonBtnRef, title: 'Lineup Set', body: 'Free Agency stays open if you want to upgrade — Begin Season locks it in when you’re ready.' }]}
         />
       </div>
@@ -463,11 +462,10 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             )}
             <button
               ref={beginSeasonBtnRef}
-              className={'primary' + (!lineupScreenOpen && !team.lineupConfirmed && seasonIssues.length > 0 ? ' needs-attention' : '')}
-              disabled={!lineupScreenOpen && team.lineupConfirmed}
+              className={'primary' + (!team.lineupConfirmed && seasonIssues.length > 0 ? ' needs-attention' : '')}
+              disabled={team.lineupConfirmed}
               aria-expanded={showSeasonIssues}
               onClick={() => {
-                if (lineupScreenOpen) { setLineupScreenOpen(false); return; }
                 if (seasonIssues.length > 0) {
                   setShowSeasonIssues(true);
                   return;
@@ -477,19 +475,19 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                 if (res && res.valid === false) alert(res.msg);
               }}
             >
-              {lineupScreenOpen ? 'Back' : team.lineupConfirmed
+              {team.lineupConfirmed
                 ? (waitingOn.length > 0 ? `Waiting For ${waitingOn.length} User${waitingOn.length === 1 ? '' : 's'} To Continue` : 'Waiting…')
                 : 'Begin Season'}
-              {!lineupScreenOpen && !team.lineupConfirmed && seasonIssues.length > 0 && <span className="bottombar-warn-icon" aria-hidden="true">!</span>}
+              {!team.lineupConfirmed && seasonIssues.length > 0 && <span className="bottombar-warn-icon" aria-hidden="true">!</span>}
             </button>
-            {!lineupScreenOpen && !team.lineupConfirmed && seasonIssues.length > 0 && showSeasonIssues && (
+            {!team.lineupConfirmed && seasonIssues.length > 0 && showSeasonIssues && (
               <div className="bottombar-issues">
                 <div className="bottombar-issues-head">Before you begin you must resolve:</div>
                 <ul>
                   {seasonIssues.map((msg) => (
                     <li key={msg}>
                       {msg === 'Set your lineup' ? (
-                        <button type="button" onClick={() => { setShowSeasonIssues(false); setTab('chemistry'); setLineupScreenOpen(true); }}>Lineup</button>
+                        <button type="button" onClick={() => { setShowSeasonIssues(false); setTab('chemistry'); }}>Lineup</button>
                       ) : msg === 'Resolve team budget' ? (
                         <button type="button" onClick={() => { setShowSeasonIssues(false); setTab('ledger'); }}>Budget</button>
                       ) : msg.startsWith('Resolve your roster') ? (

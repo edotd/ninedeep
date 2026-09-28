@@ -100,11 +100,12 @@ function MiniCard({ card, selected, onClick, onRemove, dim, onHoverStart, onHove
   );
 }
 
-export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onClose, onPreviewChange }) {
+export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onClose, onPreviewChange, embedded = false }) {
   const isDesktop = useIsDesktop();
   const onCloseRef = useRef(onClose);
   useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
   useEffect(() => {
+    if (embedded) return undefined;
     const onKey = (e) => { if (e.key === 'Escape') onCloseRef.current(); };
     document.addEventListener('keydown', onKey);
     const scrollY = window.scrollY;
@@ -127,7 +128,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
       document.documentElement.style.overflow = prevHtmlOverflow;
       window.scrollTo(0, scrollY);
     };
-  }, []);
+  }, [embedded]);
 
   // Everything in this editor is a local draft. The shared team — and therefore the
   // Franchise page underneath this modal — is changed exactly once, by Save Lineup. A fresh
@@ -147,8 +148,11 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
     slotIndex: starters.findIndex((starter) => starter?.id === card.id),
   }));
   const [selectedId, setSelectedId] = useState(null);
-  const [selectedGameplanId, setSelectedGameplanId] = useState('');
+  const [selectedGameplanId, setSelectedGameplanId] = useState(() => team.activeGameplanId || '');
   const [sixthManId, setSixthManId] = useState(() => team.sixthManId || bench[0]?.id || '');
+  const effectiveSixthManId = bench.some((card) => card.id === sixthManId) ? sixthManId : (bench[0]?.id || '');
+  const sixthMan = bench.find((card) => card.id === effectiveSixthManId) || null;
+  const depthPlayer = bench.find((card) => card.id !== effectiveSixthManId) || null;
   const [gameplanPickerOpen, setGameplanPickerOpen] = useState(false);
 
   const previewSignature = starters.map((card) => card?.id ?? 'open').join(',');
@@ -275,10 +279,9 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
     const ids = slotOrder.filter((id) => id != null);
     const check = validateLineup({ ...team, activeIds: ids });
     if (!check.valid) { alert(check.msg); return; }
-    // Close in the same event as the single shared write. React batches these updates, so the
-    // saved lineup first appears on the Franchise page only after the editor is gone.
-    onClose();
-    actions.saveLineup(myTeamId, ids, selectedGameplanId, sixthManId);
+    const result = actions.saveLineup(myTeamId, ids, selectedGameplanId, effectiveSixthManId);
+    if (result && result.valid === false) { alert(result.msg); return; }
+    if (!embedded) onClose();
   };
 
   // A valid five, never the strongest one (see roster.js's autoValidFive) — an escape hatch
@@ -289,7 +292,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
   };
 
   return (
-    <div className="tsx-overlay" role="dialog" aria-modal="true" aria-label="Your Lineup">
+    <div className={embedded ? 'slf-embedded' : 'tsx-overlay'} role={embedded ? 'region' : 'dialog'} aria-modal={embedded ? undefined : 'true'} aria-label="Your Lineup">
       <div className="slf-panel">
         <p className="slf-note">{canEdit ? 'Set your lineup. Lines between players show how pairings affect your team’s offense and/or defense.' : 'Your lineup. Lines between players show how pairings affect your team’s offense and/or defense.'}</p>
 
@@ -315,7 +318,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
 
         <label className="slf-sixth-man">
           <span className="slf-microlabel">Sixth Man</span>
-          <select value={bench.some((card) => card.id === sixthManId) ? sixthManId : (bench[0]?.id || '')} disabled={!canEdit || !bench.length} onChange={(event) => setSixthManId(event.target.value)}>
+          <select value={effectiveSixthManId} disabled={!canEdit || !bench.length} onChange={(event) => setSixthManId(event.target.value)}>
             {bench.map((card) => <option key={card.id} value={card.id}>#{jerseyNumber(card)} · {playerGrade(card)} · {card.archetype}</option>)}
           </select>
           <small>Primary bench contributor: 75% of card value. The other reserve contributes 25%.</small>
@@ -370,6 +373,18 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
                 </div>
               ))}
             </div>
+            <div className="slf-reserve-slots" aria-label="Bench roles">
+              <div className="slf-reserve-slot">
+                <div className="slf-microlabel">Sixth Man</div>
+                <MiniCard card={sixthMan} onClick={sixthMan ? () => setCenteredCard({ type: 'player', card: sixthMan }) : undefined} />
+                <small>75% bench value</small>
+              </div>
+              <div className="slf-reserve-slot">
+                <div className="slf-microlabel">Depth Player</div>
+                <MiniCard card={depthPlayer} onClick={depthPlayer ? () => setCenteredCard({ type: 'player', card: depthPlayer }) : undefined} />
+                <small>25% bench value</small>
+              </div>
+            </div>
           </div>
 
           {isDesktop && (
@@ -406,7 +421,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
               <button type="button" ref={saveBtnRef} className="slf-save-btn" onClick={handleSave}>Save Lineup</button>
             </div>
           )}
-          <button type="button" className={canEdit ? 'secondary' : 'primary'} onClick={onClose}>Back</button>
+          {!embedded && <button type="button" className={canEdit ? 'secondary' : 'primary'} onClick={onClose}>Back</button>}
         </div>
       </div>
 

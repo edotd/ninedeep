@@ -40,7 +40,7 @@ function teamProfile(team, chemistry, experience, coachOffense, coachDefense) {
   return { strengths: strengths.slice(0, 4), weaknesses: weaknesses.slice(0, 4) };
 }
 
-export default function TeamChemistry({ team, canEdit, onEditLineup }) {
+export default function TeamChemistry({ team, canEdit, onEditLineup, showLineupButton = true }) {
   const [expanded, setExpanded] = useState(null);
   const current = teamSynergy(team);
   const experience = team.coach ? teamExperience(team) : null;
@@ -57,10 +57,10 @@ export default function TeamChemistry({ team, canEdit, onEditLineup }) {
             <span className="tc2-grade">{team.lineupSet ? current.grade : '—'}</span>
             {team.lineupSet && <span className="tc2-score">{current.score}</span>}
           </div>
-          <button className="tc2-synergy-btn" onClick={onEditLineup}>
+          {showLineupButton && <button className="tc2-synergy-btn" onClick={onEditLineup}>
             {canEdit === false ? 'View Lineup' : team.lineupSet ? 'Edit Lineup' : 'Set Lineup'}
             {canEdit !== false && !team.lineupSet && <span className="alert-badge" aria-label="Lineup not set">!</span>}
-          </button>
+          </button>}
         </div>
 
         {team.lineupSet && (

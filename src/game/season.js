@@ -424,7 +424,7 @@ export function finishPlayoffs(state) {
 // playoffs entirely, 'R1'/'R2' lost in that round, 'FINALS' lost the Final, 'TITLE' won it
 // and cleared the championship bar. Read from state.playoff/state.lastResult before
 // startPlayoffs re-initializes them for the next season.
-function seasonResultForTeam(state, team) {
+export function seasonResultForTeam(state, team) {
   if (!state.playoffTeams || !state.playoffTeams.includes(team)) return 'MISSED';
   const matches = state.playoff.matches;
   const final = matches[matches.length - 1];

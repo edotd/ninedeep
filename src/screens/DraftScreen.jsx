@@ -50,28 +50,15 @@ export default function DraftScreen({ state, actions, myTeamId }) {
   });
 
   return (
-    <OffseasonFile state={state} team={myTeam}>
-      <div className="of-section-label">02 / DRAFT</div><h1>Draft — Season {state.season}</h1>
+    <OffseasonFile team={myTeam}>
+      <h1>Draft — Season {state.season}</h1>
       <p className="lede">
         Every team gets one pick, worst record first.{' '}
         {onTheClock
-          ? "You're on the clock - draft a player or forfeit your pick for a cap bonus next season."
+          ? "You're on the clock - draft a player or forfeit your pick for a budget bonus next season."
           : draft.queue[0] ? `Waiting on ${draft.queue[0].name} to pick…` : ''}
       </p>
       <div className="statusline">{draft.queue.length} pick{draft.queue.length === 1 ? '' : 's'} remaining · {draft.pool.length} card{draft.pool.length === 1 ? '' : 's'} in the pool</div>
-
-      {onTheClock && (
-        <button
-          className="secondary"
-          style={{ width: '100%', marginTop: 6 }}
-          onClick={() => {
-            const res = actions.forfeitPick(myTeamId);
-            if (res && res.ok === false) alert(res.msg);
-          }}
-        >
-          Forfeit Pick — +{formatCoins(forfeitBonusForPosition(overallPickPosition(state)))} Cap Next Season
-        </button>
-      )}
 
       {(draft.picks.length > 0 || draft.queue.length > 0) && (
         <>
@@ -89,6 +76,19 @@ export default function DraftScreen({ state, actions, myTeamId }) {
             </div>
           ))}
         </>
+      )}
+
+      {onTheClock && (
+        <button
+          className="secondary"
+          style={{ width: '100%', marginTop: 6 }}
+          onClick={() => {
+            const res = actions.forfeitPick(myTeamId);
+            if (res && res.ok === false) alert(res.msg);
+          }}
+        >
+          Forfeit Pick — +{formatCoins(forfeitBonusForPosition(overallPickPosition(state)))} Budget Next Season
+        </button>
       )}
 
       <h2>Available Cards ({sortedPool.length})</h2>
