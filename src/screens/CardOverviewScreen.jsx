@@ -38,23 +38,23 @@ function sampleMatchupCard() {
 
 const PLAYER_NOTES = [
   { key: 'archetype', selector: '.pcard-name', label: 'Archetype',
-    text: "No portraits in this game, so this is the card's identity — the number next to it is how the persistent bar shows this player in their slot." },
+    text: 'What this player excels at. There are four total archetypes: Scorer, Playmaker, Rebounder and Defender.' },
   { key: 'stats', selector: '.pcard-stats', label: 'Stats',
-    text: 'Four fixed cells so all seven player cards scan as one table. These drive offense, defense, and rebounding rolls.' },
+    text: "Player stats determine your team's output. Scoring and Playmaking contribute to offense. Defense and Rebounding contribute to defense." },
   { key: 'skillset', selector: '.pcard-skillset', label: 'Skillset',
-    text: 'A permanent trait rolled once at creation, never a stat. Two starters sharing a Skillset pairing unlock a chemistry bonus.' },
+    text: 'A permanent trait rolled once at creation. Specific skillsets apply bonuses to your team chemistry when paired together.' },
   { key: 'years', selector: '.pcard-years-row', label: 'Turns Remaining',
-    text: 'Each filled dot is one turn left on the contract. At zero, the player enters free agency.' },
+    text: 'Each dot represents the amount of turns this player will be on your roster.' },
   { key: 'stage', selector: '.pcard-header-stage', label: 'Career Stage',
-    text: 'Young, Prime, or Declining — a fixed career roll that sets a bonus or penalty on every stat this player has.' },
+    text: 'Where the player is at in their career. Different stat bonuses may apply depending on where the player is in their career.' },
   { key: 'tier', selector: '.pcard-header-tier', label: 'Tier',
-    text: "The player's background, from Undrafted to a decorated veteran — flavor and context, independent of their actual stats." },
+    text: "The player's ceiling. Applies bonuses to specific stats." },
   { key: 'position', selector: '.pcard-header-pos', label: 'Position',
     text: 'Guard, Forward, or Big. Your starting five needs at least one of each.' },
   { key: 'grade', selector: '.pcard-grade', label: 'Grade',
     text: "A single letter summarizing this player's overall quality, at a glance." },
   { key: 'cost', selector: '.pcard-budgethit-row', label: 'Cost',
-    text: 'The largest figure on the card, and the one this player gets traded on. It charges the budget every season the contract runs.' },
+    text: 'How much the player counts towards your budget every turn.' },
 ];
 
 const COACH_NOTES = [

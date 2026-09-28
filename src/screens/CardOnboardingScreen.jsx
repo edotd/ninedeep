@@ -4,15 +4,15 @@ import FrontOfficeCard from '../components/FrontOfficeCard';
 
 const TOURS = {
   player: [
-    { focus: 'archetype', title: 'Archetype', body: "No portraits in this game, so this is the card's identity — the number next to it is how the persistent bar shows this player in their slot." },
-    { focus: 'stats', title: 'Stats', body: 'Scoring, Playmaking, Rebounding, and Defense determine what this player contributes to your lineup.' },
-    { focus: 'skillset', title: 'Skillset', body: 'A permanent trait rolled once at creation. Two starters sharing a Skillset pairing unlock a chemistry bonus.' },
-    { focus: 'turns', title: 'Turns Remaining', body: 'Each filled dot is one turn left on the contract. At zero, the player enters free agency.' },
-    { focus: 'stage', title: 'Career Stage', body: 'Young, Prime, or Declining — a fixed career roll that sets a bonus or penalty on every stat this player has.' },
-    { focus: 'tier', title: 'Tier', body: "The player's background, from Undrafted to a decorated veteran — flavor and context, independent of their actual stats." },
+    { focus: 'archetype', title: 'Archetype', body: 'What this player excels at. There are four total archetypes: Scorer, Playmaker, Rebounder and Defender.' },
+    { focus: 'stats', title: 'Stats', body: "Player stats determine your team's output. Scoring and Playmaking contribute to offense. Defense and Rebounding contribute to defense." },
+    { focus: 'skillset', title: 'Skillset', body: 'A permanent trait rolled once at creation. Specific skillsets apply bonuses to your team chemistry when paired together.' },
+    { focus: 'turns', title: 'Turns Remaining', body: 'Each dot represents the amount of turns this player will be on your roster.' },
+    { focus: 'stage', title: 'Career Stage', body: 'Where the player is at in their career. Different stat bonuses may apply depending on where the player is in their career.' },
+    { focus: 'tier', title: 'Tier', body: "The player's ceiling. Applies bonuses to specific stats." },
     { focus: 'position', title: 'Position', body: 'Guard, Forward, or Big. Your starting five needs at least one of each.' },
     { focus: 'grade', title: 'Grade', body: "A single letter summarizing this player's overall quality, at a glance." },
-    { focus: 'cost', title: 'Cost', body: 'The largest figure on the card, and the one this player gets traded on. It charges the budget every season the contract runs.' },
+    { focus: 'cost', title: 'Cost', body: 'How much the player counts towards your budget every turn.' },
   ],
   coach: [
     { focus: 'type', title: 'Type', body: "The coach's archetype — who they are, independent of the specific trait rolled below." },
