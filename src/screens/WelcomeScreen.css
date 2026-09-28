@@ -40,10 +40,10 @@
 .welcome-onboarding{position:fixed;inset:0;z-index:925;background:var(--ink);overflow:auto;display:grid;place-items:center;}
 .welcome-onboarding .welcome-screen{width:100%;min-height:100dvh;}
 .welcome-franchise-name{color:var(--franchise);font-weight:inherit;}
-.welcome-card-fan-label{display:flex;align-items:center;justify-content:center;gap:6px;margin:22px 0 0;font:10px var(--font-label);letter-spacing:.16em;text-transform:uppercase;color:var(--stamp-text);}
-.welcome-card-fan{position:relative;height:250px;max-width:520px;margin:10px auto 0;}
+.welcome-card-fan{position:relative;height:250px;max-width:520px;margin:24px auto 0;}
 .welcome-mini-card{position:absolute;left:50%;top:38px;width:72px;height:102px;margin-left:-36px;border:2px solid var(--ink);background:var(--form);display:grid;place-items:center;font:13px var(--font-display);color:var(--ink);transform-origin:50% 190px;box-shadow:0 4px 10px rgba(11,17,30,.2);}
-.welcome-mini-card.player{transform:rotate(calc((var(--fan-index) - 3) * 10deg)) translateY(-18px);}
+.welcome-mini-card.player{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;transform:rotate(calc((var(--fan-index) - 3) * 10deg)) translateY(-18px);}
+.welcome-mini-card.player span{font:7px var(--font-label);letter-spacing:.1em;text-transform:uppercase;color:var(--file-muted);}
 /* Coach and GM sit as their own small pair nested INSIDE the pocket the seven-card fan forms
    (the open wedge under its curve, above the shared pivot) rather than spilling out past its
    footprint — smaller, closer together, and higher up than the fan's own lowest point. */
