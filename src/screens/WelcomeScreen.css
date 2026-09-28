@@ -40,12 +40,14 @@
 .welcome-onboarding{position:fixed;inset:0;z-index:925;background:var(--ink);overflow:auto;display:grid;place-items:center;}
 .welcome-onboarding .welcome-screen{width:100%;min-height:100dvh;}
 .welcome-franchise-name{color:var(--franchise);font-weight:inherit;}
-.welcome-card-fan{position:relative;height:250px;max-width:520px;margin:24px auto 0;}
+.welcome-card-fan-label{display:flex;align-items:center;justify-content:center;gap:6px;margin:22px 0 0;font:10px var(--font-label);letter-spacing:.16em;text-transform:uppercase;color:var(--stamp-text);}
+.welcome-card-fan{position:relative;height:250px;max-width:520px;margin:10px auto 0;}
 .welcome-mini-card{position:absolute;left:50%;top:38px;width:72px;height:102px;margin-left:-36px;border:2px solid var(--ink);background:var(--form);display:grid;place-items:center;font:13px var(--font-display);color:var(--ink);transform-origin:50% 190px;box-shadow:0 4px 10px rgba(11,17,30,.2);}
 .welcome-mini-card.player{transform:rotate(calc((var(--fan-index) - 3) * 10deg)) translateY(-18px);}
-/* Coach and GM fan out as their own small pair, tucked underneath (behind, and lower than) the
-   seven-card player fan above — a distinct hand of two rather than an extension of the same arc. */
-.welcome-mini-card.office{top:130px;width:92px;height:58px;margin-left:-46px;background:var(--ink);border-color:var(--franchise);color:var(--file);transform-origin:50% 220px;transform:rotate(calc((var(--fan-index) - .5) * 60deg));}
+/* Coach and GM sit as their own small pair nested INSIDE the pocket the seven-card fan forms
+   (the open wedge under its curve, above the shared pivot) rather than spilling out past its
+   footprint — smaller, closer together, and higher up than the fan's own lowest point. */
+.welcome-mini-card.office{top:96px;width:60px;height:38px;margin-left:-30px;background:var(--ink);border-color:var(--franchise);color:var(--file);font-size:10px;transform-origin:50% 96px;transform:rotate(calc((var(--fan-index) - .5) * 28deg));}
 
 @media(max-width:600px){
   .welcome-screen{min-height:calc(var(--app-vh,100dvh) - var(--mobile-persistent-top-height,0px) - var(--mobile-persistent-bar-height,0px));padding:18px 14px;}

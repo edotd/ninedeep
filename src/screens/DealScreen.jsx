@@ -1,6 +1,4 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import PlayerCard from '../components/PlayerCard';
-import FrontOfficeCard from '../components/FrontOfficeCard';
 import BallMark from '../components/BallMark';
 
 const ALL_FO_KINDS = ['coach', 'fanbase', 'market'];
@@ -8,9 +6,11 @@ const ALL_FO_KINDS = ['coach', 'fanbase', 'market'];
 // Deck sits at rest just long enough to read as a real stack, then each card individually
 // comes off the deck and files into its own slot in the persistent bar below (per design ref
 // 4A, "Dealing the Nine") — that bar-filling-in IS the deal, not a separate animation next to
-// it (see DesktopBar/PersistentBar's dealProgress gating). Once every card has landed, the
-// same nine-plus cards resolve into a detailed review grid here so the player can actually
-// read them, held until Continue. 'Instant' (and prefers-reduced-motion) skip straight there.
+// it (see DesktopBar/PersistentBar's dealProgress gating). Once every card has landed, this
+// goes straight to onDealDone (the post-deal Card Guide onboarding, then the League page,
+// covers "review your cards" in far more detail than a plain grid ever did) — no extra
+// tap-through screen. 'Instant' (and prefers-reduced-motion) skip the animation but still land
+// on the same onDealDone call.
 const DECK_MS = 500;
 const DEAL_STAGGER_MS = 140;
 const TOKEN_MS = 480;
@@ -40,10 +40,10 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
   const total = starters.length + bench.length + FO_KINDS.length;
   const instant = state.settings.actionLogSpeed === 'instant' || reducedMotion();
 
-  // 'deck' -> 'dealing' -> 'review'. The Welcome-to-Nine-Deep message no longer gates this flow
-  // — it's shown as its own overlay on top of the League page instead (see GameShell), so this
-  // review grid's own Continue button goes straight to onDealDone.
-  const [phase, setPhase] = useState(instant ? 'review' : 'deck');
+  // 'deck' -> 'dealing' -> onDealDone. No review grid in between any more — the post-deal Card
+  // Guide onboarding (see GameShell's postDealTour) and the League page it lands on already
+  // cover every card in more depth than a plain grid did.
+  const [phase, setPhase] = useState('deck');
   const [dealt, setDealt] = useState(instant ? total : 0);
   const [tokens, setTokens] = useState([]); // transient flying-card visuals, purely decorative
   const timersRef = useRef([]);
@@ -57,10 +57,8 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
 
   const clearTimers = () => { timersRef.current.forEach(clearTimeout); timersRef.current = []; };
 
-  const finishDealing = () => setPhase('review');
-
   useEffect(() => {
-    if (instant) { onDealProgress(total); finishDealing(); return undefined; }
+    if (instant) { onDealProgress(total); onDealDone(); return undefined; }
     if (phase === 'deck') {
       timersRef.current.push(setTimeout(() => setPhase('dealing'), DECK_MS));
     } else if (phase === 'dealing') {
@@ -73,7 +71,7 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
           setTimeout(() => setTokens((t) => t.filter((tok) => tok.id !== id)), TOKEN_MS);
         }, i * DEAL_STAGGER_MS));
       }
-      timersRef.current.push(setTimeout(finishDealing, (total - 1) * DEAL_STAGGER_MS + TOKEN_MS));
+      timersRef.current.push(setTimeout(onDealDone, (total - 1) * DEAL_STAGGER_MS + TOKEN_MS));
     }
     return clearTimers;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -84,55 +82,25 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
     setDealt(total);
     onDealProgress(total);
     setTokens([]);
-    finishDealing();
+    onDealDone();
   };
 
-  if (phase !== 'review') {
-    return (
-      <div className="screen deal-screen">
-        <div className="deal-intro">
-          <h1>Your Deal — Season {state.season}</h1>
-          <p className="lede" style={{ marginBottom: 14 }}>Your 7-player roster and Front Office — dealt together.</p>
-        </div>
-        <div className="deal-stage">
-          <div className="deal-deck">
-            <div className="deal-deck-card"><BallMark size={64} variant="onInk" /></div>
-            <div className="deal-deck-card"><BallMark size={64} variant="onInk" /></div>
-            <div className="deal-deck-card"><BallMark size={64} variant="onInk" /></div>
-            {tokens.map((t) => <div key={t.id} className="deal-token"><BallMark size={34} variant="onInk" /></div>)}
-          </div>
-          {phase === 'dealing' && <div className="deal-count">{dealt} / {total} dealt</div>}
-        </div>
-        <button className="reset-link deal-skip" onClick={handleSkip}>Skip ▸▸</button>
-      </div>
-    );
-  }
-
   return (
-    <>
-      <div className="screen deal-screen">
-        <div className="deal-intro">
-          <h1>Your Deal — Season {state.season}</h1>
-          <p className="lede" style={{ marginBottom: 14 }}>Your 7-player roster and Front Office — dealt together. Review everything here before heading to your Franchise file.</p>
-        </div>
-        <div className="deal-centered">
-          <div className="deal-heading">Starters ({starters.length}/5)</div>
-          <div className="deal-row-5">
-            {starters.map((c) => <div key={c.id} className="card-deal-in"><PlayerCard card={c} /></div>)}
-          </div>
-          <div className="deal-heading">Bench ({bench.length}/2)</div>
-          <div className="deal-row-4">
-            {bench.map((c) => <div key={c.id} className="card-deal-in"><PlayerCard card={c} /></div>)}
-          </div>
-          <div className="deal-heading">Front Office</div>
-          <div className="fo-deal-row">
-            {FO_KINDS.map((kind) => <div key={kind} className="card-deal-in"><FrontOfficeCard kind={kind} team={team} /></div>)}
-          </div>
-        </div>
+    <div className="screen deal-screen">
+      <div className="deal-intro">
+        <h1>Your Deal — Season {state.season}</h1>
+        <p className="lede" style={{ marginBottom: 14 }}>Your 7-player roster and Front Office — dealt together.</p>
       </div>
-      <div className="bottombar">
-        <button className="primary" onClick={onDealDone}>Continue</button>
+      <div className="deal-stage">
+        <div className="deal-deck">
+          <div className="deal-deck-card"><BallMark size={64} variant="onInk" /></div>
+          <div className="deal-deck-card"><BallMark size={64} variant="onInk" /></div>
+          <div className="deal-deck-card"><BallMark size={64} variant="onInk" /></div>
+          {tokens.map((t) => <div key={t.id} className="deal-token"><BallMark size={34} variant="onInk" /></div>)}
+        </div>
+        {phase === 'dealing' && <div className="deal-count">{dealt} / {total} dealt</div>}
       </div>
-    </>
+      <button className="reset-link deal-skip" onClick={handleSkip}>Skip ▸▸</button>
+    </div>
   );
 }

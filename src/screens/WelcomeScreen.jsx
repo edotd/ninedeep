@@ -1,4 +1,5 @@
 import BallMark from '../components/BallMark';
+import CardTypeMark from '../components/CardTypeMark';
 import './WelcomeScreen.css';
 
 export default function WelcomeScreen({ teamName, onContinue, cards = false }) {
@@ -13,6 +14,7 @@ export default function WelcomeScreen({ teamName, onContinue, cards = false }) {
             <>
               <h1>The Cards</h1>
               <p>At the start of the game each player receives nine cards.</p>
+              <div className="welcome-card-fan-label"><CardTypeMark type="player" size={14} /> Players</div>
               <div className="welcome-card-fan" aria-label="Seven player cards, one coach card, and one general manager card">
                 {Array.from({ length: 7 }, (_, index) => <div key={index} className="welcome-mini-card player" style={{ '--fan-index': index }}><BallMark size={18} variant="onInk" /></div>)}
                 <div className="welcome-mini-card office coach" style={{ '--fan-index': 0 }}>Coach</div>
