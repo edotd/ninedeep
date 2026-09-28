@@ -20,6 +20,11 @@ const KIND_META = {
   market: { label: 'GM' },
 };
 
+// Gives every effect row a stable, semantic class (e.g. "fo2-effect-off-bonus") derived from its
+// own label, rather than depending on row order — Card Types' annotation hotspots (see
+// CardOverviewScreen.jsx) target these individually.
+const slugify = (label) => label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
 function coachContent(team) {
   const coach = team.coach;
   const bonus = retentionBonus(team) + relationshipBonus(team);
@@ -143,7 +148,7 @@ export default function FrontOfficeCard({ kind, team, onboardingFocus }) {
         </div>
         <div className="fo2-effects">
           {content.effects.map((e, i) => (
-            <div className="fo2-effect-row" key={i}>
+            <div className={`fo2-effect-row fo2-effect-${slugify(e.label)}`} key={i}>
               <span className="fo2-effect-label">{e.label}</span>
               <span className={'fo2-effect-value ' + e.tone}>{e.value}</span>
             </div>

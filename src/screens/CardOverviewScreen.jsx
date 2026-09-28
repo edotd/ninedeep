@@ -37,33 +37,43 @@ function sampleMatchupCard() {
 }
 
 const PLAYER_NOTES = [
-  { key: 'header', selector: '.pcard-header', label: 'Header plate', side: 'left',
-    text: 'Position at a glance, reinforced by a fixed plate color — cream Guard, yellow Forward, navy Big. Career stage and tier sit to its left; Grade to its right.' },
-  { key: 'name', selector: '.pcard-name-block', label: 'Number and archetype', side: 'left',
-    text: "No portraits in this game, so this block is the card. The number is how the persistent bar shows this player in their slot." },
-  { key: 'stats', selector: '.pcard-stats', label: 'Stat block', side: 'left',
+  { key: 'archetype', selector: '.pcard-name', label: 'Archetype',
+    text: "No portraits in this game, so this is the card's identity — the number next to it is how the persistent bar shows this player in their slot." },
+  { key: 'stats', selector: '.pcard-stats', label: 'Stats',
     text: 'Four fixed cells so all seven player cards scan as one table. These drive offense, defense, and rebounding rolls.' },
-  { key: 'footer', selector: '.pcard-accolade-block', label: 'League accolades', side: 'left',
-    text: 'A rare league honor, independent of tier — shown as a single icon (hover or hold it to see which one) when this player has one, or "None" when they don’t.' },
-  { key: 'budgethit', selector: '.pcard-budgethit-row', circleSelector: '.pcard-budgethit', circle: true, label: 'Cost', side: 'right',
-    text: 'The largest figure on the card, and the one this player gets traded on. It charges the budget every season the contract runs.' },
-  { key: 'years', selector: '.pcard-years-row', label: 'Turns remaining',
+  { key: 'skillset', selector: '.pcard-skillset', label: 'Skillset',
+    text: 'A permanent trait rolled once at creation, never a stat. Two starters sharing a Skillset pairing unlock a chemistry bonus.' },
+  { key: 'years', selector: '.pcard-years-row', label: 'Turns Remaining',
     text: 'Each filled dot is one turn left on the contract. At zero, the player enters free agency.' },
-  { key: 'level', selector: '.pcard-header-stack', circleSelector: '.pcard-header-stage', circle: true, label: 'Career stage', side: 'right',
-    text: 'The career stage and tier, stacked above the position — the career stage and a fixed career roll set the bonus or penalty on every stat.' },
+  { key: 'stage', selector: '.pcard-header-stage', label: 'Career Stage',
+    text: 'Young, Prime, or Declining — a fixed career roll that sets a bonus or penalty on every stat this player has.' },
+  { key: 'tier', selector: '.pcard-header-tier', label: 'Tier',
+    text: "The player's background, from Undrafted to a decorated veteran — flavor and context, independent of their actual stats." },
+  { key: 'position', selector: '.pcard-header-pos', label: 'Position',
+    text: 'Guard, Forward, or Big. Your starting five needs at least one of each.' },
+  { key: 'grade', selector: '.pcard-grade', label: 'Grade',
+    text: "A single letter summarizing this player's overall quality, at a glance." },
+  { key: 'cost', selector: '.pcard-budgethit-row', label: 'Cost',
+    text: 'The largest figure on the card, and the one this player gets traded on. It charges the budget every season the contract runs.' },
 ];
 
-const FRONTOFFICE_NOTES = [
-  { key: 'department', selector: '.fo2-header', label: 'Department', side: 'left',
-    text: 'Which part of the front office this is — Coach, Fanbase, or GM. Fanbase cards show the current modifier here.' },
-  { key: 'name', selector: '.fo2-name-col', label: 'Name and tenure', side: 'left',
-    text: 'Who or what it is, and how long it has held. Landscape and ink, so it can never be read as a player.' },
-  { key: 'effects', selector: '.fo2-effects', label: 'Effect lines', side: 'left',
-    text: 'The effect lines show the card’s current bonuses and modifiers.' },
-  { key: 'disposition', selector: '.fo2-disposition', circle: true, label: 'Disposition', side: 'right',
-    text: 'One word for the whole card, in colour. Amber is a structural trait, green is favorable to you.' },
-  { key: 'duration', selector: '.fo2-footer', circleSelector: '.fo2-duration', circle: true, label: 'Duration', side: 'right',
-    text: 'How long it holds. This is what separates a front office card from everything else — seasons, not possessions.' },
+const COACH_NOTES = [
+  { key: 'type', selector: '.fo2-name', label: 'Type',
+    text: "The coach's archetype — who they are, independent of the specific trait rolled below." },
+  { key: 'modifier', selector: '.fo2-disposition', label: 'Modifier',
+    text: 'The one trait that makes this coach distinct — the headline word for the whole card, explained in full at the bottom.' },
+  { key: 'offbonus', selector: '.fo2-effect-off-bonus', label: 'Offensive Bonus and Die',
+    text: "This coach's Offense bonus, shown here as a percentage — and as a die size (Off/Def) next to the Coach label at the top of the card." },
+  { key: 'defbonus', selector: '.fo2-effect-def-bonus', label: 'Defensive Bonus and Die',
+    text: "This coach's Defense bonus, shown here as a percentage — and as a die size (Off/Def) next to the Coach label at the top of the card." },
+  { key: 'gameplan', selector: '.fo2-rarity-lead', label: 'Gameplan',
+    text: 'Every coach permanently holds two Gameplans, Primary and Secondary — pick one per season on the Set Lineup screen for a team-wide bonus.' },
+  { key: 'relations', selector: '.fo2-effect-player-relations', label: 'Player Relations',
+    text: "How well this coach works with the roster — a stronger relationship adds to both the Offense and Defense bonus above." },
+  { key: 'development', selector: '.fo2-effect-development-points', label: 'Development Points',
+    text: 'Points awarded each season to permanently improve a player’s stats, in whichever categories this coach’s style favors.' },
+  { key: 'adjustments', selector: '.fo2-effect-in-game-adjustments', label: 'In-Game Adjustments',
+    text: 'How many Adjustment cards this coach rolls fresh at the start of every playoff match.' },
 ];
 
 const MATCHUP_NOTES = [
@@ -150,7 +160,7 @@ export default function CardOverviewScreen({ state, actions, myTeamId = 0, onBac
             body="A standing arrangement that shapes everything else — a coach, a fanbase, and a GM. Coaches provide Development Points and two Gameplans in addition to their team bonuses."
             howLabel="How It Plays" howText="It does not get played. It is in force from the moment it is dealt."
             costLabel="How It Ends" costText="It holds for the stated duration. Read the footer before you build around it."
-            notes={FRONTOFFICE_NOTES}
+            notes={COACH_NOTES}
           >
             <FrontOfficeCard kind="coach" team={sampleTeam} />
           </CardOverviewSection>
