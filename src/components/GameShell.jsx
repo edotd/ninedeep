@@ -343,7 +343,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
   );
 
   if (['player', 'coach', 'gm'].includes(postDealTour)) return (
-    <CardOnboardingScreen type={postDealTour} team={myTeam} onComplete={advanceCardOnboarding} />
+    <CardOnboardingScreen key={postDealTour} type={postDealTour} team={myTeam} onComplete={advanceCardOnboarding} />
   );
 
   if (isDesktop && showChrome) {

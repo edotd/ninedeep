@@ -464,7 +464,7 @@ button.primary.needs-attention:hover:not(:disabled){background:var(--depth);}
 /* The "Gameplan" label itself reads like every other slot's label (see .persistent-bar-coach
    span) — only the active gameplan's name (the "b" rule above) keeps the franchise-orange
    emphasis. */
-.persistent-card-count.gameplan .persistent-bar-box-heading{font:8px var(--font-mono);letter-spacing:.08em;color:var(--ink-muted);}
+.persistent-card-count.gameplan .persistent-bar-box-heading{font:8px var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-muted);}
 .persistent-card-count.adjustment{color:var(--stamp);}.persistent-card-count.adjustment b{color:var(--stamp);}
 .persistent-card-count.development{color:var(--approved-file);}.persistent-card-count.development b{color:var(--approved-file);}
 .persistent-development-mark{font:9px var(--font-label);letter-spacing:.08em;color:var(--approved-file);}
@@ -482,7 +482,7 @@ button.primary.needs-attention:hover:not(:disabled){background:var(--depth);}
    PersistentBar.jsx / DesktopBar.jsx. */
 .persistent-bar-gameplan-active{display:inline-flex;vertical-align:middle;margin-left:4px;}
 .persistent-bar-box-heading{display:flex!important;align-items:center;gap:5px;}
-.persistent-card-count.gameplan{align-items:flex-start;text-align:left;}
+.persistent-card-count.gameplan{align-items:flex-start;justify-content:flex-start;text-align:left;}
 .persistent-card-count.gameplan>b{display:block;margin-top:4px;}
 .slf-sixth-man{margin:12px 24px 0;padding:12px 14px;border:1px solid var(--ink-rule);display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:center;color:var(--file);}
 .slf-sixth-man select{min-width:0;background:var(--ink-deep);color:var(--file);border:1px solid var(--franchise);padding:9px;font:12px var(--font-mono);}
@@ -907,17 +907,34 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .card-onboarding-actions{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:22px;}
 .card-onboarding-actions .reset-link{color:var(--ink-muted);}
 .onboarding-card>*{opacity:.2;transition:opacity .2s ease,outline-color .2s ease;}
-.onboarding-card.onboarding-identity .pcard-header,.onboarding-card.onboarding-identity .pcard-name-block,
-.onboarding-card.onboarding-contract .pcard-contract,
+/* Player Cards tour (see CardOnboardingScreen.jsx TOURS.player) — nine granular steps, one
+   card region each. */
+.onboarding-card.onboarding-archetype .pcard-name-block,
 .onboarding-card.onboarding-stats .pcard-stats,
 .onboarding-card.onboarding-skillset .pcard-skillset,
-.onboarding-card.onboarding-rarity .pcard-accolade-block,
+.onboarding-card.onboarding-turns .pcard-years-row,
+.onboarding-card.onboarding-stage .pcard-header-stage,
+.onboarding-card.onboarding-tier .pcard-header-tier,
+.onboarding-card.onboarding-position .pcard-header-pos,
+.onboarding-card.onboarding-grade .pcard-grade,
+.onboarding-card.onboarding-cost .pcard-budgethit-row,
+/* Coach tour (TOURS.coach) — eight granular steps. GM still shares the four generic ones below
+   (identity/effects/gameplans/detail) since its own tour is unchanged. */
+.onboarding-card.onboarding-type .fo2-name,
+.onboarding-card.onboarding-modifier .fo2-disposition,
+.onboarding-card.onboarding-offbonus .fo2-effect-off-bonus,.onboarding-card.onboarding-offbonus .fo2-dice,
+.onboarding-card.onboarding-defbonus .fo2-effect-def-bonus,.onboarding-card.onboarding-defbonus .fo2-dice,
+.onboarding-card.onboarding-gameplan .fo2-rarity-lead,
+.onboarding-card.onboarding-relations .fo2-effect-player-relations,
+.onboarding-card.onboarding-development .fo2-effect-development-points,
+.onboarding-card.onboarding-adjustments .fo2-effect-in-game-adjustments,
+/* GM tour (TOURS.gm) — unchanged, still generic. */
 .onboarding-card.onboarding-identity .fo2-header,.onboarding-card.onboarding-identity .fo2-name-row,
 .onboarding-card.onboarding-effects .fo2-effects,
 .onboarding-card.onboarding-gameplans .fo2-rarity-row,
 .onboarding-card.onboarding-detail .fo2-mod-detail{opacity:1;position:relative;z-index:2;outline:3px solid var(--franchise);outline-offset:-3px;}
 .onboarding-card .rarity-corner{opacity:.2;}
-.onboarding-card.onboarding-rarity .rarity-corner,.onboarding-card.onboarding-gameplans .rarity-corner{opacity:1;}
+.onboarding-card.onboarding-gameplans .rarity-corner{opacity:1;}
 @media(max-width:700px){
   .nd-splash.setup-visible .nd-splash-body{top:clamp(52px,7vh,78px);}
   .nd-splash-setup{padding-top:clamp(175px,24vh,220px);}
