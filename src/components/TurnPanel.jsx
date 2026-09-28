@@ -117,7 +117,7 @@ function readAutoProgress() {
 // All nine rotation tiles remain visible. The coach gets a dedicated dock beside the team
 // name: below the home roster on the left, and above the away roster on the right. The
 // Adjustment slot sits beside the coach; coach Gameplans affect play without occupying a slot.
-function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, adjustmentCanPlay, onAdjustmentSlotClick, canPass, onPass, isActive, flip, contributing, timerPercent, benchContribution }) {
+function TeamBoard({ team, ids, hca, isMe, statusLabel, roleLabel, cardPlays, adjustmentCanPlay, onAdjustmentSlotClick, canPass, onPass, isActive, flip, contributing, timerPercent, benchContribution }) {
   const hand = team.hand || [];
   const activeIds = ids || team.activeIds || [];
   const starters = activeIds.map((id) => hand.find((c) => c.id === id)).filter(Boolean);
@@ -138,6 +138,7 @@ function TeamBoard({ team, ids, hca, statusLabel, roleLabel, cardPlays, adjustme
           </div>}
           <div className="t2-teamboard-name">
             {hca && !flip && <span className="t2-hca-tag">Home Court</span>}
+            {isMe && <span className="t2-you-tag">You</span>}
             <div className="t2-teamboard-name-line">
               {roleLabel && <span className={'t2-team-role ' + roleLabel.toLowerCase()}>{roleLabel}</span>}
               <div className="t2-teamboard-name-text">{team.name}</div>
@@ -813,7 +814,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
       <div className={'t2-body' + (logCollapsed ? ' log-collapsed' : '')}>
         <div className="t2-board">
           <TeamBoard
-            team={teamOf(topSide)} ids={idsOf(topSide)} hca={hcaOf(topSide)}
+            team={teamOf(topSide)} ids={idsOf(topSide)} hca={hcaOf(topSide)} isMe={teamOf(topSide) === myTeam}
             statusLabel={statusFor(topSide)} roleLabel={roleFor(teamOf(topSide))}
             cardPlays={cardsOf(topSide)} gameplanPlays={gameplansOf(topSide)}
             gameplanCanPlay={gameplanCanPlayFor(teamOf(topSide))} adjustmentCanPlay={adjustmentCanPlayFor(teamOf(topSide))}
@@ -878,7 +879,7 @@ export default function TurnPanel({ state, actions, m, myTeamId, onBack }) {
           </div>
 
           <TeamBoard
-            team={teamOf(bottomSide)} ids={idsOf(bottomSide)} hca={hcaOf(bottomSide)}
+            team={teamOf(bottomSide)} ids={idsOf(bottomSide)} hca={hcaOf(bottomSide)} isMe={teamOf(bottomSide) === myTeam}
             statusLabel={statusFor(bottomSide)} roleLabel={roleFor(teamOf(bottomSide))}
             cardPlays={cardsOf(bottomSide)} gameplanPlays={gameplansOf(bottomSide)}
             gameplanCanPlay={gameplanCanPlayFor(teamOf(bottomSide))} adjustmentCanPlay={adjustmentCanPlayFor(teamOf(bottomSide))}

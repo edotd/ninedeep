@@ -1440,6 +1440,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .t2-teamboard-name{text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-width:0;}
 .t2-teamboard-name-line{display:flex;align-items:center;justify-content:center;gap:12px;min-width:0;width:100%;}
 .t2-hca-tag{display:inline-block;font-family:var(--font-label);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--franchise);border:1px solid var(--franchise);padding:3px 8px;}
+.t2-you-tag{display:inline-block;font-family:var(--font-label);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--approved-ink);border:1px solid var(--approved-ink);padding:3px 8px;}
 .t2-teamboard-name-text{font-family:var(--font-display);font-size:36px;color:var(--file);line-height:1;}
 .t2-team-role{font-family:var(--font-display);font-size:20px;line-height:1;letter-spacing:.08em;color:var(--ink);background:var(--franchise);padding:5px 9px;white-space:nowrap;}
 .t2-team-role.defense{color:var(--file);background:transparent;border:2px solid var(--franchise);padding:3px 7px;}
@@ -2651,7 +2652,7 @@ body:has(.entry-screen){padding-bottom:0;}
   .mobile-shell:has(.t2-shell) .t2-teamboard-name-text{font-size:24px;line-height:1.05;white-space:normal;overflow:visible;text-overflow:clip;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
   .mobile-shell:has(.t2-shell) .t2-team-role{font-size:11px;padding:4px 6px;}
   .mobile-shell:has(.t2-shell) .t2-teamboard-status{font-size:8px;}
-  .mobile-shell:has(.t2-shell) .t2-hca-tag{font-size:7px;padding:2px 5px;}
+  .mobile-shell:has(.t2-shell) .t2-hca-tag,.mobile-shell:has(.t2-shell) .t2-you-tag{font-size:7px;padding:2px 5px;}
   .mobile-shell:has(.t2-shell) .t2-adjustment-mini{width:66px;height:66px;}
   .mobile-shell:has(.t2-shell) .t2-rollzone{flex:1;min-height:0;padding:4px 8px;gap:4px;overflow:hidden;}
   .mobile-shell:has(.t2-shell) .t2-rollzone-dual{gap:4px;}
