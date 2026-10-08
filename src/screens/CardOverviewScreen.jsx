@@ -18,13 +18,14 @@ import { rollFanbaseMod } from '../game/fanbase';
 // state.teams, so it has no effect on the actual game.
 function buildSampleTeam() {
   const team = { hand: [], activeIds: [], retainedStreak: 0, lastCoachName: null };
-  team.coach = drawCoachCard();
+  // Card Types always shows the Core version of each card.
+  team.coach = { ...drawCoachCard(), rarity: 'Core' };
   applyCoachRetention(team, team.coach);
   team.fanbaseArchetype = weightedPick(FANBASE_ARCHETYPES);
   rollFanbaseMod(team);
   const gm = drawGM();
   team.gmType = gm.type;
-  team.gmRarity = gm.rarity;
+  team.gmRarity = 'Core';
   team.gmTrait = gm.trait;
   initAttendance(team);
   team.advantageAvailable = team.fanbaseArchetype.name === 'Die Hard';
@@ -82,7 +83,8 @@ function CardOverviewSection({ accent, markType, eyebrow, title, body, howLabel,
 // An always-available reference for the three card types. Existing saved games can still
 // enter the old cardoverview phase, so the original deal action remains as a fallback.
 export default function CardOverviewScreen({ state, actions, myTeamId = 0, onBack }) {
-  const playerExample = state.teams?.[myTeamId]?.hand?.[0] || state.starPool?.[0];
+  const dealtExample = state.teams?.[myTeamId]?.hand?.[0] || state.starPool?.[0];
+  const playerExample = useMemo(() => (dealtExample ? { ...dealtExample, rarity: 'Core' } : dealtExample), [dealtExample]);
   const sampleTeam = useMemo(() => buildSampleTeam(), []);
   const matchupExample = useMemo(() => sampleMatchupCard(), []);
 

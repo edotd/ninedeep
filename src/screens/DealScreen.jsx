@@ -1,9 +1,10 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import BallMark from '../components/BallMark';
+import DeckShuffle from '../components/DeckShuffle';
 
 const ALL_FO_KINDS = ['coach', 'fanbase', 'market'];
 
-// Deck sits at rest just long enough to read as a real stack, then each card individually
+// The deck is shuffled first (DeckShuffle — "cut and slide", then a Deal My Hand button), then sits at rest just long enough to read as a real stack, then each card individually
 // comes off the deck and files into its own slot in the persistent bar below (per design ref
 // 4A, "Dealing the Nine") — that bar-filling-in IS the deal, not a separate animation next to
 // it (see DesktopBar/PersistentBar's dealProgress gating). Once every card has landed, this
@@ -40,8 +41,8 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
   const total = starters.length + bench.length + FO_KINDS.length;
   const instant = state.settings.actionLogSpeed === 'instant' || reducedMotion();
 
-  // 'deck' -> 'dealing' -> onDealDone.
-  const [phase, setPhase] = useState('deck');
+  // 'shuffle' -> 'deck' -> 'dealing' -> onDealDone. Instant / reduced-motion skips the shuffle.
+  const [phase, setPhase] = useState(instant ? 'deck' : 'shuffle');
   const [dealt, setDealt] = useState(instant ? total : 0);
   const [tokens, setTokens] = useState([]); // transient flying-card visuals, purely decorative
   const timersRef = useRef([]);
@@ -99,6 +100,7 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
         {phase === 'dealing' && <div className="deal-count">{dealt} / {total} dealt</div>}
       </div>
       <button className="reset-link deal-skip" onClick={handleSkip}>Skip ▸▸</button>
+      {phase === 'shuffle' && <DeckShuffle onDone={() => setPhase('deck')} />}
     </div>
   );
 }

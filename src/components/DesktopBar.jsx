@@ -226,8 +226,8 @@ export default function DesktopBar({ state, myTeamId, actions, dealProgress }) {
       <div className="db-section db-slots-fixed">
         <div className="db-heading gameplan">Coach Development</div>
         <div className="db-slots">
-          <div className="db-slot db-development-points"><strong>{fullyDealt ? team.developmentPoints || 0 : 0}</strong><span>Points</span></div>
           <div className="db-slot db-active-gameplan"><span>Gameplan</span><strong>{fullyDealt ? activeGameplan?.name || 'Pending' : 'Pending'}</strong></div>
+          <div className="db-slot db-development-points"><strong>{fullyDealt ? team.developmentPoints || 0 : 0}</strong><span>Points</span></div>
         </div>
       </div>
       {swap && (swap.phase === 'flip1' || swap.phase === 'flip2') && swap.stampRect && (() => {

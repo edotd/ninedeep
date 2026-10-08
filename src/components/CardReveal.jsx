@@ -1,8 +1,9 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import PlayerCard from './PlayerCard';
 import FrontOfficeCard from './FrontOfficeCard';
 import { PLAYER_NOTES } from './playerCardNotes';
 import { COACH_NOTES, GM_NOTES } from './frontOfficeNotes';
+import { ensureCoachSystems } from '../game/strategyCards';
 import './CardReveal.css';
 
 // The "Centre dot" card reveal (design: Card Reveal, variant 1B, Onboarding context) — the
@@ -185,11 +186,19 @@ function BallReveal({ t, face, cardW, up, rarity, cardHeight, onContinue }) {
 const HINT = 'Tap any part of the card to learn more';
 
 // kind: 'player' reveals `card`; 'coach' / 'gm' reveal the Front Office card off `team`.
-export default function CardReveal({ kind = 'player', card, team, onContinue }) {
+export default function CardReveal({ kind = 'player', card: dealtCard, team: dealtTeam, onContinue }) {
   const { cardW, up, label } = KINDS[kind];
   const notes = kind === 'player' ? PLAYER_NOTES : kind === 'coach' ? COACH_NOTES : GM_NOTES;
-  const sourceRarity = kind === 'player' ? card?.rarity : kind === 'coach' ? team?.coach?.rarity : team?.gmRarity;
-  const rarity = RAR[sourceRarity] ? sourceRarity : 'Core';
+  // Onboarding always teaches with the Core version of a card — the simplest frame and the
+  // shortest reveal — whatever rarity was actually dealt. Display-only copies; the real hand is
+  // untouched. (The coach's gameplans are rolled on the real team first so they match the game.)
+  const card = useMemo(() => (dealtCard ? { ...dealtCard, rarity: 'Core' } : dealtCard), [dealtCard]);
+  const team = useMemo(() => {
+    if (!dealtTeam?.coach) return dealtTeam;
+    ensureCoachSystems(dealtTeam);
+    return { ...dealtTeam, gmRarity: 'Core', coach: { ...dealtTeam.coach, rarity: 'Core' } };
+  }, [dealtTeam]);
+  const rarity = 'Core';
   const face = kind === 'player' ? <PlayerCard card={card} /> : <FrontOfficeCard kind={kind === 'coach' ? 'coach' : 'market'} team={team} />;
   const tm = BALL_T[rarity];
   const total = tm.total;

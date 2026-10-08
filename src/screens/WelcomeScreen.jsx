@@ -3,10 +3,9 @@ import BallMark from '../components/BallMark';
 import CardReveal from '../components/CardReveal';
 import './WelcomeScreen.css';
 
-const LAST_STEP = 'ready';
-
 // Steps (driven by GameShell): welcome -> cards -> [Learn More / Start Playing dialog] ->
-// reveal (player) -> reveal-coach -> reveal-gm -> ready. "Start Playing" in the dialog skips straight to the deal.
+// reveal (player) -> reveal-coach -> reveal-gm -> the deal (which opens with the deck shuffle).
+// "Start Playing" in the dialog skips straight to the deal.
 export default function WelcomeScreen({ teamName, onContinue, onStartPlaying, step = 'welcome', revealCard, revealTeam }) {
   const [choosing, setChoosing] = useState(false);
 
@@ -14,7 +13,6 @@ export default function WelcomeScreen({ teamName, onContinue, onStartPlaying, st
   if (step === 'reveal-coach' && revealTeam) return <CardReveal key={step} kind="coach" team={revealTeam} onContinue={onContinue} />;
   if (step === 'reveal-gm' && revealTeam) return <CardReveal key={step} kind="gm" team={revealTeam} onContinue={onContinue} />;
 
-  const isLast = step === LAST_STEP;
   const handleNext = () => (step === 'cards' ? setChoosing(true) : onContinue());
   return (
     <main className="welcome-screen">
@@ -45,10 +43,7 @@ export default function WelcomeScreen({ teamName, onContinue, onStartPlaying, st
               </div>
             </>
           )}
-          {step === 'ready' && (
-            <h1>Utilize your entire hand and build a dynasty!</h1>
-          )}
-          <button type="button" className="primary welcome-continue" onClick={handleNext}>{isLast ? 'Deal My Hand' : step === 'welcome' ? 'Continue' : 'Next'}</button>
+          <button type="button" className="primary welcome-continue" onClick={handleNext}>{step === 'welcome' ? 'Continue' : 'Next'}</button>
         </div>
       </section>
       {choosing && (

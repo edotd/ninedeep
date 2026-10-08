@@ -93,7 +93,7 @@ const PAGE_LABELS = {
 // `overlay`/`Screen` resolution feeds both shells so the two never drift out of sync.
 export default function GameShell({ state, actions, myTeamId, onNewEra, onDeleteRoom, hostNotifications, roomCode }) {
   const welcomeKey = `nine-deep-welcome-seen:${state.eraId}`;
-  const WELCOME_STEPS = ['welcome', 'cards', 'reveal', 'reveal-coach', 'reveal-gm', 'ready'];
+  const WELCOME_STEPS = ['welcome', 'cards', 'reveal', 'reveal-coach', 'reveal-gm'];
   const [welcomeStep, setWelcomeStep] = useState(() => {
     if (state.phase !== 'pullhand' || state.season !== 1) return 'done';
     try { return localStorage.getItem(welcomeKey) === '1' ? 'done' : 'welcome'; } catch { return 'welcome'; }
