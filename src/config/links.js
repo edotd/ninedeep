@@ -1,9 +1,4 @@
-// Where the Nine Deep social/contact links on the start screen point. These are placeholders
-// built from the 9deepgame.com handle — confirm each one (and set up the contact address)
-// before relying on them.
-export const SOCIAL_LINKS = {
-  twitter: 'https://x.com/9deepgame',
-  instagram: 'https://www.instagram.com/9deepgame',
-  tiktok: 'https://www.tiktok.com/@9deepgame',
-};
+// Where the Nine Deep start-screen links point. The social accounts aren't set up yet, so the
+// icons render disabled (see SplashScreen.jsx) — when they are, add their URLs here and turn the
+// icons into links. The contact address is a placeholder: confirm it has a real inbox behind it.
 export const CONTACT_LINK = 'mailto:contact@9deepgame.com';

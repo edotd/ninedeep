@@ -5,7 +5,6 @@ import { PLAYER_NOTES, rarityNote, rarityLabelNote } from './playerCardNotes';
 import RarityInfoPanel from './RarityInfoPanel';
 import { COACH_NOTES, GM_NOTES } from './frontOfficeNotes';
 import { ensureCoachSystems } from '../game/strategyCards';
-import { LEAGUE_ACCOLADES } from '../game/constants';
 import './CardReveal.css';
 
 // The "Centre dot" card reveal (design: Card Reveal, variant 1B, Onboarding context) — the
@@ -201,15 +200,15 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
     return { ...dealtTeam, gmRarity: 'Core', coach: { ...dealtTeam.coach, rarity: 'Core' } };
   }, [dealtTeam]);
   // The card's own accolade icon opens an inline, non-modal popover, so the reveal covers it
-  // with a region of its own that explains the accolade in the same modal as everything else.
+  // with a region of its own that gives a generic explanation of accolades in the same modal as
+  // everything else (never this particular player's accolade).
   const notes = useMemo(() => {
     if (kind !== 'player') return [...(kind === 'coach' ? COACH_NOTES : GM_NOTES), rarityNote('Core'), rarityLabelNote('Core')];
-    const def = card?.accolade ? LEAGUE_ACCOLADES.find((a) => a.name === card.accolade) : null;
     return [...PLAYER_NOTES, {
-      key: 'accolades', selector: '.pcard-accolade-block', label: def ? def.name : 'Accolades',
-      text: def ? def.description : 'League honors a player earns over their career. This player has none yet.',
+      key: 'accolades', selector: '.pcard-accolade-block', label: 'Accolades',
+      text: 'League honors a player earns over their career, like All-Star or MVP. Each one boosts the player\u2019s stats and shows up as a single icon on the card.',
     }, rarityNote('Core'), rarityLabelNote('Core')];
-  }, [kind, card]);
+  }, [kind]);
   const rarity = 'Core';
   const face = kind === 'player' ? <PlayerCard card={card} /> : <FrontOfficeCard kind={kind === 'coach' ? 'coach' : 'market'} team={team} />;
   const tm = BALL_T[rarity];
