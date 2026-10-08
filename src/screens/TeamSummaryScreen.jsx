@@ -7,7 +7,6 @@ import { PlayerLedgerIdentity, CostBlocks } from '../components/LedgerRow';
 import { formatCoins, rosterSalary, gmCost } from '../game/economy';
 import { FANBASE_BOOST_COST, ROSTER_SIZE } from '../game/constants';
 import CoachmarkTour from '../components/CoachmarkTour';
-import Coachmark from '../components/Coachmark';
 import { teamOutput } from '../game/matchup';
 import { teamSynergy } from '../game/skillsets';
 import { jerseyNumber, playerGrade } from '../game/cards';
@@ -28,7 +27,7 @@ const tabForSection = (section) => section === 'gameplan' ? 'chemistry' : sectio
 // the League tab here) — this screen is organised by category: The League, Gameplan/Chemistry,
 // Budget ledger, front office. No nine-slot navigation here (that's the persistent bar's job on
 // every other screen).
-export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId, onBack, focusSection, onFreeAgency, onDraftClass, onTeamRosters, onLineupPreviewChange, onboardingLeague = false, onOnboardingComplete }) {
+export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId, onBack, focusSection, onFreeAgency, onDraftClass, onTeamRosters, onLineupPreviewChange }) {
   // viewTeamId lets this screen show a DIFFERENT team's file — reached by clicking a team in
   // Standings — read-only: no substitutions, releases, or front-office moves, since those
   // actions always take myTeamId regardless of which file is on screen.
@@ -101,7 +100,6 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   // "active" condition is true again) — no separate transition-tracking needed here.
   const gameplanTabRef = useRef(null);
   const beginSeasonBtnRef = useRef(null);
-  const rostersButtonRef = useRef(null);
   const [showSeasonIssues, setShowSeasonIssues] = useState(false);
   useEffect(() => {
     if (!showSeasonIssues) return undefined;
@@ -244,7 +242,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             <div className="ts-section league-overview">
               <div className="ts-heading">The League</div>
               <div className="league-jump-actions">
-                {onTeamRosters && <button ref={rostersButtonRef} type="button" className="league-jump-button rosters" onClick={onTeamRosters}>Rosters</button>}
+                {onTeamRosters && <button type="button" className="league-jump-button rosters" onClick={onTeamRosters}>Rosters</button>}
                 <button type="button" className="league-jump-button free-agency" onClick={onFreeAgency}>Free Agency</button>
                 <button type="button" className="league-jump-button draft" onClick={onDraftClass}>Draft Class</button>
               </div>
@@ -431,18 +429,6 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           active={!readOnly && !team.lineupSet}
           steps={[{ targetRef: gameplanTabRef, title: 'Build Your Team', body: 'Set your starting five here — tap Gameplan to get started.' }]}
         />
-        {onboardingLeague && showSection('office') && (
-          <Coachmark
-            targetRef={rostersButtonRef}
-            title="League Rosters"
-            body="Open Rosters to view every franchise and inspect their full player cards. You can also add players from other teams to your scouting report."
-            step={1}
-            total={1}
-            lastLabel="Got It"
-            onDismiss={onOnboardingComplete}
-            onNext={onOnboardingComplete}
-          />
-        )}
         <CoachmarkTour
           storageKey="nine-deep-onboard-begin-season-seen"
           active={!readOnly && !onBack && team.lineupSet}

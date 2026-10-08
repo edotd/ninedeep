@@ -40,9 +40,7 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
   const total = starters.length + bench.length + FO_KINDS.length;
   const instant = state.settings.actionLogSpeed === 'instant' || reducedMotion();
 
-  // 'deck' -> 'dealing' -> onDealDone. No review grid in between any more — the post-deal Card
-  // Guide onboarding (see GameShell's postDealTour) and the League page it lands on already
-  // cover every card in more depth than a plain grid did.
+  // 'deck' -> 'dealing' -> onDealDone.
   const [phase, setPhase] = useState('deck');
   const [dealt, setDealt] = useState(instant ? total : 0);
   const [tokens, setTokens] = useState([]); // transient flying-card visuals, purely decorative

@@ -887,64 +887,9 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
   .db-player-slot.ringing,.db-player-slot.rejected,.db-sub-stamp{animation:none;}
 }
 
-/* Post-deal card guide. It uses the live card components, dims their sections, and lifts the
-   currently explained section back to full contrast with an orange interaction outline. */
-.card-onboarding-screen{position:fixed;inset:0;z-index:930;background:var(--ink);color:var(--file);overflow:auto;padding:clamp(24px,5vh,54px) 20px;box-sizing:border-box;}
-.card-onboarding-heading{text-align:center;margin-bottom:22px;}
-.card-onboarding-heading>span{font:10px var(--font-label);letter-spacing:.16em;text-transform:uppercase;color:var(--franchise);}
-.card-onboarding-heading h1{color:var(--file);margin:7px 0 0;font-size:clamp(38px,6vw,62px);}
-.card-onboarding-stage{width:min(900px,100%);margin:0 auto;display:grid;grid-template-columns:minmax(280px,440px) minmax(240px,1fr);gap:30px;align-items:center;}
-.card-onboarding-card{display:flex;justify-content:center;min-width:0;}
-.card-onboarding-card .pcard{width:min(100%,390px);}
-.card-onboarding-card .fo2-wrap{width:min(100%,440px);}
-.card-onboarding-copy{border:2px solid var(--franchise);background:var(--form);color:var(--ink);padding:24px;box-shadow:8px 8px 0 rgba(240,160,61,.22);}
-.card-onboarding-copy h2{margin:0 0 10px;font-size:30px;}
-.card-onboarding-copy p{margin:0;font:14px/1.65 var(--font-mono);}
-.card-onboarding-actions{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:22px;}
-.card-onboarding-actions .reset-link{color:var(--ink-muted);}
-.onboarding-card>*{opacity:.2;transition:opacity .2s ease,outline-color .2s ease;}
-/* Player Cards tour (see CardOnboardingScreen.jsx TOURS.player) — nine granular steps, one
-   card region each. */
-.onboarding-card.onboarding-archetype .pcard-name-block,
-.onboarding-card.onboarding-stats .pcard-stats,
-.onboarding-card.onboarding-skillset .pcard-skillset,
-.onboarding-card.onboarding-turns .pcard-years-row,
-.onboarding-card.onboarding-stage .pcard-header-stage,
-.onboarding-card.onboarding-tier .pcard-header-tier,
-.onboarding-card.onboarding-position .pcard-header-pos,
-.onboarding-card.onboarding-grade .pcard-grade,
-.onboarding-card.onboarding-cost .pcard-budgethit-row,
-/* Coach tour (TOURS.coach) — eight granular steps. GM still shares the four generic ones below
-   (identity/effects/gameplans/detail) since its own tour is unchanged. */
-.onboarding-card.onboarding-type .fo2-name,
-.onboarding-card.onboarding-modifier .fo2-disposition,
-.onboarding-card.onboarding-offbonus .fo2-effect-off-bonus,.onboarding-card.onboarding-offbonus .fo2-dice,
-.onboarding-card.onboarding-defbonus .fo2-effect-def-bonus,.onboarding-card.onboarding-defbonus .fo2-dice,
-.onboarding-card.onboarding-gameplan .fo2-rarity-lead,
-.onboarding-card.onboarding-relations .fo2-effect-player-relations,
-.onboarding-card.onboarding-development .fo2-effect-development-points,
-.onboarding-card.onboarding-adjustments .fo2-effect-in-game-adjustments,
-/* GM tour (TOURS.gm) — unchanged, still generic. */
-.onboarding-card.onboarding-identity .fo2-header,.onboarding-card.onboarding-identity .fo2-name-row,
-.onboarding-card.onboarding-effects .fo2-effects,
-.onboarding-card.onboarding-gameplans .fo2-rarity-row,
-.onboarding-card.onboarding-detail .fo2-mod-detail{opacity:1;position:relative;z-index:2;outline:3px solid var(--franchise);outline-offset:-3px;}
-.onboarding-card .rarity-corner{opacity:.2;}
-.onboarding-card.onboarding-gameplans .rarity-corner{opacity:1;}
 @media(max-width:700px){
   .nd-splash.setup-visible .nd-splash-body{top:clamp(52px,7vh,78px);}
   .nd-splash-setup{padding-top:clamp(175px,24vh,220px);}
-  .card-onboarding-screen{padding:18px 14px 28px;display:flex;flex-direction:column;justify-content:center;}
-  .card-onboarding-heading{margin-bottom:12px;}
-  .card-onboarding-stage{display:flex;flex-direction:column;gap:14px;}
-  .card-onboarding-card{width:min(100%,360px);}
-  .card-onboarding-copy{width:min(100%,420px);box-sizing:border-box;padding:17px 18px;}
-  .card-onboarding-copy h2{font-size:24px;}
-  .card-onboarding-copy p{font-size:12px;line-height:1.5;}
-  .card-onboarding-actions{margin-top:14px;}
-}
-@media(max-width:700px) and (max-height:760px){
-  .card-onboarding-screen{justify-content:flex-start;}
 }
 
 /* Full-card hover preview — position:fixed so it escapes .desktop-bar's overflow-x:auto

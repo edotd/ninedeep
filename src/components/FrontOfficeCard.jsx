@@ -122,13 +122,13 @@ function marketContent(team) {
   };
 }
 
-export default function FrontOfficeCard({ kind, team, onboardingFocus }) {
+export default function FrontOfficeCard({ kind, team }) {
   const meta = KIND_META[kind];
   const content = kind === 'coach' ? coachContent(team) : kind === 'fanbase' ? fanbaseContent(team) : marketContent(team);
   const coachRarity = kind === 'coach' ? (team.coach.rarity || 'Core') : kind === 'market' ? (team.gmRarity || 'Core') : null;
   return (
     <div className="fo2-wrap">
-      <div className={'fo2-card' + (coachRarity ? ` rarity-${coachRarity}` : '') + (onboardingFocus ? ` onboarding-card onboarding-${onboardingFocus}` : '')}>
+      <div className={'fo2-card' + (coachRarity ? ` rarity-${coachRarity}` : '')}>
         {coachRarity && (RARITY_CORNERS[coachRarity] || []).map((c) => <span key={c} className={'rarity-corner ' + c} />)}
         <CardTypeMark type="frontoffice" className="fo2-watermark" color="var(--ink-rule)" size={190} />
         <div className="fo2-logo-mark"><BallMark size={44} variant="onInk" /></div>

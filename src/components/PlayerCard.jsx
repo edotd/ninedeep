@@ -20,7 +20,7 @@ const LEGACY_DEVELOPMENT_CHANGES = {
 // that a normal card-select tap never trips it, short enough that it doesn't feel unresponsive.
 const LONG_PRESS_MS = 500;
 
-export default function PlayerCard({ card, onClick, selected, rosterLabel, compact, onRelease, onDevelop, onScout, scouted, revealPeak, alwaysShowOptions, contractLabel, signingNote, onboardingFocus }) {
+export default function PlayerCard({ card, onClick, selected, rosterLabel, compact, onRelease, onDevelop, onScout, scouted, revealPeak, alwaysShowOptions, contractLabel, signingNote }) {
   const tier = cardTier(card);
   const skillset = skillsetFor(card);
   const level = careerLevel(card);
@@ -66,7 +66,7 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
 
   return (
     <div
-      className={`pcard tier-${tier}${compact ? '' : ` rarity-${rarity}`}${positionClass}${compact ? ' pcard-compact' : ''}${selected ? ' selected' : ''}${expanded ? ' expanded' : ''}${onboardingFocus ? ` onboarding-card onboarding-${onboardingFocus}` : ''}`}
+      className={`pcard tier-${tier}${compact ? '' : ` rarity-${rarity}`}${positionClass}${compact ? ' pcard-compact' : ''}${selected ? ' selected' : ''}${expanded ? ' expanded' : ''}`}
       onClick={handleClick}
       onTouchStart={handleTouchStart}
       onTouchEnd={clearPressTimer}

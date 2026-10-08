@@ -28,7 +28,6 @@ import DraftClassScreen from '../screens/DraftClassScreen';
 import TeamRostersScreen from '../screens/TeamRostersScreen';
 import WelcomeScreen from '../screens/WelcomeScreen';
 import { bestCard } from '../game/cards';
-import CardOnboardingScreen from '../screens/CardOnboardingScreen';
 import FranchiseMasthead from './FranchiseMasthead';
 
 const SCREENS = {
@@ -94,7 +93,6 @@ const PAGE_LABELS = {
 // `overlay`/`Screen` resolution feeds both shells so the two never drift out of sync.
 export default function GameShell({ state, actions, myTeamId, onNewEra, onDeleteRoom, hostNotifications, roomCode }) {
   const welcomeKey = `nine-deep-welcome-seen:${state.eraId}`;
-  const cardOnboardingKey = `nine-deep-card-onboarding-seen:${state.eraId}`;
   const WELCOME_STEPS = ['welcome', 'cards', 'reveal', 'players', 'coachgm', 'ready'];
   const [welcomeStep, setWelcomeStep] = useState(() => {
     if (state.phase !== 'pullhand' || state.season !== 1) return 'done';
@@ -242,27 +240,8 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
   // everyone else's screen to Team Summary too. Now each player moves on at their own pace,
   // and TeamSummaryScreen treats 'pullhand' the same as 'teamsummary' once reached this way.
   const [pastDeal, setPastDeal] = useState(false);
-  const [postDealTour, setPostDealTour] = useState(null); // null | player | coach | gm | league
   useEffect(() => { if (state.phase !== 'pullhand') setPastDeal(false); }, [state.phase]);
-  const finishDeal = () => {
-    let seen = false;
-    try { seen = localStorage.getItem(cardOnboardingKey) === '1'; } catch { /* ignore */ }
-    if (seen) setPastDeal(true);
-    else setPostDealTour('player');
-  };
-  const advanceCardOnboarding = () => {
-    if (postDealTour === 'player') setPostDealTour('coach');
-    else if (postDealTour === 'coach') setPostDealTour('gm');
-    else if (postDealTour === 'gm') {
-      setPastDeal(true);
-      setTeamFocus({ section: 'league', request: Date.now() });
-      setPostDealTour('league');
-    }
-  };
-  const finishLeagueOnboarding = () => {
-    try { localStorage.setItem(cardOnboardingKey, '1'); } catch { /* ignore */ }
-    setPostDealTour(null);
-  };
+  const finishDeal = () => setPastDeal(true);
   const effectivePhase = state.phase === 'pullhand' && pastDeal ? 'teamsummary' : state.phase;
 
   // TeamSummaryScreen renders two ways: as the base phase screen once the flow reaches
@@ -326,7 +305,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
   if (overlay === 'glossary') overlayBody = <GlossaryScreen key={screenKey} state={state} onBack={close} />;
   else if (overlay === 'settings') overlayBody = <SettingsScreen key={screenKey} state={state} actions={actions} onBack={close} onNewEra={onNewEra} onDeleteRoom={onDeleteRoom} hostNotifications={hostNotifications} />;
   else if (overlay === 'standings') overlayBody = <LeagueScreen key={screenKey} state={state} myTeamId={myTeamId} onBack={close} onViewTeam={(id) => openTeamView(id, 'standings')} />;
-  else if (overlay === 'team') overlayBody = <TeamSummaryScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} viewTeamId={viewTeamId} onBack={closeTeamView} focusSection={teamFocus} onFreeAgency={openFreeAgency} onDraftClass={() => setOverlay('draftclass')} onTeamRosters={() => setOverlay('teamrosters')} onLineupPreviewChange={setLineupPreview} onboardingLeague={postDealTour === 'league'} onOnboardingComplete={finishLeagueOnboarding} />;
+  else if (overlay === 'team') overlayBody = <TeamSummaryScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} viewTeamId={viewTeamId} onBack={closeTeamView} focusSection={teamFocus} onFreeAgency={openFreeAgency} onDraftClass={() => setOverlay('draftclass')} onTeamRosters={() => setOverlay('teamrosters')} onLineupPreviewChange={setLineupPreview} />;
   else if (overlay === 'freeagency') overlayBody = <FreeAgencyScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onBack={close} onGoToFranchise={() => setOverlay(effectivePhase === 'teamsummary' ? null : 'team')} />;
   else if (overlay === 'draftclass') overlayBody = <DraftClassScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
   else if (overlay === 'teamrosters') overlayBody = <TeamRostersScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
@@ -334,7 +313,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
 
   const Screen = SCREENS[effectivePhase];
   const mainBody = overlayBody || (Screen
-    ? <Screen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onViewTeam={(id) => openTeamView(id, null)} onFreeAgency={openFreeAgency} onDraftClass={() => setOverlay('draftclass')} onTeamRosters={() => setOverlay('teamrosters')} onEndGame={onNewEra} dealProgress={dealProgress} onDealProgress={setDealProgress} onDealDone={finishDeal} onLineupPreviewChange={setLineupPreview} onboardingLeague={postDealTour === 'league'} onOnboardingComplete={finishLeagueOnboarding} />
+    ? <Screen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onViewTeam={(id) => openTeamView(id, null)} onFreeAgency={openFreeAgency} onDraftClass={() => setOverlay('draftclass')} onTeamRosters={() => setOverlay('teamrosters')} onEndGame={onNewEra} dealProgress={dealProgress} onDealProgress={setDealProgress} onDealDone={finishDeal} onLineupPreviewChange={setLineupPreview} />
     : (
       <div className="screen">
         <h1>Something broke</h1>
@@ -347,10 +326,6 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
     <div className="welcome-onboarding">
       <WelcomeScreen teamName={myTeam?.name} step={welcomeStep} onContinue={advanceWelcome} onStartPlaying={finishWelcome} revealCard={welcomeStep === 'reveal' ? bestCard(myTeam?.hand) : null} />
     </div>
-  );
-
-  if (['player', 'coach', 'gm'].includes(postDealTour)) return (
-    <CardOnboardingScreen key={postDealTour} type={postDealTour} team={myTeam} onComplete={advanceCardOnboarding} />
   );
 
   if (isDesktop && showChrome) {
