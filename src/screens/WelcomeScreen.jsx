@@ -6,7 +6,7 @@ import './WelcomeScreen.css';
 const LAST_STEP = 'ready';
 
 // Steps (driven by GameShell): welcome -> cards -> [Learn More / Start Playing dialog] ->
-// reveal -> players -> coachgm -> ready. "Start Playing" in the dialog skips straight to the deal.
+// reveal -> ready. "Start Playing" in the dialog skips straight to the deal.
 export default function WelcomeScreen({ teamName, onContinue, onStartPlaying, step = 'welcome', revealCard }) {
   const [choosing, setChoosing] = useState(false);
 
@@ -41,18 +41,6 @@ export default function WelcomeScreen({ teamName, onContinue, onStartPlaying, st
                 <div className="welcome-mini-card office coach" style={{ '--fan-index': 0 }}>Coach</div>
                 <div className="welcome-mini-card office gm" style={{ '--fan-index': 1 }}>GM</div>
               </div>
-            </>
-          )}
-          {step === 'players' && (
-            <>
-              <h1>The Players</h1>
-              <p>Five starters and 2 bench players. Your starters directly contribute to your offensive and defensive output. Your bench players, a sixth man and a depth player, contribute in special ways that are unique to their cards.</p>
-            </>
-          )}
-          {step === 'coachgm' && (
-            <>
-              <h1>The Coach and GM</h1>
-              <p>Your Coach sets the gameplan and helps drive your franchise forward. Your GM helps negotiate better deals, spot young talent early or increase the size of your budget.</p>
             </>
           )}
           {step === 'ready' && (

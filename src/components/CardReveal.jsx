@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import PlayerCard from './PlayerCard';
+import { PLAYER_NOTES } from './playerCardNotes';
 import './CardReveal.css';
 
 // The "Centre dot" card reveal (design: Card Reveal, variant 1B, Onboarding context) — the
@@ -12,9 +13,9 @@ import './CardReveal.css';
 // centre sits at 201,440) and the whole stage is scaled to fit the viewport, so the timings and
 // offsets below are the design's numbers untouched. The face is the player's real card.
 
-const INK = '#1E2B47', IRULE = '#3C4A69', IMUTED = '#A9B4C9', FILE = '#E6DCC4',
+const INK = '#1E2B47', IRULE = '#3C4A69', FILE = '#E6DCC4',
   STAMP = '#B5431F', SINK = '#E8825C', FR = '#F0A03D';
-const BEB = 'var(--font-display)', ARC = 'var(--font-label)', MONO = 'var(--font-mono)';
+const ARC = 'var(--font-label)';
 const c01 = (v) => Math.max(0, Math.min(1, v));
 const lerp = (a, b, p) => a + (b - a) * p;
 const P = (t, s, d) => c01((t - s) / d);
@@ -51,7 +52,7 @@ function Sheen({ t, tm, cw, ch }) {
   return <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>{pass(tm.sheen1, 560, 120)}{pass(tm.sheen2, 460, 60)}</div>;
 }
 
-function Chrome({ t, tm, rarity, subtitle, cw, ch, onContinue, children }) {
+function Chrome({ t, tm, rarity, cw, ch, onContinue, children }) {
   const L = rarity === 'Legendary';
   const ui = eo(P(t, tm.ui, 500));
   const flash = tm.flash != null ? Math.max(0, 1 - P(t, tm.flash, 320)) * (t >= tm.flash ? 1 : 0) : 0;
@@ -62,10 +63,6 @@ function Chrome({ t, tm, rarity, subtitle, cw, ch, onContinue, children }) {
   return (
     <div style={{ position: 'absolute', inset: 0, background: INK, overflow: 'hidden' }}>
       {glow > 0 && <div style={{ position: 'absolute', left: 201 - 320, top: 440 - 320, width: 640, height: 640, borderRadius: '50%', opacity: glow, background: 'radial-gradient(closest-side, rgba(240,160,61,0.42), rgba(240,160,61,0.12) 55%, transparent)' }} />}
-      <div style={{ position: 'absolute', top: 92, left: 0, right: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, opacity: ui, transform: `translateY(${lerp(-10, 0, ui)}px)` }}>
-        <span style={{ fontFamily: MONO, fontSize: 13, letterSpacing: '0.18em', color: IMUTED }}>ERA 01 · DRAFT DAY</span>
-        <span style={{ fontFamily: BEB, fontSize: 40, lineHeight: 0.84, color: FILE }}>YOUR FRANCHISE PLAYER</span>
-      </div>
       <div style={{ position: 'absolute', left: 201, top: 440, width: 0, height: 0 }}>
         {children}
         {L && badgeScale > 0 && (
@@ -75,8 +72,7 @@ function Chrome({ t, tm, rarity, subtitle, cw, ch, onContinue, children }) {
           >LEGENDARY</div>
         )}
       </div>
-      <div style={{ position: 'absolute', left: 24, right: 24, bottom: 54, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, opacity: ui, transform: `translateY(${lerp(14, 0, ui)}px)` }}>
-        <span style={{ fontFamily: MONO, fontSize: 13, letterSpacing: '0.16em', color: RAR[rarity].color }}>{subtitle}</span>
+      <div style={{ position: 'absolute', left: 24, right: 24, bottom: 54, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, opacity: ui, transform: `translateY(${lerp(14, 0, ui)}px)` }}>
         <button
           type="button"
           onClick={onContinue}
@@ -150,7 +146,7 @@ function BallReveal({ t, card, rarity, cardHeight, onContinue }) {
   });
   const pw = lerp(dot * 1.5, cw, g), ph = lerp(dot * 1.5, ch, g);
   return (
-    <Chrome t={t} tm={tm} rarity={rarity} subtitle={`${rarity.toUpperCase()} · ${card.position.toUpperCase()}`} cw={cw} ch={ch} onContinue={onContinue}>
+    <Chrome t={t} tm={tm} rarity={rarity} cw={cw} ch={ch} onContinue={onContinue}>
       {ballOut < 1 && (
         <div style={{ position: 'absolute', left: -S / 2, top: -S / 2, width: S, height: S, transform: `translate(${sx}px,${sy}px) scale(${c01(pop) * csc * (1 + 0.4 * ballOut)}) rotate(${spin}deg)`, opacity: 1 - ballOut }}>
           <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: FILE }} />
@@ -177,16 +173,24 @@ function BallReveal({ t, card, rarity, cardHeight, onContinue }) {
   );
 }
 
+const HINT = 'Tap any part of the card to learn what it means.';
+
 export default function CardReveal({ card, onContinue }) {
   const rarity = RAR[card.rarity] ? card.rarity : 'Core';
-  const total = BALL_T[rarity].total;
+  const tm = BALL_T[rarity];
+  const total = tm.total;
   const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const [clock, setT] = useState(0);
   const t = reduced ? total : clock;
-  const [run, setRun] = useState(0);
   const [scale, setScale] = useState(1);
   const [cardHeight, setCardHeight] = useState(500);
+  const [boxes, setBoxes] = useState([]);
+  const [activeKey, setActiveKey] = useState(null);
   const measureRef = useRef(null);
+  const stageRef = useRef(null);
+  const ready = t >= tm.ui + 250;
+  const ui = eo(P(t, tm.ui, 500));
+  const active = boxes.find((box) => box.key === activeKey);
 
   // The real card's height varies (accolade rows, signing notes), so measure it off-screen once
   // and size the frame/reveal clip to it rather than the design's fixed mock face.
@@ -213,17 +217,55 @@ export default function CardReveal({ card, onContinue }) {
     };
     id = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(id);
-  }, [total, reduced, run]);
+  }, [total, reduced]);
+
+  // Once the card has settled, lay a tappable region over each explained part of the real card.
+  // Rects are read in screen space and divided back out by the stage's own scale.
+  useLayoutEffect(() => {
+    if (!ready) return undefined;
+    const measure = () => {
+      const stage = stageRef.current;
+      if (!stage) return;
+      const sr = stage.getBoundingClientRect();
+      const sc = sr.width / STAGE_W || 1;
+      const pad = 5;
+      setBoxes(PLAYER_NOTES.flatMap((note) => {
+        const el = stage.querySelector('.card-reveal-face ' + note.selector);
+        if (!el) return [];
+        const r = el.getBoundingClientRect();
+        if (r.width < 2 || r.height < 2) return [];
+        return [{ ...note, left: (r.left - sr.left) / sc - pad, top: (r.top - sr.top) / sc - pad, width: r.width / sc + pad * 2, height: r.height / sc + pad * 2 }];
+      }));
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [ready, scale, card, cardHeight]);
 
   return (
     <div className="card-reveal-overlay" role="dialog" aria-modal="true" aria-label="Your franchise player">
       <div ref={measureRef} className="card-reveal-measure" aria-hidden="true"><PlayerCard card={card} /></div>
       <div
+        ref={stageRef}
         className="card-reveal-stage"
         style={{ width: STAGE_W, height: STAGE_H, marginLeft: -STAGE_W / 2, marginTop: -STAGE_H / 2, transform: `scale(${scale})` }}
-        onClick={(e) => { if (e.target === e.currentTarget || !e.target.closest('button')) setRun((n) => n + 1); }}
       >
         <BallReveal t={t} card={card} rarity={rarity} cardHeight={cardHeight} onContinue={onContinue} />
+        <div className="card-reveal-explain" style={{ opacity: ui, transform: `translateY(${lerp(-10, 0, ui)}px)` }} aria-live="polite">
+          <span className="card-reveal-explain-label">{active ? active.label : 'Your franchise player'}</span>
+          <span className="card-reveal-explain-text">{active ? active.text : HINT}</span>
+        </div>
+        {ready && boxes.map((box) => (
+          <button
+            key={box.key}
+            type="button"
+            className={'card-reveal-hotspot' + (box.key === activeKey ? ' active' : '')}
+            style={{ left: box.left, top: box.top, width: box.width, height: box.height }}
+            aria-label={`${box.label}: ${box.text}`}
+            aria-pressed={box.key === activeKey}
+            onClick={() => setActiveKey((k) => (k === box.key ? null : box.key))}
+          />
+        ))}
       </div>
     </div>
   );
