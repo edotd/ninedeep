@@ -2783,3 +2783,18 @@ body:has(.trans-screen){padding-bottom:0;}
 .nd-splash-footer-rule{width:1px;height:16px;background:var(--file-muted);opacity:.5;}
 .nd-splash-footer .contact{font-family:var(--font-label);font-size:10px;letter-spacing:.14em;text-transform:uppercase;}
 @media (max-height:760px){.nd-splash.setup-visible{padding-bottom:56px;box-sizing:border-box;}}
+.rarity-info-backdrop{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:18px;background:rgba(10,18,36,.72);}
+.rarity-info-panel{position:relative;width:min(430px,100%);max-height:min(680px,calc(100dvh - 36px));overflow:auto;padding:22px;background:var(--form);border:3px solid var(--rarity-accent);border-radius:12px;box-shadow:0 22px 60px rgba(0,0,0,.45);color:var(--ink);text-align:left;}
+.rarity-info-panel.rarity-Core{--rarity-accent:#C4715A;}.rarity-info-panel.rarity-Prime{--rarity-accent:var(--stamp);}.rarity-info-panel.rarity-Signature{--rarity-accent:var(--stamp-text);}.rarity-info-panel.rarity-Legendary{--rarity-accent:var(--franchise);}
+.rarity-info-close{position:absolute;top:10px;right:10px;width:34px;height:34px;border:1px solid var(--form-rule);border-radius:50%;background:var(--file);color:var(--ink);cursor:pointer;}
+.rarity-info-selected{display:flex;align-items:center;gap:13px;color:var(--rarity-accent);padding-right:38px;}
+.rarity-info-selected div{display:flex;flex-direction:column;gap:1px;}
+.rarity-info-selected span{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-muted);}
+.rarity-info-selected strong{font-family:var(--font-display);font-size:34px;line-height:1;text-transform:uppercase;}
+.rarity-info-panel>p{font-family:var(--font-mono);font-size:12px;line-height:1.55;}
+.rarity-info-scale{display:flex;flex-direction:column;border-top:1px solid var(--form-rule);}
+.rarity-info-scale>div{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:center;padding:9px 8px;border-bottom:1px solid var(--form-rule);color:var(--ink-muted);}
+.rarity-info-scale>div.selected{background:color-mix(in srgb,var(--rarity-accent) 12%,transparent);color:var(--ink);}
+.rarity-info-scale span{display:flex;flex-direction:column;font-family:var(--font-mono);font-size:10px;line-height:1.35;}
+.rarity-info-scale b{font-family:var(--font-label);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);}
+.rarity-info-panel .rarity-info-note{margin-bottom:0;color:var(--ink-muted);font-size:10px;}

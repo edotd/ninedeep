@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import PlayerCard from './PlayerCard';
 import FrontOfficeCard from './FrontOfficeCard';
-import { PLAYER_NOTES, rarityNote } from './playerCardNotes';
+import { PLAYER_NOTES, rarityNote, rarityLabelNote } from './playerCardNotes';
+import RarityInfoPanel from './RarityInfoPanel';
 import { COACH_NOTES, GM_NOTES } from './frontOfficeNotes';
 import { ensureCoachSystems } from '../game/strategyCards';
 import { LEAGUE_ACCOLADES } from '../game/constants';
@@ -78,7 +79,7 @@ function Chrome({ t, tm, rarity, cw, ch, onContinue, children }) {
       <div style={{ position: 'absolute', left: 201, top: 440, width: 0, height: 0 }}>
         {children}
         {badgeScale > 0 && (
-          <div style={{ position: 'absolute', left: cw / 2 - 8, top: -ch / 2 - 13, transform: `translateX(-100%) scale(${badgeScale})`, transformOrigin: '100% 0',
+          <div className="card-reveal-badge" style={{ position: 'absolute', left: cw / 2 - 8, top: -ch / 2 - 13, transform: `translateX(-100%) scale(${badgeScale})`, transformOrigin: '100% 0',
             background: RAR[rarity].color, padding: '6px 9px', fontFamily: ARC, fontSize: 13, letterSpacing: '0.14em', color: rarity === 'Core' ? FILE : INK, whiteSpace: 'nowrap',
             boxShadow: L ? `0 0 ${26 * bloom}px ${6 * bloom}px rgba(240,160,61,${0.75 * bloom})` : 'none' }}
           >{rarity.toUpperCase()}</div>
@@ -202,12 +203,12 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
   // The card's own accolade icon opens an inline, non-modal popover, so the reveal covers it
   // with a region of its own that explains the accolade in the same modal as everything else.
   const notes = useMemo(() => {
-    if (kind !== 'player') return [...(kind === 'coach' ? COACH_NOTES : GM_NOTES), rarityNote('Core')];
+    if (kind !== 'player') return [...(kind === 'coach' ? COACH_NOTES : GM_NOTES), rarityNote('Core'), rarityLabelNote('Core')];
     const def = card?.accolade ? LEAGUE_ACCOLADES.find((a) => a.name === card.accolade) : null;
     return [...PLAYER_NOTES, {
       key: 'accolades', selector: '.pcard-accolade-block', label: def ? def.name : 'Accolades',
       text: def ? def.description : 'League honors a player earns over their career. This player has none yet.',
-    }, rarityNote('Core')];
+    }, rarityNote('Core'), rarityLabelNote('Core')];
   }, [kind, card]);
   const rarity = 'Core';
   const face = kind === 'player' ? <PlayerCard card={card} /> : <FrontOfficeCard kind={kind === 'coach' ? 'coach' : 'market'} team={team} />;
@@ -222,7 +223,8 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
   const [activeKey, setActiveKey] = useState(null);
   const measureRef = useRef(null);
   const stageRef = useRef(null);
-  const ready = t >= tm.ui + 250;
+  // Not until the rarity label has finished popping in, so its tap target is measured at rest.
+  const ready = t >= Math.max(tm.ui + 250, tm.badge + 600);
   const ui = eo(P(t, tm.ui, 500));
   const active = boxes.find((box) => box.key === activeKey);
   // Where the selected region sits on screen (the stage is centred and scaled to fit), so the
@@ -281,7 +283,7 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
       const sc = sr.width / STAGE_W || 1;
       const pad = 5;
       setBoxes(notes.flatMap((note) => {
-        const el = stage.querySelector('.card-reveal-face ' + note.selector);
+        const el = stage.querySelector((note.global ? '' : '.card-reveal-face ') + note.selector);
         if (!el) return [];
         let r = el.getBoundingClientRect();
         if (r.width < 2 || r.height < 2) return [];
@@ -318,7 +320,7 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
           />
         ))}
       </div>
-      {spot && (
+      {spot && !active.panel && (
         <svg className="card-reveal-spotlight" aria-hidden="true">
           <defs>
             <filter id="crSoft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="9" /></filter>
@@ -330,7 +332,8 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
           <rect width="100%" height="100%" fill="rgba(18,26,46,0.78)" mask="url(#crHole)" />
         </svg>
       )}
-      {active && (
+      {active?.panel === 'rarity' && <RarityInfoPanel rarity="Core" onClose={() => setActiveKey(null)} />}
+      {active && !active.panel && (
         <div className="card-reveal-modal-backdrop" role="presentation" onClick={() => setActiveKey(null)}>
           <section
             className="card-reveal-modal"

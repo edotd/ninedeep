@@ -35,10 +35,11 @@ function coachContent(team) {
   // not what's currently active.
   ensureCoachSystems(team);
   const [primaryGameplan, secondaryGameplan] = coach.gameplans || [];
-  const gameplanText = [
+  // Always one gameplan per line, never joined into a single run-on string.
+  const gameplanLines = [
     primaryGameplan && `Primary: ${primaryGameplan.name}`,
     secondaryGameplan && `Secondary: ${secondaryGameplan.name}`,
-  ].filter(Boolean).join(' · ');
+  ].filter(Boolean);
   return {
     name: coach.archetype,
     qualifier: team.retainedStreak ? `Retained ${team.retainedStreak} season${team.retainedStreak === 1 ? '' : 's'}` : null,
@@ -53,7 +54,7 @@ function coachContent(team) {
       { label: 'In-Game Adjustments', value: `${matchupCardCountFor(team)} per match`, tone: 'approved-ink' },
     ],
     detail: `${coach.modifier} — ${coach.ability || 'Improves the coach’s base Offense and Defense bonuses.'}`,
-    rarityLead: { label: 'Gameplans', value: gameplanText || 'None' },
+    rarityLead: { label: 'Gameplans', lines: gameplanLines.length ? gameplanLines : ['None'] },
     duration: 'Holds Through Era 01',
   };
 }
@@ -155,7 +156,7 @@ export default function FrontOfficeCard({ kind, team }) {
             </div>
           ))}
         </div>
-        {coachRarity && <div className="fo2-rarity-row">{content.rarityLead && <div className="fo2-rarity-lead"><span>{content.rarityLead.label}</span><strong>{content.rarityLead.value}</strong></div>}</div>}
+        {coachRarity && <div className="fo2-rarity-row">{content.rarityLead && <div className="fo2-rarity-lead"><span>{content.rarityLead.label}</span>{content.rarityLead.lines.map((line) => <strong key={line}>{line}</strong>)}</div>}</div>}
         {content.detail && <div className="fo2-mod-detail">{content.detail}</div>}
       </div>
     </div>
