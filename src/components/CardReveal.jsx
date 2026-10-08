@@ -4,6 +4,7 @@ import FrontOfficeCard from './FrontOfficeCard';
 import { PLAYER_NOTES } from './playerCardNotes';
 import { COACH_NOTES, GM_NOTES } from './frontOfficeNotes';
 import { ensureCoachSystems } from '../game/strategyCards';
+import { LEAGUE_ACCOLADES } from '../game/constants';
 import './CardReveal.css';
 
 // The "Centre dot" card reveal (design: Card Reveal, variant 1B, Onboarding context) — the
@@ -188,7 +189,6 @@ const HINT = 'Tap any part of the card to learn more';
 // kind: 'player' reveals `card`; 'coach' / 'gm' reveal the Front Office card off `team`.
 export default function CardReveal({ kind = 'player', card: dealtCard, team: dealtTeam, onContinue }) {
   const { cardW, up, label } = KINDS[kind];
-  const notes = kind === 'player' ? PLAYER_NOTES : kind === 'coach' ? COACH_NOTES : GM_NOTES;
   // Onboarding always teaches with the Core version of a card — the simplest frame and the
   // shortest reveal — whatever rarity was actually dealt. Display-only copies; the real hand is
   // untouched. (The coach's gameplans are rolled on the real team first so they match the game.)
@@ -198,6 +198,16 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
     ensureCoachSystems(dealtTeam);
     return { ...dealtTeam, gmRarity: 'Core', coach: { ...dealtTeam.coach, rarity: 'Core' } };
   }, [dealtTeam]);
+  // The card's own accolade icon opens an inline, non-modal popover, so the reveal covers it
+  // with a region of its own that explains the accolade in the same modal as everything else.
+  const notes = useMemo(() => {
+    if (kind !== 'player') return kind === 'coach' ? COACH_NOTES : GM_NOTES;
+    const def = card?.accolade ? LEAGUE_ACCOLADES.find((a) => a.name === card.accolade) : null;
+    return [...PLAYER_NOTES, {
+      key: 'accolades', selector: '.pcard-accolade-block', label: def ? def.name : 'Accolades',
+      text: def ? def.description : 'League honors a player earns over their career. This player has none yet.',
+    }];
+  }, [kind, card]);
   const rarity = 'Core';
   const face = kind === 'player' ? <PlayerCard card={card} /> : <FrontOfficeCard kind={kind === 'coach' ? 'coach' : 'market'} team={team} />;
   const tm = BALL_T[rarity];
@@ -214,6 +224,8 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
   const ready = t >= tm.ui + 250;
   const ui = eo(P(t, tm.ui, 500));
   const active = boxes.find((box) => box.key === activeKey);
+  // Park the modal on whichever half of the screen the selected region isn't in, so it never covers what it's explaining.
+  const spotlightMid = active ? (window.innerHeight - STAGE_H * scale) / 2 + (active.top + active.height / 2) * scale : 0;
 
   // The real card's height varies (accolade rows, signing notes), so measure it off-screen once
   // and size the frame/reveal clip to it rather than the design's fixed mock face.
@@ -294,7 +306,22 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
         ))}
       </div>
       {active && (
-        <div className="card-reveal-modal-backdrop" role="presentation" onClick={() => setActiveKey(null)}>
+        <div
+          className="card-reveal-spotlight"
+          style={{
+            left: (window.innerWidth - STAGE_W * scale) / 2 + active.left * scale,
+            top: (window.innerHeight - STAGE_H * scale) / 2 + active.top * scale,
+            width: active.width * scale,
+            height: active.height * scale,
+          }}
+        />
+      )}
+      {active && (
+        <div
+          className={'card-reveal-modal-backdrop ' + (spotlightMid > window.innerHeight / 2 ? 'top' : 'bottom')}
+          role="presentation"
+          onClick={() => setActiveKey(null)}
+        >
           <section className="card-reveal-modal" role="dialog" aria-modal="true" aria-label={active.label} onClick={(event) => event.stopPropagation()}>
             <h2>{active.label}</h2>
             <p>{active.text}</p>
