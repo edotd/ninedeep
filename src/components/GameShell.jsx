@@ -27,6 +27,7 @@ import ScrollToTopButton from './ScrollToTopButton';
 import DraftClassScreen from '../screens/DraftClassScreen';
 import TeamRostersScreen from '../screens/TeamRostersScreen';
 import WelcomeScreen from '../screens/WelcomeScreen';
+import { bestCard } from '../game/cards';
 import CardOnboardingScreen from '../screens/CardOnboardingScreen';
 import FranchiseMasthead from './FranchiseMasthead';
 
@@ -94,7 +95,7 @@ const PAGE_LABELS = {
 export default function GameShell({ state, actions, myTeamId, onNewEra, onDeleteRoom, hostNotifications, roomCode }) {
   const welcomeKey = `nine-deep-welcome-seen:${state.eraId}`;
   const cardOnboardingKey = `nine-deep-card-onboarding-seen:${state.eraId}`;
-  const WELCOME_STEPS = ['welcome', 'cards', 'players', 'coachgm', 'ready'];
+  const WELCOME_STEPS = ['welcome', 'cards', 'reveal', 'players', 'coachgm', 'ready'];
   const [welcomeStep, setWelcomeStep] = useState(() => {
     if (state.phase !== 'pullhand' || state.season !== 1) return 'done';
     try { return localStorage.getItem(welcomeKey) === '1' ? 'done' : 'welcome'; } catch { return 'welcome'; }
@@ -344,7 +345,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
 
   if (welcomeStep !== 'done') return (
     <div className="welcome-onboarding">
-      <WelcomeScreen teamName={myTeam?.name} step={welcomeStep} onContinue={advanceWelcome} />
+      <WelcomeScreen teamName={myTeam?.name} step={welcomeStep} onContinue={advanceWelcome} onStartPlaying={finishWelcome} revealCard={welcomeStep === 'reveal' ? bestCard(myTeam?.hand) : null} />
     </div>
   );
 

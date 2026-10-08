@@ -1,10 +1,19 @@
+import { useState } from 'react';
 import BallMark from '../components/BallMark';
+import CardReveal from '../components/CardReveal';
 import './WelcomeScreen.css';
 
-const STEPS = ['welcome', 'cards', 'players', 'coachgm', 'ready'];
+const LAST_STEP = 'ready';
 
-export default function WelcomeScreen({ teamName, onContinue, step = 'welcome' }) {
-  const isLast = step === STEPS[STEPS.length - 1];
+// Steps (driven by GameShell): welcome -> cards -> [Learn More / Start Playing dialog] ->
+// reveal -> players -> coachgm -> ready. "Start Playing" in the dialog skips straight to the deal.
+export default function WelcomeScreen({ teamName, onContinue, onStartPlaying, step = 'welcome', revealCard }) {
+  const [choosing, setChoosing] = useState(false);
+
+  if (step === 'reveal' && revealCard) return <CardReveal card={revealCard} onContinue={onContinue} />;
+
+  const isLast = step === LAST_STEP;
+  const handleNext = () => (step === 'cards' ? setChoosing(true) : onContinue());
   return (
     <main className="welcome-screen">
       <section className="welcome-file">
@@ -21,7 +30,7 @@ export default function WelcomeScreen({ teamName, onContinue, step = 'welcome' }
           {step === 'cards' && (
             <>
               <h1>The Cards</h1>
-              <p>At the start of the game each player receives nine cards.</p>
+              <p>At the start of the game each player receives nine cards. Five starters, two bench players, a coach and a GM.</p>
               <div className="welcome-card-fan" aria-label="Seven player cards, one coach card, and one general manager card">
                 {Array.from({ length: 7 }, (_, index) => (
                   <div key={index} className="welcome-mini-card player" style={{ '--fan-index': index }}>
@@ -49,9 +58,21 @@ export default function WelcomeScreen({ teamName, onContinue, step = 'welcome' }
           {step === 'ready' && (
             <h1>Utilize your entire hand and build a dynasty!</h1>
           )}
-          <button type="button" className="primary welcome-continue" onClick={onContinue}>{isLast ? 'Deal My Hand' : step === 'welcome' ? 'Continue' : 'Next'}</button>
+          <button type="button" className="primary welcome-continue" onClick={handleNext}>{isLast ? 'Deal My Hand' : step === 'welcome' ? 'Continue' : 'Next'}</button>
         </div>
       </section>
+      {choosing && (
+        <div className="welcome-dialog-backdrop" role="dialog" aria-modal="true" aria-label="Learn more or start playing">
+          <div className="welcome-dialog">
+            <h2>Ready To Deal?</h2>
+            <p>Want a closer look at how your cards work, or jump straight into the game?</p>
+            <div className="welcome-dialog-actions">
+              <button type="button" className="secondary" onClick={() => { setChoosing(false); onContinue(); }}>Learn More</button>
+              <button type="button" className="primary" onClick={onStartPlaying}>Start Playing</button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

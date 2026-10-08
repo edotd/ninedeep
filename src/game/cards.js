@@ -231,3 +231,10 @@ export function drawMatchupModifierCard(state, playableOnly = false) {
   const definition = MATCHUP_MODIFIER_TYPES.find((c) => c.definitionId === definitionId);
   return { ...definition, id: nextCardId(state), used: false };
 }
+
+// The hand's best card — highest rarity, then highest overall — for moments that showcase one
+// player (the onboarding card reveal).
+const RARITY_RANK = { Core: 0, Prime: 1, Signature: 2, Legendary: 3 };
+export function bestCard(hand = []) {
+  return [...hand].sort((a, b) => ((RARITY_RANK[b.rarity] ?? 0) - (RARITY_RANK[a.rarity] ?? 0)) || (cardTotal(b) - cardTotal(a)))[0] || null;
+}

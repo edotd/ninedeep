@@ -75,3 +75,14 @@
   box-sizing:border-box;
 }
 .welcome-overlay-backdrop .welcome-screen{min-height:auto;padding:0;width:100%;}
+
+/* Learn More / Start Playing choice, laid over The Cards page. */
+.welcome-dialog-backdrop{position:fixed;inset:0;z-index:5;background:rgba(11,17,30,.72);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;}
+.welcome-dialog{width:min(440px,100%);background:var(--form);border:2px solid var(--ink);box-shadow:8px 8px 0 var(--form-rule);padding:26px 24px 22px;text-align:center;}
+.welcome-dialog h2{margin:0 0 10px;font:34px/1 var(--font-display);letter-spacing:.01em;text-transform:none;color:var(--ink);}
+.welcome-dialog p{margin:0;font:15px/1.6 var(--font-mono);color:var(--file-body);}
+.welcome-dialog-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px;}
+.welcome-dialog-actions button{width:100%;min-width:0;}
+@media(max-width:420px){.welcome-dialog-actions{grid-template-columns:1fr;}}
+.welcome-dialog-actions .secondary{background:transparent;color:var(--ink);border:2px solid var(--ink);}
+.welcome-dialog-actions .secondary:hover{background:var(--form-rule);}

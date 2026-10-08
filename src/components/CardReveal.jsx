@@ -1,0 +1,230 @@
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import PlayerCard from './PlayerCard';
+import './CardReveal.css';
+
+// The "Centre dot" card reveal (design: Card Reveal, variant 1B, Onboarding context) — the
+// ball's nine dots light up one by one, the centre dot grows into the card, and the other eight
+// fly out to the card's corners and edge midpoints and stamp the rarity frame in. The reveal
+// escalates with rarity: Core is a quick open, Prime adds a fast light sweep, Signature lights
+// each dot in stamp, Legendary adds a charge, a flash, the badge, two sheens and a resting glow.
+//
+// Everything is laid out in the design's own 402×874 phone-screen coordinate space (the card's
+// centre sits at 201,440) and the whole stage is scaled to fit the viewport, so the timings and
+// offsets below are the design's numbers untouched. The face is the player's real card.
+
+const INK = '#1E2B47', IRULE = '#3C4A69', IMUTED = '#A9B4C9', FILE = '#E6DCC4',
+  STAMP = '#B5431F', SINK = '#E8825C', FR = '#F0A03D';
+const BEB = 'var(--font-display)', ARC = 'var(--font-label)', MONO = 'var(--font-mono)';
+const c01 = (v) => Math.max(0, Math.min(1, v));
+const lerp = (a, b, p) => a + (b - a) * p;
+const P = (t, s, d) => c01((t - s) / d);
+const eo = (p) => 1 - Math.pow(1 - p, 3);
+const eio = (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
+const back = (p) => { const c = 1.9; return 1 + (c + 1) * Math.pow(p - 1, 3) + c * Math.pow(p - 1, 2); };
+
+const RAR = {
+  Core: { color: '#6B7894', w: 2, lit: '#6B7894' },
+  Prime: { color: '#8E9BB5', w: 3, lit: '#8E9BB5' },
+  Signature: { color: SINK, hair: FILE, w: 4, lit: STAMP },
+  Legendary: { color: FR, hair: IRULE, w: 5, lit: FR },
+};
+const frameShadow = (r) => (RAR[r].hair ? `0 0 0 1px ${RAR[r].hair}, 0 0 0 ${1 + RAR[r].w}px ${RAR[r].color}` : `0 0 0 ${RAR[r].w}px ${RAR[r].color}`);
+const CARD_W = 264, SCALE_UP = 1.12, STAGE_W = 402, STAGE_H = 874;
+
+const BALL_T = {
+  Core: { pop: 0, light: 99999, stag: 0, grow: 420, fly: 440, reveal: 720, strike: 1000, badge: 99999, ui: 1100, total: 1500 },
+  Prime: { pop: 0, light: 300, stag: 25, grow: 620, fly: 650, reveal: 950, strike: 1250, badge: 99999, ui: 1380, total: 1800 },
+  Signature: { pop: 0, light: 380, stag: 35, grow: 760, fly: 800, reveal: 1140, strike: 1480, badge: 99999, ui: 1670, total: 2120 },
+  Legendary: { pop: 0, light: 560, stag: 70, hold: 1120, grow: 1560, fly: 1600, flash: 1560, reveal: 2000, strike: 2400, badge: 2520, sheen1: 2700, sheen2: 3080, ui: 3160, total: 3740 },
+};
+
+function Sheen({ t, tm, cw, ch }) {
+  const pass = (s, d, w) => {
+    const p = P(t, s, d);
+    if (p <= 0 || p >= 1) return null;
+    return (
+      <div style={{ position: 'absolute', top: -ch, left: 0, width: w, height: ch * 3, transform: `translateX(${lerp(-w * 2, cw + w, eio(p))}px) rotate(20deg)`,
+        background: 'linear-gradient(90deg, transparent, rgba(255,250,235,0.18) 35%, rgba(255,255,255,0.55) 50%, rgba(255,250,235,0.18) 65%, transparent)' }}
+      />
+    );
+  };
+  return <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>{pass(tm.sheen1, 560, 120)}{pass(tm.sheen2, 460, 60)}</div>;
+}
+
+function Chrome({ t, tm, rarity, subtitle, cw, ch, onContinue, children }) {
+  const L = rarity === 'Legendary';
+  const ui = eo(P(t, tm.ui, 500));
+  const flash = tm.flash != null ? Math.max(0, 1 - P(t, tm.flash, 320)) * (t >= tm.flash ? 1 : 0) : 0;
+  const glow = tm.flash != null && t >= tm.flash ? lerp(1, 0.45, eo(P(t, tm.flash, 900))) : 0;
+  const bp = P(t, tm.badge, 260), bs = P(t, tm.badge + 260, 300);
+  const badgeScale = bp > 0 ? (bs > 0 ? lerp(1.55, 1, back(bs)) : lerp(0.4, 1.55, eo(bp))) : 0;
+  const bloom = bs > 0 ? 1 - eo(P(t, tm.badge + 260, 420)) : bp > 0 ? 1 : 0;
+  return (
+    <div style={{ position: 'absolute', inset: 0, background: INK, overflow: 'hidden' }}>
+      {glow > 0 && <div style={{ position: 'absolute', left: 201 - 320, top: 440 - 320, width: 640, height: 640, borderRadius: '50%', opacity: glow, background: 'radial-gradient(closest-side, rgba(240,160,61,0.42), rgba(240,160,61,0.12) 55%, transparent)' }} />}
+      <div style={{ position: 'absolute', top: 92, left: 0, right: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, opacity: ui, transform: `translateY(${lerp(-10, 0, ui)}px)` }}>
+        <span style={{ fontFamily: MONO, fontSize: 13, letterSpacing: '0.18em', color: IMUTED }}>ERA 01 · DRAFT DAY</span>
+        <span style={{ fontFamily: BEB, fontSize: 40, lineHeight: 0.84, color: FILE }}>YOUR FRANCHISE PLAYER</span>
+      </div>
+      <div style={{ position: 'absolute', left: 201, top: 440, width: 0, height: 0 }}>
+        {children}
+        {L && badgeScale > 0 && (
+          <div style={{ position: 'absolute', left: cw / 2 - 8, top: -ch / 2 - 13, transform: `translateX(-100%) scale(${badgeScale})`, transformOrigin: '100% 0',
+            background: FR, padding: '6px 9px', fontFamily: ARC, fontSize: 13, letterSpacing: '0.14em', color: INK, whiteSpace: 'nowrap',
+            boxShadow: `0 0 ${26 * bloom}px ${6 * bloom}px rgba(240,160,61,${0.75 * bloom})` }}
+          >LEGENDARY</div>
+        )}
+      </div>
+      <div style={{ position: 'absolute', left: 24, right: 24, bottom: 54, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, opacity: ui, transform: `translateY(${lerp(14, 0, ui)}px)` }}>
+        <span style={{ fontFamily: MONO, fontSize: 13, letterSpacing: '0.16em', color: RAR[rarity].color }}>{subtitle}</span>
+        <button
+          type="button"
+          onClick={onContinue}
+          disabled={ui < 0.6}
+          style={{ alignSelf: 'stretch', height: 54, border: 0, background: FILE, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: ARC, fontSize: 14, letterSpacing: '0.16em', color: INK, cursor: 'pointer' }}
+        >CONTINUE</button>
+      </div>
+      {flash > 0 && <div style={{ position: 'absolute', inset: 0, background: FR, opacity: 0.38 * flash, pointerEvents: 'none' }} />}
+    </div>
+  );
+}
+
+function BallReveal({ t, card, rarity, cardHeight, onContinue }) {
+  const tm = BALL_T[rarity], L = rarity === 'Legendary';
+  const cw = CARD_W * SCALE_UP, ch = cardHeight * SCALE_UP;
+  const S = 132, pitch = S * 0.196, dot = S * 0.1;
+  const lit = RAR[rarity].lit;
+  const pop = back(P(t, tm.pop, 420));
+  const ballOut = eio(P(t, tm.grow, 320));
+  const spin = L ? lerp(-18, 0, eo(P(t, 0, 1700))) : lerp(-8, 0, eo(P(t, 0, 900)));
+  const order = [0, 1, 2, 5, 8, 7, 6, 3, 4];
+  // Legendary charge: the ball swells and shakes harder, then dips just before the burst.
+  let csc = 1, sx = 0, sy = 0;
+  if (L && t > tm.hold && t < tm.grow) {
+    const cp = P(t, tm.hold, tm.grow - tm.hold - 90);
+    const ci = cp * cp;
+    const dip = eo(P(t, tm.grow - 90, 90));
+    csc = lerp(1 + 0.2 * ci, 0.9, dip);
+    const a = 6 * ci * (1 - dip * 0.6);
+    sx = a * Math.sin(t / 11) + a * 0.5 * Math.sin(t / 5.3);
+    sy = a * Math.cos(t / 13) + a * 0.4 * Math.cos(t / 4.7);
+  }
+  const g = eio(P(t, tm.grow, 440));
+  const rv = eio(P(t, tm.reveal, 380));
+  const fly = eio(P(t, tm.fly, 440));
+  const sk = P(t, tm.strike, 280);
+  const sw = S * 0.022;
+  const seams = (
+    <svg width={S} height={S} style={{ position: 'absolute', left: 0, top: 0 }}>
+      <defs>
+        <radialGradient id="crSeam"><stop offset="0.68" stopColor="#fff" stopOpacity="0" /><stop offset="0.85" stopColor="#fff" stopOpacity="0.22" /><stop offset="1" stopColor="#fff" stopOpacity="0.65" /></radialGradient>
+        <mask id="crMask"><circle cx={S / 2} cy={S / 2} r={S / 2} fill="url(#crSeam)" /></mask>
+        <clipPath id="crClip"><circle cx={S / 2} cy={S / 2} r={S / 2} /></clipPath>
+      </defs>
+      <g mask="url(#crMask)" clipPath="url(#crClip)" stroke={INK} strokeWidth={sw} fill="none">
+        <ellipse cx={S / 2} cy={S / 2} rx={0.3 * S} ry={0.73 * S} />
+        <line x1={S / 2} y1="0" x2={S / 2} y2={S} /><line x1="0" y1={S / 2} x2={S} y2={S / 2} />
+      </g>
+    </svg>
+  );
+  const dots = [...Array(9)].map((_, i) => {
+    const c = i % 3, r = Math.floor(i / 3), centre = i === 4;
+    const lt = P(t, tm.light + order.indexOf(i) * tm.stag, 110);
+    const hb = L && centre && t > tm.hold && t < tm.grow ? 0.5 + 0.5 * Math.sin((t - tm.hold) / 90) : 0;
+    const bx = (c - 1) * pitch * pop * csc + sx, by = (r - 1) * pitch * pop * csc + sy;
+    if (centre) {
+      if (g > 0) return null;
+      const d = dot * c01(pop) * csc * (1 + 0.5 * Math.sin(Math.PI * lt) + 0.25 * hb);
+      return <span key={i} style={{ position: 'absolute', left: bx - d / 2, top: by - d / 2, width: d, height: d, borderRadius: '50%', background: lt > 0 ? lit : STAMP, boxShadow: L && lt > 0 ? `0 0 ${10 + 14 * hb}px ${FR}` : 'none' }} />;
+    }
+    const ex = (c - 1) * (cw / 2 + 3), ey = (r - 1) * (ch / 2 + 3);
+    const x = lerp(bx, ex, fly), y = lerp(by, ey, fly);
+    const d = (sk > 0 ? lerp(dot * 1.3, 0, eo(sk)) : lerp(dot, dot * 1.3, fly) * (1 + 0.5 * Math.sin(Math.PI * lt))) * c01(pop);
+    const ring = sk > 0 && sk < 1 ? <span style={{ position: 'absolute', left: x - 24 * sk, top: y - 24 * sk, width: 48 * sk, height: 48 * sk, borderRadius: '50%', border: `2px solid ${RAR[rarity].color}`, opacity: 1 - sk }} /> : null;
+    return (
+      <span key={i}>
+        {d > 0.3 && <span style={{ position: 'absolute', left: x - d / 2, top: y - d / 2, width: d, height: d, borderRadius: '50%', background: fly > 0.3 ? RAR[rarity].color : lt > 0 ? lit : INK, boxShadow: L && lt > 0 ? `0 0 10px ${FR}` : 'none' }} />}
+        {ring}
+      </span>
+    );
+  });
+  const pw = lerp(dot * 1.5, cw, g), ph = lerp(dot * 1.5, ch, g);
+  return (
+    <Chrome t={t} tm={tm} rarity={rarity} subtitle={`${rarity.toUpperCase()} · ${card.position.toUpperCase()}`} cw={cw} ch={ch} onContinue={onContinue}>
+      {ballOut < 1 && (
+        <div style={{ position: 'absolute', left: -S / 2, top: -S / 2, width: S, height: S, transform: `translate(${sx}px,${sy}px) scale(${c01(pop) * csc * (1 + 0.4 * ballOut)}) rotate(${spin}deg)`, opacity: 1 - ballOut }}>
+          <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: FILE }} />
+          {seams}
+        </div>
+      )}
+      {g > 0 && (
+        <div style={{ position: 'absolute', left: -pw / 2, top: -ph / 2, width: pw, height: ph, borderRadius: lerp(pw / 2, 0, eo(c01(g * 1.4))), background: lit, opacity: 1 - c01((rv - 0.8) * 5),
+          boxShadow: sk > 0 ? frameShadow(rarity) : 'none' }}
+        />
+      )}
+      {rv > 0 && (
+        <div style={{ position: 'absolute', left: -cw / 2, top: -ch / 2, width: cw, height: ch, clipPath: `circle(${rv * 75}% at 50% 50%)`, boxShadow: '0 14px 26px rgba(8,13,26,0.62)' }}>
+          <div className="card-reveal-face" style={{ width: CARD_W, transform: `scale(${SCALE_UP})`, transformOrigin: '0 0' }}><PlayerCard card={card} /></div>
+        </div>
+      )}
+      {sk > 0 && (
+        <div style={{ position: 'absolute', left: -cw / 2, top: -ch / 2, width: cw, height: ch, boxShadow: frameShadow(rarity), transform: `scale(${lerp(1.06, 1, back(sk))})`, pointerEvents: 'none' }}>
+          {L && <Sheen t={t} tm={tm} cw={cw} ch={ch} />}
+        </div>
+      )}
+      {dots}
+    </Chrome>
+  );
+}
+
+export default function CardReveal({ card, onContinue }) {
+  const rarity = RAR[card.rarity] ? card.rarity : 'Core';
+  const total = BALL_T[rarity].total;
+  const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const [clock, setT] = useState(0);
+  const t = reduced ? total : clock;
+  const [run, setRun] = useState(0);
+  const [scale, setScale] = useState(1);
+  const [cardHeight, setCardHeight] = useState(500);
+  const measureRef = useRef(null);
+
+  // The real card's height varies (accolade rows, signing notes), so measure it off-screen once
+  // and size the frame/reveal clip to it rather than the design's fixed mock face.
+  useLayoutEffect(() => {
+    const el = measureRef.current?.querySelector('.pcard');
+    if (el && el.offsetHeight) setCardHeight(el.offsetHeight);
+  }, [card]);
+
+  useEffect(() => {
+    const fit = () => setScale(Math.min(window.innerWidth / STAGE_W, window.innerHeight / STAGE_H, 1.3));
+    fit();
+    window.addEventListener('resize', fit);
+    return () => window.removeEventListener('resize', fit);
+  }, []);
+
+  useEffect(() => {
+    if (reduced) return undefined;
+    let id;
+    const start = performance.now();
+    const frame = (now) => {
+      const e = Math.min(now - start, total);
+      setT(e);
+      if (e < total) id = requestAnimationFrame(frame);
+    };
+    id = requestAnimationFrame(frame);
+    return () => cancelAnimationFrame(id);
+  }, [total, reduced, run]);
+
+  return (
+    <div className="card-reveal-overlay" role="dialog" aria-modal="true" aria-label="Your franchise player">
+      <div ref={measureRef} className="card-reveal-measure" aria-hidden="true"><PlayerCard card={card} /></div>
+      <div
+        className="card-reveal-stage"
+        style={{ width: STAGE_W, height: STAGE_H, marginLeft: -STAGE_W / 2, marginTop: -STAGE_H / 2, transform: `scale(${scale})` }}
+        onClick={(e) => { if (e.target === e.currentTarget || !e.target.closest('button')) setRun((n) => n + 1); }}
+      >
+        <BallReveal t={t} card={card} rarity={rarity} cardHeight={cardHeight} onContinue={onContinue} />
+      </div>
+    </div>
+  );
+}

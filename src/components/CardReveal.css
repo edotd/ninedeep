@@ -1,0 +1,8 @@
+.card-reveal-overlay{position:fixed;inset:0;z-index:940;background:#1E2B47;overflow:hidden;}
+/* The design lays everything out in a 402×874 phone-screen space; the stage is centred and scaled
+   to fit the viewport (see CardReveal.jsx), so it never reflows. */
+.card-reveal-stage{position:absolute;left:50%;top:50%;transform-origin:50% 50%;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.card-reveal-measure{position:absolute;left:-9999px;top:0;width:264px;visibility:hidden;pointer-events:none;}
+/* The rarity frame is stamped on by the reveal itself, so the real card's own border steps aside
+   rather than doubling up with it. */
+.card-reveal-face .pcard.pcard[class]{width:264px;max-width:none;margin:0;border-color:transparent;background-clip:padding-box;box-shadow:none;cursor:default;}
