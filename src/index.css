@@ -1976,19 +1976,15 @@ html[data-theme="dark"] .wordmark-ink{color:var(--file);}
 .deal-stage{flex:1;min-height:340px;background:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;box-sizing:border-box;padding:20px;}
 .deal-skip{display:block;margin:14px auto 0;}
 
-.deal-deck{position:relative;width:160px;height:224px;animation:deal-deck-in 260ms ease-out both;}
-.deal-deck-card{position:absolute;inset:0;border-radius:8px;background:var(--ink-deep);box-shadow:inset 0 0 0 3px var(--franchise);display:grid;place-items:center;}
-.deal-deck-card:nth-child(1){transform:translate(-6px,-6px) rotate(-4deg);}
-.deal-deck-card:nth-child(2){transform:translate(3px,-2px) rotate(2deg);}
-.deal-deck-card:nth-child(3){transform:none;}
-@keyframes deal-deck-in{from{opacity:0;transform:scale(.8);}to{opacity:1;transform:scale(1);}}
+.deal-deck{position:relative;width:160px;height:224px;}
 
 /* One token per card dealt — comes off the deck and travels down toward the persistent bar
    (fixed to the very bottom of the viewport in both shells), fading out just before it would
    reach the screen edge, right as that card's real slot in the bar lands via bar-fill. Purely
    decorative: the actual "card" is the bar slot itself. */
-.deal-token{position:absolute;inset:0;margin:auto;width:90px;height:126px;border-radius:6px;background:var(--franchise);box-shadow:inset 0 0 0 2px var(--ink);display:grid;place-items:center;animation:deal-token-drop 480ms cubic-bezier(.4,0,.7,.3) both;}
-@keyframes deal-token-drop{from{opacity:1;transform:translateY(0) scale(1) rotate(0deg);}to{opacity:0;transform:translateY(340px) scale(.5) rotate(14deg);}}
+/* A flying card is the same card back as the deck it comes off of, so the deal reads as one stack giving up its top card. */
+.deal-token{position:absolute;inset:0;margin:auto;width:160px;height:224px;z-index:20;pointer-events:none;animation:deal-token-drop 480ms cubic-bezier(.4,0,.7,.3) both;}
+@keyframes deal-token-drop{from{opacity:1;transform:translateY(-21px) scale(1) rotate(0deg);}to{opacity:0;transform:translateY(340px) scale(.5) rotate(14deg);}}
 .deal-count{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-muted);}
 
 /* Mobile Deal review (per the brand handoff's mobile Deal) — a small preview of the dealt hand
@@ -1998,7 +1994,7 @@ html[data-theme="dark"] .wordmark-ink{color:var(--file);}
 .deal-mobile-preview{display:flex;gap:8px;}
 .deal-mobile-preview .nd2-tile{flex:1 1 0;min-width:0;}
 .deal-mobile-hint{font-family:var(--font-mono);font-size:12px;line-height:1.5;color:var(--ink-muted);margin-top:14px;}
-@media(prefers-reduced-motion:reduce){.deal-deck,.deal-token{animation:none;}}
+@media(prefers-reduced-motion:reduce){.deal-token{animation:none;}}
 
 /* Hand screen — now that the window isn't capped at 900px, starters (5) and bench (4) each
    deal into a single row instead of the 3-column fa-grid wrapping to a second line. */
@@ -2336,7 +2332,7 @@ body:has(.entry-screen){padding-bottom:0;}
    auto-set lineup and save lineups buttons to the bottom of the screen"), above the Back
    button rather than up in the header. */
 .slf-footer-actions{display:flex;gap:10px;}
-.slf-auto-set{flex:1;display:flex!important;align-items:center;justify-content:center;gap:9px;min-height:48px;position:relative;z-index:50;border:3px solid #E6DCC4!important;background:#F0A03D!important;color:#1E2B47!important;-webkit-text-fill-color:#1E2B47!important;opacity:1!important;visibility:visible!important;padding:12px 16px;font-family:var(--font-label);font-size:13px;font-weight:700;line-height:1.2;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;box-shadow:0 0 0 2px #F0A03D,0 0 18px rgba(240,160,61,.65);}
+.slf-auto-set{flex:1;display:flex!important;align-items:center;justify-content:center;gap:9px;min-height:48px;position:relative;z-index:1;border:3px solid #E6DCC4!important;background:#F0A03D!important;color:#1E2B47!important;-webkit-text-fill-color:#1E2B47!important;opacity:1!important;visibility:visible!important;padding:12px 16px;font-family:var(--font-label);font-size:13px;font-weight:700;line-height:1.2;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;box-shadow:0 0 0 2px #F0A03D,0 0 18px rgba(240,160,61,.65);}
 .slf-auto-set span{font-size:20px;line-height:1;}
 .slf-auto-set:hover:not(:disabled){background:#ffb455;}
 .slf-auto-set:disabled{opacity:.4!important;cursor:not-allowed;}

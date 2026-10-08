@@ -1,18 +1,16 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import BallMark from '../components/BallMark';
-import DeckShuffle from '../components/DeckShuffle';
+import DeckShuffle, { CardBack } from '../components/DeckShuffle';
 
 const ALL_FO_KINDS = ['coach', 'fanbase', 'market'];
 
-// The deck is shuffled first (DeckShuffle — "cut and slide", then a Deal My Hand button), then sits at rest just long enough to read as a real stack, then each card individually
-// comes off the deck and files into its own slot in the persistent bar below (per design ref
-// 4A, "Dealing the Nine") — that bar-filling-in IS the deal, not a separate animation next to
-// it (see DesktopBar/PersistentBar's dealProgress gating). Once every card has landed, this
-// goes straight to onDealDone (the post-deal Card Guide onboarding, then the League page,
-// covers "review your cards" in far more detail than a plain grid ever did) — no extra
-// tap-through screen. 'Instant' (and prefers-reduced-motion) skip the animation but still land
-// on the same onDealDone call.
-const DECK_MS = 500;
+// The deck shuffles right on the stage (DeckShuffle — "cut and slide"), squares up, and then each
+// card individually comes off that same deck and files into its own slot in the persistent bar
+// below (per design ref 4A, "Dealing the Nine") — that bar-filling-in IS the deal, not a separate
+// animation next to it (see DesktopBar/PersistentBar's dealProgress gating). Shuffle and deal are
+// one continuous beat with no pause or button between them. Once every card has landed, this goes
+// straight to onDealDone (the League page covers "review your cards" in far more detail than a
+// plain grid ever did) — no extra tap-through screen. 'Instant' (and prefers-reduced-motion) skip
+// both animations but still land on the same onDealDone call.
 const DEAL_STAGGER_MS = 140;
 const TOKEN_MS = 480;
 
@@ -41,8 +39,8 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
   const total = starters.length + bench.length + FO_KINDS.length;
   const instant = state.settings.actionLogSpeed === 'instant' || reducedMotion();
 
-  // 'shuffle' -> 'deck' -> 'dealing' -> onDealDone. Instant / reduced-motion skips the shuffle.
-  const [phase, setPhase] = useState(instant ? 'deck' : 'shuffle');
+  // 'shuffle' -> 'dealing' -> onDealDone. Instant / reduced-motion skips the shuffle.
+  const [phase, setPhase] = useState(instant ? 'dealing' : 'shuffle');
   const [dealt, setDealt] = useState(instant ? total : 0);
   const [tokens, setTokens] = useState([]); // transient flying-card visuals, purely decorative
   const timersRef = useRef([]);
@@ -58,9 +56,7 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
 
   useEffect(() => {
     if (instant) { onDealProgress(total); onDealDone(); return undefined; }
-    if (phase === 'deck') {
-      timersRef.current.push(setTimeout(() => setPhase('dealing'), DECK_MS));
-    } else if (phase === 'dealing') {
+    if (phase === 'dealing') {
       for (let i = 0; i < total; i++) {
         timersRef.current.push(setTimeout(() => {
           setDealt(i + 1);
@@ -92,15 +88,12 @@ export default function DealScreen({ state, myTeamId, onDealProgress, onDealDone
       </div>
       <div className="deal-stage">
         <div className="deal-deck">
-          <div className="deal-deck-card"><BallMark size={64} variant="onInk" /></div>
-          <div className="deal-deck-card"><BallMark size={64} variant="onInk" /></div>
-          <div className="deal-deck-card"><BallMark size={64} variant="onInk" /></div>
-          {tokens.map((t) => <div key={t.id} className="deal-token"><BallMark size={34} variant="onInk" /></div>)}
+          <DeckShuffle skip={instant} onDone={() => setPhase('dealing')} />
+          {tokens.map((t) => <div key={t.id} className="deal-token"><CardBack s={160} h={224} /></div>)}
         </div>
-        {phase === 'dealing' && <div className="deal-count">{dealt} / {total} dealt</div>}
+        <div className="deal-count">{phase === 'dealing' ? `${dealt} / ${total} dealt` : 'Shuffling the deck'}</div>
       </div>
       <button className="reset-link deal-skip" onClick={handleSkip}>Skip ▸▸</button>
-      {phase === 'shuffle' && <DeckShuffle onDone={() => setPhase('deck')} />}
     </div>
   );
 }
