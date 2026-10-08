@@ -6,7 +6,7 @@ import { cardTier, jerseyNumber, playerGrade } from '../game/cards';
 import { LEAGUE_ACCOLADES, RARITY_CORNERS } from '../game/constants';
 import CardTypeMark from './CardTypeMark';
 import BallMark from './BallMark';
-import RarityBadge from './RarityBadge';
+import RarityBadge, { RarityGhost } from './RarityBadge';
 
 const LEGACY_DEVELOPMENT_CHANGES = {
   'Shooting Lab': { SCO: 2 },
@@ -73,6 +73,7 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
       onTouchMove={clearPressTimer}
     >
       {rarityCorners.map((c) => <span key={c} className={'rarity-corner ' + c} />)}
+      {!compact && <RarityGhost rarity={rarity} />}
       <CardTypeMark
         type="player"
         size={compact ? 90 : 170}

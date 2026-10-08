@@ -4,7 +4,7 @@ import CardTypeMark from './CardTypeMark';
 import BallMark from './BallMark';
 import { offenseDieSize, defenseDieSize, matchupCardCountFor } from '../game/roster';
 import { RARITY_CORNERS } from '../game/constants';
-import RarityBadge from './RarityBadge';
+import RarityBadge, { RarityGhost } from './RarityBadge';
 import { ensureCoachSystems } from '../game/strategyCards';
 
 // Front Office card, per the brand handoff's "Components: Front Office & Matchup Cards" —
@@ -130,6 +130,7 @@ export default function FrontOfficeCard({ kind, team }) {
     <div className="fo2-wrap">
       <div className={'fo2-card' + (coachRarity ? ` rarity-${coachRarity}` : '')}>
         {coachRarity && (RARITY_CORNERS[coachRarity] || []).map((c) => <span key={c} className={'rarity-corner ' + c} />)}
+        {coachRarity && <RarityGhost rarity={coachRarity} />}
         <CardTypeMark type="frontoffice" className="fo2-watermark" color="var(--ink-rule)" size={190} />
         <div className="fo2-logo-mark"><BallMark size={44} variant="onInk" /></div>
         <div className="fo2-header">

@@ -1,7 +1,7 @@
 import CardTypeMark from './CardTypeMark';
 import BallMark from './BallMark';
 import { RARITY_CORNERS } from '../game/constants';
-import RarityBadge from './RarityBadge';
+import RarityBadge, { RarityGhost } from './RarityBadge';
 
 // Adjustment card, per the brand handoff's "Components: Front Office & Adjustment Cards" — square,
 // stamp-bordered, torn bottom edge. The spec's two fixed bottom rows ("IF UNANSWERED" /
@@ -54,6 +54,7 @@ export default function MatchupCard({ card, playoff, justDealt }) {
         <div className={'mu2-card' + (playoff ? ' playoff' : '') + dealCls} data-rarity={rarity}>
           {legendary && <div className={'mu2-glow' + dealCls} />}
           <div className="mu2-logo-mark"><BallMark size={40} variant={legendary ? 'onInk' : 'monoOutline'} /></div>
+          <RarityGhost rarity={rarity} />
           <RarityBadge rarity={rarity} />
           <div className="mu2-header"><span className="mu2-kind-group"><CardTypeMark type="matchup" size={16} />{card.category}</span><span>{card.rarity}</span></div>
           <div className="mu2-name">{card.name}</div>

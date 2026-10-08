@@ -11,7 +11,8 @@ import './CardReveal.css';
 // ball's nine dots light up one by one, the centre dot grows into the card, and the other eight
 // fly out to the card's corners and edge midpoints and stamp the rarity frame in. The reveal
 // escalates with rarity: Core is a quick open, Prime adds a fast light sweep, Signature lights
-// each dot in stamp, Legendary adds a charge, a flash, the badge, two sheens and a resting glow.
+// each dot in stamp, Legendary adds a charge, a flash, two sheens and a resting glow. Every rarity
+// gets its name stamped on a label at the card's top-right corner.
 //
 // Everything is laid out in the design's own 402×874 phone-screen coordinate space (the card's
 // centre sits at 201,440) and the whole stage is scaled to fit the viewport, so the timings and
@@ -44,9 +45,9 @@ const KINDS = {
 };
 
 const BALL_T = {
-  Core: { pop: 0, light: 99999, stag: 0, grow: 420, fly: 440, reveal: 720, strike: 1000, badge: 99999, ui: 1100, total: 1500 },
-  Prime: { pop: 0, light: 300, stag: 25, grow: 620, fly: 650, reveal: 950, strike: 1250, badge: 99999, ui: 1380, total: 1800 },
-  Signature: { pop: 0, light: 380, stag: 35, grow: 760, fly: 800, reveal: 1140, strike: 1480, badge: 99999, ui: 1670, total: 2120 },
+  Core: { pop: 0, light: 99999, stag: 0, grow: 420, fly: 440, reveal: 720, strike: 1000, badge: 1080, ui: 1100, total: 1700 },
+  Prime: { pop: 0, light: 300, stag: 25, grow: 620, fly: 650, reveal: 950, strike: 1250, badge: 1330, ui: 1380, total: 1950 },
+  Signature: { pop: 0, light: 380, stag: 35, grow: 760, fly: 800, reveal: 1140, strike: 1480, badge: 1560, ui: 1670, total: 2120 },
   Legendary: { pop: 0, light: 560, stag: 70, hold: 1120, grow: 1560, fly: 1600, flash: 1560, reveal: 2000, strike: 2400, badge: 2520, sheen1: 2700, sheen2: 3080, ui: 3160, total: 3740 },
 };
 
@@ -76,11 +77,11 @@ function Chrome({ t, tm, rarity, cw, ch, onContinue, children }) {
       {glow > 0 && <div style={{ position: 'absolute', left: 201 - 320, top: 440 - 320, width: 640, height: 640, borderRadius: '50%', opacity: glow, background: 'radial-gradient(closest-side, rgba(240,160,61,0.42), rgba(240,160,61,0.12) 55%, transparent)' }} />}
       <div style={{ position: 'absolute', left: 201, top: 440, width: 0, height: 0 }}>
         {children}
-        {L && badgeScale > 0 && (
+        {badgeScale > 0 && (
           <div style={{ position: 'absolute', left: cw / 2 - 8, top: -ch / 2 - 13, transform: `translateX(-100%) scale(${badgeScale})`, transformOrigin: '100% 0',
-            background: FR, padding: '6px 9px', fontFamily: ARC, fontSize: 13, letterSpacing: '0.14em', color: INK, whiteSpace: 'nowrap',
-            boxShadow: `0 0 ${26 * bloom}px ${6 * bloom}px rgba(240,160,61,${0.75 * bloom})` }}
-          >LEGENDARY</div>
+            background: RAR[rarity].color, padding: '6px 9px', fontFamily: ARC, fontSize: 13, letterSpacing: '0.14em', color: rarity === 'Core' ? FILE : INK, whiteSpace: 'nowrap',
+            boxShadow: L ? `0 0 ${26 * bloom}px ${6 * bloom}px rgba(240,160,61,${0.75 * bloom})` : 'none' }}
+          >{rarity.toUpperCase()}</div>
         )}
       </div>
       <div style={{ position: 'absolute', left: 24, right: 24, bottom: 54, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, opacity: ui, transform: `translateY(${lerp(14, 0, ui)}px)` }}>
@@ -224,8 +225,16 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
   const ready = t >= tm.ui + 250;
   const ui = eo(P(t, tm.ui, 500));
   const active = boxes.find((box) => box.key === activeKey);
-  // Park the modal on whichever half of the screen the selected region isn't in, so it never covers what it's explaining.
-  const spotlightMid = active ? (window.innerHeight - STAGE_H * scale) / 2 + (active.top + active.height / 2) * scale : 0;
+  // Where the selected region sits on screen (the stage is centred and scaled to fit), so the
+  // spotlight can feather around it and the modal can sit right beside it.
+  const spot = active ? {
+    left: (window.innerWidth - STAGE_W * scale) / 2 + active.left * scale,
+    top: (window.innerHeight - STAGE_H * scale) / 2 + active.top * scale,
+    width: active.width * scale,
+    height: active.height * scale,
+  } : null;
+  const modalBelow = spot ? window.innerHeight - (spot.top + spot.height) >= 300 : true;
+  const MODAL_GAP = 14;
 
   // The real card's height varies (accolade rows, signing notes), so measure it off-screen once
   // and size the frame/reveal clip to it rather than the design's fixed mock face.
@@ -305,24 +314,28 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
           />
         ))}
       </div>
-      {active && (
-        <div
-          className="card-reveal-spotlight"
-          style={{
-            left: (window.innerWidth - STAGE_W * scale) / 2 + active.left * scale,
-            top: (window.innerHeight - STAGE_H * scale) / 2 + active.top * scale,
-            width: active.width * scale,
-            height: active.height * scale,
-          }}
-        />
+      {spot && (
+        <svg className="card-reveal-spotlight" aria-hidden="true">
+          <defs>
+            <filter id="crSoft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="9" /></filter>
+            <mask id="crHole">
+              <rect width="100%" height="100%" fill="#fff" />
+              <rect x={spot.left - 4} y={spot.top - 4} width={spot.width + 8} height={spot.height + 8} rx="8" fill="#000" filter="url(#crSoft)" />
+            </mask>
+          </defs>
+          <rect width="100%" height="100%" fill="rgba(18,26,46,0.78)" mask="url(#crHole)" />
+        </svg>
       )}
       {active && (
-        <div
-          className={'card-reveal-modal-backdrop ' + (spotlightMid > window.innerHeight / 2 ? 'top' : 'bottom')}
-          role="presentation"
-          onClick={() => setActiveKey(null)}
-        >
-          <section className="card-reveal-modal" role="dialog" aria-modal="true" aria-label={active.label} onClick={(event) => event.stopPropagation()}>
+        <div className="card-reveal-modal-backdrop" role="presentation" onClick={() => setActiveKey(null)}>
+          <section
+            className="card-reveal-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label={active.label}
+            style={modalBelow ? { top: spot.top + spot.height + MODAL_GAP } : { bottom: window.innerHeight - spot.top + MODAL_GAP }}
+            onClick={(event) => event.stopPropagation()}
+          >
             <h2>{active.label}</h2>
             <p>{active.text}</p>
             <button type="button" className="primary" autoFocus onClick={() => setActiveKey(null)}>Got It</button>

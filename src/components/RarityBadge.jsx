@@ -9,6 +9,14 @@ const RARITY_DETAILS = {
   Legendary: 'The rarest and most powerful cards in the game.',
 };
 
+// The card's rarity mark, enlarged to fill its lower-right quadrant (sized by CSS, aspect ratio
+// kept) and faded right back so it reads as a watermark — it never takes clicks and sits well
+// under every other element. A direct child of the card, so the quadrant is the card's, not
+// whatever section happens to hold the info button.
+export function RarityGhost({ rarity = 'Core' }) {
+  return <span className="rarity-ghost" aria-hidden="true"><CardTypeMark type={rarity} size={100} /></span>;
+}
+
 export default function RarityBadge({ rarity = 'Core' }) {
   const [open, setOpen] = useState(false);
   const close = (event) => { event.stopPropagation(); setOpen(false); };
@@ -22,7 +30,7 @@ export default function RarityBadge({ rarity = 'Core' }) {
         title={`${rarity} rarity`}
         onClick={(event) => { event.stopPropagation(); setOpen(true); }}
       >
-        <CardTypeMark type={rarity} size={30} />
+        i
       </button>
       {open && createPortal(
         <div className="rarity-info-backdrop" role="presentation" onClick={close}>
