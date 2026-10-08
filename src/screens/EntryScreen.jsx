@@ -110,8 +110,15 @@ export default function EntryScreen({ pendingJoinCode, joinOnly = false, soloSta
                     onChange={(e) => setTeamName(e.target.value)}
                   />
                   <div className="entry-name-footer">
-                    <button className="entry-generate" onClick={() => setTeamName(randomFranchiseName())}>
-                      <BallMark size={16} variant="onInk" /> Generate One
+                    <button className="entry-generate" onClick={() => setTeamName(randomFranchiseName())} aria-label="Generate a franchise name" title="Generate a franchise name">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true">
+                        <rect x="3.5" y="3.5" width="17" height="17" rx="3.5" />
+                        <circle cx="8.5" cy="8.5" r="1.3" fill="currentColor" stroke="none" />
+                        <circle cx="15.5" cy="8.5" r="1.3" fill="currentColor" stroke="none" />
+                        <circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none" />
+                        <circle cx="8.5" cy="15.5" r="1.3" fill="currentColor" stroke="none" />
+                        <circle cx="15.5" cy="15.5" r="1.3" fill="currentColor" stroke="none" />
+                      </svg>
                     </button>
                   </div>
                 </div>

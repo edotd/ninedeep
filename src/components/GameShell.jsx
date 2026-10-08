@@ -75,7 +75,7 @@ const PAGE_LABELS = {
   team: 'Franchise',
   freeagency: 'Free Agency',
   draftclass: 'Draft Class',
-  teamrosters: 'Rosters',
+  teamrosters: 'Teams',
   cardtypes: 'Card Types',
   glossary: 'Glossary',
   settings: 'Settings',

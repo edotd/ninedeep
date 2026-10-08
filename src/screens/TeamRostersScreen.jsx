@@ -64,7 +64,7 @@ function PlayerRosterTable({ starters, bench, sixthManId, sort, starterOpenSlots
   );
 }
 
-// A league-wide roster browser reached from the League page's "Rosters" button — the same
+// A league-wide roster browser reached from the League page's "Teams" button — the same
 // card carousel/list that used to live on the Team File's own Players tab, but not tied to any
 // one team: a switcher up top lets you page through every team in the league. Only the viewer's
 // own team can Release/Develop (still gated by the same pre-season/lineup-unconfirmed window as
@@ -146,7 +146,7 @@ export default function TeamRostersScreen({ state, actions, myTeamId, onBack }) 
 
   return (
     <div className="screen ts-screen">
-      <div className="ts-viewing-franchise"><span>Rosters</span><strong>{team.name}</strong></div>
+      <div className="ts-viewing-franchise"><span>Teams</span><strong>{team.name}</strong></div>
 
       <div className="team-roster-switcher">
         {state.teams.map((t) => (

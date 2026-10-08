@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import BallMark from './BallMark';
+import { SOCIAL_LINKS, CONTACT_LINK } from '../config/links';
 
 // Keep in lockstep with the 2.5s nd-splash-* keyframes in index.css.
 const SPLASH_DURATION_MS = 2500;
@@ -43,6 +44,21 @@ export default function SplashScreen({ children }) {
       </div>
       {!setupVisible && <div className="nd-splash-skip">Tap to skip</div>}
       <div className="nd-splash-setup" aria-hidden={!setupVisible}>{setupVisible && children}</div>
+      {setupVisible && (
+        <nav className="nd-splash-footer" aria-label="Social links and contact">
+          <a href={SOCIAL_LINKS.twitter} target="_blank" rel="noopener noreferrer" aria-label="Twitter" title="Twitter">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+          </a>
+          <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4.2" /><circle cx="17.4" cy="6.6" r="1.1" fill="currentColor" stroke="none" /></svg>
+          </a>
+          <a href={SOCIAL_LINKS.tiktok} target="_blank" rel="noopener noreferrer" aria-label="TikTok" title="TikTok">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.6 5.82A4.28 4.28 0 0 1 15.54 3h-3.09v12.4a2.59 2.59 0 0 1-2.59 2.5 2.59 2.59 0 0 1-2.59-2.59 2.59 2.59 0 0 1 2.59-2.59c.27 0 .53.04.77.12V9.66a5.7 5.7 0 0 0-.77-.05 5.68 5.68 0 1 0 5.68 5.68V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48z" /></svg>
+          </a>
+          <span className="nd-splash-footer-rule" aria-hidden="true" />
+          <a className="contact" href={CONTACT_LINK}>Contact</a>
+        </nav>
+      )}
     </div>
   );
 }

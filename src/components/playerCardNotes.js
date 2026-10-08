@@ -20,3 +20,18 @@ export const PLAYER_NOTES = [
   { key: 'cost', selector: '.pcard-budgethit-row', label: 'Cost',
     text: 'How much the player counts towards your budget every turn.' },
 ];
+
+const RARITY_DETAILS = {
+  Core: 'The most common cards. Reliable building blocks with straightforward impact.',
+  Prime: 'Less common cards with stronger traits or effects than Core cards.',
+  Signature: 'Rare, high-impact cards that can meaningfully shape a franchise or matchup.',
+  Legendary: 'The rarest and most powerful cards in the game.',
+};
+
+// The rarity mark filling a card's lower-right quadrant — tappable in the onboarding reveals.
+// `inset` shrinks the tap target to the glyph itself, so it doesn't swallow the quadrant's
+// other regions (stats, skillset, accolades).
+export const rarityNote = (rarity = 'Core') => ({
+  key: 'rarity', selector: '.rarity-ghost', inset: 0.8, label: `${rarity} Rarity`,
+  text: `How rare a card is: Core, Prime, Signature or Legendary. ${RARITY_DETAILS[rarity] || ''} Rarity reflects a card's existing power and scarcity. It does not add a separate bonus.`,
+});

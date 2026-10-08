@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import PlayerCard from './PlayerCard';
 import FrontOfficeCard from './FrontOfficeCard';
-import { PLAYER_NOTES } from './playerCardNotes';
+import { PLAYER_NOTES, rarityNote } from './playerCardNotes';
 import { COACH_NOTES, GM_NOTES } from './frontOfficeNotes';
 import { ensureCoachSystems } from '../game/strategyCards';
 import { LEAGUE_ACCOLADES } from '../game/constants';
@@ -202,12 +202,12 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
   // The card's own accolade icon opens an inline, non-modal popover, so the reveal covers it
   // with a region of its own that explains the accolade in the same modal as everything else.
   const notes = useMemo(() => {
-    if (kind !== 'player') return kind === 'coach' ? COACH_NOTES : GM_NOTES;
+    if (kind !== 'player') return [...(kind === 'coach' ? COACH_NOTES : GM_NOTES), rarityNote('Core')];
     const def = card?.accolade ? LEAGUE_ACCOLADES.find((a) => a.name === card.accolade) : null;
     return [...PLAYER_NOTES, {
       key: 'accolades', selector: '.pcard-accolade-block', label: def ? def.name : 'Accolades',
       text: def ? def.description : 'League honors a player earns over their career. This player has none yet.',
-    }];
+    }, rarityNote('Core')];
   }, [kind, card]);
   const rarity = 'Core';
   const face = kind === 'player' ? <PlayerCard card={card} /> : <FrontOfficeCard kind={kind === 'coach' ? 'coach' : 'market'} team={team} />;
@@ -283,8 +283,12 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
       setBoxes(notes.flatMap((note) => {
         const el = stage.querySelector('.card-reveal-face ' + note.selector);
         if (!el) return [];
-        const r = el.getBoundingClientRect();
+        let r = el.getBoundingClientRect();
         if (r.width < 2 || r.height < 2) return [];
+        if (note.inset) {
+          const size = Math.min(r.width, r.height) * note.inset;
+          r = { left: r.left + (r.width - size) / 2, top: r.top + (r.height - size) / 2, width: size, height: size };
+        }
         return [{ ...note, left: (r.left - sr.left) / sc - pad, top: (r.top - sr.top) / sc - pad, width: r.width / sc + pad * 2, height: r.height / sc + pad * 2 }];
       }));
     };

@@ -24,7 +24,7 @@ const tabForSection = (section) => section === 'gameplan' ? 'chemistry' : sectio
 // the caller's own — fully read-only, since every mutation here always targets `myTeamId`
 // regardless of whose file is on screen.
 // Browsing a specific player's card lives on the separate Team Rosters screen (reached from
-// the League tab here) — this screen is organised by category: The League, Gameplan/Chemistry,
+// the League tab here) — this screen is organised by category: Team (Gameplan/Chemistry), League,
 // Budget ledger, front office. No nine-slot navigation here (that's the persistent bar's job on
 // every other screen).
 export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId, onBack, focusSection, onFreeAgency, onDraftClass, onTeamRosters, onLineupPreviewChange }) {
@@ -66,7 +66,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   const preSeason = state.phase === 'teamsummary' || state.phase === 'pullhand';
   const canEdit = !readOnly && preSeason && !team.lineupConfirmed;
 
-  // Mobile-only tab bar (per the brand handoff's mobile Team File — The League/Gameplan/
+  // Mobile-only tab bar (per the brand handoff's mobile Team File — Team/League/
   // Budget) — on desktop every section still shows stacked in one scroll, same as before;
   // `isDesktop` just decides whether `tab` actually filters anything.
   const isDesktop = useIsDesktop();
@@ -112,7 +112,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   // bubble through this body handler) — an earlier version tried gating this by requiring the
   // touch to START within ~32px of the screen edge instead, which also blocked the ordinary case
   // of swiping between tabs from the middle of the screen, where nothing actually conflicts.
-  const TAB_ORDER = [team.gmType ? 'office' : null, 'chemistry', 'ledger'].filter(Boolean);
+  const TAB_ORDER = ['chemistry', team.gmType ? 'office' : null, 'ledger'].filter(Boolean);
   const bodyTouchStartX = useRef(null);
   const tabbarRef = useRef(null);
   const underlineRef = useRef(null);
@@ -209,13 +209,13 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
       <div className="screen ts-screen">
         <div className="ts-viewing-franchise"><span>{readOnly ? 'Viewing Franchise' : 'Your Franchise'}</span><strong>{team.name}</strong></div>
         <div className="ts-tabbar" ref={tabbarRef}>
-          {team.gmType && (
-            <button className={'ts-tab' + (tab === 'office' ? ' active' : '')} onClick={() => setTab('office')}>The League</button>
-          )}
           <button ref={gameplanTabRef} className={'ts-tab' + (tab === 'chemistry' ? ' active' : '')} onClick={() => setTab('chemistry')}>
-            Gameplan
+            Team
             {!readOnly && !team.lineupSet && <span className="alert-badge" aria-label="Lineup not set">!</span>}
           </button>
+          {team.gmType && (
+            <button className={'ts-tab' + (tab === 'office' ? ' active' : '')} onClick={() => setTab('office')}>League</button>
+          )}
           <button className={'ts-tab' + (tab === 'ledger' ? ' active' : '')} onClick={() => setTab('ledger')}>
             Budget
             {!readOnly && preSeason && committed > cap && <span className="alert-badge" aria-label="Team is over budget">!</span>}
@@ -240,9 +240,9 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
 
           {showSection('office') && (
             <div className="ts-section league-overview">
-              <div className="ts-heading">The League</div>
+              <div className="ts-heading">League</div>
               <div className="league-jump-actions">
-                {onTeamRosters && <button type="button" className="league-jump-button rosters" onClick={onTeamRosters}>Rosters</button>}
+                {onTeamRosters && <button type="button" className="league-jump-button rosters" onClick={onTeamRosters}>Teams</button>}
                 <button type="button" className="league-jump-button free-agency" onClick={onFreeAgency}>Free Agency</button>
                 <button type="button" className="league-jump-button draft" onClick={onDraftClass}>Draft Class</button>
               </div>
@@ -252,7 +252,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                   <strong>#{jerseyNumber(card)} · {playerGrade(card)} · {card.archetype} · {card.position}</strong>
                   {history.length ? history.map((entry) => <small key={`${entry.season}-${entry.game}`}>Season {entry.season}: Starter {entry.starterOutput} · Sixth Man {entry.sixthManOutput} · Depth {entry.depthOutput}</small>) : <small>Tracking begins with your next season simulation.</small>}
                 </div>
-              ))}</div> : <div className="ts-ledger-empty">Add players from Rosters, Free Agency, or Draft Class.</div>}
+              ))}</div> : <div className="ts-ledger-empty">Add players from Teams, Free Agency, or Draft Class.</div>}
               <div className="league-output-grid">
                 <div><span>League Output</span><strong>{Math.round(leagueTotal * 100) / 100}</strong><small>Total collective output from all teams</small></div>
                 <div><span>Best Offense</span><strong>{bestFor('off').output.off}</strong><small>{bestFor('off').team.name}</small></div>
@@ -427,7 +427,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
         <CoachmarkTour
           storageKey="nine-deep-onboard-gameplan-tab-seen"
           active={!readOnly && !team.lineupSet}
-          steps={[{ targetRef: gameplanTabRef, title: 'Build Your Team', body: 'Set your starting five here — tap Gameplan to get started.' }]}
+          steps={[{ targetRef: gameplanTabRef, title: 'Build Your Team', body: 'Set your starting five here — tap Team to get started.' }]}
         />
         <CoachmarkTour
           storageKey="nine-deep-onboard-begin-season-seen"
