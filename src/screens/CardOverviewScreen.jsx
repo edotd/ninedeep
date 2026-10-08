@@ -5,6 +5,7 @@ import MatchupCard from '../components/MatchupCard';
 import CardTypeMark from '../components/CardTypeMark';
 import CardAnnotation from '../components/CardAnnotation';
 import { PLAYER_NOTES } from '../components/playerCardNotes';
+import { COACH_NOTES } from '../components/frontOfficeNotes';
 import { drawCoachCard, applyCoachRetention } from '../game/cards';
 import { weightedPick } from '../game/rng';
 import { FANBASE_ARCHETYPES, MATCHUP_MODIFIER_TYPES } from '../game/constants';
@@ -36,25 +37,6 @@ function sampleMatchupCard() {
   const t = weightedPick(MATCHUP_MODIFIER_TYPES);
   return { ...t, id: 'preview-0', used: false };
 }
-
-const COACH_NOTES = [
-  { key: 'type', selector: '.fo2-name', label: 'Type',
-    text: "The coach's archetype — who they are, independent of the specific trait rolled below." },
-  { key: 'modifier', selector: '.fo2-disposition', label: 'Modifier',
-    text: 'The one trait that makes this coach distinct — the headline word for the whole card, explained in full at the bottom.' },
-  { key: 'offbonus', selector: '.fo2-effect-off-bonus', label: 'Offensive Bonus and Die',
-    text: "This coach's Offense bonus, shown here as a percentage — and as a die size (Off/Def) next to the Coach label at the top of the card." },
-  { key: 'defbonus', selector: '.fo2-effect-def-bonus', label: 'Defensive Bonus and Die',
-    text: "This coach's Defense bonus, shown here as a percentage — and as a die size (Off/Def) next to the Coach label at the top of the card." },
-  { key: 'gameplan', selector: '.fo2-rarity-lead', label: 'Gameplan',
-    text: 'Every coach permanently holds two Gameplans, Primary and Secondary — pick one per season on the Set Lineup screen for a team-wide bonus.' },
-  { key: 'relations', selector: '.fo2-effect-player-relations', label: 'Player Relations',
-    text: "How well this coach works with the roster — a stronger relationship adds to both the Offense and Defense bonus above." },
-  { key: 'development', selector: '.fo2-effect-development-points', label: 'Development Points',
-    text: 'Points awarded each season to permanently improve a player’s stats, in whichever categories this coach’s style favors.' },
-  { key: 'adjustments', selector: '.fo2-effect-in-game-adjustments', label: 'In-Game Adjustments',
-    text: 'How many Adjustment cards this coach rolls fresh at the start of every playoff match.' },
-];
 
 const MATCHUP_NOTES = [
   { key: 'header', selector: '.mu2-header', label: 'Stamp header', side: 'left',

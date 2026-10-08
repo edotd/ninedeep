@@ -7,12 +7,21 @@
    rather than doubling up with it. */
 .card-reveal-face .pcard.pcard[class]{width:264px;max-width:none;margin:0;border-color:transparent;background-clip:padding-box;box-shadow:none;cursor:default;}
 
-/* "Tap to learn" layer: dashed outlines mark what can be tapped, the selected region lights solid,
-   and the panel up top shows what it means (see CardReveal.jsx). */
-.card-reveal-explain{position:absolute;left:24px;right:24px;top:64px;height:108px;box-sizing:border-box;padding:12px 16px;background:#F2EBDC;border:2px solid #F0A03D;display:flex;flex-direction:column;justify-content:center;gap:6px;overflow:hidden;}
-.card-reveal-explain-label{font:11px var(--font-label);letter-spacing:.14em;text-transform:uppercase;color:#9C3818;}
-.card-reveal-explain-text{font:13px/1.45 var(--font-mono);color:#4A4433;}
-.card-reveal-hotspot{position:absolute;z-index:3;padding:0;background:transparent;border:1px dashed rgba(240,160,61,.75);border-radius:3px;cursor:pointer;-webkit-tap-highlight-color:transparent;min-width:0;min-height:0;}
-.card-reveal-hotspot:hover{background:rgba(240,160,61,.14);}
-.card-reveal-hotspot.active{border:2px solid #F0A03D;background:rgba(240,160,61,.2);}
+/* Front Office cards: same idea — the reveal draws the rarity frame, so the card's own border and
+   inner Legendary rule step aside, and the landscape card takes the wider base width. */
+.card-reveal-face .fo2-wrap{width:300px;max-width:none;}
+.card-reveal-face .fo2-wrap .fo2-card.fo2-card{width:300px;max-width:none;margin:0;border-color:transparent;box-shadow:none;}
+.card-reveal-face .fo2-card.rarity-Legendary::after{display:none;}
+.card-reveal-measure .fo2-wrap{width:300px;max-width:none;}
+.card-reveal-measure .fo2-wrap .fo2-card.fo2-card{width:300px;max-width:none;margin:0;}
+
+/* "Tap to learn": regions are invisible tap targets; the selected one lights up behind a modal. */
+.card-reveal-hint{position:absolute;left:24px;right:24px;top:84px;text-align:center;font:11px var(--font-label);letter-spacing:.16em;text-transform:uppercase;color:#8E9BB5;pointer-events:none;}
+.card-reveal-hotspot{position:absolute;z-index:3;padding:0;background:transparent;border:0;border-radius:3px;cursor:pointer;-webkit-tap-highlight-color:transparent;min-width:0;min-height:0;}
+.card-reveal-hotspot.active{box-shadow:0 0 0 2px #F0A03D;background:rgba(240,160,61,.2);}
 .card-reveal-hotspot:focus-visible{outline:2px solid #F0A03D;outline-offset:2px;}
+.card-reveal-modal-backdrop{position:absolute;inset:0;z-index:10;background:rgba(18,26,46,.72);display:flex;align-items:center;justify-content:center;padding:24px;}
+.card-reveal-modal{width:100%;max-width:340px;box-sizing:border-box;padding:22px 22px 18px;background:#F2EBDC;border:2px solid #F0A03D;display:flex;flex-direction:column;gap:12px;}
+.card-reveal-modal h2{margin:0;font:13px var(--font-label);letter-spacing:.16em;text-transform:uppercase;color:#9C3818;}
+.card-reveal-modal p{margin:0;font:14px/1.5 var(--font-mono);color:#2E2A1E;}
+.card-reveal-modal button{align-self:stretch;margin-top:4px;}

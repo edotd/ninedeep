@@ -6,11 +6,13 @@ import './WelcomeScreen.css';
 const LAST_STEP = 'ready';
 
 // Steps (driven by GameShell): welcome -> cards -> [Learn More / Start Playing dialog] ->
-// reveal -> ready. "Start Playing" in the dialog skips straight to the deal.
-export default function WelcomeScreen({ teamName, onContinue, onStartPlaying, step = 'welcome', revealCard }) {
+// reveal (player) -> reveal-coach -> reveal-gm -> ready. "Start Playing" in the dialog skips straight to the deal.
+export default function WelcomeScreen({ teamName, onContinue, onStartPlaying, step = 'welcome', revealCard, revealTeam }) {
   const [choosing, setChoosing] = useState(false);
 
-  if (step === 'reveal' && revealCard) return <CardReveal card={revealCard} onContinue={onContinue} />;
+  if (step === 'reveal' && revealCard) return <CardReveal key={step} kind="player" card={revealCard} onContinue={onContinue} />;
+  if (step === 'reveal-coach' && revealTeam) return <CardReveal key={step} kind="coach" team={revealTeam} onContinue={onContinue} />;
+  if (step === 'reveal-gm' && revealTeam) return <CardReveal key={step} kind="gm" team={revealTeam} onContinue={onContinue} />;
 
   const isLast = step === LAST_STEP;
   const handleNext = () => (step === 'cards' ? setChoosing(true) : onContinue());

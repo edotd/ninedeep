@@ -1,6 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import PlayerCard from './PlayerCard';
+import FrontOfficeCard from './FrontOfficeCard';
 import { PLAYER_NOTES } from './playerCardNotes';
+import { COACH_NOTES, GM_NOTES } from './frontOfficeNotes';
 import './CardReveal.css';
 
 // The "Centre dot" card reveal (design: Card Reveal, variant 1B, Onboarding context) — the
@@ -30,7 +32,14 @@ const RAR = {
   Legendary: { color: FR, hair: IRULE, w: 5, lit: FR },
 };
 const frameShadow = (r) => (RAR[r].hair ? `0 0 0 1px ${RAR[r].hair}, 0 0 0 ${1 + RAR[r].w}px ${RAR[r].color}` : `0 0 0 ${RAR[r].w}px ${RAR[r].color}`);
-const CARD_W = 264, SCALE_UP = 1.12, STAGE_W = 402, STAGE_H = 874;
+const STAGE_W = 402, STAGE_H = 874;
+// Base width the real card is laid out at, and how far the reveal enlarges it. Front Office
+// cards are landscape, so they take a wider base than the portrait player card.
+const KINDS = {
+  player: { cardW: 264, up: 1.3, label: 'Your franchise player' },
+  coach: { cardW: 300, up: 1.2, label: 'Your coach' },
+  gm: { cardW: 300, up: 1.2, label: 'Your general manager' },
+};
 
 const BALL_T = {
   Core: { pop: 0, light: 99999, stag: 0, grow: 420, fly: 440, reveal: 720, strike: 1000, badge: 99999, ui: 1100, total: 1500 },
@@ -85,9 +94,9 @@ function Chrome({ t, tm, rarity, cw, ch, onContinue, children }) {
   );
 }
 
-function BallReveal({ t, card, rarity, cardHeight, onContinue }) {
+function BallReveal({ t, face, cardW, up, rarity, cardHeight, onContinue }) {
   const tm = BALL_T[rarity], L = rarity === 'Legendary';
-  const cw = CARD_W * SCALE_UP, ch = cardHeight * SCALE_UP;
+  const cw = cardW * up, ch = cardHeight * up;
   const S = 132, pitch = S * 0.196, dot = S * 0.1;
   const lit = RAR[rarity].lit;
   const pop = back(P(t, tm.pop, 420));
@@ -160,7 +169,7 @@ function BallReveal({ t, card, rarity, cardHeight, onContinue }) {
       )}
       {rv > 0 && (
         <div style={{ position: 'absolute', left: -cw / 2, top: -ch / 2, width: cw, height: ch, clipPath: `circle(${rv * 75}% at 50% 50%)`, boxShadow: '0 14px 26px rgba(8,13,26,0.62)' }}>
-          <div className="card-reveal-face" style={{ width: CARD_W, transform: `scale(${SCALE_UP})`, transformOrigin: '0 0' }}><PlayerCard card={card} /></div>
+          <div className="card-reveal-face" style={{ width: cardW, transform: `scale(${up})`, transformOrigin: '0 0' }}>{face}</div>
         </div>
       )}
       {sk > 0 && (
@@ -173,10 +182,15 @@ function BallReveal({ t, card, rarity, cardHeight, onContinue }) {
   );
 }
 
-const HINT = 'Tap any part of the card to learn what it means.';
+const HINT = 'Tap any part of the card to learn more';
 
-export default function CardReveal({ card, onContinue }) {
-  const rarity = RAR[card.rarity] ? card.rarity : 'Core';
+// kind: 'player' reveals `card`; 'coach' / 'gm' reveal the Front Office card off `team`.
+export default function CardReveal({ kind = 'player', card, team, onContinue }) {
+  const { cardW, up, label } = KINDS[kind];
+  const notes = kind === 'player' ? PLAYER_NOTES : kind === 'coach' ? COACH_NOTES : GM_NOTES;
+  const sourceRarity = kind === 'player' ? card?.rarity : kind === 'coach' ? team?.coach?.rarity : team?.gmRarity;
+  const rarity = RAR[sourceRarity] ? sourceRarity : 'Core';
+  const face = kind === 'player' ? <PlayerCard card={card} /> : <FrontOfficeCard kind={kind === 'coach' ? 'coach' : 'market'} team={team} />;
   const tm = BALL_T[rarity];
   const total = tm.total;
   const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -195,9 +209,9 @@ export default function CardReveal({ card, onContinue }) {
   // The real card's height varies (accolade rows, signing notes), so measure it off-screen once
   // and size the frame/reveal clip to it rather than the design's fixed mock face.
   useLayoutEffect(() => {
-    const el = measureRef.current?.querySelector('.pcard');
+    const el = measureRef.current?.querySelector('.pcard, .fo2-card');
     if (el && el.offsetHeight) setCardHeight(el.offsetHeight);
-  }, [card]);
+  }, [card, team, kind]);
 
   useEffect(() => {
     const fit = () => setScale(Math.min(window.innerWidth / STAGE_W, window.innerHeight / STAGE_H, 1.3));
@@ -219,8 +233,15 @@ export default function CardReveal({ card, onContinue }) {
     return () => cancelAnimationFrame(id);
   }, [total, reduced]);
 
-  // Once the card has settled, lay a tappable region over each explained part of the real card.
-  // Rects are read in screen space and divided back out by the stage's own scale.
+  useEffect(() => {
+    if (!activeKey) return undefined;
+    const onKey = (event) => { if (event.key === 'Escape') setActiveKey(null); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [activeKey]);
+
+  // Once the card has settled, lay an invisible tappable region over each explained part of the
+  // real card. Rects are read in screen space and divided back out by the stage's own scale.
   useLayoutEffect(() => {
     if (!ready) return undefined;
     const measure = () => {
@@ -229,7 +250,7 @@ export default function CardReveal({ card, onContinue }) {
       const sr = stage.getBoundingClientRect();
       const sc = sr.width / STAGE_W || 1;
       const pad = 5;
-      setBoxes(PLAYER_NOTES.flatMap((note) => {
+      setBoxes(notes.flatMap((note) => {
         const el = stage.querySelector('.card-reveal-face ' + note.selector);
         if (!el) return [];
         const r = el.getBoundingClientRect();
@@ -240,33 +261,38 @@ export default function CardReveal({ card, onContinue }) {
     measure();
     window.addEventListener('resize', measure);
     return () => window.removeEventListener('resize', measure);
-  }, [ready, scale, card, cardHeight]);
+  }, [ready, scale, notes, cardHeight]);
 
   return (
-    <div className="card-reveal-overlay" role="dialog" aria-modal="true" aria-label="Your franchise player">
-      <div ref={measureRef} className="card-reveal-measure" aria-hidden="true"><PlayerCard card={card} /></div>
+    <div className="card-reveal-overlay" role="dialog" aria-modal="true" aria-label={label}>
+      <div ref={measureRef} className={'card-reveal-measure kind-' + kind} style={{ width: cardW }} aria-hidden="true">{face}</div>
       <div
         ref={stageRef}
-        className="card-reveal-stage"
+        className={'card-reveal-stage kind-' + kind}
         style={{ width: STAGE_W, height: STAGE_H, marginLeft: -STAGE_W / 2, marginTop: -STAGE_H / 2, transform: `scale(${scale})` }}
       >
-        <BallReveal t={t} card={card} rarity={rarity} cardHeight={cardHeight} onContinue={onContinue} />
-        <div className="card-reveal-explain" style={{ opacity: ui, transform: `translateY(${lerp(-10, 0, ui)}px)` }} aria-live="polite">
-          <span className="card-reveal-explain-label">{active ? active.label : 'Your franchise player'}</span>
-          <span className="card-reveal-explain-text">{active ? active.text : HINT}</span>
-        </div>
+        <BallReveal t={t} face={face} cardW={cardW} up={up} rarity={rarity} cardHeight={cardHeight} onContinue={onContinue} />
+        <div className="card-reveal-hint" style={{ opacity: ui }}>{HINT}</div>
         {ready && boxes.map((box) => (
           <button
             key={box.key}
             type="button"
             className={'card-reveal-hotspot' + (box.key === activeKey ? ' active' : '')}
             style={{ left: box.left, top: box.top, width: box.width, height: box.height }}
-            aria-label={`${box.label}: ${box.text}`}
-            aria-pressed={box.key === activeKey}
-            onClick={() => setActiveKey((k) => (k === box.key ? null : box.key))}
+            aria-label={`${box.label}: learn more`}
+            onClick={() => setActiveKey(box.key)}
           />
         ))}
       </div>
+      {active && (
+        <div className="card-reveal-modal-backdrop" role="presentation" onClick={() => setActiveKey(null)}>
+          <section className="card-reveal-modal" role="dialog" aria-modal="true" aria-label={active.label} onClick={(event) => event.stopPropagation()}>
+            <h2>{active.label}</h2>
+            <p>{active.text}</p>
+            <button type="button" className="primary" autoFocus onClick={() => setActiveKey(null)}>Got It</button>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
