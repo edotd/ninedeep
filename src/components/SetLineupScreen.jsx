@@ -272,8 +272,25 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
   }, [sheetSlot]);
 
   const missing = 5 - starterIds.length;
-  const saveLabel = !complete ? `FILL ${missing} MORE` : dirty ? 'SAVE LINEUP' : 'SAVED';
+  const saveLabel = !complete ? `FILL ${missing} MORE` : dirty ? 'SAVE' : 'SAVED';
   const pairNames = bonusRows.length ? bonusRows.map((row) => row.name).join(' · ') : 'NO PAIRINGS LIVE';
+
+  // Randomize and Save live in the page's title bar (the Team page renders a slot for them);
+  // with no title bar (desktop stacks everything) they sit under the court instead.
+  const [actionSlot, setActionSlot] = useState(null);
+  useEffect(() => { setActionSlot(document.getElementById('lineup-header-actions')); }, []);
+  const actions_ = canEdit ? (
+    <div className={actionSlot ? 'lb-actions in-header' : 'lb-actions'}>
+      <button type="button" className="lb-auto" onClick={handleAutoSet} aria-label="Randomize lineup" title="Randomize lineup">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" aria-hidden="true">
+          <path d="M3 7h3.2c1.6 0 3 .8 3.9 2.1l3.8 5.8c.9 1.3 2.3 2.1 3.9 2.1H21" />
+          <path d="M3 17h3.2c1.6 0 3-.8 3.9-2.1M13.9 9.1c.9-1.3 2.3-2.1 3.9-2.1H21" />
+          <path d="M18.5 4.5L21 7l-2.5 2.5M18.5 14.5L21 17l-2.5 2.5" />
+        </svg>
+      </button>
+      <button type="button" ref={saveBtnRef} className={'lb-save' + (canSave ? ' ready' : '')} disabled={!canSave} onClick={handleSave}>{saveLabel}</button>
+    </div>
+  ) : null;
 
   return (
     <div className="lb" role="region" aria-label="Your Lineup">
@@ -369,15 +386,10 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
           </div>
         </div>
 
-        {canEdit && (
-          <div className="lb-actions">
-            <button type="button" className="lb-auto" onClick={handleAutoSet}>AUTO-SET</button>
-            <button type="button" ref={saveBtnRef} className={'lb-save' + (canSave ? ' ready' : '')} disabled={!canSave} onClick={handleSave}>{saveLabel}</button>
-          </div>
-        )}
+        {!actionSlot && actions_}
       </div>
+      {actionSlot && actions_ && createPortal(actions_, actionSlot)}
 
-      <div className={'lb-dim' + (sheet?.type === 'plan' ? ' open' : '')} onClick={closeSheet} />
 
       {sheetSlot && createPortal(
         <div className={'lb-picker' + (pickerOpen ? ' open' : '')} role="dialog" aria-modal="true" aria-label="Select a player">
@@ -426,18 +438,24 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
         document.body,
       )}
 
-      <div className={'lb-sheet plan' + (sheet?.type === 'plan' ? ' open' : '')} role="dialog" aria-modal="true" aria-label="Select a Gameplan" aria-hidden={sheet?.type !== 'plan'}>
-        <div className="lb-sheet-head"><strong className="title">GAMEPLAN</strong><button type="button" aria-label="Close" onClick={closeSheet}>×</button></div>
-        <button type="button" className={'lb-plan-row' + (!planId ? ' on' : '')} onClick={() => { setPlanId(''); closeSheet(); }}>
-          <span><strong>None</strong><small>No Gameplan bonus applies this season.</small></span>
-        </button>
-        {plans.map((plan, index) => (
-          <button type="button" key={plan.id} className={'lb-plan-row' + (planId === plan.id ? ' on' : '')} onClick={() => { setPlanId(plan.id); closeSheet(); }}>
-            <span><strong>{plan.name}</strong><small>{plan.description}</small></span>
-            <em>{index === 0 ? 'PRIMARY' : 'SECONDARY'}</em>
-          </button>
-        ))}
-      </div>
+      {createPortal(
+        <>
+          <div className={'lb-dim' + (sheet?.type === 'plan' ? ' open' : '')} onClick={closeSheet} />
+          <div className={'lb-sheet plan' + (sheet?.type === 'plan' ? ' open' : '')} role="dialog" aria-modal="true" aria-label="Select a Gameplan" aria-hidden={sheet?.type !== 'plan'}>
+            <div className="lb-sheet-head"><strong className="title">GAMEPLAN</strong><button type="button" aria-label="Close" onClick={closeSheet}>×</button></div>
+            <button type="button" className={'lb-plan-row' + (!planId ? ' on' : '')} onClick={() => { setPlanId(''); closeSheet(); }}>
+              <span><strong>None</strong><small>No Gameplan bonus applies this season.</small></span>
+            </button>
+            {plans.map((plan, index) => (
+              <button type="button" key={plan.id} className={'lb-plan-row' + (planId === plan.id ? ' on' : '')} onClick={() => { setPlanId(plan.id); closeSheet(); }}>
+                <span><strong>{plan.name}</strong><small>{plan.description}</small></span>
+                <em>{index === 0 ? 'PRIMARY' : 'SECONDARY'}</em>
+              </button>
+            ))}
+          </div>
+        </>,
+        document.body,
+      )}
 
       <div className={'lb-toast' + (toast ? ' show' : '')} aria-live="polite">{toast}</div>
 

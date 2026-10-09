@@ -405,6 +405,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           <div className="ts-pagebar">
             <button type="button" className="ts-pagebar-back" onClick={leaveSub} aria-label="Back to Team">‹</button>
             <h2>{SUB_TITLES[sub]}</h2>
+            {sub === 'lineup' && <div className="ts-pagebar-actions" id="lineup-header-actions" />}
           </div>
         ) : (
           <div className="ts-tabbar">

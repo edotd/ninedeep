@@ -3076,3 +3076,13 @@ body:has(.trans-screen){padding-bottom:0;}
 .lb-picker .lb-slide-card{padding-top:0;margin:auto 0;}
 .lb-picker .lb-card-foot{flex:none;}
 .lb-picker .lb-card-foot button{flex:none;}
+
+/* Randomize + Save, right-aligned in the Lineup page's title bar. */
+.ts-pagebar-actions{margin-left:auto;display:flex;align-items:center;}
+.ts-pagebar:has(.ts-pagebar-actions) h2{font-size:24px;white-space:nowrap;}
+.lb-actions.in-header{display:flex;grid-template-columns:none;gap:8px;padding:0;align-items:center;}
+.lb-actions.in-header button{height:38px;}
+.lb-actions.in-header .lb-auto{width:40px;padding:0;display:flex;align-items:center;justify-content:center;background:transparent;box-shadow:inset 0 0 0 2px var(--franchise);color:var(--franchise);}
+.lb-actions.in-header .lb-save{padding:0 10px;font-size:9px;letter-spacing:.1em;white-space:nowrap;background:#3C4A69;color:#A9B4C9;}
+.lb-actions.in-header .lb-save.ready{background:var(--stamp);color:var(--form);}
+.lb-actions:not(.in-header) .lb-auto{display:flex;align-items:center;justify-content:center;}
