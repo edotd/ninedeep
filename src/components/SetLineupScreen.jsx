@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { findSkillPair, skillsetFor, teamSynergy } from '../game/skillsets';
+import { findSkillPair, teamSynergy } from '../game/skillsets';
 import { jerseyNumber, playerGrade } from '../game/cards';
 import { autoValidFive, validateLineup } from '../game/roster';
 import { sortPlayers } from '../game/playerFilters';
@@ -31,9 +31,10 @@ const COURT = [
 ];
 const BENCH = [{ key: 'B6', label: '6TH MAN' }, { key: 'BD', label: 'DEPTH' }];
 const SLOT_KEYS = [...COURT.map((s) => s.key), ...BENCH.map((b) => b.key)];
+// Rarity label tab (background, ink) — the same colours the card reveal stamps on a card.
+const RARITY_LABEL = { Core: ['#6B7894', '#E6DCC4'], Prime: ['#8E9BB5', '#1E2B47'], Signature: ['#E8825C', '#1E2B47'], Legendary: ['#F0A03D', '#1E2B47'] };
 const RARITY_COLOR = { Legendary: '#F0A03D', Signature: '#8E9BB5', Prime: '#C9BC9C', Core: '#A79A78' };
 const SORTS = [['POS', 'position'], ['GRADE', 'grade'], ['SCO', 'SCO'], ['PLM', 'PLM'], ['REB', 'REB'], ['DEF', 'DEF'], ['COST', 'cost']];
-const trim = (n) => `${Number(Number(n).toFixed(2))}`;
 
 const sortRoster = (cards, sort) => (sort === 'cost' ? [...cards].sort((a, b) => a.salary - b.salary) : sortPlayers(cards, sort));
 
@@ -364,18 +365,13 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
             {roster.map((card) => {
               const where = slotOf(card.id);
               const here = where === sheetSlot;
-              const skill = skillsetFor(card);
-              const stat = (k, v, field) => <div key={k}><span className={sort === field ? 'on' : ''}>{k}</span><strong className={sort === field ? 'on' : ''}>{v}</strong></div>;
+              const rarity = card.rarity || 'Core';
+              const [labelBg, labelInk] = RARITY_LABEL[rarity] || RARITY_LABEL.Core;
               return (
                 <div className="lb-slide" key={card.id}>
-                  <div className="lb-card" style={{ borderColor: RARITY_COLOR[card.rarity] || RARITY_COLOR.Core }}>
-                    <div className="lb-card-top" style={{ background: RARITY_COLOR[card.rarity] || RARITY_COLOR.Core }}><span>{card.position.toUpperCase()} · {card.archetype.toUpperCase()}</span><span>{(card.rarity || 'Core').toUpperCase()}</span></div>
-                    <div className="lb-card-id"><b>#{jerseyNumber(card)}</b><strong>{card.archetype}</strong></div>
-                    <div className="lb-card-stats">
-                      {stat('SCO', card.stats?.SCO, 'SCO')}{stat('PLM', card.stats?.PLM, 'PLM')}{stat('REB', card.stats?.REB, 'REB')}
-                      {stat('DEF', card.stats?.DEF, 'DEF')}{stat('GRADE', playerGrade(card), 'grade')}{stat('COST', trim(card.salary), 'cost')}
-                    </div>
-                    <div className="lb-card-skill"><span>SKILLSET</span><em>{(skill?.name || 'No Skillset').toUpperCase()}</em></div>
+                  <div className="lb-slide-card">
+                    <span className="lb-rarity-label" style={{ background: labelBg, color: labelInk }}>{rarity.toUpperCase()}</span>
+                    <PlayerCard card={card} />
                     <div className="lb-card-foot">
                       <span className={where && !here ? 'warn' : ''}>{here ? 'IN THIS SLOT' : where ? `NOW AT ${slotLabel(where)} · WILL MOVE` : 'AVAILABLE'}</span>
                       <button type="button" className={here ? 'on' : ''} onClick={() => (here ? closeSheet() : place(sheetSlot, card.id))}>{here ? 'SELECTED' : 'SELECT'}</button>
