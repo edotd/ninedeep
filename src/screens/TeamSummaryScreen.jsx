@@ -164,7 +164,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   const swipeStart = useRef(null);
   const handleBodyTouchStart = (event) => {
     const ownsHorizontalGesture = event.target.closest(
-      '.development-picker, .tsx-overlay, .row-scroll, .strategy-deal-row, .ts-cost-blocks, .league-standings-table, .lb-sheet, .lb-cards',
+      '.development-picker, .tsx-overlay, .row-scroll, .strategy-deal-row, .ts-cost-blocks, .league-standings-table, .lb-sheet, .lb-cards, .lb-picker',
     );
     swipeStart.current = ownsHorizontalGesture ? null : { x: event.touches[0].clientX, y: event.touches[0].clientY };
   };

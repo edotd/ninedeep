@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { findSkillPair, skillsetFor, teamSynergy } from '../game/skillsets';
 import { jerseyNumber, playerGrade } from '../game/cards';
 import { autoValidFive, validateLineup } from '../game/roster';
@@ -161,7 +162,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
       next[key] = cardId;
       return next;
     });
-    setSheet(null);
+    closeSheet();
   };
 
   const complete = starterIds.length === 5;
@@ -194,7 +195,9 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
     const card = cardFor(key);
     if (!canEdit) { if (card) setViewCard(card); return; }
     setSort('position');
-    setSheet({ type: 'player', slot: key });
+    clearTimeout(pickerTimer.current);
+    setSheet({ type: 'player', slot: key, entering: true });
+    requestAnimationFrame(() => requestAnimationFrame(() => setSheet((cur) => (cur && cur.type === 'player' ? { ...cur, entering: false } : cur))));
   };
 
   const courtRef = useRef(null);
@@ -203,7 +206,35 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
 
   const sheetSlot = sheet?.type === 'player' ? sheet.slot : null;
   const roster = sortRoster(team.hand, sort);
-  const closeSheet = () => setSheet(null);
+  // The full-screen player picker is dealt in from the right (the same slide the Team page's sub
+  // pages use) and thrown back off the same way, so closing waits out the animation.
+  const PICKER_MS = 460;
+  const pickerTimer = useRef(null);
+  useEffect(() => () => clearTimeout(pickerTimer.current), []);
+  const closeSheet = () => {
+    if (sheet?.type !== 'player') { setSheet(null); return; }
+    clearTimeout(pickerTimer.current);
+    setSheet((cur) => (cur ? { ...cur, closing: true } : cur));
+    pickerTimer.current = setTimeout(() => setSheet(null), PICKER_MS);
+  };
+  const pickerOpen = sheet?.type === 'player' && !sheet.closing && !sheet.entering;
+  const carouselRef = useRef(null);
+  const [cardIndex, setCardIndex] = useState(0);
+  // Start on the player already in this slot (or the first card), and keep the page behind the
+  // picker from scrolling while it's up.
+  useEffect(() => {
+    if (!sheetSlot) return undefined;
+    const el = carouselRef.current;
+    if (el) {
+      const at = Math.max(0, roster.findIndex((card) => slotOf(card.id) === sheetSlot));
+      el.scrollLeft = at * el.clientWidth;
+      setCardIndex(at);
+    }
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sheetSlot]);
 
   const missing = 5 - starterIds.length;
   const saveLabel = !complete ? `FILL ${missing} MORE` : dirty ? 'SAVE LINEUP' : 'SAVED';
@@ -311,43 +342,57 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
         )}
       </div>
 
-      <div className={'lb-dim' + (sheet ? ' open' : '')} onClick={closeSheet} />
+      <div className={'lb-dim' + (sheet?.type === 'plan' ? ' open' : '')} onClick={closeSheet} />
 
-      <div className={'lb-sheet player' + (sheetSlot ? ' open' : '')} role="dialog" aria-modal="true" aria-label="Select a player" aria-hidden={!sheetSlot}>
-        <div className="lb-sheet-head">
-          <div><span>SELECT PLAYER</span><strong>{sheetSlot ? slotLabel(sheetSlot) : ''}</strong></div>
-          <button type="button" aria-label="Close" onClick={closeSheet}>×</button>
-        </div>
-        <div className="lb-sorts">
-          <span>SORT</span>
-          {SORTS.map(([label, key]) => (
-            <button type="button" key={key} className={key === sort ? 'on' : ''} onClick={() => setSort(key)}>{label}</button>
-          ))}
-        </div>
-        <div className="lb-cards">
-          {sheetSlot && roster.map((card) => {
-            const where = slotOf(card.id);
-            const here = where === sheetSlot;
-            const skill = skillsetFor(card);
-            const stat = (k, v, field) => <div key={k}><span className={sort === field ? 'on' : ''}>{k}</span><strong className={sort === field ? 'on' : ''}>{v}</strong></div>;
-            return (
-              <div className="lb-card" key={card.id} style={{ borderColor: RARITY_COLOR[card.rarity] || RARITY_COLOR.Core }}>
-                <div className="lb-card-top" style={{ background: RARITY_COLOR[card.rarity] || RARITY_COLOR.Core }}><span>{card.position.toUpperCase()} · {card.archetype.toUpperCase()}</span><span>{(card.rarity || 'Core').toUpperCase()}</span></div>
-                <div className="lb-card-id"><b>#{jerseyNumber(card)}</b><strong>{card.archetype}</strong></div>
-                <div className="lb-card-stats">
-                  {stat('SCO', card.stats?.SCO, 'SCO')}{stat('PLM', card.stats?.PLM, 'PLM')}{stat('REB', card.stats?.REB, 'REB')}
-                  {stat('DEF', card.stats?.DEF, 'DEF')}{stat('GRADE', playerGrade(card), 'grade')}{stat('COST', trim(card.salary), 'cost')}
+      {sheetSlot && createPortal(
+        <div className={'lb-picker' + (pickerOpen ? ' open' : '')} role="dialog" aria-modal="true" aria-label="Select a player">
+          <div className="lb-picker-head">
+            <div><span>SELECT PLAYER</span><strong>{slotLabel(sheetSlot)}</strong></div>
+            <button type="button" aria-label="Close" onClick={closeSheet}>×</button>
+          </div>
+          <div className="lb-sorts">
+            <span>SORT</span>
+            {SORTS.map(([label, key]) => (
+              <button type="button" key={key} className={key === sort ? 'on' : ''} onClick={() => { setSort(key); if (carouselRef.current) carouselRef.current.scrollLeft = 0; setCardIndex(0); }}>{label}</button>
+            ))}
+          </div>
+          <div
+            className="lb-cards"
+            ref={carouselRef}
+            onScroll={(event) => setCardIndex(Math.round(event.currentTarget.scrollLeft / (event.currentTarget.clientWidth || 1)))}
+          >
+            {roster.map((card) => {
+              const where = slotOf(card.id);
+              const here = where === sheetSlot;
+              const skill = skillsetFor(card);
+              const stat = (k, v, field) => <div key={k}><span className={sort === field ? 'on' : ''}>{k}</span><strong className={sort === field ? 'on' : ''}>{v}</strong></div>;
+              return (
+                <div className="lb-slide" key={card.id}>
+                  <div className="lb-card" style={{ borderColor: RARITY_COLOR[card.rarity] || RARITY_COLOR.Core }}>
+                    <div className="lb-card-top" style={{ background: RARITY_COLOR[card.rarity] || RARITY_COLOR.Core }}><span>{card.position.toUpperCase()} · {card.archetype.toUpperCase()}</span><span>{(card.rarity || 'Core').toUpperCase()}</span></div>
+                    <div className="lb-card-id"><b>#{jerseyNumber(card)}</b><strong>{card.archetype}</strong></div>
+                    <div className="lb-card-stats">
+                      {stat('SCO', card.stats?.SCO, 'SCO')}{stat('PLM', card.stats?.PLM, 'PLM')}{stat('REB', card.stats?.REB, 'REB')}
+                      {stat('DEF', card.stats?.DEF, 'DEF')}{stat('GRADE', playerGrade(card), 'grade')}{stat('COST', trim(card.salary), 'cost')}
+                    </div>
+                    <div className="lb-card-skill"><span>SKILLSET</span><em>{(skill?.name || 'No Skillset').toUpperCase()}</em></div>
+                    <div className="lb-card-foot">
+                      <span className={where && !here ? 'warn' : ''}>{here ? 'IN THIS SLOT' : where ? `NOW AT ${slotLabel(where)} · WILL MOVE` : 'AVAILABLE'}</span>
+                      <button type="button" className={here ? 'on' : ''} onClick={() => (here ? closeSheet() : place(sheetSlot, card.id))}>{here ? 'SELECTED' : 'SELECT'}</button>
+                    </div>
+                  </div>
                 </div>
-                <div className="lb-card-skill"><span>SKILLSET</span><em>{(skill?.name || 'No Skillset').toUpperCase()}</em></div>
-                <div className="lb-card-foot">
-                  <span className={where && !here ? 'warn' : ''}>{here ? 'IN THIS SLOT' : where ? `NOW AT ${slotLabel(where)} · WILL MOVE` : 'AVAILABLE'}</span>
-                  <button type="button" className={here ? 'on' : ''} onClick={() => (here ? closeSheet() : place(sheetSlot, card.id))}>{here ? 'SELECTED' : 'SELECT'}</button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+              );
+            })}
+          </div>
+          <div className="lb-picker-pager" aria-live="polite">
+            <span>{Math.min(cardIndex + 1, roster.length)} / {roster.length}</span>
+            <i>{roster.map((card, index) => <b key={card.id} className={index === cardIndex ? 'on' : ''} />)}</i>
+            <small>SWIPE FOR MORE PLAYERS</small>
+          </div>
+        </div>,
+        document.body,
+      )}
 
       <div className={'lb-sheet plan' + (sheet?.type === 'plan' ? ' open' : '')} role="dialog" aria-modal="true" aria-label="Select a Gameplan" aria-hidden={sheet?.type !== 'plan'}>
         <div className="lb-sheet-head"><strong className="title">GAMEPLAN</strong><button type="button" aria-label="Close" onClick={closeSheet}>×</button></div>

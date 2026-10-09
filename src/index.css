@@ -3006,3 +3006,28 @@ body:has(.trans-screen){padding-bottom:0;}
 /* The Team / League tab row on the top-level pages: two equal tabs, the active one underlined. */
 .ts-tab-static{border-bottom:2px solid transparent;}
 .ts-tab-static.active{border-bottom-color:var(--franchise);}
+
+/* The full-screen player picker: one card at a time over everything (both bars included), dealt
+   in from the right like the Team page's sub pages. */
+.lb-picker{position:fixed;inset:0;z-index:990;display:flex;flex-direction:column;gap:12px;box-sizing:border-box;padding:max(18px,env(safe-area-inset-top)) 0 max(18px,env(safe-area-inset-bottom));background:#E3D8BD;transform:translateX(106%) rotate(7deg);visibility:hidden;box-shadow:-14px 0 32px rgba(23,34,58,.4);transition:transform 440ms cubic-bezier(.2,.8,.2,1),visibility 0s linear 440ms;overscroll-behavior:contain;}
+.lb-picker.open{transform:none;visibility:visible;transition:transform 440ms cubic-bezier(.2,.8,.2,1),visibility 0s;}
+.lb-picker-head{display:flex;justify-content:space-between;align-items:center;padding:0 16px;}
+.lb-picker-head div{display:flex;flex-direction:column;gap:4px;}
+.lb-picker-head span{font:9px var(--font-mono);letter-spacing:.14em;color:#625A44;}
+.lb-picker-head strong{font:400 32px/.8 var(--font-display);color:#1E2B47;text-transform:uppercase;}
+.lb-picker-head button{width:44px;height:44px;background:none;border:0;font:400 30px var(--font-display);color:#1E2B47;cursor:pointer;}
+.lb-picker .lb-cards{flex:1;min-height:0;gap:0;padding:0;align-items:center;scroll-snap-type:x mandatory;}
+.lb-slide{flex:0 0 100%;box-sizing:border-box;padding:0 18px;scroll-snap-align:center;scroll-snap-stop:always;display:flex;justify-content:center;align-items:center;}
+.lb-picker .lb-card{width:100%;max-width:340px;}
+.lb-picker-pager{display:flex;flex-direction:column;align-items:center;gap:8px;padding:0 16px;}
+.lb-picker-pager span{font:400 12px var(--font-label);letter-spacing:.14em;color:#1E2B47;}
+.lb-picker-pager i{display:flex;gap:5px;font-style:normal;}
+.lb-picker-pager b{width:18px;height:4px;background:#C9BC9C;}
+.lb-picker-pager b.on{background:#1E2B47;}
+.lb-picker-pager small{font:9px var(--font-mono);letter-spacing:.12em;color:#625A44;}
+@media (prefers-reduced-motion:reduce){.lb-picker,.lb-picker.open{transition:none;}}
+/* One tidy row of sort chips in the picker. */
+.lb-picker .lb-sorts{flex-wrap:nowrap;gap:4px;padding:0 16px;overflow-x:auto;scrollbar-width:none;}
+.lb-picker .lb-sorts::-webkit-scrollbar{display:none;}
+.lb-picker .lb-sorts span{margin-right:2px;flex:none;}
+.lb-picker .lb-sorts button{flex:none;height:30px;padding:0 7px;font-size:8px;letter-spacing:.06em;}
