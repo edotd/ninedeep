@@ -7,11 +7,16 @@ import { PlayerLedgerIdentity, CostBlocks } from '../components/LedgerRow';
 import { formatCoins, rosterSalary, gmCost } from '../game/economy';
 import { FANBASE_BOOST_COST, ROSTER_SIZE } from '../game/constants';
 import CoachmarkTour from '../components/CoachmarkTour';
+import TeamMain from '../components/TeamMain';
 import { teamOutput } from '../game/matchup';
 import { teamSynergy } from '../game/skillsets';
 import { jerseyNumber, playerGrade } from '../game/cards';
 
-const tabForSection = (section) => section === 'gameplan' ? 'chemistry' : section === 'league' ? 'office' : section || 'office';
+// The Team tab opens on its main index; the League and Budget tabs are their own. A section
+// request from elsewhere (the persistent bar's Coach / Gameplan boxes) lands on the matching
+// sub page of the Team tab.
+const tabForSection = (section) => (section === 'league' ? 'office' : section === 'ledger' || section === 'budget' ? 'ledger' : 'chemistry');
+const subForSection = (section) => (section === 'office' ? 'coach' : section === 'gameplan' ? 'lineup' : null);
 
 // The Team Summary screen — "the file the league keeps on you" (design brand handoff, 1a).
 // Serves two roles from the same markup: as the 'teamsummary' phase (shown once per season,
@@ -71,6 +76,8 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   // `isDesktop` just decides whether `tab` actually filters anything.
   const isDesktop = useIsDesktop();
   const [tab, setTab] = useState(() => tabForSection(focusSection?.section));
+  // Which Team sub page is open (null = the main index): 'lineup' | 'coach' | 'gm'.
+  const [sub, setSub] = useState(() => subForSection(focusSection?.section));
   const showSection = (key) => isDesktop || tab === key;
   const leagueOutputs = state.teams.map((candidate) => ({ team: candidate, output: candidate.coach ? teamOutput(candidate) : { total: 0, off: 0, def: 0, bench: 0 } }));
   const leagueTotal = leagueOutputs.reduce((sum, entry) => sum + entry.output.total, 0);
@@ -84,6 +91,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   useEffect(() => {
     if (!focusSection) return;
     setTab(tabForSection(focusSection.section));
+    setSub(subForSection(focusSection.section));
     const targetId = focusSection.section === 'office'
       ? 'team-coach-card'
       : ['gameplan', 'adjustment'].includes(focusSection.section) ? `team-${focusSection.section}-cards` : `team-${focusSection.section}`;
@@ -204,12 +212,25 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   if (committed > cap) seasonIssues.push('Resolve team budget');
   if (!team.lineupSet || starters.length !== 5) seasonIssues.push('Set your lineup');
 
+  // A Team main tile: sub pages swap in on a phone (and the budget tile jumps to the Budget tab);
+  // on desktop everything is already stacked on one page, so the tile scrolls to its section.
+  const openSub = (target) => {
+    if (isDesktop) {
+      const id = { lineup: 'team-lineup', coach: 'team-coach-card', gm: 'team-gm-card', budget: 'team-ledger' }[target];
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    if (target === 'budget') { setTab('ledger'); return; }
+    setSub(target);
+    window.scrollTo(0, 0);
+  };
+
   return (
     <>
       <div className="screen ts-screen">
         <div className="ts-viewing-franchise"><span>{readOnly ? 'Viewing Franchise' : 'Your Franchise'}</span><strong>{team.name}</strong></div>
         <div className="ts-tabbar" ref={tabbarRef}>
-          <button ref={gameplanTabRef} className={'ts-tab' + (tab === 'chemistry' ? ' active' : '')} onClick={() => setTab('chemistry')}>
+          <button ref={gameplanTabRef} className={'ts-tab' + (tab === 'chemistry' ? ' active' : '')} onClick={() => { setTab('chemistry'); setSub(null); }}>
             Team
             {!readOnly && !team.lineupSet && <span className="alert-badge" aria-label="Lineup not set">!</span>}
           </button>
@@ -226,15 +247,23 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
         <div className="ts-body" onTouchStart={!isDesktop ? handleBodyTouchStart : undefined} onTouchMove={!isDesktop ? handleBodyTouchMove : undefined} onTouchEnd={!isDesktop ? handleBodyTouchEnd : undefined}>
           {showSection('chemistry') && (
             <>
-              <SetLineupScreen
-                embedded
-                team={team}
-                actions={actions}
-                myTeamId={myTeamId}
-                canEdit={canEdit}
-                onPreviewChange={onLineupPreviewChange}
-              />
-              <TeamChemistry team={team} canEdit={canEdit} showLineupButton={false} />
+              {!isDesktop && sub && <button type="button" className="tm-back" onClick={() => setSub(null)}>‹ Team</button>}
+              {(isDesktop || !sub) && (
+                <TeamMain state={state} team={team} readOnly={readOnly} committed={committed} cap={cap} budgetSources={budgetSources} onOpen={openSub} />
+              )}
+              {(isDesktop || sub === 'lineup') && (
+                <div id="team-lineup">
+                  <SetLineupScreen
+                    embedded
+                    team={team}
+                    actions={actions}
+                    myTeamId={myTeamId}
+                    canEdit={canEdit}
+                    onPreviewChange={onLineupPreviewChange}
+                  />
+                  <TeamChemistry team={team} canEdit={canEdit} showLineupButton={false} />
+                </div>
+              )}
             </>
           )}
 
@@ -278,7 +307,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           )}
 
           {showSection('ledger') && (
-            <div className="ts-section ts-ledger">
+            <div className="ts-section ts-ledger" id="team-ledger">
               <div className="ts-ledger-topline">
                 <div><div className="ts-heading">Budget</div><strong>{formatCoins(committed)} / {formatCoins(cap).replace('🪙', '')}</strong></div>
                 <div className={'ts-ledger-room' + (room < 0 ? ' bad' : '')}><span>Room Available</span><strong>{formatCoins(room)}</strong></div>
@@ -350,14 +379,14 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             </div>
           )}
 
-          {team.gmType && showSection('chemistry') && (
+          {team.gmType && showSection('chemistry') && (isDesktop || sub === 'coach' || sub === 'gm') && (
             <div className="ts-section" id="team-office">
-              <div className="ts-heading">Coach & GM</div>
+              <div className="ts-heading">{isDesktop ? 'Coach & GM' : sub === 'coach' ? 'Coach' : 'GM'}</div>
               {/* Coach gets its own row, GM (and Fanbase, the other front-office role) a second
                   row below it — kept apart rather than sharing one swipeable row of up to three
                   cards. Neither row ever holds more than two cards, so both stay a plain
                   stretch-to-fit row with no scroll tracking needed. */}
-              <div className="fo-deal-row row-fit" style={{ margin: 0 }}>
+              {(isDesktop || sub === 'coach') && <div className="fo-deal-row row-fit" style={{ margin: 0 }}>
                 <div className="ts-fo-col" id="team-coach-card">
                   {team.coach ? <FrontOfficeCard kind="coach" team={team} /> : <div className="ts-empty-coach"><span>Coach</span><strong>Open Slot</strong><small>Choose a replacement in Free Agency.</small></div>}
                   {!readOnly && team.coach && state.settings.coachChangesEnabled && (
@@ -373,9 +402,9 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                     </button>
                   )}
                 </div>
-              </div>
-              <div className="fo-deal-row row-fit" style={{ margin: '12px 0 0' }}>
-                <div className="ts-fo-col">
+              </div>}
+              {(isDesktop || sub === 'gm') && <div className="fo-deal-row row-fit" style={{ margin: isDesktop ? '12px 0 0' : 0 }}>
+                <div className="ts-fo-col" id="team-gm-card">
                   <FrontOfficeCard kind="market" team={team} />
                   {!readOnly && state.settings.coachChangesEnabled && (
                     <button
@@ -391,7 +420,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                     </button>
                   )}
                 </div>
-              </div>
+              </div>}
             </div>
           )}
 
@@ -473,7 +502,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                   {seasonIssues.map((msg) => (
                     <li key={msg}>
                       {msg === 'Set your lineup' ? (
-                        <button type="button" onClick={() => { setShowSeasonIssues(false); setTab('chemistry'); }}>Lineup</button>
+                        <button type="button" onClick={() => { setShowSeasonIssues(false); setTab('chemistry'); setSub('lineup'); }}>Lineup</button>
                       ) : msg === 'Resolve team budget' ? (
                         <button type="button" onClick={() => { setShowSeasonIssues(false); setTab('ledger'); }}>Budget</button>
                       ) : msg.startsWith('Resolve your roster') ? (
