@@ -246,19 +246,19 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
         <div className="ts-body" onTouchStart={!isDesktop ? handleBodyTouchStart : undefined} onTouchMove={!isDesktop ? handleBodyTouchMove : undefined} onTouchEnd={!isDesktop ? handleBodyTouchEnd : undefined}>
           {showSection('chemistry') && (
             <>
-              {!isDesktop && sub && <button type="button" className="tm-back" onClick={() => setSub(null)}>‹ Team</button>}
+              {!isDesktop && sub && sub !== 'lineup' && <button type="button" className="tm-back" onClick={() => setSub(null)}>‹ Team</button>}
               {(isDesktop || !sub) && (
                 <TeamMain team={team} readOnly={readOnly} committed={committed} cap={cap} budgetSources={budgetSources} onOpen={openSub} />
               )}
               {(isDesktop || sub === 'lineup') && (
                 <div id="team-lineup">
                   <SetLineupScreen
-                    embedded
                     team={team}
                     actions={actions}
                     myTeamId={myTeamId}
                     canEdit={canEdit}
                     onPreviewChange={onLineupPreviewChange}
+                    onBack={isDesktop ? undefined : () => setSub(null)}
                   />
                 </div>
               )}

@@ -3,158 +3,111 @@ import { findSkillPair, skillsetFor } from '../game/skillsets';
 import { jerseyNumber, playerGrade } from '../game/cards';
 import { autoValidFive, validateLineup } from '../game/roster';
 import { sortPlayers } from '../game/playerFilters';
-import { useIsDesktop } from '../hooks/useIsDesktop';
 import PlayerCard from './PlayerCard';
-import FrontOfficeCard from './FrontOfficeCard';
-import PlayerFilterBar from './PlayerFilterBar';
 import CoachmarkTour from './CoachmarkTour';
 import { gameplanEffects } from '../game/strategyCards';
 
 // Shown once per browser — the first time anyone opens this editor, not once per team/era, so
-// re-explaining after a fresh solo game or a new room would be redundant. v2: a short anchored
-// coachmark tour replaced the old single static modal (LINEUP_INTRO_KEY) — a new key so returning
-// players who already dismissed the old text-only version still get the more useful one once.
+// re-explaining after a fresh solo game or a new room would be redundant.
 const LINEUP_TOUR_KEY = 'nine-deep-lineup-coachmark-v2-seen';
 
-// "The Floor" (design ref 1a) — the starting five placed on a half-court diagram, wired
-// together wherever two of them share a live Skillset pairing (game/skillsets.js's
-// SKILLSET_PAIRS — the same bonus the Lineup & Chemistry tab's pairs list shows, just drawn here
-// instead of tabulated). The five court positions below are a fixed, purely cosmetic layout
-// (this game only tracks Guard/Forward/Big, not five true positions) so a starter can occupy
-// any of the five spots — nothing here enforces which slot a given position "belongs" in
-// beyond what confirmLineup already requires (one of each Guard/Forward/Big among the five).
-// `number` is the slot's real, meaningful label — 1/2 for the two lowest (deepest, corner)
-// slots, 3/4 for the two middle (wing) slots, 5 for the lone top slot nearest the rim
-// (CourtLines' basket sits at the low-y end of its viewBox, i.e. visually near the top of this
-// diagram) — not just a cosmetic court-diagram position. Whoever's rostered here belongs to a
-// real slot identity a Skillset can react to (see POSITION_SLOT_BONUSES in skillsets.js), the
-// same way position ('Guard'/'Forward'/'Big') already does.
-const COURT_SLOTS = [
-  { left: '50%', top: '16%', number: 5 },
-  { left: '14%', top: '46%', number: 3 },
-  { left: '86%', top: '46%', number: 4 },
-  { left: '30%', top: '80%', number: 1 },
-  { left: '70%', top: '80%', number: 2 },
+// Lineup & Chemistry (design: Lineup Builder). The starting five sit on a half-court diagram,
+// wired together wherever two of them share a live Skillset pairing (game/skillsets.js's
+// SKILLSET_PAIRS); the two bench roles sit under it; the live pairings are tabulated below.
+// Tapping a slot opens a bottom sheet of the roster to fill it, and the Gameplan row opens its
+// own sheet. Everything here is a local draft — the shared team changes exactly once, on Save.
+//
+// The five court spots are a fixed, purely cosmetic layout (this game only tracks
+// Guard/Forward/Big, so a starter can occupy any spot) — nothing enforces which spot a position
+// "belongs" in beyond what saveLineup already requires: one of each Guard/Forward/Big.
+const COURT = [
+  { key: 'S0', n: 1, x: 50, y: 80 },
+  { key: 'S1', n: 2, x: 16, y: 54 },
+  { key: 'S2', n: 3, x: 84, y: 54 },
+  { key: 'S3', n: 4, x: 24, y: 22 },
+  { key: 'S4', n: 5, x: 76, y: 22 },
 ];
+const BENCH = [{ key: 'B6', label: '6TH MAN' }, { key: 'BD', label: 'DEPTH' }];
+const SLOT_KEYS = [...COURT.map((s) => s.key), ...BENCH.map((b) => b.key)];
+const RARITY_COLOR = { Legendary: '#F0A03D', Signature: '#8E9BB5', Prime: '#C9BC9C', Core: '#A79A78' };
+const SORTS = [['POS', 'position'], ['GRADE', 'grade'], ['SCO', 'SCO'], ['PLM', 'PLM'], ['REB', 'REB'], ['DEF', 'DEF'], ['COST', 'cost']];
+const trim = (n) => `${Number(Number(n).toFixed(2))}`;
 
-// team.activeIds has no slot concept at all — it's just an unordered array, and
-// promoteToStarter always appends to its end regardless of which visual court slot was
-// clicked. This reconciles a purely local, 5-entry "which id sits in which slot" array
-// against the real activeIds: ids that are still active keep their existing slot, ids no
-// longer active are cleared, and newly-active ids fill whatever slots are still open. Without
-// this, a card placed into slot 3 could visually land in slot 0 instead, wherever
-// activeIds.length happened to point.
-function reconcileSlots(prevSlots, ids) {
-  const next = prevSlots.map((id) => (id != null && ids.includes(id) ? id : null));
-  for (const id of ids) {
-    if (next.includes(id)) continue;
-    const openIndex = next.indexOf(null);
-    if (openIndex >= 0) next[openIndex] = id;
+const sortRoster = (cards, sort) => (sort === 'cost' ? [...cards].sort((a, b) => a.salary - b.salary) : sortPlayers(cards, sort));
+
+export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onBack, onPreviewChange }) {
+  // slot key -> card id (S0..S4 starters, B6 sixth man, BD depth). A fresh season opens empty
+  // because the generated active five is only a placeholder until a human reviews it; an
+  // already-saved lineup opens with its current five intact.
+  const [assign, setAssign] = useState(() => {
+    const next = {};
+    if (team.lineupSet) {
+      (team.activeIds || []).slice(0, 5).forEach((id, i) => { next[`S${i}`] = id; });
+      const bench = team.hand.filter((c) => !(team.activeIds || []).includes(c.id));
+      const sixth = bench.find((c) => c.id === team.sixthManId) || bench[0];
+      if (sixth) next.B6 = sixth.id;
+      const depth = bench.find((c) => c.id !== sixth?.id);
+      if (depth) next.BD = depth.id;
+    }
+    return next;
+  });
+  const [planId, setPlanId] = useState(() => team.activeGameplanId || '');
+  const [sheet, setSheet] = useState(null); // { type: 'player', slot } | { type: 'plan' }
+  const [sort, setSort] = useState('position');
+  const [toast, setToast] = useState('');
+  const [viewCard, setViewCard] = useState(null);
+  const toastTimer = useRef(null);
+  const flash = (msg) => {
+    setToast(msg);
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(''), 1400);
+  };
+  useEffect(() => () => clearTimeout(toastTimer.current), []);
+
+  const cardById = (id) => (id ? team.hand.find((c) => c.id === id) || null : null);
+  const starters = COURT.map((s) => cardById(assign[s.key]));
+  const starterIds = starters.filter(Boolean).map((c) => c.id);
+
+  // Once all five are in, an empty bench role fills itself from whoever's left over, so a plain
+  // seven-man roster never needs the bench picked by hand. An explicit pick always wins.
+  const resolveBench = () => {
+    const out = {};
+    const used = new Set();
+    for (const { key } of BENCH) {
+      const picked = cardById(assign[key]);
+      if (picked && !starterIds.includes(picked.id) && !used.has(picked.id)) { out[key] = picked; used.add(picked.id); }
+    }
+    if (starterIds.length === 5) {
+      for (const { key } of BENCH) {
+        if (out[key]) continue;
+        const fill = team.hand.find((c) => !starterIds.includes(c.id) && !used.has(c.id));
+        if (fill) { out[key] = fill; used.add(fill.id); }
+      }
+    }
+    return out;
+  };
+  const benchCards = resolveBench();
+  const sixthMan = benchCards.B6 || null;
+  const cardFor = (key) => (key.startsWith('S') ? starters[Number(key.slice(1))] : benchCards[key] || null);
+
+  const plans = team.coach?.gameplans || [];
+  const activePlan = plans.find((plan) => plan.id === planId) || null;
+
+  // Live pairings. A named pairing pays out once no matter how many starter pairs satisfy it
+  // (see teamSynergy in game/skillsets.js — it dedupes by rule, not by player pair), so only
+  // the first starter pair found for a given rule is drawn and listed.
+  const pairings = [];
+  const seenRules = new Set();
+  for (let i = 0; i < starters.length; i++) {
+    for (let j = i + 1; j < starters.length; j++) {
+      const pair = findSkillPair(starters[i], starters[j]);
+      if (!pair || seenRules.has(pair.name)) continue;
+      seenRules.add(pair.name);
+      pairings.push({ i, j, pair });
+    }
   }
-  while (next.length < 5) next.push(null);
-  return next.slice(0, 5);
-}
 
-// A plain half-court diagram — baseline, key, free-throw circle, a corner-to-corner three
-// point arc, and the center line/circle at the far edge — decorative flavor rather than a
-// regulation-accurate court, drawn once at a fixed viewBox that matches .slf-court's own
-// 3:4 aspect-ratio so it always fills the box without distortion.
-function CourtLines() {
-  return (
-    <svg className="slf-court-lines" viewBox="0 0 300 400" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-      <rect x="10" y="10" width="280" height="380" />
-      <rect x="95" y="10" width="110" height="160" />
-      <circle cx="150" cy="170" r="42" />
-      <circle cx="150" cy="32" r="6" />
-      <line x1="130" y1="24" x2="170" y2="24" />
-      <path d="M 35 92 A 205 205 0 0 0 265 92" />
-      <line x1="35" y1="10" x2="35" y2="92" />
-      <line x1="265" y1="10" x2="265" y2="92" />
-      <path d="M 110 390 A 40 40 0 0 1 190 390" />
-    </svg>
-  );
-}
-
-function MiniCard({ card, selected, onClick, onRemove, dim, onHoverStart, onHoverEnd }) {
-  if (!card) {
-    return <button type="button" className="slf-card slf-card-empty" onClick={onClick} disabled={!onClick}><span>+</span></button>;
-  }
-  const skillset = skillsetFor(card);
-  return (
-    <div className="slf-card-wrap">
-      <button
-        type="button"
-        className={'slf-card' + (selected ? ' selected' : '') + (dim ? ' dim' : '')}
-        onClick={onClick}
-        disabled={!onClick}
-        onMouseEnter={() => onHoverStart?.(card.id)}
-        onMouseLeave={() => onHoverEnd?.(card.id)}
-      >
-        <span className="slf-card-top"><span className="slf-card-pos">{card.position}</span><span className="slf-card-grade">{playerGrade(card)}</span></span>
-        <span className="slf-card-num">#{jerseyNumber(card)}</span>
-        <span className="slf-card-name">{card.archetype}</span>
-        <span className="slf-card-skill">{skillset?.name || 'No Skillset'}</span>
-      </button>
-      {onRemove && <button type="button" className="slf-card-remove" onClick={onRemove} aria-label={`Remove ${card.archetype} from the lineup`}>-</button>}
-    </div>
-  );
-}
-
-export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onClose, onPreviewChange, embedded = false }) {
-  const isDesktop = useIsDesktop();
-  const onCloseRef = useRef(onClose);
-  useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
-  useEffect(() => {
-    if (embedded) return undefined;
-    const onKey = (e) => { if (e.key === 'Escape') onCloseRef.current(); };
-    document.addEventListener('keydown', onKey);
-    const scrollY = window.scrollY;
-    const prevOverflow = document.body.style.overflow;
-    const prevPosition = document.body.style.position;
-    const prevTop = document.body.style.top;
-    const prevWidth = document.body.style.width;
-    const prevHtmlOverflow = document.documentElement.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = '100%';
-    document.documentElement.style.overflow = 'hidden';
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = prevOverflow;
-      document.body.style.position = prevPosition;
-      document.body.style.top = prevTop;
-      document.body.style.width = prevWidth;
-      document.documentElement.style.overflow = prevHtmlOverflow;
-      window.scrollTo(0, scrollY);
-    };
-  }, [embedded]);
-
-  // Everything in this editor is a local draft. The shared team — and therefore the
-  // Franchise page underneath this modal — is changed exactly once, by Save Lineup. A fresh
-  // season still opens empty because the generated active five is only a placeholder until a
-  // human reviews it; an already-saved lineup opens with its current five intact.
-  const [slotOrder, setSlotOrder] = useState(() => reconcileSlots(
-    [null, null, null, null, null],
-    team.lineupSet ? (team.activeIds || []) : [],
-  ));
-  const activeIds = slotOrder.filter((id) => id != null);
-  const starters = slotOrder.map((id) => (id ? team.hand.find((c) => c.id === id) || null : null));
-  const bench = team.hand.filter((c) => !activeIds.includes(c.id));
-  const [playerSort, setPlayerSort] = useState('position');
-  const filteredBench = sortPlayers(bench, playerSort);
-  const sortedRosterEntries = sortPlayers(starters.filter(Boolean).concat(bench), playerSort).map((card) => ({
-    card,
-    slotIndex: starters.findIndex((starter) => starter?.id === card.id),
-  }));
-  const [selectedId, setSelectedId] = useState(null);
-  const [selectedGameplanId, setSelectedGameplanId] = useState(() => team.activeGameplanId || '');
-  const [sixthManId] = useState(() => team.sixthManId || bench[0]?.id || '');
-  const effectiveSixthManId = bench.some((card) => card.id === sixthManId) ? sixthManId : (bench[0]?.id || '');
-  const sixthMan = bench.find((card) => card.id === effectiveSixthManId) || null;
-  const depthPlayer = bench.find((card) => card.id !== effectiveSixthManId) || null;
-  const [gameplanPickerOpen, setGameplanPickerOpen] = useState(false);
-
+  // Feed the masthead's live Offense/Defense/Bench preview.
   const previewSignature = starters.map((card) => card?.id ?? 'open').join(',');
   useEffect(() => {
     const stats = starters.reduce((totals, card) => {
@@ -162,315 +115,248 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
       for (const stat of ['SCO', 'PLM', 'REB', 'DEF']) totals[stat] += card.stats?.[stat] || 0;
       return totals;
     }, { SCO: 0, PLM: 0, REB: 0, DEF: 0 });
-    const previewTeam = { ...team, activeIds, activeGameplanId: selectedGameplanId };
-    const selectedPlan = team.coach?.gameplans?.find((plan) => plan.id === selectedGameplanId) || null;
-    const effects = gameplanEffects(previewTeam, selectedPlan);
-    const adjustedStats = {
+    const previewTeam = { ...team, activeIds: starterIds, activeGameplanId: planId };
+    const effects = gameplanEffects(previewTeam, activePlan);
+    const adjusted = {
       SCO: Math.round(stats.SCO * (1 + (effects.offPercent || 0) / 100) * 10) / 10,
       PLM: Math.round(stats.PLM * (1 + (effects.offPercent || 0) / 100) * 10) / 10,
       REB: Math.round(stats.REB * (1 + (effects.defPercent || 0) / 100) * 10) / 10,
       DEF: Math.round(stats.DEF * (1 + (effects.defPercent || 0) / 100) * 10) / 10,
     };
-    onPreviewChange?.({ teamId: team.id, stats: adjustedStats });
+    onPreviewChange?.({ teamId: team.id, stats: adjusted });
     // The player ids are the source of every stat total; card objects themselves remain stable.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [previewSignature, selectedGameplanId, team, team.id, onPreviewChange]);
+  }, [previewSignature, planId, team, team.id, onPreviewChange]);
   useEffect(() => () => onPreviewChange?.(null), [onPreviewChange]);
 
-  // A card is "held" the moment it's selected for placement (the existing tap-to-hold
-  // mechanic, which is also mobile's only way to hold a card) or, on desktop only, moused
-  // over — either way, show the full player card so its stats are readable without leaving
-  // this screen. Non-interactive: it never intercepts the click that actually places a card.
-  const [hoveredId, setHoveredId] = useState(null);
-  const handleHoverStart = (cardId) => setHoveredId(cardId);
-  const handleHoverEnd = (cardId) => setHoveredId((cur) => (cur === cardId ? null : cur));
-  // Mobile has no real hover — some touch browsers still fire a synthetic mouseenter on first
-  // tap, which would otherwise pop the preview on a plain tap rather than an actual hold. Only
-  // trust hover on desktop; mobile shows the preview solely for a genuinely held (selected) card.
-  const previewId = isDesktop ? (hoveredId ?? selectedId) : selectedId;
-  const previewCard = previewId != null ? team.hand.find((c) => c.id === previewId) || null : null;
+  // Which slot (if any) currently holds a card.
+  const slotOf = (cardId) => SLOT_KEYS.find((key) => cardFor(key)?.id === cardId) || null;
+  const slotLabel = (key) => (key.startsWith('S') ? `STARTER ${Number(key.slice(1)) + 1}` : BENCH.find((b) => b.key === key).label);
 
-  // Mobile has no bench sidebar to hold a card from first (see the Players section, desktop
-  // only below), so tapping an empty court slot there opens a picker of eligible players right
-  // in this window instead — one tap to open, one tap on a card to place it. Desktop keeps its
-  // existing hold-from-the-sidebar-then-tap-the-slot flow, so this is mobile-only.
-  const [pickerSlotIndex, setPickerSlotIndex] = useState(null);
-  useEffect(() => { if (isDesktop) setPickerSlotIndex(null); }, [isDesktop]);
-  const placeCardInSlot = (slotIndex, cardId) => {
-    setSelectedId(null);
-    setSlotOrder((prev) => { const next = [...prev]; next[slotIndex] = cardId; return next; });
-    setPickerSlotIndex(null);
+  const place = (key, cardId) => {
+    setAssign((prev) => {
+      const next = { ...prev };
+      for (const k of SLOT_KEYS) if (next[k] === cardId) delete next[k];
+      next[key] = cardId;
+      return next;
+    });
+    setSheet(null);
+  };
+  const clearSlot = (key, event) => {
+    event?.stopPropagation();
+    setAssign((prev) => { const next = { ...prev }; delete next[key]; return next; });
   };
 
-  // A starter's full card, or the coach's full card, centered on screen — a plain inspection
-  // view, so it's available whether or not the lineup can be edited right now. { type: 'player',
-  // card } or { type: 'coach' } (the coach itself always comes from `team`, already in scope).
-  const [centeredCard, setCenteredCard] = useState(null);
+  const complete = starterIds.length === 5;
+  const signature = JSON.stringify([starterIds, sixthMan?.id || null, planId]);
+  const [savedSignature, setSavedSignature] = useState(() => (team.lineupSet ? signature : null));
+  const dirty = signature !== savedSignature;
+  const canSave = canEdit && complete && dirty;
+
+  const handleSave = () => {
+    if (!canSave) return;
+    const check = validateLineup({ ...team, activeIds: starterIds });
+    if (!check.valid) { alert(check.msg); return; }
+    const result = actions.saveLineup(myTeamId, starterIds, planId, sixthMan?.id || '');
+    if (result && result.valid === false) { alert(result.msg); return; }
+    setSavedSignature(signature);
+    flash('LINEUP SAVED');
+  };
+
+  // A valid five, never the strongest one (see roster.js's autoValidFive) — an escape hatch for
+  // someone who doesn't want to hand-pick, not a "set my best lineup" shortcut.
+  const handleAutoSet = () => {
+    const ids = autoValidFive(team.hand);
+    const next = {};
+    ids.forEach((id, i) => { next[`S${i}`] = id; });
+    setAssign(next);
+    flash('LINEUP SET');
+  };
+
+  const openSlot = (key) => {
+    const card = cardFor(key);
+    if (!canEdit) { if (card) setViewCard(card); return; }
+    setSort('position');
+    setSheet({ type: 'player', slot: key });
+  };
 
   const courtRef = useRef(null);
   const gameplanBtnRef = useRef(null);
   const saveBtnRef = useRef(null);
-  const slotRefs = useRef([]);
-  const [wires, setWires] = useState([]);
-  const starterKey = starters.map((c) => c?.id ?? 'x').join(',');
-  useEffect(() => {
-    const courtEl = courtRef.current;
-    if (!courtEl) return undefined;
-    const compute = () => {
-      const courtRect = courtEl.getBoundingClientRect();
-      const centers = slotRefs.current.map((el) => {
-        if (!el) return null;
-        const r = el.getBoundingClientRect();
-        return { x: r.left + r.width / 2 - courtRect.left, y: r.top + r.height / 2 - courtRect.top };
-      });
-      // A named pairing pays out once no matter how many starter pairs satisfy it (see
-      // teamSynergy in game/skillsets.js — it dedupes by rule, not by player pair), so only the
-      // first starter pair found for a given rule gets a wire. Without this, three starters
-      // sharing one half of a pairing would draw — and list, and sum — that same bonus two or
-      // three times over, well past what the team's actual Offense/Defense total reflects.
-      const seenRules = new Set();
-      const next = [];
-      for (let i = 0; i < starters.length; i++) {
-        for (let j = i + 1; j < starters.length; j++) {
-          const pair = findSkillPair(starters[i], starters[j]);
-          if (!pair || !centers[i] || !centers[j] || seenRules.has(pair.name)) continue;
-          seenRules.add(pair.name);
-          next.push({ id: i + '-' + j, x1: centers[i].x, y1: centers[i].y, x2: centers[j].x, y2: centers[j].y, pair });
-        }
-      }
-      setWires(next);
-    };
-    compute();
-    const observer = new ResizeObserver(compute);
-    observer.observe(courtEl);
-    return () => observer.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [starterKey]);
 
-  // Click a bench card to hold it, click again to release it, click a different bench card to
-  // switch which one is held — a starter no longer becomes "held" by clicking it (that now
-  // always shows its full card instead, see the court slots below), so a held card is always
-  // a bench card, and it's always placed by clicking the target starter slot next.
-  const holdCard = (cardId) => {
-    if (!canEdit) return;
-    setSelectedId((cur) => (cur === cardId ? null : cardId));
-  };
+  const sheetSlot = sheet?.type === 'player' ? sheet.slot : null;
+  const roster = sortRoster(team.hand, sort);
+  const closeSheet = () => setSheet(null);
 
-  const placeOnSlot = (slotIndex) => {
-    if (!canEdit || selectedId == null || activeIds.includes(selectedId)) { setSelectedId(null); return; }
-    const incomingId = selectedId;
-    setSelectedId(null);
-    setSlotOrder((prev) => { const next = [...prev]; next[slotIndex] = incomingId; return next; });
-  };
-
-  const handleBenchClick = (card) => {
-    if (!canEdit) return;
-    holdCard(card.id);
-  };
-
-  const handleRemove = (card) => {
-    if (!canEdit) return;
-    setSelectedId(null);
-    const idx = slotOrder.indexOf(card.id);
-    if (idx >= 0) setSlotOrder((prev) => { const next = [...prev]; next[idx] = null; return next; });
-  };
-
-  const handleSave = () => {
-    const ids = slotOrder.filter((id) => id != null);
-    const check = validateLineup({ ...team, activeIds: ids });
-    if (!check.valid) { alert(check.msg); return; }
-    const result = actions.saveLineup(myTeamId, ids, selectedGameplanId, effectiveSixthManId);
-    if (result && result.valid === false) { alert(result.msg); return; }
-    if (!embedded) onClose();
-  };
-
-  // A valid five, never the strongest one (see roster.js's autoValidFive) — an escape hatch
-  // for someone who doesn't want to hand-pick, not a "set my best lineup" shortcut.
-  const handleAutoSet = () => {
-    setSelectedId(null);
-    setSlotOrder(reconcileSlots([null, null, null, null, null], autoValidFive(team.hand)));
-  };
+  const missing = 5 - starterIds.length;
+  const saveLabel = !complete ? `FILL ${missing} MORE` : dirty ? 'SAVE LINEUP' : 'SAVED';
+  const pairNames = pairings.length ? pairings.map((p) => p.pair.name).join(' · ') : 'NO PAIRINGS LIVE';
 
   return (
-    <div className={embedded ? 'slf-embedded' : 'tsx-overlay'} role={embedded ? 'region' : 'dialog'} aria-modal={embedded ? undefined : 'true'} aria-label="Your Lineup">
-      <div className="slf-panel">
-        <p className="slf-note">{canEdit ? 'Set your lineup. Lines between players show how pairings affect your team’s offense and/or defense.' : 'Your lineup. Lines between players show how pairings affect your team’s offense and/or defense.'}</p>
+    <div className="lb" role="region" aria-label="Your Lineup">
+      <div className="lb-head">
+        {onBack && <button type="button" className="lb-back" onClick={onBack}>‹ TEAM</button>}
+        <h2>LINEUP &amp; CHEMISTRY</h2>
+      </div>
 
-        {wires.length > 0 && (
-          <div className="slf-pairings">
-            <div className="slf-microlabel">Lineup Fit</div>
-            {wires.map((w, i) => (
-              <div key={w.id} className="slf-pairing-row">
-                <span className={'slf-pairing-num ' + w.pair.side}>{i + 1}</span>
-                <span className="slf-pairing-name">{w.pair.name}</span>
-                <span className={'slf-pairing-value ' + w.pair.side}>+{w.pair.percent}% {w.pair.side === 'offense' ? 'OFF' : 'DEF'}</span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {team.coach?.gameplans?.length > 0 && (
-          <button type="button" ref={gameplanBtnRef} className="slf-set-gameplan" disabled={!canEdit} onClick={() => setGameplanPickerOpen(true)}>
-            <span>Set Gameplan</span>
-            <strong>{team.coach.gameplans.find((plan) => plan.id === selectedGameplanId)?.name || 'None'}</strong>
+      <div className="lb-body">
+        {plans.length > 0 && (
+          <button type="button" ref={gameplanBtnRef} className="lb-plan" disabled={!canEdit} onClick={() => setSheet({ type: 'plan' })}>
+            <span>GAMEPLAN</span>
+            <strong>{activePlan?.name || 'None'}<i>▾</i></strong>
           </button>
         )}
 
-        <div className="slf-columns">
-          <div className="slf-court-col">
-            <div className="slf-microlabel slf-starters-label">Starters</div>
-            <div className="slf-court" ref={courtRef}>
-              <CourtLines />
-              {team.coach && (
-                <button type="button" className="slf-coach" onClick={() => setCenteredCard({ type: 'coach' })}>
-                  <div className="slf-microlabel">Head Coach</div>
-                  <div className="slf-coach-name">{team.coach.archetype}</div>
-                </button>
-              )}
-              <svg className="slf-wire-svg">
-                {wires.map((w) => <line key={w.id} x1={w.x1} y1={w.y1} x2={w.x2} y2={w.y2} className={'slf-wire ' + w.pair.side} />)}
-              </svg>
-              {wires.map((w, i) => (
-                <div key={w.id} className={'slf-wire-badge ' + w.pair.side} style={{ left: (w.x1 + w.x2) / 2, top: (w.y1 + w.y2) / 2 }} title={`${w.pair.name} +${w.pair.percent}% ${w.pair.side === 'offense' ? 'OFF' : 'DEF'}`}>
-                  {i + 1}
-                </div>
-              ))}
-              {COURT_SLOTS.map((pos, i) => (
-                <div className="slf-slot" style={{ left: pos.left, top: pos.top }} key={i} ref={(el) => { slotRefs.current[i] = el; }}>
-                  <span className="slf-slot-number" aria-hidden="true">{pos.number}</span>
-                  <MiniCard
-                    card={starters[i]}
-                    selected={starters[i] && selectedId === starters[i].id}
-                    onClick={(starters[i] || canEdit) ? () => {
-                      if (starters[i]) {
-                        // A held bench card still completes its swap by clicking the target
-                        // starter slot on desktop — everywhere else, clicking a starter is
-                        // simply "show me this player's full card."
-                        if (isDesktop && canEdit && selectedId != null && !activeIds.includes(selectedId)) {
-                          placeOnSlot(i);
-                        } else {
-                          setCenteredCard({ type: 'player', card: starters[i] });
-                        }
-                      } else if (!isDesktop) {
-                        setSelectedId(null);
-                        setPickerSlotIndex(i);
-                      } else {
-                        placeOnSlot(i);
-                      }
-                    } : undefined}
-                    onRemove={canEdit && starters[i] ? () => handleRemove(starters[i]) : undefined}
-                    onHoverStart={handleHoverStart}
-                    onHoverEnd={handleHoverEnd}
-                  />
-                </div>
-              ))}
-            </div>
-            <div className="slf-reserve-slots" aria-label="Bench roles">
-              <div className="slf-reserve-slot">
-                <div className="slf-microlabel">Sixth Man</div>
-                <MiniCard card={sixthMan} onClick={sixthMan ? () => setCenteredCard({ type: 'player', card: sixthMan }) : undefined} />
-                <small>75% bench value</small>
+        <div className="lb-court" ref={courtRef}>
+          <div className="lb-key" />
+          <div className="lb-ft" />
+          <div className="lb-arc" />
+          <div className="lb-rim" />
+          <div className="lb-board" />
+          <div className="lb-center" />
+          <svg className="lb-wires" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            {pairings.map(({ i, j, pair }) => (
+              <line key={pair.name} x1={COURT[i].x} y1={COURT[i].y} x2={COURT[j].x} y2={COURT[j].y} className={pair.side} vectorEffect="non-scaling-stroke" />
+            ))}
+          </svg>
+          {COURT.map((slot, i) => {
+            const card = starters[i];
+            return (
+              <div
+                key={slot.key}
+                role="button"
+                tabIndex={0}
+                className="lb-slot"
+                style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
+                aria-label={card ? `${card.archetype} ${card.position}, grade ${playerGrade(card)}` : `Open starter spot ${slot.n}`}
+                onClick={() => openSlot(slot.key)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSlot(slot.key); } }}
+              >
+                {card ? (
+                  <span className="lb-slot-card" style={{ borderTopColor: RARITY_COLOR[card.rarity] || RARITY_COLOR.Core }}>
+                    <b>{playerGrade(card)}</b>
+                    <em>{card.archetype}</em>
+                    <small>{card.position}</small>
+                    {canEdit && <span className="lb-remove" role="button" aria-label={`Remove ${card.archetype}`} onClick={(e) => clearSlot(slot.key, e)}>−</span>}
+                  </span>
+                ) : (
+                  <span className="lb-slot-empty"><b>+</b><small>{slot.n}</small></span>
+                )}
               </div>
-              <div className="slf-reserve-slot">
-                <div className="slf-microlabel">Depth Player</div>
-                <MiniCard card={depthPlayer} onClick={depthPlayer ? () => setCenteredCard({ type: 'player', card: depthPlayer }) : undefined} />
-                <small>25% bench value</small>
-              </div>
-            </div>
-          </div>
-
-          {isDesktop && (
-            <div className="slf-sideline">
-              <div className="slf-bench">
-                <div className="slf-microlabel">Players</div>
-                <PlayerFilterBar sort={playerSort} onChange={setPlayerSort} />
-                <div className="slf-bench-row">
-                  {sortedRosterEntries.map(({ card: c, slotIndex }) => (
-                    <MiniCard
-                      key={c.id}
-                      card={c}
-                      selected={selectedId === c.id}
-                      onClick={slotIndex >= 0
-                        ? () => { if (canEdit && selectedId != null) placeOnSlot(slotIndex); else setCenteredCard({ type: 'player', card: c }); }
-                        : canEdit ? () => handleBenchClick(c) : () => setCenteredCard({ type: 'player', card: c })}
-                      onRemove={canEdit && slotIndex >= 0 ? () => handleRemove(c) : undefined}
-                      onHoverStart={handleHoverStart}
-                      onHoverEnd={handleHoverEnd}
-                      dim={slotIndex < 0}
-                    />
-                  ))}
-                  {filteredBench.length === 0 && bench.length > 0 && <div className="slf-slot-picker-empty">No players match these filters.</div>}
-                </div>
-              </div>
-            </div>
-          )}
+            );
+          })}
         </div>
 
-        <div className="slf-footer">
-          {canEdit && (
-            <div className="slf-footer-actions">
-              <button type="button" className="slf-auto-set" onClick={handleAutoSet}><span aria-hidden="true">↻</span> Auto Set Lineup</button>
-              <button type="button" ref={saveBtnRef} className="slf-save-btn" onClick={handleSave}>Save Lineup</button>
-            </div>
-          )}
-          {!embedded && <button type="button" className={canEdit ? 'secondary' : 'primary'} onClick={onClose}>Back</button>}
+        <div className="lb-bench-wrap">
+          <div className="lb-bench-head"><span>BENCH</span><span className="lb-pairnames">{pairNames}</span></div>
+          <div className="lb-bench">
+            {BENCH.map((b) => {
+              const card = benchCards[b.key];
+              return (
+                <div
+                  key={b.key}
+                  role="button"
+                  tabIndex={0}
+                  className="lb-bench-slot"
+                  onClick={() => openSlot(b.key)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSlot(b.key); } }}
+                >
+                  {card ? (
+                    <span className="lb-bench-card" style={{ borderLeftColor: RARITY_COLOR[card.rarity] || RARITY_COLOR.Core }}>
+                      <b>{playerGrade(card)}</b>
+                      <span><em>{card.archetype}</em><small>{b.label}</small></span>
+                      {canEdit && <span className="lb-remove" role="button" aria-label={`Remove ${card.archetype}`} onClick={(e) => clearSlot(b.key, e)}>−</span>}
+                    </span>
+                  ) : (
+                    <span className="lb-bench-empty"><b>+</b><small>{b.label}</small></span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="lb-pairs">
+          <div className="lb-label">ACTIVE PAIRINGS</div>
+          <div className="lb-pairs-table">
+            <div className="lb-pairs-row head"><span>PAIRING</span><span>PLAYERS</span></div>
+            {pairings.length ? pairings.map(({ i, j, pair }) => (
+              <div className="lb-pairs-row" key={pair.name}>
+                <span className={pair.side}>{pair.name} +{pair.percent}% {pair.side === 'offense' ? 'OFF' : 'DEF'}</span>
+                <span>#{jerseyNumber(starters[i])} {starters[i].archetype} + #{jerseyNumber(starters[j])} {starters[j].archetype}</span>
+              </div>
+            )) : (
+              <div className="lb-pairs-row"><span className="none">N/A</span><span>—</span></div>
+            )}
+          </div>
+        </div>
+
+        {canEdit && (
+          <div className="lb-actions">
+            <button type="button" className="lb-auto" onClick={handleAutoSet}>AUTO-SET</button>
+            <button type="button" ref={saveBtnRef} className={'lb-save' + (canSave ? ' ready' : '')} disabled={!canSave} onClick={handleSave}>{saveLabel}</button>
+          </div>
+        )}
+      </div>
+
+      <div className={'lb-dim' + (sheet ? ' open' : '')} onClick={closeSheet} />
+
+      <div className={'lb-sheet player' + (sheetSlot ? ' open' : '')} role="dialog" aria-modal="true" aria-label="Select a player" aria-hidden={!sheetSlot}>
+        <div className="lb-sheet-head">
+          <div><span>SELECT PLAYER</span><strong>{sheetSlot ? slotLabel(sheetSlot) : ''}</strong></div>
+          <button type="button" aria-label="Close" onClick={closeSheet}>×</button>
+        </div>
+        <div className="lb-sorts">
+          <span>SORT</span>
+          {SORTS.map(([label, key]) => (
+            <button type="button" key={key} className={key === sort ? 'on' : ''} onClick={() => setSort(key)}>{label}</button>
+          ))}
+        </div>
+        <div className="lb-cards">
+          {sheetSlot && roster.map((card) => {
+            const where = slotOf(card.id);
+            const here = where === sheetSlot;
+            const skill = skillsetFor(card);
+            const stat = (k, v, field) => <div key={k}><span className={sort === field ? 'on' : ''}>{k}</span><strong className={sort === field ? 'on' : ''}>{v}</strong></div>;
+            return (
+              <div className="lb-card" key={card.id} style={{ borderColor: RARITY_COLOR[card.rarity] || RARITY_COLOR.Core }}>
+                <div className="lb-card-top" style={{ background: RARITY_COLOR[card.rarity] || RARITY_COLOR.Core }}><span>{card.position.toUpperCase()} · {card.archetype.toUpperCase()}</span><span>{(card.rarity || 'Core').toUpperCase()}</span></div>
+                <div className="lb-card-id"><b>#{jerseyNumber(card)}</b><strong>{card.archetype}</strong></div>
+                <div className="lb-card-stats">
+                  {stat('SCO', card.stats?.SCO, 'SCO')}{stat('PLM', card.stats?.PLM, 'PLM')}{stat('REB', card.stats?.REB, 'REB')}
+                  {stat('DEF', card.stats?.DEF, 'DEF')}{stat('GRADE', playerGrade(card), 'grade')}{stat('COST', trim(card.salary), 'cost')}
+                </div>
+                <div className="lb-card-skill"><span>SKILLSET</span><em>{(skill?.name || 'No Skillset').toUpperCase()}</em></div>
+                <div className="lb-card-foot">
+                  <span className={where && !here ? 'warn' : ''}>{here ? 'IN THIS SLOT' : where ? `NOW AT ${slotLabel(where)} · WILL MOVE` : 'AVAILABLE'}</span>
+                  <button type="button" className={here ? 'on' : ''} onClick={() => (here ? closeSheet() : place(sheetSlot, card.id))}>{here ? 'SELECTED' : 'SELECT'}</button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      {previewCard && (
-        <div className="slf-preview" aria-hidden="true">
-          <PlayerCard card={previewCard} />
-        </div>
-      )}
+      <div className={'lb-sheet plan' + (sheet?.type === 'plan' ? ' open' : '')} role="dialog" aria-modal="true" aria-label="Select a Gameplan" aria-hidden={sheet?.type !== 'plan'}>
+        <div className="lb-sheet-head"><strong className="title">GAMEPLAN</strong><button type="button" aria-label="Close" onClick={closeSheet}>×</button></div>
+        <button type="button" className={'lb-plan-row' + (!planId ? ' on' : '')} onClick={() => { setPlanId(''); closeSheet(); }}>
+          <span><strong>None</strong><small>No Gameplan bonus applies this season.</small></span>
+        </button>
+        {plans.map((plan, index) => (
+          <button type="button" key={plan.id} className={'lb-plan-row' + (planId === plan.id ? ' on' : '')} onClick={() => { setPlanId(plan.id); closeSheet(); }}>
+            <span><strong>{plan.name}</strong><small>{plan.description}</small></span>
+            <em>{index === 0 ? 'PRIMARY' : 'SECONDARY'}</em>
+          </button>
+        ))}
+      </div>
 
-      {pickerSlotIndex != null && (
-        <div className="slf-slot-picker-backdrop" onClick={() => setPickerSlotIndex(null)}>
-          <div className="slf-slot-picker" role="dialog" aria-modal="true" aria-label="Choose a starter" onClick={(e) => e.stopPropagation()}>
-            <div className="slf-slot-picker-head">
-              <span>Choose A Starter</span>
-              <button type="button" className="slf-picker-close" onClick={() => setPickerSlotIndex(null)} aria-label="Close">×</button>
-            </div>
-            <PlayerFilterBar sort={playerSort} onChange={setPlayerSort} />
-            <div className="slf-slot-picker-carousel">
-              {filteredBench.map((c) => (
-                <button key={c.id} type="button" className="slf-slot-picker-card" onClick={() => placeCardInSlot(pickerSlotIndex, c.id)}>
-                  <PlayerCard card={c} />
-                </button>
-              ))}
-              {bench.length === 0 && <div className="slf-slot-picker-empty">No available players.</div>}
-              {bench.length > 0 && filteredBench.length === 0 && <div className="slf-slot-picker-empty">No players match these filters.</div>}
-            </div>
-          </div>
-        </div>
-      )}
+      <div className={'lb-toast' + (toast ? ' show' : '')} aria-live="polite">{toast}</div>
 
-      {centeredCard && (
-        <div className="slf-card-modal-backdrop" onClick={() => setCenteredCard(null)}>
-          <div
-            className="slf-card-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-label={centeredCard.type === 'coach' ? 'Coach card' : 'Player card'}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button type="button" className="slf-picker-close" onClick={() => setCenteredCard(null)} aria-label="Close">×</button>
-            {centeredCard.type === 'coach' ? <FrontOfficeCard kind="coach" team={team} /> : <PlayerCard card={centeredCard.card} />}
-          </div>
-        </div>
-      )}
-
-      {gameplanPickerOpen && (
-        <div className="slf-gameplan-modal-backdrop" onClick={() => setGameplanPickerOpen(false)}>
-          <div className="slf-gameplan-modal" role="dialog" aria-modal="true" aria-label="Select a Gameplan" onClick={(event) => event.stopPropagation()}>
-            <div className="slf-gameplan-modal-head"><div><div className="slf-microlabel">Set Gameplan</div><h3>Choose Your Approach</h3></div><button type="button" className="slf-picker-close" onClick={() => setGameplanPickerOpen(false)} aria-label="Close">×</button></div>
-            <div className="slf-gameplan-options">
-              <button type="button" className={!selectedGameplanId ? 'active' : ''} onClick={() => { setSelectedGameplanId(''); setGameplanPickerOpen(false); }}><span>None</span><strong>No Gameplan</strong><small>No Gameplan bonus will be applied.</small></button>
-              {team.coach.gameplans.map((plan, index) => (
-                <button type="button" key={plan.id} className={selectedGameplanId === plan.id ? 'active' : ''} onClick={() => { setSelectedGameplanId(plan.id); setGameplanPickerOpen(false); }}>
-                  <span>{index === 0 ? 'Primary' : 'Secondary'}</span><strong>{plan.name}</strong><small>{plan.description}</small>
-                </button>
-              ))}
-            </div>
+      {viewCard && (
+        <div className="lb-card-backdrop" onClick={() => setViewCard(null)}>
+          <div className="lb-card-modal" role="dialog" aria-modal="true" aria-label="Player card" onClick={(e) => e.stopPropagation()}>
+            <PlayerCard card={viewCard} />
+            <button type="button" className="secondary" onClick={() => setViewCard(null)}>Close</button>
           </div>
         </div>
       )}
@@ -479,8 +365,8 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
         <CoachmarkTour
           storageKey={LINEUP_TOUR_KEY}
           steps={[
-            { targetRef: courtRef, title: 'Set Your Lineup', body: 'Tap an open slot to add a starter. You need at least one Guard, one Forward, and one Big among your five.' },
-            ...(team.coach?.gameplans?.length > 0 ? [{ targetRef: gameplanBtnRef, title: 'Pick a Gameplan', body: 'Choose your coach’s primary or secondary Gameplan for a team-wide bonus this season.' }] : []),
+            { targetRef: courtRef, title: 'Set Your Lineup', body: 'Tap an open spot to add a starter. You need at least one Guard, one Forward, and one Big among your five.' },
+            ...(plans.length > 0 ? [{ targetRef: gameplanBtnRef, title: 'Pick a Gameplan', body: 'Choose your coach’s primary or secondary Gameplan for a team-wide bonus this season.' }] : []),
             { targetRef: saveBtnRef, title: 'Save Your Lineup', body: 'Two starters sharing a Skillset pairing light up a bonus — look for the lines between them. When you’re happy with your five, Save Lineup to lock it in.' },
           ]}
         />
