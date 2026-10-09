@@ -14,7 +14,7 @@ import { ERA_LENGTH } from '../game/constants';
 // doubles as that row's menu trigger there (see .topbar-menu-btn / .topbar-nav in index.css,
 // scoped to the mobile breakpoint only); desktop keeps the row inline exactly as before, so
 // menuOpen never applies there.
-export default function Header({ state, myTeamId, overlay, pageLabel, onTeam, onGlossary, onSettings, roomCode }) {
+export default function Header({ state, myTeamId, overlay, pageLabel, onGlossary, onSettings, roomCode }) {
   const team = state.teams[myTeamId];
   const seasonNum = Math.min(state.season, ERA_LENGTH);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -47,7 +47,6 @@ export default function Header({ state, myTeamId, overlay, pageLabel, onTeam, on
       </div>
       {menuOpen && <div className="topbar-menu-backdrop" onClick={() => setMenuOpen(false)} />}
       <div className={'topbar-nav' + (menuOpen ? ' open' : '')}>
-        <button className={'reset-link' + (overlay === 'team' ? ' active' : '')} onClick={navClick(onTeam)}>Franchise</button>
         <button className={'reset-link' + (overlay === 'glossary' ? ' active' : '')} onClick={navClick(onGlossary)}>Glossary</button>
         <button className={'reset-link' + (overlay === 'settings' ? ' active' : '')} onClick={navClick(onSettings)}>Settings</button>
       </div>

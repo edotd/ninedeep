@@ -291,7 +291,6 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
     overlay: navOverlay,
     onGlossary: () => toggleOverlay('glossary'),
     onSettings: () => toggleOverlay('settings'),
-    onTeam: () => handleNav('team'),
     // Free Agency, Draft Class and Standings no longer have their own entries in this menu —
     // all three are reachable from the Franchise page's League tab instead.
     roomCode,

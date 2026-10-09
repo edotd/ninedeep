@@ -76,7 +76,34 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   const isDesktop = useIsDesktop();
   const [tab, setTab] = useState(() => tabForSection(focusSection?.section));
   // Which Team sub page is open (null = the main index): 'lineup' | 'coach' | 'gm'.
-  const [sub, setSub] = useState(() => subForSection(focusSection?.section));
+  const [sub, setSubRaw] = useState(() => subForSection(focusSection?.section));
+  // The sub page slides over the main page like a dealt card (design: page transitions, Deal).
+  // `sub` is the page that's mounted, `subOpen` drives the slide, `subBusy` is true while it's
+  // moving (the main page stays mounted underneath until it's done).
+  const [subOpen, setSubOpen] = useState(() => !!subForSection(focusSection?.section));
+  const [subBusy, setSubBusy] = useState(false);
+  const subTimer = useRef(null);
+  useEffect(() => () => clearTimeout(subTimer.current), []);
+  const reduceMotion = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  // Instant (no animation) — used when something else changes the tab or the page outright.
+  const setSub = (next) => { clearTimeout(subTimer.current); setSubBusy(false); setSubRaw(next); setSubOpen(!!next); };
+  const SUB_MS = 460;
+  const enterSub = (target) => {
+    if (subBusy) return;
+    if (reduceMotion) { setSub(target); return; }
+    clearTimeout(subTimer.current);
+    setSubRaw(target); setSubOpen(false); setSubBusy(true);
+    requestAnimationFrame(() => requestAnimationFrame(() => setSubOpen(true)));
+    subTimer.current = setTimeout(() => setSubBusy(false), SUB_MS);
+  };
+  const leaveSub = () => {
+    if (!sub || subBusy) return;
+    if (reduceMotion) { setSub(null); return; }
+    clearTimeout(subTimer.current);
+    setSubBusy(true);
+    requestAnimationFrame(() => requestAnimationFrame(() => setSubOpen(false)));
+    subTimer.current = setTimeout(() => { setSubRaw(null); setSubBusy(false); }, SUB_MS);
+  };
   const showSection = (key) => isDesktop || tab === key;
   const leagueOutputs = state.teams.map((candidate) => ({ team: candidate, output: candidate.coach ? teamOutput(candidate) : { total: 0, off: 0, def: 0, bench: 0 } }));
   const leagueTotal = leagueOutputs.reduce((sum, entry) => sum + entry.output.total, 0);
@@ -144,7 +171,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   }, [tab, isDesktop, team.gmType]);
   const handleBodyTouchStart = (event) => {
     const ownsHorizontalGesture = event.target.closest(
-      '.development-picker, .tsx-overlay, .row-scroll, .strategy-deal-row, .ts-cost-blocks, .league-standings-table',
+      '.development-picker, .tsx-overlay, .row-scroll, .strategy-deal-row, .ts-cost-blocks, .league-standings-table, .lb-sheet, .lb-cards',
     );
     if (ownsHorizontalGesture) {
       bodyTouchStartX.current = null;
@@ -219,38 +246,11 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
       document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
-    if (target === 'budget') { setTab('ledger'); return; }
-    setSub(target);
     window.scrollTo(0, 0);
+    enterSub(target);
   };
 
-  return (
-    <>
-      <div className="screen ts-screen">
-        <div className="ts-viewing-franchise"><span>{readOnly ? 'Viewing Franchise' : 'Your Franchise'}</span><strong>{team.name}</strong></div>
-        <div className="ts-tabbar" ref={tabbarRef}>
-          <button ref={gameplanTabRef} className={'ts-tab' + (tab === 'chemistry' ? ' active' : '')} onClick={() => { setTab('chemistry'); setSub(null); }}>
-            Team
-            {!readOnly && !team.lineupSet && <span className="alert-badge" aria-label="Lineup not set">!</span>}
-          </button>
-          {team.gmType && (
-            <button className={'ts-tab' + (tab === 'office' ? ' active' : '')} onClick={() => setTab('office')}>League</button>
-          )}
-          <button className={'ts-tab' + (tab === 'ledger' ? ' active' : '')} onClick={() => setTab('ledger')}>
-            Budget
-            {!readOnly && preSeason && committed > cap && <span className="alert-badge" aria-label="Team is over budget">!</span>}
-          </button>
-          {!isDesktop && <span className="ts-tab-underline" ref={underlineRef} aria-hidden="true" />}
-        </div>
-
-        <div className="ts-body" onTouchStart={!isDesktop ? handleBodyTouchStart : undefined} onTouchMove={!isDesktop ? handleBodyTouchMove : undefined} onTouchEnd={!isDesktop ? handleBodyTouchEnd : undefined}>
-          {showSection('chemistry') && (
-            <>
-              {!isDesktop && sub && sub !== 'lineup' && <button type="button" className="tm-back" onClick={() => setSub(null)}>‹ Team</button>}
-              {(isDesktop || !sub) && (
-                <TeamMain team={team} readOnly={readOnly} committed={committed} cap={cap} budgetSources={budgetSources} onOpen={openSub} />
-              )}
-              {(isDesktop || sub === 'lineup') && (
+  const lineupPage = (
                 <div id="team-lineup">
                   <SetLineupScreen
                     team={team}
@@ -258,53 +258,10 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                     myTeamId={myTeamId}
                     canEdit={canEdit}
                     onPreviewChange={onLineupPreviewChange}
-                    onBack={isDesktop ? undefined : () => setSub(null)}
                   />
                 </div>
-              )}
-            </>
-          )}
-
-          {showSection('office') && (
-            <div className="ts-section league-overview">
-              <div className="ts-heading">League</div>
-              <div className="league-jump-actions">
-                {onTeamRosters && <button type="button" className="league-jump-button rosters" onClick={onTeamRosters}>Teams</button>}
-                <button type="button" className="league-jump-button free-agency" onClick={onFreeAgency}>Free Agency</button>
-                <button type="button" className="league-jump-button draft" onClick={onDraftClass}>Draft Class</button>
-              </div>
-              <div className="ts-heading league-standings-heading">Scouting Report</div>
-              {scoutingRows.length ? <div className="scouting-report-list">{scoutingRows.map(({ cardId, card, history }) => (
-                <div className="scouting-report-row" key={cardId}>
-                  <strong>#{jerseyNumber(card)} · {playerGrade(card)} · {card.archetype} · {card.position}</strong>
-                  {history.length ? history.map((entry) => <small key={`${entry.season}-${entry.game}`}>Season {entry.season}: Starter {entry.starterOutput} · Sixth Man {entry.sixthManOutput} · Depth {entry.depthOutput}</small>) : <small>Tracking begins with your next season simulation.</small>}
-                </div>
-              ))}</div> : <div className="ts-ledger-empty">Add players from Teams, Free Agency, or Draft Class.</div>}
-              <div className="league-output-grid">
-                <div><span>League Output</span><strong>{Math.round(leagueTotal * 100) / 100}</strong><small>Total collective output from all teams</small></div>
-                <div><span>Best Offense</span><strong>{bestFor('off').output.off}</strong><small>{bestFor('off').team.name}</small></div>
-                <div><span>Best Defense</span><strong>{bestFor('def').output.def}</strong><small>{bestFor('def').team.name}</small></div>
-                <div><span>Best Bench</span><strong>{bestFor('bench').output.bench}</strong><small>{bestFor('bench').team.name}</small></div>
-              </div>
-              <div className="ts-heading league-standings-heading">Standings</div>
-              <div className="league-standings-table">
-                <div className="league-standings-row head">
-                  <span>Team</span><span>Chemistry</span><span>Projected Output</span><span>Offense</span><span>Defense</span>
-                </div>
-                {leagueStandings.map(({ team: t, output }, index) => (
-                  <div key={t.id} className={'league-standings-row' + (t.id === team.id ? ' you' : '')}>
-                    <span className="league-team"><i>{index + 1}</i><b>{t.name}</b></span>
-                    <span>{teamSynergy(t).grade}</span>
-                    <span className="league-output">{output.total}</span>
-                    <span>{output.off}</span>
-                    <span>{output.def}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {showSection('ledger') && (
+  );
+  const ledgerPage = (
             <div className="ts-section ts-ledger" id="team-ledger">
               <div className="ts-ledger-topline">
                 <div><div className="ts-heading">Budget</div><strong>{formatCoins(committed)} / {formatCoins(cap).replace('🪙', '')}</strong></div>
@@ -375,16 +332,15 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                 ))}</div> : <div className="ts-ledger-empty">No dead cap obligations.</div>}
               </div>
             </div>
-          )}
-
-          {team.gmType && showSection('chemistry') && (isDesktop || sub === 'coach' || sub === 'gm') && (
+  );
+  const officePage = (which) => (
             <div className="ts-section" id="team-office">
-              <div className="ts-heading">{isDesktop ? 'Coach & GM' : sub === 'coach' ? 'Coach' : 'GM'}</div>
+              <div className="ts-heading">{which === 'both' ? 'Coach & GM' : which === 'coach' ? 'Coach' : 'GM'}</div>
               {/* Coach gets its own row, GM (and Fanbase, the other front-office role) a second
                   row below it — kept apart rather than sharing one swipeable row of up to three
                   cards. Neither row ever holds more than two cards, so both stay a plain
                   stretch-to-fit row with no scroll tracking needed. */}
-              {(isDesktop || sub === 'coach') && <div className="fo-deal-row row-fit" style={{ margin: 0 }}>
+              {(which === 'both' || which === 'coach') && <div className="fo-deal-row row-fit" style={{ margin: 0 }}>
                 <div className="ts-fo-col" id="team-coach-card">
                   {team.coach ? <FrontOfficeCard kind="coach" team={team} /> : <div className="ts-empty-coach"><span>Coach</span><strong>Open Slot</strong><small>Choose a replacement in Free Agency.</small></div>}
                   {!readOnly && team.coach && state.settings.coachChangesEnabled && (
@@ -401,7 +357,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                   )}
                 </div>
               </div>}
-              {(isDesktop || sub === 'gm') && <div className="fo-deal-row row-fit" style={{ margin: isDesktop ? '12px 0 0' : 0 }}>
+              {(which === 'both' || which === 'gm') && <div className="fo-deal-row row-fit" style={{ margin: which === 'both' ? '12px 0 0' : 0 }}>
                 <div className="ts-fo-col" id="team-gm-card">
                   <FrontOfficeCard kind="market" team={team} />
                   {!readOnly && state.settings.coachChangesEnabled && (
@@ -420,7 +376,94 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                 </div>
               </div>}
             </div>
+  );
+
+  return (
+    <>
+      <div className="screen ts-screen">
+        <div className="ts-viewing-franchise"><span>{readOnly ? 'Viewing Franchise' : 'Your Franchise'}</span><strong>{team.name}</strong></div>
+        <div className="ts-tabbar" ref={tabbarRef}>
+          <button ref={gameplanTabRef} className={'ts-tab' + (tab === 'chemistry' ? ' active' : '')} onClick={() => { setTab('chemistry'); setSub(null); }}>
+            Team
+            {!readOnly && !team.lineupSet && <span className="alert-badge" aria-label="Lineup not set">!</span>}
+          </button>
+          {team.gmType && (
+            <button className={'ts-tab' + (tab === 'office' ? ' active' : '')} onClick={() => setTab('office')}>League</button>
           )}
+          <button className={'ts-tab' + (tab === 'ledger' ? ' active' : '')} onClick={() => setTab('ledger')}>
+            Budget
+            {!readOnly && preSeason && committed > cap && <span className="alert-badge" aria-label="Team is over budget">!</span>}
+          </button>
+          {!isDesktop && <span className="ts-tab-underline" ref={underlineRef} aria-hidden="true" />}
+        </div>
+
+        <div className={'ts-body' + (subBusy ? ' ts-stacking' : '')} onTouchStart={!isDesktop ? handleBodyTouchStart : undefined} onTouchMove={!isDesktop ? handleBodyTouchMove : undefined} onTouchEnd={!isDesktop ? handleBodyTouchEnd : undefined}>
+          {showSection('chemistry') && (isDesktop ? (
+            <>
+              <TeamMain team={team} readOnly={readOnly} committed={committed} cap={cap} budgetSources={budgetSources} onOpen={openSub} />
+              {lineupPage}
+            </>
+          ) : (
+            <>
+              {(!sub || subBusy) && (
+                <div className={'ts-main-layer' + (subOpen ? ' away' : '')}>
+                  <TeamMain team={team} readOnly={readOnly} committed={committed} cap={cap} budgetSources={budgetSources} onOpen={openSub} />
+                  <div className="ts-main-dim" aria-hidden="true" />
+                </div>
+              )}
+              {sub && (
+                <div className={'ts-sub-layer' + (subOpen ? ' open' : '') + (subBusy ? '' : ' settled')}>
+                  <button type="button" className="tm-back" onClick={leaveSub}>‹ Team</button>
+                  {sub === 'lineup' && lineupPage}
+                  {(sub === 'coach' || sub === 'gm') && team.gmType && officePage(sub)}
+                  {sub === 'budget' && ledgerPage}
+                </div>
+              )}
+            </>
+          ))}
+
+          {showSection('office') && (
+            <div className="ts-section league-overview">
+              <div className="ts-heading">League</div>
+              <div className="league-jump-actions">
+                {onTeamRosters && <button type="button" className="league-jump-button rosters" onClick={onTeamRosters}>Teams</button>}
+                <button type="button" className="league-jump-button free-agency" onClick={onFreeAgency}>Free Agency</button>
+                <button type="button" className="league-jump-button draft" onClick={onDraftClass}>Draft Class</button>
+              </div>
+              <div className="ts-heading league-standings-heading">Scouting Report</div>
+              {scoutingRows.length ? <div className="scouting-report-list">{scoutingRows.map(({ cardId, card, history }) => (
+                <div className="scouting-report-row" key={cardId}>
+                  <strong>#{jerseyNumber(card)} · {playerGrade(card)} · {card.archetype} · {card.position}</strong>
+                  {history.length ? history.map((entry) => <small key={`${entry.season}-${entry.game}`}>Season {entry.season}: Starter {entry.starterOutput} · Sixth Man {entry.sixthManOutput} · Depth {entry.depthOutput}</small>) : <small>Tracking begins with your next season simulation.</small>}
+                </div>
+              ))}</div> : <div className="ts-ledger-empty">Add players from Teams, Free Agency, or Draft Class.</div>}
+              <div className="league-output-grid">
+                <div><span>League Output</span><strong>{Math.round(leagueTotal * 100) / 100}</strong><small>Total collective output from all teams</small></div>
+                <div><span>Best Offense</span><strong>{bestFor('off').output.off}</strong><small>{bestFor('off').team.name}</small></div>
+                <div><span>Best Defense</span><strong>{bestFor('def').output.def}</strong><small>{bestFor('def').team.name}</small></div>
+                <div><span>Best Bench</span><strong>{bestFor('bench').output.bench}</strong><small>{bestFor('bench').team.name}</small></div>
+              </div>
+              <div className="ts-heading league-standings-heading">Standings</div>
+              <div className="league-standings-table">
+                <div className="league-standings-row head">
+                  <span>Team</span><span>Chemistry</span><span>Projected Output</span><span>Offense</span><span>Defense</span>
+                </div>
+                {leagueStandings.map(({ team: t, output }, index) => (
+                  <div key={t.id} className={'league-standings-row' + (t.id === team.id ? ' you' : '')}>
+                    <span className="league-team"><i>{index + 1}</i><b>{t.name}</b></span>
+                    <span>{teamSynergy(t).grade}</span>
+                    <span className="league-output">{output.total}</span>
+                    <span>{output.off}</span>
+                    <span>{output.def}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {showSection('ledger') && ledgerPage}
+
+          {isDesktop && team.gmType && officePage('both')}
 
           {state.settings.fanbaseCardsEnabled !== false && showSection('office') && (
             <div className="ts-section">

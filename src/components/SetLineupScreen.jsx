@@ -36,7 +36,7 @@ const trim = (n) => `${Number(Number(n).toFixed(2))}`;
 
 const sortRoster = (cards, sort) => (sort === 'cost' ? [...cards].sort((a, b) => a.salary - b.salary) : sortPlayers(cards, sort));
 
-export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onBack, onPreviewChange }) {
+export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPreviewChange }) {
   // slot key -> card id (S0..S4 starters, B6 sixth man, BD depth). A fresh season opens empty
   // because the generated active five is only a placeholder until a human reviews it; an
   // already-saved lineup opens with its current five intact.
@@ -211,11 +211,6 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onBa
 
   return (
     <div className="lb" role="region" aria-label="Your Lineup">
-      <div className="lb-head">
-        {onBack && <button type="button" className="lb-back" onClick={onBack}>‹ TEAM</button>}
-        <h2>LINEUP &amp; CHEMISTRY</h2>
-      </div>
-
       <div className="lb-body">
         {plans.length > 0 && (
           <button type="button" ref={gameplanBtnRef} className="lb-plan" disabled={!canEdit} onClick={() => setSheet({ type: 'plan' })}>

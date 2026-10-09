@@ -95,7 +95,7 @@ body{min-height:100vh;padding-bottom:138px;}
    matched, so it needs the same background itself rather than relying on #root to bleed
    through. Dark mode inverts to a navy ground where a "ball on leather" texture no longer
    reads, so both are switched off entirely below (see the html[data-theme="dark"] rule). */
-#root,.ts-body{
+#root,.ts-body,.ts-sub-layer{
   background-color:#E3D8BD;
   background-image:
     radial-gradient(circle at 2px 2px, rgba(255,251,240,.7) .9px, transparent 1.5px),
@@ -2854,7 +2854,7 @@ body:has(.trans-screen){padding-bottom:0;}
 .lb-head{background:#1E2B47;padding:14px 18px 14px;display:flex;flex-direction:column;gap:10px;}
 .lb-back{align-self:flex-start;background:none;border:0;padding:4px 0;font:400 10px var(--font-label);letter-spacing:.14em;color:#F0A03D;cursor:pointer;}
 .lb-head h2{margin:0;font:400 40px/.8 var(--font-display);color:#E6DCC4;text-transform:uppercase;}
-.lb-body{display:flex;flex-direction:column;gap:10px;padding:12px 0 0;}
+.lb-body{display:flex;flex-direction:column;gap:10px;padding:0;}
 .lb-plan{display:flex;justify-content:space-between;align-items:center;gap:10px;height:44px;padding:0 12px;border:0;background:#F2EBDC;box-shadow:inset 0 0 0 1px #C9BC9C;cursor:pointer;text-align:left;font:inherit;color:inherit;}
 .lb-plan:disabled{cursor:default;opacity:.85;}
 .lb-plan span{font-size:9px;letter-spacing:.14em;color:#625A44;}
@@ -2924,7 +2924,7 @@ body:has(.trans-screen){padding-bottom:0;}
 .lb-sorts span{font-size:9px;letter-spacing:.12em;color:#625A44;margin-right:4px;}
 .lb-sorts button{height:32px;padding:0 8px;border:0;background:transparent;box-shadow:inset 0 0 0 1.5px #1E2B47;font:400 9px var(--font-label);letter-spacing:.08em;color:#1E2B47;cursor:pointer;}
 .lb-sorts button.on{background:#1E2B47;color:#E6DCC4;}
-.lb-cards{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 16px 8px;scrollbar-width:none;}
+.lb-cards{display:flex;gap:12px;overscroll-behavior-x:contain;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 16px 8px;scrollbar-width:none;}
 .lb-cards::-webkit-scrollbar{display:none;}
 .lb-card{flex:none;width:236px;scroll-snap-align:center;background:#F2EBDC;border:4px solid #A79A78;box-sizing:border-box;display:flex;flex-direction:column;}
 .lb-card-top{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:8px 12px;font:9px var(--font-mono);letter-spacing:.1em;color:#1E2B47;}
@@ -2969,3 +2969,19 @@ body:has(.trans-screen){padding-bottom:0;}
 .bonus-icon-tile{box-sizing:border-box;display:flex;align-items:center;justify-content:center;color:#F2EBDC;}
 .bonus-icon-pips{display:flex;gap:2px;height:3px;}
 .bonus-icon-pips i{display:block;width:10px;height:3px;}
+
+/* Team page transitions (design: page transitions, "Deal") — a sub page is dealt in from the
+   right like a card, landing from a slight tilt with a shadow, while the main page slides a
+   third of the way left and dims. Back throws it off the same way. 440ms. */
+.ts-body{position:relative;}
+.ts-body.ts-stacking{overflow-x:clip;}
+.ts-main-layer{position:relative;transition:transform 440ms cubic-bezier(.2,.8,.2,1);}
+.ts-main-layer.away{transform:translateX(-30%);}
+.ts-main-dim{position:absolute;inset:-22px -24px;background:rgba(23,34,58,.5);opacity:0;pointer-events:none;transition:opacity 440ms cubic-bezier(.2,.8,.2,1);}
+.ts-main-layer.away .ts-main-dim{opacity:1;}
+.ts-sub-layer{position:absolute;top:0;left:0;right:0;min-height:100%;box-sizing:border-box;padding:22px 24px;display:flex;flex-direction:column;gap:20px;z-index:3;transform:translateX(106%) rotate(7deg);transition:transform 440ms cubic-bezier(.2,.8,.2,1);box-shadow:-14px 0 32px rgba(23,34,58,.4);}
+.ts-sub-layer.open{transform:none;}
+/* Once it has landed the sub page is simply the page: back in the normal flow (the main page is
+   unmounted), padding cancelled against the body's own so nothing shifts. */
+.ts-sub-layer.settled{position:relative;margin:-22px -24px;box-shadow:none;transition:none;}
+@media (prefers-reduced-motion:reduce){.ts-main-layer,.ts-sub-layer,.ts-main-dim{transition:none;}}
