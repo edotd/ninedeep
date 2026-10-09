@@ -3068,3 +3068,11 @@ body:has(.trans-screen){padding-bottom:0;}
 .lb-picker .lb-slide-card{max-width:none;}
 .lb-picker .lb-reveal-frame{overflow:visible;}
 .lb-picker .lb-natural .pcard{width:100%;}
+
+.lb-reveal-box{position:relative;width:100%;}
+.lb-measure{position:absolute;left:-9999px;top:0;visibility:hidden;pointer-events:none;}
+.lb-measure .pcard{width:100%;max-width:none;margin:0;}
+
+.lb-picker .lb-slide-card{padding-top:0;margin:auto 0;}
+.lb-picker .lb-card-foot{flex:none;}
+.lb-picker .lb-card-foot button{flex:none;}

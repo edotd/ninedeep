@@ -5,6 +5,7 @@ import { jerseyNumber, playerGrade } from '../game/cards';
 import { autoValidFive, validateLineup } from '../game/roster';
 import { sortPlayers } from '../game/playerFilters';
 import PlayerCard from './PlayerCard';
+import { CardRevealPlayer } from './CardReveal';
 import CoachmarkTour from './CoachmarkTour';
 import BonusIcon from './BonusIcon';
 import { gameplanEffects } from '../game/strategyCards';
@@ -31,8 +32,6 @@ const COURT = [
 ];
 const BENCH = [{ key: 'B6', label: '6TH MAN' }, { key: 'BD', label: 'DEPTH' }];
 const SLOT_KEYS = [...COURT.map((s) => s.key), ...BENCH.map((b) => b.key)];
-// Rarity label tab (background, ink) — the same colours the card reveal stamps on a card.
-const RARITY_LABEL = { Core: ['#6B7894', '#E6DCC4'], Prime: ['#8E9BB5', '#1E2B47'], Signature: ['#E8825C', '#1E2B47'], Legendary: ['#F0A03D', '#1E2B47'] };
 const RARITY_COLOR = { Legendary: '#F0A03D', Signature: '#8E9BB5', Prime: '#C9BC9C', Core: '#A79A78' };
 const SORTS = [['Position', 'position'], ['Grade', 'grade'], ['Scoring', 'SCO'], ['Playmaking', 'PLM'], ['Rebounding', 'REB'], ['Defense', 'DEF'], ['Cost', 'cost']];
 
@@ -229,15 +228,25 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
     const fit = () => {
       const el = carouselRef.current;
       if (!el) return;
-      const natural = [...el.querySelectorAll('.lb-natural')].reduce((m, node) => Math.max(m, node.offsetHeight), 0) || 405;
+      const natural = [...document.querySelectorAll('.lb-measure .lb-natural')].reduce((m, node) => Math.max(m, node.offsetHeight), 0) || 405;
       const availW = el.clientWidth - 28;
-      const availH = el.clientHeight - 30 - 96;
+      const availH = el.clientHeight - 44 - 104;
       setPickerFit({ s: Math.max(1, Math.min(availW / 264, availH / natural)), h: natural });
     };
     fit();
     window.addEventListener('resize', fit);
     return () => window.removeEventListener('resize', fit);
   }, [sheetSlot]);
+  // Each card plays the onboarding reveal (1.5x) when it's swiped to, and again every time it
+  // comes back. A card that has played and been swiped past rests on its finished frame.
+  const [plays, setPlays] = useState({});
+  useEffect(() => { if (!sheetSlot) setPlays({}); }, [sheetSlot]);
+  useEffect(() => {
+    if (!sheetSlot) return;
+    const card = roster[cardIndex];
+    if (card) setPlays((prev) => ({ ...prev, [card.id]: (prev[card.id] || 0) + 1 }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sheetSlot, cardIndex]);
   // Start on the player already in this slot (or the first card), and keep the page behind the
   // picker from scrolling while it's up.
   useEffect(() => {
@@ -384,14 +393,11 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
             {roster.map((card) => {
               const where = slotOf(card.id);
               const here = where === sheetSlot;
-              const rarity = card.rarity || 'Core';
-              const [labelBg, labelInk] = RARITY_LABEL[rarity] || RARITY_LABEL.Core;
               return (
                 <div className="lb-slide" key={card.id}>
                   <div className="lb-slide-card" style={{ width: 264 * pickerFit.s }}>
-                    <span className="lb-rarity-label" style={{ background: labelBg, color: labelInk }}>{rarity.toUpperCase()}</span>
-                    <div className={'lb-reveal-frame frame-' + rarity} style={{ width: 264 * pickerFit.s, height: pickerFit.h * pickerFit.s, borderRadius: 12 * pickerFit.s }}>
-                      <div className="lb-natural" style={{ width: 264, transform: `scale(${pickerFit.s})`, transformOrigin: '0 0' }}><PlayerCard card={card} /></div>
+                    <div className="lb-reveal-box" style={{ height: pickerFit.h * pickerFit.s + 44 }}>
+                      {plays[card.id] > 0 && <CardRevealPlayer key={plays[card.id]} card={card} up={pickerFit.s} cardHeight={pickerFit.h} speed={1.5} delay={250} />}
                     </div>
                     <div className="lb-card-foot">
                       <span className={where && !here ? 'warn' : ''}>{here ? 'IN THIS SLOT' : where ? `NOW AT ${slotLabel(where)} · WILL MOVE` : 'AVAILABLE'}</span>
@@ -402,6 +408,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
               );
             })}
           </div>
+          <div className="lb-measure" aria-hidden="true">{roster.map((card) => <div className="lb-natural" key={card.id} style={{ width: 264 }}><PlayerCard card={card} /></div>)}</div>
           <div className="lb-picker-pager" aria-live="polite">
             <span>{Math.min(cardIndex + 1, roster.length)} / {roster.length}</span>
             <i>{roster.map((card, index) => <b key={card.id} className={index === cardIndex ? 'on' : ''} />)}</i>

@@ -64,7 +64,9 @@ function Sheen({ t, tm, cw, ch }) {
   return <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>{pass(tm.sheen1, 560, 120)}{pass(tm.sheen2, 460, 60)}</div>;
 }
 
-function Chrome({ t, tm, rarity, cw, ch, onContinue, ctaLabel, children }) {
+// `bare` drops the full-screen chrome (ink ground, glow, flash, Continue button) and centres the
+// reveal in whatever box it's placed in — used by CardRevealPlayer below.
+function Chrome({ t, tm, rarity, cw, ch, onContinue, ctaLabel, bare, children }) {
   const L = rarity === 'Legendary';
   const ui = eo(P(t, tm.ui, 500));
   const flash = tm.flash != null ? Math.max(0, 1 - P(t, tm.flash, 320)) * (t >= tm.flash ? 1 : 0) : 0;
@@ -73,9 +75,9 @@ function Chrome({ t, tm, rarity, cw, ch, onContinue, ctaLabel, children }) {
   const badgeScale = bp > 0 ? (bs > 0 ? lerp(1.55, 1, back(bs)) : lerp(0.4, 1.55, eo(bp))) : 0;
   const bloom = bs > 0 ? 1 - eo(P(t, tm.badge + 260, 420)) : bp > 0 ? 1 : 0;
   return (
-    <div style={{ position: 'absolute', inset: 0, background: INK, overflow: 'hidden' }}>
-      {glow > 0 && <div style={{ position: 'absolute', left: 201 - 320, top: 440 - 320, width: 640, height: 640, borderRadius: '50%', opacity: glow, background: 'radial-gradient(closest-side, rgba(240,160,61,0.42), rgba(240,160,61,0.12) 55%, transparent)' }} />}
-      <div style={{ position: 'absolute', left: 201, top: 440, width: 0, height: 0 }}>
+    <div style={bare ? { position: 'absolute', inset: 0 } : { position: 'absolute', inset: 0, background: INK, overflow: 'hidden' }}>
+      {!bare && glow > 0 && <div style={{ position: 'absolute', left: 201 - 320, top: 440 - 320, width: 640, height: 640, borderRadius: '50%', opacity: glow, background: 'radial-gradient(closest-side, rgba(240,160,61,0.42), rgba(240,160,61,0.12) 55%, transparent)' }} />}
+      <div style={{ position: 'absolute', left: bare ? '50%' : 201, top: bare ? '50%' : 440, width: 0, height: 0 }}>
         {children}
         {badgeScale > 0 && (
           <div className="card-reveal-badge" style={{ position: 'absolute', left: cw / 2 - 8, top: -ch / 2 - 13, transform: `translateX(-100%) scale(${badgeScale})`, transformOrigin: '100% 0',
@@ -84,20 +86,20 @@ function Chrome({ t, tm, rarity, cw, ch, onContinue, ctaLabel, children }) {
           >{rarity.toUpperCase()}</div>
         )}
       </div>
-      <div style={{ position: 'absolute', left: 24, right: 24, bottom: 54, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, opacity: ui, transform: `translateY(${lerp(14, 0, ui)}px)` }}>
+      {!bare && <div style={{ position: 'absolute', left: 24, right: 24, bottom: 54, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, opacity: ui, transform: `translateY(${lerp(14, 0, ui)}px)` }}>
         <button
           type="button"
           onClick={onContinue}
           disabled={ui < 0.6}
           style={{ alignSelf: 'stretch', height: 54, border: 0, background: FILE, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: ARC, fontSize: 14, letterSpacing: '0.16em', color: INK, cursor: 'pointer' }}
         >{ctaLabel}</button>
-      </div>
-      {flash > 0 && <div style={{ position: 'absolute', inset: 0, background: FR, opacity: 0.38 * flash, pointerEvents: 'none' }} />}
+      </div>}
+      {!bare && flash > 0 && <div style={{ position: 'absolute', inset: 0, background: FR, opacity: 0.38 * flash, pointerEvents: 'none' }} />}
     </div>
   );
 }
 
-function BallReveal({ t, face, cardW, up, rarity, cardHeight, onContinue, ctaLabel }) {
+function BallReveal({ t, face, cardW, up, rarity, cardHeight, onContinue, ctaLabel, bare }) {
   const tm = BALL_T[rarity], L = rarity === 'Legendary';
   const cw = cardW * up, ch = cardHeight * up;
   const S = 132, pitch = S * 0.196, dot = S * 0.1;
@@ -158,7 +160,7 @@ function BallReveal({ t, face, cardW, up, rarity, cardHeight, onContinue, ctaLab
   });
   const pw = lerp(dot * 1.5, cw, g), ph = lerp(dot * 1.5, ch, g);
   return (
-    <Chrome t={t} tm={tm} rarity={rarity} cw={cw} ch={ch} onContinue={onContinue} ctaLabel={ctaLabel}>
+    <Chrome t={t} tm={tm} rarity={rarity} cw={cw} ch={ch} onContinue={onContinue} ctaLabel={ctaLabel} bare={bare}>
       {ballOut < 1 && (
         <div style={{ position: 'absolute', left: -S / 2, top: -S / 2, width: S, height: S, transform: `translate(${sx}px,${sy}px) scale(${c01(pop) * csc * (1 + 0.4 * ballOut)}) rotate(${spin}deg)`, opacity: 1 - ballOut }}>
           <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: FILE }} />
@@ -183,6 +185,30 @@ function BallReveal({ t, face, cardW, up, rarity, cardHeight, onContinue, ctaLab
       {dots}
     </Chrome>
   );
+}
+
+// The same ball reveal, playable anywhere: centred in its parent box, no ink ground or buttons,
+// sped up by `speed` (the player picker runs it 1.5x). `delay` holds the start back a moment.
+// Remounting it (change its key) plays it again.
+export function CardRevealPlayer({ card, up, cardHeight, speed = 1, delay = 0 }) {
+  const rarity = RAR[card.rarity] ? card.rarity : 'Core';
+  const total = BALL_T[rarity].total;
+  const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const [clock, setClock] = useState(0);
+  useEffect(() => {
+    if (reduced) return undefined;
+    let id;
+    const start = performance.now();
+    const frame = (now) => {
+      const e = now - start;
+      setClock(e);
+      if ((e - delay) * speed < total) id = requestAnimationFrame(frame);
+    };
+    id = requestAnimationFrame(frame);
+    return () => cancelAnimationFrame(id);
+  }, [total, reduced, speed, delay]);
+  const t = reduced ? total : Math.min(total, Math.max(0, clock - delay) * speed);
+  return <BallReveal t={t} face={<PlayerCard card={card} />} cardW={264} up={up} rarity={rarity} cardHeight={cardHeight} bare />;
 }
 
 const HINT = 'Tap any part of the card to learn more';
