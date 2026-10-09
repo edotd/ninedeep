@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { findSkillPair, skillsetFor } from '../game/skillsets';
+import { findSkillPair, skillsetFor, teamSynergy } from '../game/skillsets';
 import { jerseyNumber, playerGrade } from '../game/cards';
 import { autoValidFive, validateLineup } from '../game/roster';
 import { sortPlayers } from '../game/playerFilters';
 import PlayerCard from './PlayerCard';
 import CoachmarkTour from './CoachmarkTour';
+import BonusIcon from './BonusIcon';
 import { gameplanEffects } from '../game/strategyCards';
 
 // Shown once per browser — the first time anyone opens this editor, not once per team/era, so
@@ -107,6 +108,26 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onBa
     }
   }
 
+  // Every live lineup bonus for the table (and its icons): the named pairings above, plus the
+  // stat-threshold bonuses, the position bonus and Wise Veteran's leadership — the same set
+  // teamSynergy folds into the team's Offense/Defense.
+  const synergy = starterIds.length === 5 ? teamSynergy({ ...team, activeIds: starterIds }, starterIds) : null;
+  const tag = (side, percent) => `+${percent}% ${side === 'offense' ? 'OFF' : 'DEF'}`;
+  const who = (card) => `#${jerseyNumber(card)} ${card.archetype}`;
+  const bonusRows = [];
+  for (const { i, j, pair } of pairings) bonusRows.push({ name: pair.name, side: pair.side, value: tag(pair.side, pair.percent), players: `${who(starters[i])} + ${who(starters[j])}` });
+  for (const rule of synergy?.statBonuses || []) {
+    bonusRows.push({ name: rule.name, side: rule.side, value: tag(rule.side, rule.percent), players: `2+ starters at ${rule.threshold}+ ${rule.stat}` });
+  }
+  for (const rule of synergy?.positionBonuses || []) {
+    const holder = starters.find((card) => card.skillsetId === rule.skillsetId && card.position === rule.position);
+    bonusRows.push({ name: rule.name, side: rule.side, value: tag(rule.side, rule.percent), players: holder ? `${who(holder)} at ${rule.position}` : rule.position });
+  }
+  if (synergy?.leadership) {
+    const vet = team.hand.find((card) => card.skillsetId === 'skill-03');
+    bonusRows.push({ name: 'Wise Veteran', side: 'both', value: '+1% OFF & DEF', players: vet ? who(vet) : 'On your roster' });
+  }
+
   // Feed the masthead's live Offense/Defense/Bench preview.
   const previewSignature = starters.map((card) => card?.id ?? 'open').join(',');
   useEffect(() => {
@@ -141,10 +162,6 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onBa
       return next;
     });
     setSheet(null);
-  };
-  const clearSlot = (key, event) => {
-    event?.stopPropagation();
-    setAssign((prev) => { const next = { ...prev }; delete next[key]; return next; });
   };
 
   const complete = starterIds.length === 5;
@@ -190,7 +207,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onBa
 
   const missing = 5 - starterIds.length;
   const saveLabel = !complete ? `FILL ${missing} MORE` : dirty ? 'SAVE LINEUP' : 'SAVED';
-  const pairNames = pairings.length ? pairings.map((p) => p.pair.name).join(' · ') : 'NO PAIRINGS LIVE';
+  const pairNames = bonusRows.length ? bonusRows.map((row) => row.name).join(' · ') : 'NO PAIRINGS LIVE';
 
   return (
     <div className="lb" role="region" aria-label="Your Lineup">
@@ -237,7 +254,6 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onBa
                     <b>{playerGrade(card)}</b>
                     <em>{card.archetype}</em>
                     <small>{card.position}</small>
-                    {canEdit && <span className="lb-remove" role="button" aria-label={`Remove ${card.archetype}`} onClick={(e) => clearSlot(slot.key, e)}>−</span>}
                   </span>
                 ) : (
                   <span className="lb-slot-empty"><b>+</b><small>{slot.n}</small></span>
@@ -265,7 +281,6 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onBa
                     <span className="lb-bench-card" style={{ borderLeftColor: RARITY_COLOR[card.rarity] || RARITY_COLOR.Core }}>
                       <b>{playerGrade(card)}</b>
                       <span><em>{card.archetype}</em><small>{b.label}</small></span>
-                      {canEdit && <span className="lb-remove" role="button" aria-label={`Remove ${card.archetype}`} onClick={(e) => clearSlot(b.key, e)}>−</span>}
                     </span>
                   ) : (
                     <span className="lb-bench-empty"><b>+</b><small>{b.label}</small></span>
@@ -277,13 +292,15 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onBa
         </div>
 
         <div className="lb-pairs">
-          <div className="lb-label">ACTIVE PAIRINGS</div>
           <div className="lb-pairs-table">
-            <div className="lb-pairs-row head"><span>PAIRING</span><span>PLAYERS</span></div>
-            {pairings.length ? pairings.map(({ i, j, pair }) => (
-              <div className="lb-pairs-row" key={pair.name}>
-                <span className={pair.side}>{pair.name} +{pair.percent}% {pair.side === 'offense' ? 'OFF' : 'DEF'}</span>
-                <span>#{jerseyNumber(starters[i])} {starters[i].archetype} + #{jerseyNumber(starters[j])} {starters[j].archetype}</span>
+            <div className="lb-pairs-row head"><span>ACTIVE PAIRINGS</span><span>PLAYERS</span></div>
+            {bonusRows.length ? bonusRows.map((row) => (
+              <div className="lb-pairs-row" key={row.name}>
+                <span className={'lb-bonus ' + row.side}>
+                  <BonusIcon name={row.name} size={40} />
+                  <span><b>{row.name}</b><em>{row.value}</em></span>
+                </span>
+                <span>{row.players}</span>
               </div>
             )) : (
               <div className="lb-pairs-row"><span className="none">N/A</span><span>—</span></div>
