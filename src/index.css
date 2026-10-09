@@ -2994,15 +2994,15 @@ body:has(.trans-screen){padding-bottom:0;}
 .ts-pagebar h2{margin:0;font:400 28px/1 var(--font-display);letter-spacing:.02em;text-transform:uppercase;color:var(--file);}
 .ts-pagebar-back{flex:none;width:36px;height:36px;margin-left:-8px;display:flex;align-items:center;justify-content:center;background:none;border:0;color:var(--franchise);font:400 34px/1 var(--font-display);cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .ts-proj-rank-spacer{visibility:hidden;}
-.tm-league{position:relative;background:#F2EBDC;color:#1E2B47;box-shadow:inset 0 0 0 1px #C9BC9C,0 2px 0 rgba(30,43,71,.2);padding:14px;gap:8px;}
-.tm-league .tm-tile-head b{font:400 11px var(--font-label);letter-spacing:.14em;}
-.tm-league .tm-tile-head i{font-size:24px;}
-.tm-league-note{font:9px/1.4 var(--font-mono);letter-spacing:.06em;color:#625A44;text-transform:uppercase;}
 /* First-visit welcome on the Team page. */
 .tw-backdrop{position:fixed;inset:0;z-index:980;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(18,26,46,.82);}
 .tw-dialog{width:100%;max-width:380px;box-sizing:border-box;padding:28px 24px 22px;background:#F2EBDC;border:2px solid #F0A03D;display:flex;flex-direction:column;gap:14px;}
-.tw-dialog h2{margin:0;font:400 38px/.9 var(--font-display);color:#1E2B47;text-transform:uppercase;}
-.tw-dialog p{margin:0;font:14px/1.55 var(--font-mono);color:#2E2A1E;}
+.tw-dialog h2{margin:0;font:400 38px/.9 var(--font-display);color:#1E2B47;text-transform:uppercase;text-align:center;}
+.tw-dialog p{margin:0;font:14px/1.55 var(--font-mono);color:#2E2A1E;text-align:center;}
 .tw-dialog button{margin-top:4px;width:100%;}
 /* Room under the page for the floating action button that docks above the persistent bar. */
 @media(max-width:999px){.ts-body{padding-bottom:92px;}}
+
+/* The Team / League tab row on the top-level pages: two equal tabs, the active one underlined. */
+.ts-tab-static{border-bottom:2px solid transparent;}
+.ts-tab-static.active{border-bottom-color:var(--franchise);}

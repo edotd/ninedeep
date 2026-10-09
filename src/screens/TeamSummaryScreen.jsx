@@ -11,12 +11,13 @@ import { teamOutput } from '../game/matchup';
 import { teamSynergy } from '../game/skillsets';
 import { jerseyNumber, playerGrade } from '../game/cards';
 
-// The Team page opens on its main index; everything else is a sub page dealt in over it. A
+// The Team page opens on its main index; its sub pages (lineup, coach, GM, budget) are dealt in
+// over it. League is its own tab beside Team. A
 // section request from elsewhere (the persistent bar's Coach / Gameplan boxes) lands straight
 // on the matching sub page.
-const subForSection = (section) => (section === 'office' ? 'coach' : section === 'gameplan' ? 'lineup' : section === 'league' ? 'league' : section === 'ledger' || section === 'budget' ? 'budget' : null);
+const subForSection = (section) => (section === 'office' ? 'coach' : section === 'gameplan' ? 'lineup' : section === 'ledger' || section === 'budget' ? 'budget' : null);
 // Page names for the title bar and the header breadcrumb.
-const SUB_TITLES = { lineup: 'Lineup & Chemistry', coach: 'Coach', gm: 'GM', budget: 'Budget', league: 'League' };
+const SUB_TITLES = { lineup: 'Lineup & Chemistry', coach: 'Coach', gm: 'GM', budget: 'Budget' };
 
 // The Team Summary screen — "the file the league keeps on you" (design brand handoff, 1a).
 // Serves two roles from the same markup: as the 'teamsummary' phase (shown once per season,
@@ -74,7 +75,8 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   // On a phone the Team page is one index plus sub pages (see `sub` below); on desktop every
   // section still shows stacked in one scroll.
   const isDesktop = useIsDesktop();
-  // Which Team sub page is open (null = the main index): 'lineup' | 'coach' | 'gm' | 'budget' | 'league'.
+  // Which Team sub page is open (null = the main index): 'lineup' | 'coach' | 'gm' | 'budget'.
+  const [tab, setTab] = useState(() => (focusSection?.section === 'league' ? 'league' : 'team'));
   const [sub, setSubRaw] = useState(() => subForSection(focusSection?.section));
   // The sub page slides over the main page like a dealt card (design: page transitions, Deal).
   // `sub` is the page that's mounted, `subOpen` drives the slide, `subBusy` is true while it's
@@ -85,7 +87,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   useEffect(() => () => clearTimeout(subTimer.current), []);
   // Tell the header which page this is, so its page label can read as a breadcrumb
   // ("Team → Lineup & Chemistry").
-  const crumb = sub && !isDesktop ? `Team → ${SUB_TITLES[sub]}` : 'Team';
+  const crumb = isDesktop ? 'Team' : sub ? `Team → ${SUB_TITLES[sub]}` : tab === 'league' ? 'League' : 'Team';
   useEffect(() => {
     onCrumbChange?.(crumb);
     return () => onCrumbChange?.(null);
@@ -132,6 +134,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   }).filter((entry) => entry.card);
   useEffect(() => {
     if (!focusSection) return;
+    setTab(focusSection.section === 'league' ? 'league' : 'team');
     setSub(subForSection(focusSection.section));
     const targetId = focusSection.section === 'office'
       ? 'team-coach-card'
@@ -154,23 +157,28 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
     return () => window.clearTimeout(timer);
   }, [showSeasonIssues]);
 
-  // Swipe right anywhere on a sub page to go back to the Team page. Bails out for a touch that
-  // starts inside a child modal or horizontal scroller (their gestures belong to that surface,
-  // even though they bubble through this body handler).
+  // Swipe right anywhere on a sub page to go back to the Team page; on the top-level pages a
+  // swipe moves between the Team and League tabs. Bails out for a touch that starts inside a
+  // child modal or horizontal scroller (their gestures belong to that surface, even though
+  // they bubble through this body handler).
   const swipeStart = useRef(null);
   const handleBodyTouchStart = (event) => {
     const ownsHorizontalGesture = event.target.closest(
       '.development-picker, .tsx-overlay, .row-scroll, .strategy-deal-row, .ts-cost-blocks, .league-standings-table, .lb-sheet, .lb-cards',
     );
-    swipeStart.current = ownsHorizontalGesture || !sub ? null : { x: event.touches[0].clientX, y: event.touches[0].clientY };
+    swipeStart.current = ownsHorizontalGesture ? null : { x: event.touches[0].clientX, y: event.touches[0].clientY };
   };
   const handleBodyTouchEnd = (event) => {
     const start = swipeStart.current;
     swipeStart.current = null;
     if (!start) return;
     const touch = event.changedTouches[0];
+    const dx = touch.clientX - start.x;
     // A deliberate, mostly-horizontal drag — not a passing touch while scrolling the page.
-    if (touch.clientX - start.x > 90 && Math.abs(touch.clientY - start.y) < 60) leaveSub();
+    if (Math.abs(dx) < 90 || Math.abs(touch.clientY - start.y) > 60) return;
+    if (sub) { if (dx > 0) leaveSub(); return; }
+    if (tab === 'team' && dx < 0) setTab('league');
+    else if (tab === 'league' && dx > 0) setTab('team');
   };
 
   const handleRelease = (card) => {
@@ -401,10 +409,17 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
     <>
       <div className="screen ts-screen">
         <div className="ts-viewing-franchise"><span>{readOnly ? 'Viewing Franchise' : 'Your Franchise'}</span><strong>{team.name}</strong></div>
-        <div className="ts-pagebar">
-          {sub && <button type="button" className="ts-pagebar-back" onClick={leaveSub} aria-label="Back to Team">‹</button>}
-          <h2>{sub ? SUB_TITLES[sub] : 'Team'}</h2>
-        </div>
+        {sub ? (
+          <div className="ts-pagebar">
+            <button type="button" className="ts-pagebar-back" onClick={leaveSub} aria-label="Back to Team">‹</button>
+            <h2>{SUB_TITLES[sub]}</h2>
+          </div>
+        ) : (
+          <div className="ts-tabbar">
+            <button className={'ts-tab ts-tab-static' + (tab === 'team' ? ' active' : '')} onClick={() => setTab('team')}>Team</button>
+            <button className={'ts-tab ts-tab-static' + (tab === 'league' ? ' active' : '')} onClick={() => setTab('league')}>League</button>
+          </div>
+        )}
 
         <div className={'ts-body' + (subBusy ? ' ts-stacking' : '')} onTouchStart={!isDesktop ? handleBodyTouchStart : undefined} onTouchEnd={!isDesktop ? handleBodyTouchEnd : undefined}>
           {isDesktop ? (
@@ -415,6 +430,8 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
               {ledgerPage}
               {team.gmType && officePage('both')}
             </>
+          ) : tab === 'league' ? (
+            leaguePage
           ) : (
             <>
               {(!sub || subBusy) && (
@@ -428,13 +445,10 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                   {sub === 'lineup' && lineupPage}
                   {(sub === 'coach' || sub === 'gm') && team.gmType && officePage(sub)}
                   {sub === 'budget' && ledgerPage}
-                  {sub === 'league' && leaguePage}
                 </div>
               )}
             </>
           )}
-
-
         </div>
 
         {preSeason && team.hand.length > ROSTER_SIZE && (

@@ -150,10 +150,6 @@ export default function TeamMain({ team, readOnly, onOpen, committed, cap, budge
           {room < 0 && <small className="tm-over">Over budget by {formatCoins(-room)}</small>}
         </Tile>
 
-        <Tile onOpen={onOpen} sub="league" className="tm-league" label="League">
-          <span className="tm-tile-head"><b>LEAGUE</b><i>›</i></span>
-          <span className="tm-league-note">Standings · Teams · Scouting Report · Free Agency · Draft Class</span>
-        </Tile>
       </div>
       {picked && (
         <div className="tm-card-backdrop" role="presentation" onClick={() => setPicked(null)}>
