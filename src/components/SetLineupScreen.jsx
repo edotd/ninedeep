@@ -34,7 +34,7 @@ const SLOT_KEYS = [...COURT.map((s) => s.key), ...BENCH.map((b) => b.key)];
 // Rarity label tab (background, ink) — the same colours the card reveal stamps on a card.
 const RARITY_LABEL = { Core: ['#6B7894', '#E6DCC4'], Prime: ['#8E9BB5', '#1E2B47'], Signature: ['#E8825C', '#1E2B47'], Legendary: ['#F0A03D', '#1E2B47'] };
 const RARITY_COLOR = { Legendary: '#F0A03D', Signature: '#8E9BB5', Prime: '#C9BC9C', Core: '#A79A78' };
-const SORTS = [['POS', 'position'], ['GRADE', 'grade'], ['SCO', 'SCO'], ['PLM', 'PLM'], ['REB', 'REB'], ['DEF', 'DEF'], ['COST', 'cost']];
+const SORTS = [['Position', 'position'], ['Grade', 'grade'], ['Scoring', 'SCO'], ['Playmaking', 'PLM'], ['Rebounding', 'REB'], ['Defense', 'DEF'], ['Cost', 'cost']];
 
 const sortRoster = (cards, sort) => (sort === 'cost' ? [...cards].sort((a, b) => a.salary - b.salary) : sortPlayers(cards, sort));
 
@@ -351,11 +351,27 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
             <div><span>SELECT PLAYER</span><strong>{slotLabel(sheetSlot)}</strong></div>
             <button type="button" aria-label="Close" onClick={closeSheet}>×</button>
           </div>
-          <div className="lb-sorts">
-            <span>SORT</span>
-            {SORTS.map(([label, key]) => (
-              <button type="button" key={key} className={key === sort ? 'on' : ''} onClick={() => { setSort(key); if (carouselRef.current) carouselRef.current.scrollLeft = 0; setCardIndex(0); }}>{label}</button>
-            ))}
+          <div className="lb-picker-tools">
+            <div className="lb-mini" aria-hidden="true">
+              <div className="lb-mini-court">
+                <i className="mini-key" /><i className="mini-arc" /><i className="mini-rim" />
+                {COURT.map((slot) => {
+                  const filled = !!cardFor(slot.key);
+                  return <b key={slot.key} className={'lb-mini-slot' + (filled ? ' filled' : '') + (slot.key === sheetSlot ? ' active' : '')} style={{ left: `${slot.x}%`, top: `${slot.y}%` }} />;
+                })}
+              </div>
+              <div className="lb-mini-bench">
+                {BENCH.map((b) => (
+                  <span key={b.key} className={(cardFor(b.key) ? 'filled ' : '') + (b.key === sheetSlot ? 'active' : '')}>{b.label}</span>
+                ))}
+              </div>
+            </div>
+            <label className="lb-sort">
+              <span>SORT BY</span>
+              <select value={sort} onChange={(event) => { setSort(event.target.value); if (carouselRef.current) carouselRef.current.scrollLeft = 0; setCardIndex(0); }}>
+                {SORTS.map(([label, key]) => <option key={key} value={key}>{label}</option>)}
+              </select>
+            </label>
           </div>
           <div
             className="lb-cards"
@@ -371,7 +387,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
                 <div className="lb-slide" key={card.id}>
                   <div className="lb-slide-card">
                     <span className="lb-rarity-label" style={{ background: labelBg, color: labelInk }}>{rarity.toUpperCase()}</span>
-                    <PlayerCard card={card} />
+                    <div className={'lb-reveal-frame frame-' + rarity}><PlayerCard card={card} /></div>
                     <div className="lb-card-foot">
                       <span className={where && !here ? 'warn' : ''}>{here ? 'IN THIS SLOT' : where ? `NOW AT ${slotLabel(where)} · WILL MOVE` : 'AVAILABLE'}</span>
                       <button type="button" className={here ? 'on' : ''} onClick={() => (here ? closeSheet() : place(sheetSlot, card.id))}>{here ? 'SELECTED' : 'SELECT'}</button>
@@ -384,7 +400,6 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
           <div className="lb-picker-pager" aria-live="polite">
             <span>{Math.min(cardIndex + 1, roster.length)} / {roster.length}</span>
             <i>{roster.map((card, index) => <b key={card.id} className={index === cardIndex ? 'on' : ''} />)}</i>
-            <small>SWIPE FOR MORE PLAYERS</small>
           </div>
         </div>,
         document.body,
