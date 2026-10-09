@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { useIsDesktop } from '../hooks/useIsDesktop';
-import TeamChemistry from '../components/TeamChemistry';
 import SetLineupScreen from '../components/SetLineupScreen';
 import FrontOfficeCard from '../components/FrontOfficeCard';
 import { PlayerLedgerIdentity, CostBlocks } from '../components/LedgerRow';
@@ -261,7 +260,6 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                     canEdit={canEdit}
                     onPreviewChange={onLineupPreviewChange}
                   />
-                  <TeamChemistry team={team} canEdit={canEdit} showLineupButton={false} />
                 </div>
               )}
             </>

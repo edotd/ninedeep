@@ -149,7 +149,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
   }));
   const [selectedId, setSelectedId] = useState(null);
   const [selectedGameplanId, setSelectedGameplanId] = useState(() => team.activeGameplanId || '');
-  const [sixthManId, setSixthManId] = useState(() => team.sixthManId || bench[0]?.id || '');
+  const [sixthManId] = useState(() => team.sixthManId || bench[0]?.id || '');
   const effectiveSixthManId = bench.some((card) => card.id === sixthManId) ? sixthManId : (bench[0]?.id || '');
   const sixthMan = bench.find((card) => card.id === effectiveSixthManId) || null;
   const depthPlayer = bench.find((card) => card.id !== effectiveSixthManId) || null;
@@ -315,14 +315,6 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onCl
             <strong>{team.coach.gameplans.find((plan) => plan.id === selectedGameplanId)?.name || 'None'}</strong>
           </button>
         )}
-
-        <label className="slf-sixth-man">
-          <span className="slf-microlabel">Sixth Man</span>
-          <select value={effectiveSixthManId} disabled={!canEdit || !bench.length} onChange={(event) => setSixthManId(event.target.value)}>
-            {bench.map((card) => <option key={card.id} value={card.id}>#{jerseyNumber(card)} · {playerGrade(card)} · {card.archetype}</option>)}
-          </select>
-          <small>Primary bench contributor: 75% of card value. The other reserve contributes 25%.</small>
-        </label>
 
         <div className="slf-columns">
           <div className="slf-court-col">
