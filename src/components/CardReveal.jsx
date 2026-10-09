@@ -64,7 +64,7 @@ function Sheen({ t, tm, cw, ch }) {
   return <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>{pass(tm.sheen1, 560, 120)}{pass(tm.sheen2, 460, 60)}</div>;
 }
 
-function Chrome({ t, tm, rarity, cw, ch, onContinue, children }) {
+function Chrome({ t, tm, rarity, cw, ch, onContinue, ctaLabel, children }) {
   const L = rarity === 'Legendary';
   const ui = eo(P(t, tm.ui, 500));
   const flash = tm.flash != null ? Math.max(0, 1 - P(t, tm.flash, 320)) * (t >= tm.flash ? 1 : 0) : 0;
@@ -90,14 +90,14 @@ function Chrome({ t, tm, rarity, cw, ch, onContinue, children }) {
           onClick={onContinue}
           disabled={ui < 0.6}
           style={{ alignSelf: 'stretch', height: 54, border: 0, background: FILE, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: ARC, fontSize: 14, letterSpacing: '0.16em', color: INK, cursor: 'pointer' }}
-        >CONTINUE</button>
+        >{ctaLabel}</button>
       </div>
       {flash > 0 && <div style={{ position: 'absolute', inset: 0, background: FR, opacity: 0.38 * flash, pointerEvents: 'none' }} />}
     </div>
   );
 }
 
-function BallReveal({ t, face, cardW, up, rarity, cardHeight, onContinue }) {
+function BallReveal({ t, face, cardW, up, rarity, cardHeight, onContinue, ctaLabel }) {
   const tm = BALL_T[rarity], L = rarity === 'Legendary';
   const cw = cardW * up, ch = cardHeight * up;
   const S = 132, pitch = S * 0.196, dot = S * 0.1;
@@ -158,7 +158,7 @@ function BallReveal({ t, face, cardW, up, rarity, cardHeight, onContinue }) {
   });
   const pw = lerp(dot * 1.5, cw, g), ph = lerp(dot * 1.5, ch, g);
   return (
-    <Chrome t={t} tm={tm} rarity={rarity} cw={cw} ch={ch} onContinue={onContinue}>
+    <Chrome t={t} tm={tm} rarity={rarity} cw={cw} ch={ch} onContinue={onContinue} ctaLabel={ctaLabel}>
       {ballOut < 1 && (
         <div style={{ position: 'absolute', left: -S / 2, top: -S / 2, width: S, height: S, transform: `translate(${sx}px,${sy}px) scale(${c01(pop) * csc * (1 + 0.4 * ballOut)}) rotate(${spin}deg)`, opacity: 1 - ballOut }}>
           <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: FILE }} />
@@ -306,7 +306,7 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
         className={'card-reveal-stage kind-' + kind}
         style={{ width: STAGE_W, height: STAGE_H, marginLeft: -STAGE_W / 2, marginTop: -STAGE_H / 2, transform: `scale(${scale})` }}
       >
-        <BallReveal t={t} face={face} cardW={cardW} up={up} rarity={rarity} cardHeight={cardHeight} onContinue={onContinue} />
+        <BallReveal t={t} face={face} cardW={cardW} up={up} rarity={rarity} cardHeight={cardHeight} onContinue={onContinue} ctaLabel={kind === 'gm' ? 'START GAME' : 'CONTINUE'} />
         <div className="card-reveal-hint" style={{ opacity: ui }}>{HINT}</div>
         {ready && boxes.map((box) => (
           <button

@@ -1263,17 +1263,17 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
   .persistent-franchise-masthead .ts-hero-value{font-size:25px;}
   .persistent-franchise-masthead .ts-hero-value.budget{font-size:15px;}
 
-  /* Every phase screen's own floating .bottombar (Begin Season, Begin Playoffs, Resolve
-     Budget, Back, …) used to hover in its own box above the persistent bar. On a phone that's
-     two separate strips competing for the same corner of a small screen — dock it into the
-     persistent bar's own right edge instead, styled to read as one continuous bar rather than
-     a chip floating over it. The reserved width below (.persistent-bar's padding-right) and
-     this bar's own width must match, and the coach/gameplan/adjustment sections shrink to
-     leave it that room. */
-  .bottombar{position:fixed;left:auto;right:0;bottom:0;z-index:13;background:var(--ink);border:none;border-top:2px solid var(--franchise);border-left:1px solid rgba(230,220,196,.2);box-shadow:none;padding:9px 10px calc(9px + env(safe-area-inset-bottom,0px));min-height:72px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;width:118px;max-width:118px;gap:0;}
-  .bottombar button{min-width:0;width:100%;min-height:52px;align-self:stretch;flex:none;font-size:10.5px;letter-spacing:.02em;padding:9px 6px;white-space:normal;line-height:1.2;text-align:center;}
-  .persistent-bar{padding-right:130px;}
-  .persistent-bar-coach{flex:1.1;}
+  /* The persistent bar is just the Coach and Gameplan boxes, spanning the full width. Every
+     phase screen's own action button (Begin Season, Begin Playoffs, Resolve Budget, Back, …)
+     docks on top of it instead — centred on the screen, a rounded button resting just above
+     the bar rather than sharing its row. */
+  .bottombar{position:fixed;left:50%;right:auto;transform:translateX(-50%);bottom:calc(var(--mobile-persistent-bar-height,72px) + 10px);z-index:13;background:transparent;border:0;box-shadow:none;padding:0;min-height:0;box-sizing:border-box;display:flex;align-items:center;justify-content:center;width:auto;max-width:calc(100vw - 32px);gap:10px;}
+  .bottombar button{min-width:200px;width:auto;min-height:50px;align-self:stretch;flex:none;border-radius:14px;box-shadow:0 4px 14px rgba(8,13,26,.4);font-size:12px;letter-spacing:.08em;padding:12px 26px;white-space:normal;line-height:1.2;text-align:center;}
+  .bottombar-action{align-items:center;}
+  .season-ready-status{justify-content:center;}
+  .bottombar-issues{right:auto;left:50%;transform:translateX(-50%);}
+  .persistent-bar{padding-right:12px;}
+  .persistent-bar-coach{flex:1;}
   .persistent-card-count{flex:1 1 0;}
   .persistent-card-count b{font-size:17px;}
 }
@@ -2861,7 +2861,7 @@ body:has(.trans-screen){padding-bottom:0;}
 .lb-plan strong{display:flex;align-items:center;gap:8px;font:400 24px/.9 var(--font-display);text-align:right;}
 .lb-plan i{font:400 22px/.7 var(--font-display);font-style:normal;color:#B5431F;}
 .lb-court{position:relative;height:330px;background:#EADFC4;box-shadow:inset 0 0 0 2px #1E2B47;overflow:hidden;}
-.lb-court>div{position:absolute;pointer-events:none;}
+.lb-court>div:not(.lb-slot){position:absolute;pointer-events:none;}
 .lb-key{left:32%;width:36%;top:0;height:46%;box-shadow:inset 0 0 0 2px rgba(30,43,71,.45);background:rgba(181,67,31,.08);}
 .lb-ft{left:32%;width:36%;top:calc(46% - 65px);height:130px;border-radius:50%;box-shadow:inset 0 0 0 2px rgba(30,43,71,.45);clip-path:inset(50% 0 0 0);}
 .lb-arc{left:4%;width:92%;top:-244px;height:520px;border-radius:50%;box-shadow:inset 0 0 0 2px rgba(30,43,71,.45);}
