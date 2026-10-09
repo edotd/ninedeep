@@ -11,11 +11,12 @@ import { teamOutput } from '../game/matchup';
 import { teamSynergy } from '../game/skillsets';
 import { jerseyNumber, playerGrade } from '../game/cards';
 
-// The Team tab opens on its main index; the League and Budget tabs are their own. A section
-// request from elsewhere (the persistent bar's Coach / Gameplan boxes) lands on the matching
-// sub page of the Team tab.
-const tabForSection = (section) => (section === 'league' ? 'office' : section === 'ledger' || section === 'budget' ? 'ledger' : 'chemistry');
-const subForSection = (section) => (section === 'office' ? 'coach' : section === 'gameplan' ? 'lineup' : null);
+// The Team page opens on its main index; everything else is a sub page dealt in over it. A
+// section request from elsewhere (the persistent bar's Coach / Gameplan boxes) lands straight
+// on the matching sub page.
+const subForSection = (section) => (section === 'office' ? 'coach' : section === 'gameplan' ? 'lineup' : section === 'league' ? 'league' : section === 'ledger' || section === 'budget' ? 'budget' : null);
+// Page names for the title bar and the header breadcrumb.
+const SUB_TITLES = { lineup: 'Lineup & Chemistry', coach: 'Coach', gm: 'GM', budget: 'Budget', league: 'League' };
 
 // The Team Summary screen — "the file the league keeps on you" (design brand handoff, 1a).
 // Serves two roles from the same markup: as the 'teamsummary' phase (shown once per season,
@@ -31,7 +32,7 @@ const subForSection = (section) => (section === 'office' ? 'coach' : section ===
 // the League tab here) — this screen is organised by category: Team (Gameplan/Chemistry), League,
 // Budget ledger, front office. No nine-slot navigation here (that's the persistent bar's job on
 // every other screen).
-export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId, onBack, focusSection, onFreeAgency, onDraftClass, onTeamRosters, onLineupPreviewChange }) {
+export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId, onBack, focusSection, onFreeAgency, onDraftClass, onTeamRosters, onLineupPreviewChange, onCrumbChange }) {
   // viewTeamId lets this screen show a DIFFERENT team's file — reached by clicking a team in
   // Standings — read-only: no substitutions, releases, or front-office moves, since those
   // actions always take myTeamId regardless of which file is on screen.
@@ -70,12 +71,10 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   const preSeason = state.phase === 'teamsummary' || state.phase === 'pullhand';
   const canEdit = !readOnly && preSeason && !team.lineupConfirmed;
 
-  // Mobile-only tab bar (per the brand handoff's mobile Team File — Team/League/
-  // Budget) — on desktop every section still shows stacked in one scroll, same as before;
-  // `isDesktop` just decides whether `tab` actually filters anything.
+  // On a phone the Team page is one index plus sub pages (see `sub` below); on desktop every
+  // section still shows stacked in one scroll.
   const isDesktop = useIsDesktop();
-  const [tab, setTab] = useState(() => tabForSection(focusSection?.section));
-  // Which Team sub page is open (null = the main index): 'lineup' | 'coach' | 'gm'.
+  // Which Team sub page is open (null = the main index): 'lineup' | 'coach' | 'gm' | 'budget' | 'league'.
   const [sub, setSubRaw] = useState(() => subForSection(focusSection?.section));
   // The sub page slides over the main page like a dealt card (design: page transitions, Deal).
   // `sub` is the page that's mounted, `subOpen` drives the slide, `subBusy` is true while it's
@@ -84,6 +83,24 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   const [subBusy, setSubBusy] = useState(false);
   const subTimer = useRef(null);
   useEffect(() => () => clearTimeout(subTimer.current), []);
+  // Tell the header which page this is, so its page label can read as a breadcrumb
+  // ("Team → Lineup & Chemistry").
+  const crumb = sub && !isDesktop ? `Team → ${SUB_TITLES[sub]}` : 'Team';
+  useEffect(() => {
+    onCrumbChange?.(crumb);
+    return () => onCrumbChange?.(null);
+  }, [crumb, onCrumbChange]);
+
+  // First visit to the Team page after the deal: a short welcome, shown once per era.
+  const welcomeKey = `nine-deep-team-welcome-seen:${state.eraId}`;
+  const [showWelcome, setShowWelcome] = useState(() => {
+    if (readOnly || onBack || !(state.phase === 'teamsummary' || state.phase === 'pullhand')) return false;
+    try { return localStorage.getItem(welcomeKey) !== '1'; } catch { return false; }
+  });
+  const dismissWelcome = () => {
+    try { localStorage.setItem(welcomeKey, '1'); } catch { /* ignore */ }
+    setShowWelcome(false);
+  };
   const reduceMotion = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   // Instant (no animation) — used when something else changes the tab or the page outright.
   const setSub = (next) => { clearTimeout(subTimer.current); setSubBusy(false); setSubRaw(next); setSubOpen(!!next); };
@@ -104,7 +121,6 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
     requestAnimationFrame(() => requestAnimationFrame(() => setSubOpen(false)));
     subTimer.current = setTimeout(() => { setSubRaw(null); setSubBusy(false); }, SUB_MS);
   };
-  const showSection = (key) => isDesktop || tab === key;
   const leagueOutputs = state.teams.map((candidate) => ({ team: candidate, output: candidate.coach ? teamOutput(candidate) : { total: 0, off: 0, def: 0, bench: 0 } }));
   const leagueTotal = leagueOutputs.reduce((sum, entry) => sum + entry.output.total, 0);
   const bestFor = (key) => leagueOutputs.reduce((best, entry) => entry.output[key] > best.output[key] ? entry : best, leagueOutputs[0]);
@@ -116,7 +132,6 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   }).filter((entry) => entry.card);
   useEffect(() => {
     if (!focusSection) return;
-    setTab(tabForSection(focusSection.section));
     setSub(subForSection(focusSection.section));
     const targetId = focusSection.section === 'office'
       ? 'team-coach-card'
@@ -128,11 +143,9 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
     }));
   }, [focusSection]);
 
-  // Onboarding anchors: the Gameplan tab (opens Team Chemistry, where Set Lineup lives) before
-  // a lineup has ever been set, and Begin Season once one has. Both coachmarks are gated by
-  // their own CoachmarkTour storageKey (shown once ever, ignoring later seasons where the same
-  // "active" condition is true again) — no separate transition-tracking needed here.
-  const gameplanTabRef = useRef(null);
+  // Onboarding anchor: Begin Season once a lineup is set, gated by its own CoachmarkTour
+  // storageKey (shown once ever, ignoring later seasons where the same "active" condition is
+  // true again) — no separate transition-tracking needed here.
   const beginSeasonBtnRef = useRef(null);
   const [showSeasonIssues, setShowSeasonIssues] = useState(false);
   useEffect(() => {
@@ -141,75 +154,23 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
     return () => window.clearTimeout(timer);
   }, [showSeasonIssues]);
 
-  // Swipe anywhere in the body to move between tabs. Bails out for a touch that starts inside a
-  // child modal or horizontal scroller (their gestures belong to that surface, even though they
-  // bubble through this body handler) — an earlier version tried gating this by requiring the
-  // touch to START within ~32px of the screen edge instead, which also blocked the ordinary case
-  // of swiping between tabs from the middle of the screen, where nothing actually conflicts.
-  const TAB_ORDER = ['chemistry', team.gmType ? 'office' : null, 'ledger'].filter(Boolean);
-  const bodyTouchStartX = useRef(null);
-  const tabbarRef = useRef(null);
-  const underlineRef = useRef(null);
-  // Moves the single sliding underline to sit under TAB_ORDER[index]. `animate` toggles the
-  // CSS transition off for a live drag (where the underline should track the finger 1:1, with
-  // no lag) and on for a settle — either a normal tap-to-switch, or the snap-to-rest at the end
-  // of a drag (design ref Screen 05 swipe rule 04: "the amber underline tracks the finger").
-  const positionUnderline = (index, animate) => {
-    const bar = tabbarRef.current;
-    const underline = underlineRef.current;
-    if (!bar || !underline) return;
-    const btn = bar.querySelectorAll(':scope > .ts-tab')[index];
-    if (!btn) return;
-    underline.style.transition = animate ? '' : 'none';
-    underline.style.left = btn.offsetLeft + 'px';
-    underline.style.width = btn.offsetWidth + 'px';
-  };
-  useEffect(() => {
-    if (isDesktop) return;
-    positionUnderline(TAB_ORDER.indexOf(tab), true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, isDesktop, team.gmType]);
+  // Swipe right anywhere on a sub page to go back to the Team page. Bails out for a touch that
+  // starts inside a child modal or horizontal scroller (their gestures belong to that surface,
+  // even though they bubble through this body handler).
+  const swipeStart = useRef(null);
   const handleBodyTouchStart = (event) => {
     const ownsHorizontalGesture = event.target.closest(
       '.development-picker, .tsx-overlay, .row-scroll, .strategy-deal-row, .ts-cost-blocks, .league-standings-table, .lb-sheet, .lb-cards',
     );
-    if (ownsHorizontalGesture) {
-      bodyTouchStartX.current = null;
-      return;
-    }
-    bodyTouchStartX.current = event.touches[0].clientX;
-  };
-  const handleBodyTouchMove = (event) => {
-    const startX = bodyTouchStartX.current;
-    if (startX == null) return;
-    const idx = TAB_ORDER.indexOf(tab);
-    const deltaX = startX - event.touches[0].clientX;
-    const targetIdx = deltaX > 0 ? idx + 1 : idx - 1;
-    if (targetIdx < 0 || targetIdx >= TAB_ORDER.length) return;
-    const bar = tabbarRef.current;
-    const underline = underlineRef.current;
-    if (!bar || !underline) return;
-    const buttons = bar.querySelectorAll(':scope > .ts-tab');
-    const cur = buttons[idx];
-    const next = buttons[targetIdx];
-    if (!cur || !next) return;
-    const progress = Math.min(1, Math.abs(deltaX) / window.innerWidth);
-    underline.style.transition = 'none';
-    underline.style.left = (cur.offsetLeft + (next.offsetLeft - cur.offsetLeft) * progress) + 'px';
-    underline.style.width = (cur.offsetWidth + (next.offsetWidth - cur.offsetWidth) * progress) + 'px';
+    swipeStart.current = ownsHorizontalGesture || !sub ? null : { x: event.touches[0].clientX, y: event.touches[0].clientY };
   };
   const handleBodyTouchEnd = (event) => {
-    const startX = bodyTouchStartX.current;
-    bodyTouchStartX.current = null;
-    if (startX == null) return;
-    const deltaX = startX - event.changedTouches[0].clientX;
-    const idx = TAB_ORDER.indexOf(tab);
-    // A light or partial swipe shouldn't change tabs — this needs a deliberate, most-of-the-way
-    // gesture, not just a passing touch-drag while scrolling the page vertically.
-    if (Math.abs(deltaX) < 110) { positionUnderline(idx, true); return; }
-    if (deltaX > 0 && idx < TAB_ORDER.length - 1) setTab(TAB_ORDER[idx + 1]);
-    else if (deltaX < 0 && idx > 0) setTab(TAB_ORDER[idx - 1]);
-    else positionUnderline(idx, true);
+    const start = swipeStart.current;
+    swipeStart.current = null;
+    if (!start) return;
+    const touch = event.changedTouches[0];
+    // A deliberate, mostly-horizontal drag — not a passing touch while scrolling the page.
+    if (touch.clientX - start.x > 90 && Math.abs(touch.clientY - start.y) < 60) leaveSub();
   };
 
   const handleRelease = (card) => {
@@ -238,7 +199,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   if (committed > cap) seasonIssues.push('Resolve team budget');
   if (!team.lineupSet || starters.length !== 5) seasonIssues.push('Set your lineup');
 
-  // A Team main tile: sub pages swap in on a phone (and the budget tile jumps to the Budget tab);
+  // A Team main tile: sub pages are dealt in over the main page on a phone;
   // on desktop everything is already stacked on one page, so the tile scrolls to its section.
   const openSub = (target) => {
     if (isDesktop) {
@@ -250,6 +211,64 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
     enterSub(target);
   };
 
+  const leaguePage = (
+    <>
+            <div className="ts-section league-overview">
+              <div className="ts-heading">League</div>
+              <div className="league-jump-actions">
+                {onTeamRosters && <button type="button" className="league-jump-button rosters" onClick={onTeamRosters}>Teams</button>}
+                <button type="button" className="league-jump-button free-agency" onClick={onFreeAgency}>Free Agency</button>
+                <button type="button" className="league-jump-button draft" onClick={onDraftClass}>Draft Class</button>
+              </div>
+              <div className="ts-heading league-standings-heading">Scouting Report</div>
+              {scoutingRows.length ? <div className="scouting-report-list">{scoutingRows.map(({ cardId, card, history }) => (
+                <div className="scouting-report-row" key={cardId}>
+                  <strong>#{jerseyNumber(card)} · {playerGrade(card)} · {card.archetype} · {card.position}</strong>
+                  {history.length ? history.map((entry) => <small key={`${entry.season}-${entry.game}`}>Season {entry.season}: Starter {entry.starterOutput} · Sixth Man {entry.sixthManOutput} · Depth {entry.depthOutput}</small>) : <small>Tracking begins with your next season simulation.</small>}
+                </div>
+              ))}</div> : <div className="ts-ledger-empty">Add players from Teams, Free Agency, or Draft Class.</div>}
+              <div className="league-output-grid">
+                <div><span>League Output</span><strong>{Math.round(leagueTotal * 100) / 100}</strong><small>Total collective output from all teams</small></div>
+                <div><span>Best Offense</span><strong>{bestFor('off').output.off}</strong><small>{bestFor('off').team.name}</small></div>
+                <div><span>Best Defense</span><strong>{bestFor('def').output.def}</strong><small>{bestFor('def').team.name}</small></div>
+                <div><span>Best Bench</span><strong>{bestFor('bench').output.bench}</strong><small>{bestFor('bench').team.name}</small></div>
+              </div>
+              <div className="ts-heading league-standings-heading">Standings</div>
+              <div className="league-standings-table">
+                <div className="league-standings-row head">
+                  <span>Team</span><span>Chemistry</span><span>Projected Output</span><span>Offense</span><span>Defense</span>
+                </div>
+                {leagueStandings.map(({ team: t, output }, index) => (
+                  <div key={t.id} className={'league-standings-row' + (t.id === team.id ? ' you' : '')}>
+                    <span className="league-team"><i>{index + 1}</i><b>{t.name}</b></span>
+                    <span>{teamSynergy(t).grade}</span>
+                    <span className="league-output">{output.total}</span>
+                    <span>{output.off}</span>
+                    <span>{output.def}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+        {state.settings.fanbaseCardsEnabled !== false && (
+            <div className="ts-section">
+              <div className="ts-heading">Fanbase</div>
+              <div className="fo-deal-row row-fit" style={{ margin: 0 }}>
+                <div className="ts-fo-col">
+                  <FrontOfficeCard kind="fanbase" team={team} />
+                  {!readOnly && (
+                    <button className="secondary ts-fo-action" style={{ width: '100%' }} disabled={team.financeBoostUsedThisSeason} onClick={() => {
+                      const res = actions.investInFanbase(myTeamId);
+                      if (res && res.ok === false) alert(res.msg);
+                    }}>
+                      {team.financeBoostUsedThisSeason ? 'Already Invested This Season' : `Invest — ${formatCoins(FANBASE_BOOST_COST)}`}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+        )}
+    </>
+  );
   const lineupPage = (
                 <div id="team-lineup">
                   <SetLineupScreen
@@ -382,26 +401,19 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
     <>
       <div className="screen ts-screen">
         <div className="ts-viewing-franchise"><span>{readOnly ? 'Viewing Franchise' : 'Your Franchise'}</span><strong>{team.name}</strong></div>
-        <div className="ts-tabbar" ref={tabbarRef}>
-          <button ref={gameplanTabRef} className={'ts-tab' + (tab === 'chemistry' ? ' active' : '')} onClick={() => { setTab('chemistry'); setSub(null); }}>
-            Team
-            {!readOnly && !team.lineupSet && <span className="alert-badge" aria-label="Lineup not set">!</span>}
-          </button>
-          {team.gmType && (
-            <button className={'ts-tab' + (tab === 'office' ? ' active' : '')} onClick={() => setTab('office')}>League</button>
-          )}
-          <button className={'ts-tab' + (tab === 'ledger' ? ' active' : '')} onClick={() => setTab('ledger')}>
-            Budget
-            {!readOnly && preSeason && committed > cap && <span className="alert-badge" aria-label="Team is over budget">!</span>}
-          </button>
-          {!isDesktop && <span className="ts-tab-underline" ref={underlineRef} aria-hidden="true" />}
+        <div className="ts-pagebar">
+          {sub && <button type="button" className="ts-pagebar-back" onClick={leaveSub} aria-label="Back to Team">‹</button>}
+          <h2>{sub ? SUB_TITLES[sub] : 'Team'}</h2>
         </div>
 
-        <div className={'ts-body' + (subBusy ? ' ts-stacking' : '')} onTouchStart={!isDesktop ? handleBodyTouchStart : undefined} onTouchMove={!isDesktop ? handleBodyTouchMove : undefined} onTouchEnd={!isDesktop ? handleBodyTouchEnd : undefined}>
-          {showSection('chemistry') && (isDesktop ? (
+        <div className={'ts-body' + (subBusy ? ' ts-stacking' : '')} onTouchStart={!isDesktop ? handleBodyTouchStart : undefined} onTouchEnd={!isDesktop ? handleBodyTouchEnd : undefined}>
+          {isDesktop ? (
             <>
               <TeamMain team={team} readOnly={readOnly} committed={committed} cap={cap} budgetSources={budgetSources} onOpen={openSub} />
               {lineupPage}
+              {leaguePage}
+              {ledgerPage}
+              {team.gmType && officePage('both')}
             </>
           ) : (
             <>
@@ -413,76 +425,15 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
               )}
               {sub && (
                 <div className={'ts-sub-layer' + (subOpen ? ' open' : '') + (subBusy ? '' : ' settled')}>
-                  <button type="button" className="tm-back" onClick={leaveSub}>‹ Team</button>
                   {sub === 'lineup' && lineupPage}
                   {(sub === 'coach' || sub === 'gm') && team.gmType && officePage(sub)}
                   {sub === 'budget' && ledgerPage}
+                  {sub === 'league' && leaguePage}
                 </div>
               )}
             </>
-          ))}
-
-          {showSection('office') && (
-            <div className="ts-section league-overview">
-              <div className="ts-heading">League</div>
-              <div className="league-jump-actions">
-                {onTeamRosters && <button type="button" className="league-jump-button rosters" onClick={onTeamRosters}>Teams</button>}
-                <button type="button" className="league-jump-button free-agency" onClick={onFreeAgency}>Free Agency</button>
-                <button type="button" className="league-jump-button draft" onClick={onDraftClass}>Draft Class</button>
-              </div>
-              <div className="ts-heading league-standings-heading">Scouting Report</div>
-              {scoutingRows.length ? <div className="scouting-report-list">{scoutingRows.map(({ cardId, card, history }) => (
-                <div className="scouting-report-row" key={cardId}>
-                  <strong>#{jerseyNumber(card)} · {playerGrade(card)} · {card.archetype} · {card.position}</strong>
-                  {history.length ? history.map((entry) => <small key={`${entry.season}-${entry.game}`}>Season {entry.season}: Starter {entry.starterOutput} · Sixth Man {entry.sixthManOutput} · Depth {entry.depthOutput}</small>) : <small>Tracking begins with your next season simulation.</small>}
-                </div>
-              ))}</div> : <div className="ts-ledger-empty">Add players from Teams, Free Agency, or Draft Class.</div>}
-              <div className="league-output-grid">
-                <div><span>League Output</span><strong>{Math.round(leagueTotal * 100) / 100}</strong><small>Total collective output from all teams</small></div>
-                <div><span>Best Offense</span><strong>{bestFor('off').output.off}</strong><small>{bestFor('off').team.name}</small></div>
-                <div><span>Best Defense</span><strong>{bestFor('def').output.def}</strong><small>{bestFor('def').team.name}</small></div>
-                <div><span>Best Bench</span><strong>{bestFor('bench').output.bench}</strong><small>{bestFor('bench').team.name}</small></div>
-              </div>
-              <div className="ts-heading league-standings-heading">Standings</div>
-              <div className="league-standings-table">
-                <div className="league-standings-row head">
-                  <span>Team</span><span>Chemistry</span><span>Projected Output</span><span>Offense</span><span>Defense</span>
-                </div>
-                {leagueStandings.map(({ team: t, output }, index) => (
-                  <div key={t.id} className={'league-standings-row' + (t.id === team.id ? ' you' : '')}>
-                    <span className="league-team"><i>{index + 1}</i><b>{t.name}</b></span>
-                    <span>{teamSynergy(t).grade}</span>
-                    <span className="league-output">{output.total}</span>
-                    <span>{output.off}</span>
-                    <span>{output.def}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
           )}
 
-          {showSection('ledger') && ledgerPage}
-
-          {isDesktop && team.gmType && officePage('both')}
-
-          {state.settings.fanbaseCardsEnabled !== false && showSection('office') && (
-            <div className="ts-section">
-              <div className="ts-heading">Fanbase</div>
-              <div className="fo-deal-row row-fit" style={{ margin: 0 }}>
-                <div className="ts-fo-col">
-                  <FrontOfficeCard kind="fanbase" team={team} />
-                  {!readOnly && (
-                    <button className="secondary ts-fo-action" style={{ width: '100%' }} disabled={team.financeBoostUsedThisSeason} onClick={() => {
-                      const res = actions.investInFanbase(myTeamId);
-                      if (res && res.ok === false) alert(res.msg);
-                    }}>
-                      {team.financeBoostUsedThisSeason ? 'Already Invested This Season' : `Invest — ${formatCoins(FANBASE_BOOST_COST)}`}
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
 
         </div>
 
@@ -494,11 +445,15 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
         {preSeason && team.hand.length === ROSTER_SIZE && committed > cap && (
           <div className="statusline" style={{ marginTop: 16 }}>Get under budget before the season begins. Reduce committed costs by {formatCoins(committed - cap)}.</div>
         )}
-        <CoachmarkTour
-          storageKey="nine-deep-onboard-gameplan-tab-seen"
-          active={!readOnly && !team.lineupSet}
-          steps={[{ targetRef: gameplanTabRef, title: 'Build Your Team', body: 'Set your starting five here — tap Team to get started.' }]}
-        />
+        {showWelcome && (
+          <div className="tw-backdrop" role="presentation">
+            <div className="tw-dialog" role="dialog" aria-modal="true" aria-labelledby="tw-title">
+              <h2 id="tw-title">Welcome to Nine Deep!</h2>
+              <p>This is your home page. You can set your lineups, study your scouting report and manage your budget here. Try setting your lineup now and see how you matchup against the league.</p>
+              <button type="button" className="primary" autoFocus onClick={dismissWelcome}>Let's Go</button>
+            </div>
+          </div>
+        )}
         <CoachmarkTour
           storageKey="nine-deep-onboard-begin-season-seen"
           active={!readOnly && !onBack && team.lineupSet}
@@ -543,11 +498,11 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                   {seasonIssues.map((msg) => (
                     <li key={msg}>
                       {msg === 'Set your lineup' ? (
-                        <button type="button" onClick={() => { setShowSeasonIssues(false); setTab('chemistry'); setSub('lineup'); }}>Lineup</button>
+                        <button type="button" onClick={() => { setShowSeasonIssues(false); setSub('lineup'); }}>Lineup</button>
                       ) : msg === 'Resolve team budget' ? (
-                        <button type="button" onClick={() => { setShowSeasonIssues(false); setTab('ledger'); }}>Budget</button>
+                        <button type="button" onClick={() => { setShowSeasonIssues(false); setSub('budget'); }}>Budget</button>
                       ) : msg.startsWith('Resolve your roster') ? (
-                        <button type="button" onClick={() => { setShowSeasonIssues(false); setTab('ledger'); }}>{msg}</button>
+                        <button type="button" onClick={() => { setShowSeasonIssues(false); setSub('budget'); }}>{msg}</button>
                       ) : msg}
                     </li>
                   ))}
