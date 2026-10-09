@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { playerGrade, retentionBonus, relationshipBonus } from '../game/cards';
+import { playerGrade } from '../game/cards';
 import PlayerCard from './PlayerCard';
 import { formatCoins } from '../game/economy';
 import { teamSynergy } from '../game/skillsets';
@@ -39,15 +39,6 @@ function bracketLayout(pairs) {
 
 const colX = (i) => `calc((100% - 30px) / 7 * ${i + 0.5} + ${4 * i}px)`;
 
-function gmHeadline(team) {
-  const trait = team.gmTrait;
-  if (!trait) return { mod: 'Neutral', stat: '—' };
-  const stat = trait.name === 'Third Eye' ? 'PEAK VIEW'
-    : trait.name === 'Cap Architect' ? `+${trim(trait.value)} BUDGET`
-      : trait.name === 'Talent Hawk' ? `+${trait.value} SCOUTED`
-        : `+${(trait.value || 0) * 2}%`;
-  return { mod: trait.name, stat };
-}
 
 // One lineup box: empty outline until the lineup is set, then the player's letter grade — tap it
 // to pull up their card.
@@ -94,8 +85,6 @@ export default function TeamMain({ team, readOnly, onOpen, committed, cap, budge
   const shownPairs = [...pairs].sort((a, b) => b.rule.percent - a.rule.percent).slice(0, 3);
 
   const coach = team.coach;
-  const bonus = coach ? retentionBonus(team) + relationshipBonus(team) : 0;
-  const gm = team.gmType ? gmHeadline(team) : null;
 
   const room = cap - committed;
   const span = Math.max(cap, committed) || 1;
@@ -143,14 +132,12 @@ export default function TeamMain({ team, readOnly, onOpen, committed, cap, budge
           <Tile onOpen={onOpen} sub="coach" className={'tm-fo coach' + (coach ? ` rarity-${coach.rarity || 'Core'}` : '')} label="Coach">
             <span className="tm-fo-head"><b>COACH</b><i>›</i></span>
             <strong>{coach ? coach.archetype : 'Open Slot'}</strong>
-            <span className="tm-fo-mod">{coach ? coach.modifier : ''}</span>
-            <span className="tm-fo-stat">{coach ? <><span>{`+${Math.round((coach.offBonus + bonus) * 100)}% OFF`}</span><span>{`+${Math.round((coach.defBonus + bonus) * 100)}% DEF`}</span></> : 'Hire in Free Agency'}</span>
+            <span className="tm-fo-stat">{coach ? coach.modifier : 'Hire in Free Agency'}</span>
           </Tile>
           <Tile onOpen={onOpen} sub="gm" className="tm-fo gm" label="General manager">
             <span className="tm-fo-head"><b>GM</b><i>›</i></span>
-            <strong>{gm ? 'General Manager' : 'Open Slot'}</strong>
-            <span className="tm-fo-mod">{gm ? gm.mod : ''}</span>
-            <span className="tm-fo-stat">{gm ? gm.stat : '—'}</span>
+            <strong>{team.gmType ? 'General Manager' : 'Open Slot'}</strong>
+            <span className="tm-fo-stat">{team.gmType ? (team.gmTrait?.name || 'Neutral') : '—'}</span>
           </Tile>
         </div>
 

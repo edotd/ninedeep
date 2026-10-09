@@ -2826,8 +2826,7 @@ body:has(.trans-screen){padding-bottom:0;}
 .tm-fo-head b{font:400 10px var(--font-label);letter-spacing:.14em;color:#A9B4C9;}
 .tm-fo-head i{font:400 22px/.7 var(--font-display);font-style:normal;color:#F0A03D;}
 .tm-fo strong{font:400 30px/.84 var(--font-display);color:#F0A03D;text-transform:uppercase;overflow-wrap:anywhere;}
-.tm-fo-mod{font:400 20px/.9 var(--font-display);letter-spacing:.02em;text-transform:uppercase;color:#E6DCC4;min-height:18px;}
-.tm-fo-stat{display:flex;flex-direction:column;gap:2px;border-top:1px solid #3C4A69;padding-top:8px;font:400 22px/.9 var(--font-display);color:#6FA383;}
+.tm-fo-stat{display:block;border-top:1px solid #3C4A69;padding-top:8px;font:400 24px/.9 var(--font-display);text-transform:uppercase;color:#6FA383;}
 .tm-budget-nums{display:flex;align-items:baseline;gap:5px;}
 .tm-budget-nums strong{font:400 34px/.8 var(--font-display);}
 .tm-budget-nums em{font:400 34px/.8 var(--font-display);font-style:normal;color:#A79A78;}
