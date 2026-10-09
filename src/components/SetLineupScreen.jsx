@@ -237,16 +237,24 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
     window.addEventListener('resize', fit);
     return () => window.removeEventListener('resize', fit);
   }, [sheetSlot]);
-  // Each card plays the onboarding reveal (1.5x) when it's swiped to, and again every time it
-  // comes back. A card that has played and been swiped past rests on its finished frame.
-  const [plays, setPlays] = useState({});
-  useEffect(() => { if (!sheetSlot) setPlays({}); }, [sheetSlot]);
+  // Each card plays the onboarding reveal when it's swiped to, and again every time it comes
+  // back. A card is blank until it's the one in view, so you never see it finished before it
+  // plays; only the card being swiped away from stays on its finished frame until the swipe lands.
+  const [reveal, setReveal] = useState({ active: null, prev: null, count: 0 });
+  useEffect(() => { if (!sheetSlot) setReveal({ active: null, prev: null, count: 0 }); }, [sheetSlot]);
   useEffect(() => {
     if (!sheetSlot) return;
     const card = roster[cardIndex];
-    if (card) setPlays((prev) => ({ ...prev, [card.id]: (prev[card.id] || 0) + 1 }));
+    if (!card) return;
+    setReveal((r) => (r.active === card.id ? r : { active: card.id, prev: r.active, count: r.count + 1 }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sheetSlot, cardIndex]);
+  const settleTimer = useRef(null);
+  useEffect(() => () => clearTimeout(settleTimer.current), []);
+  const settleSoon = () => {
+    clearTimeout(settleTimer.current);
+    settleTimer.current = setTimeout(() => setReveal((r) => (r.prev ? { ...r, prev: null } : r)), 140);
+  };
   // Start on the player already in this slot (or the first card), and keep the page behind the
   // picker from scrolling while it's up.
   useEffect(() => {
@@ -388,7 +396,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
           <div
             className="lb-cards"
             ref={carouselRef}
-            onScroll={(event) => setCardIndex(Math.round(event.currentTarget.scrollLeft / (event.currentTarget.clientWidth || 1)))}
+            onScroll={(event) => { setCardIndex(Math.round(event.currentTarget.scrollLeft / (event.currentTarget.clientWidth || 1))); settleSoon(); }}
           >
             {roster.map((card) => {
               const where = slotOf(card.id);
@@ -397,7 +405,8 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
                 <div className="lb-slide" key={card.id}>
                   <div className="lb-slide-card" style={{ width: 264 * pickerFit.s }}>
                     <div className="lb-reveal-box" style={{ height: pickerFit.h * pickerFit.s + 44 }}>
-                      {plays[card.id] > 0 && <CardRevealPlayer key={plays[card.id]} card={card} up={pickerFit.s} cardHeight={pickerFit.h} speed={1.5} delay={250} />}
+                      {reveal.active === card.id && <CardRevealPlayer key={'live' + reveal.count} card={card} up={pickerFit.s} cardHeight={pickerFit.h} speed={2.25} delay={150} />}
+                      {reveal.prev === card.id && reveal.active !== card.id && <CardRevealPlayer key="done" card={card} up={pickerFit.s} cardHeight={pickerFit.h} settled />}
                     </div>
                     <div className="lb-card-foot">
                       <span className={where && !here ? 'warn' : ''}>{here ? 'IN THIS SLOT' : where ? `NOW AT ${slotLabel(where)} · WILL MOVE` : 'AVAILABLE'}</span>

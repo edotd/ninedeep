@@ -25,3 +25,5 @@
 .card-reveal-modal h2{margin:0;font:13px var(--font-label);letter-spacing:.16em;text-transform:uppercase;color:#9C3818;}
 .card-reveal-modal p{margin:0;font:14px/1.5 var(--font-mono);color:#2E2A1E;}
 .card-reveal-modal button{align-self:stretch;margin-top:4px;}
+
+.card-reveal-face{will-change:transform;backface-visibility:hidden;}

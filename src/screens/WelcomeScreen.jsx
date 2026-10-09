@@ -1,19 +1,15 @@
-import { useState } from 'react';
 import BallMark from '../components/BallMark';
 import CardReveal from '../components/CardReveal';
 import './WelcomeScreen.css';
 
-// Steps (driven by GameShell): welcome -> cards -> [Learn More / Start Playing dialog] ->
-// reveal (player) -> reveal-coach -> reveal-gm -> the deal (which opens with the deck shuffle).
-// "Start Playing" in the dialog skips straight to the deal.
+// Steps (driven by GameShell): welcome -> cards -> reveal (player) -> reveal-coach -> reveal-gm ->
+// the deal (which opens with the deck shuffle). The cards page ends in two buttons: "Learn More"
+// walks through the reveals, "Start Playing" skips straight to the deal.
 export default function WelcomeScreen({ teamName, onContinue, onStartPlaying, step = 'welcome', revealCard, revealTeam }) {
-  const [choosing, setChoosing] = useState(false);
-
   if (step === 'reveal' && revealCard) return <CardReveal key={step} kind="player" card={revealCard} onContinue={onContinue} />;
   if (step === 'reveal-coach' && revealTeam) return <CardReveal key={step} kind="coach" team={revealTeam} onContinue={onContinue} />;
   if (step === 'reveal-gm' && revealTeam) return <CardReveal key={step} kind="gm" team={revealTeam} onContinue={onContinue} />;
 
-  const handleNext = () => (step === 'cards' ? setChoosing(true) : onContinue());
   return (
     <main className="welcome-screen">
       <section className="welcome-file">
@@ -43,21 +39,16 @@ export default function WelcomeScreen({ teamName, onContinue, onStartPlaying, st
               </div>
             </>
           )}
-          <button type="button" className="primary welcome-continue" onClick={handleNext}>{step === 'welcome' ? 'Continue' : 'Next'}</button>
-        </div>
-      </section>
-      {choosing && (
-        <div className="welcome-dialog-backdrop" role="dialog" aria-modal="true" aria-label="Learn more or start playing">
-          <div className="welcome-dialog">
-            <h2>Ready To Deal?</h2>
-            <p>Want a closer look at how your cards work, or jump straight into the game?</p>
-            <div className="welcome-dialog-actions">
-              <button type="button" className="secondary" onClick={() => { setChoosing(false); onContinue(); }}>Learn More</button>
+          {step === 'cards' ? (
+            <div className="welcome-actions">
+              <button type="button" className="secondary welcome-learn" onClick={onContinue}>Learn More</button>
               <button type="button" className="primary" onClick={onStartPlaying}>Start Playing</button>
             </div>
-          </div>
+          ) : (
+            <button type="button" className="primary welcome-continue" onClick={onContinue}>Continue</button>
+          )}
         </div>
-      )}
+      </section>
     </main>
   );
 }

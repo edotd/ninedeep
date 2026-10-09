@@ -192,13 +192,13 @@ function BallReveal({ t, face, cardW, up, rarity, cardHeight, onContinue, ctaLab
 // The same ball reveal, playable anywhere: centred in its parent box, no ink ground or buttons,
 // sped up by `speed` (the player picker runs it 1.5x). `delay` holds the start back a moment.
 // Remounting it (change its key) plays it again.
-export function CardRevealPlayer({ card, up, cardHeight, speed = 1, delay = 0 }) {
+export function CardRevealPlayer({ card, up, cardHeight, speed = 1, delay = 0, settled = false }) {
   const rarity = RAR[card.rarity] ? card.rarity : 'Core';
   const total = BALL_T[rarity].total;
   const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const [clock, setClock] = useState(0);
   useEffect(() => {
-    if (reduced) return undefined;
+    if (reduced || settled) return undefined;
     let id;
     const start = performance.now();
     const frame = (now) => {
@@ -208,9 +208,11 @@ export function CardRevealPlayer({ card, up, cardHeight, speed = 1, delay = 0 })
     };
     id = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(id);
-  }, [total, reduced, speed, delay]);
-  const t = reduced ? total : Math.min(total, Math.max(0, clock - delay) * speed);
-  return <BallReveal t={t} face={<PlayerCard card={card} />} cardW={264} up={up} rarity={rarity} cardHeight={cardHeight} bare />;
+  }, [total, reduced, settled, speed, delay]);
+  const t = reduced || settled ? total : Math.min(total, Math.max(0, clock - delay) * speed);
+  // One element for the card's whole life, so a frame of the animation never re-renders the card.
+  const face = useMemo(() => <PlayerCard card={card} />, [card]);
+  return <BallReveal t={t} face={face} cardW={264} up={up} rarity={rarity} cardHeight={cardHeight} bare />;
 }
 
 const HINT = 'Tap any part of the card to learn more';
