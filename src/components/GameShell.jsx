@@ -122,9 +122,6 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
   const [viewTeamId, setViewTeamId] = useState(null);
   const [returnOverlay, setReturnOverlay] = useState(null);
   const [teamFocus, setTeamFocus] = useState(null);
-  // The Team page reports where in itself the user is, so the header's page label can read as a
-  // breadcrumb ("Team → Lineup & Chemistry").
-  const [teamCrumb, setTeamCrumb] = useState(null);
   const toggleOverlay = (name) => setOverlay((o) => (o === name ? null : name));
   // Free agency stays open through Contracts, the Draft, and right up until this team confirms
   // its lineup for the season. Manual closeout is optional; Begin Season also locks this user
@@ -257,7 +254,9 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
   const onOwnTeamPage = overlay === null && viewTeamId == null && effectivePhase === 'teamsummary';
   const navOverlay = onOwnTeamPage ? 'team' : overlay;
   const onTeamPage = overlay === 'team' || (overlay === null && effectivePhase === 'teamsummary');
-  const pageLabel = (onTeamPage && teamCrumb) || PAGE_LABELS[overlay || effectivePhase] || 'Nine Deep';
+  // The Team page (and its sub pages) just wears the brand wordmark up top; the page's own title
+  // bar says where you are.
+  const pageLabel = onTeamPage ? null : PAGE_LABELS[overlay || effectivePhase] || 'Nine Deep';
   // Season is part of screen identity. A Team overlay can remain selected while the shared
   // flow moves through the draft, so phase/overlay alone can otherwise reuse last season's
   // TeamSummaryScreen and its carousel position after the new roster arrives.
@@ -308,7 +307,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
   if (overlay === 'glossary') overlayBody = <GlossaryScreen key={screenKey} state={state} onBack={close} />;
   else if (overlay === 'settings') overlayBody = <SettingsScreen key={screenKey} state={state} actions={actions} onBack={close} onNewEra={onNewEra} onDeleteRoom={onDeleteRoom} hostNotifications={hostNotifications} />;
   else if (overlay === 'standings') overlayBody = <LeagueScreen key={screenKey} state={state} myTeamId={myTeamId} onBack={close} onViewTeam={(id) => openTeamView(id, 'standings')} />;
-  else if (overlay === 'team') overlayBody = <TeamSummaryScreen key={screenKey} onCrumbChange={setTeamCrumb} state={state} actions={actions} myTeamId={myTeamId} viewTeamId={viewTeamId} onBack={closeTeamView} focusSection={teamFocus} onFreeAgency={openFreeAgency} onDraftClass={() => setOverlay('draftclass')} onTeamRosters={() => setOverlay('teamrosters')} onLineupPreviewChange={setLineupPreview} />;
+  else if (overlay === 'team') overlayBody = <TeamSummaryScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} viewTeamId={viewTeamId} onBack={closeTeamView} focusSection={teamFocus} onFreeAgency={openFreeAgency} onDraftClass={() => setOverlay('draftclass')} onTeamRosters={() => setOverlay('teamrosters')} onLineupPreviewChange={setLineupPreview} />;
   else if (overlay === 'freeagency') overlayBody = <FreeAgencyScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onBack={close} onGoToFranchise={() => setOverlay(effectivePhase === 'teamsummary' ? null : 'team')} />;
   else if (overlay === 'draftclass') overlayBody = <DraftClassScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
   else if (overlay === 'teamrosters') overlayBody = <TeamRostersScreen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onBack={close} />;
@@ -316,7 +315,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
 
   const Screen = SCREENS[effectivePhase];
   const mainBody = overlayBody || (Screen
-    ? <Screen key={screenKey} onCrumbChange={setTeamCrumb} state={state} actions={actions} myTeamId={myTeamId} onViewTeam={(id) => openTeamView(id, null)} onFreeAgency={openFreeAgency} onDraftClass={() => setOverlay('draftclass')} onTeamRosters={() => setOverlay('teamrosters')} onEndGame={onNewEra} dealProgress={dealProgress} onDealProgress={setDealProgress} onDealDone={finishDeal} onLineupPreviewChange={setLineupPreview} />
+    ? <Screen key={screenKey} state={state} actions={actions} myTeamId={myTeamId} onViewTeam={(id) => openTeamView(id, null)} onFreeAgency={openFreeAgency} onDraftClass={() => setOverlay('draftclass')} onTeamRosters={() => setOverlay('teamrosters')} onEndGame={onNewEra} dealProgress={dealProgress} onDealProgress={setDealProgress} onDealDone={finishDeal} onLineupPreviewChange={setLineupPreview} />
     : (
       <div className="screen">
         <h1>Something broke</h1>

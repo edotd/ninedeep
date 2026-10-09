@@ -16,7 +16,7 @@ import { jerseyNumber, playerGrade } from '../game/cards';
 // section request from elsewhere (the persistent bar's Coach / Gameplan boxes) lands straight
 // on the matching sub page.
 const subForSection = (section) => (section === 'office' ? 'coach' : section === 'gameplan' ? 'lineup' : section === 'ledger' || section === 'budget' ? 'budget' : null);
-// Page names for the title bar and the header breadcrumb.
+// Page names for the title bar.
 const SUB_TITLES = { lineup: 'Lineup & Chemistry', coach: 'Coach', gm: 'GM', budget: 'Budget' };
 
 // The Team Summary screen — "the file the league keeps on you" (design brand handoff, 1a).
@@ -33,7 +33,7 @@ const SUB_TITLES = { lineup: 'Lineup & Chemistry', coach: 'Coach', gm: 'GM', bud
 // the League tab here) — this screen is organised by category: Team (Gameplan/Chemistry), League,
 // Budget ledger, front office. No nine-slot navigation here (that's the persistent bar's job on
 // every other screen).
-export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId, onBack, focusSection, onFreeAgency, onDraftClass, onTeamRosters, onLineupPreviewChange, onCrumbChange }) {
+export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId, onBack, focusSection, onFreeAgency, onDraftClass, onTeamRosters, onLineupPreviewChange }) {
   // viewTeamId lets this screen show a DIFFERENT team's file — reached by clicking a team in
   // Standings — read-only: no substitutions, releases, or front-office moves, since those
   // actions always take myTeamId regardless of which file is on screen.
@@ -85,14 +85,6 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   const [subBusy, setSubBusy] = useState(false);
   const subTimer = useRef(null);
   useEffect(() => () => clearTimeout(subTimer.current), []);
-  // Tell the header which page this is, so its page label can read as a breadcrumb
-  // ("Team → Lineup & Chemistry").
-  const crumb = isDesktop ? 'Team' : sub ? `Team → ${SUB_TITLES[sub]}` : tab === 'league' ? 'League' : 'Team';
-  useEffect(() => {
-    onCrumbChange?.(crumb);
-    return () => onCrumbChange?.(null);
-  }, [crumb, onCrumbChange]);
-
   // First visit to the Team page after the deal: a short welcome, shown once per era.
   const welcomeKey = `nine-deep-team-welcome-seen:${state.eraId}`;
   const [showWelcome, setShowWelcome] = useState(() => {

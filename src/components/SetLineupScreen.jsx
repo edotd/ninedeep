@@ -221,6 +221,23 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
   const pickerOpen = sheet?.type === 'player' && !sheet.closing && !sheet.entering;
   const carouselRef = useRef(null);
   const [cardIndex, setCardIndex] = useState(0);
+  // The cards are drawn at their natural 264px width and scaled up to fill the screen — as wide
+  // as the screen allows, or as tall as fits above the status line and SELECT button.
+  const [pickerFit, setPickerFit] = useState({ s: 1.3, h: 405 });
+  useEffect(() => {
+    if (!sheetSlot) return undefined;
+    const fit = () => {
+      const el = carouselRef.current;
+      if (!el) return;
+      const natural = [...el.querySelectorAll('.lb-natural')].reduce((m, node) => Math.max(m, node.offsetHeight), 0) || 405;
+      const availW = el.clientWidth - 28;
+      const availH = el.clientHeight - 30 - 96;
+      setPickerFit({ s: Math.max(1, Math.min(availW / 264, availH / natural)), h: natural });
+    };
+    fit();
+    window.addEventListener('resize', fit);
+    return () => window.removeEventListener('resize', fit);
+  }, [sheetSlot]);
   // Start on the player already in this slot (or the first card), and keep the page behind the
   // picker from scrolling while it's up.
   useEffect(() => {
@@ -352,20 +369,6 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
             <button type="button" aria-label="Close" onClick={closeSheet}>×</button>
           </div>
           <div className="lb-picker-tools">
-            <div className="lb-mini" aria-hidden="true">
-              <div className="lb-mini-court">
-                <i className="mini-key" /><i className="mini-arc" /><i className="mini-rim" />
-                {COURT.map((slot) => {
-                  const filled = !!cardFor(slot.key);
-                  return <b key={slot.key} className={'lb-mini-slot' + (filled ? ' filled' : '') + (slot.key === sheetSlot ? ' active' : '')} style={{ left: `${slot.x}%`, top: `${slot.y}%` }} />;
-                })}
-              </div>
-              <div className="lb-mini-bench">
-                {BENCH.map((b) => (
-                  <span key={b.key} className={(cardFor(b.key) ? 'filled ' : '') + (b.key === sheetSlot ? 'active' : '')}>{b.label}</span>
-                ))}
-              </div>
-            </div>
             <label className="lb-sort">
               <span>SORT BY</span>
               <select value={sort} onChange={(event) => { setSort(event.target.value); if (carouselRef.current) carouselRef.current.scrollLeft = 0; setCardIndex(0); }}>
@@ -385,9 +388,11 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
               const [labelBg, labelInk] = RARITY_LABEL[rarity] || RARITY_LABEL.Core;
               return (
                 <div className="lb-slide" key={card.id}>
-                  <div className="lb-slide-card">
+                  <div className="lb-slide-card" style={{ width: 264 * pickerFit.s }}>
                     <span className="lb-rarity-label" style={{ background: labelBg, color: labelInk }}>{rarity.toUpperCase()}</span>
-                    <div className={'lb-reveal-frame frame-' + rarity}><PlayerCard card={card} /></div>
+                    <div className={'lb-reveal-frame frame-' + rarity} style={{ width: 264 * pickerFit.s, height: pickerFit.h * pickerFit.s, borderRadius: 12 * pickerFit.s }}>
+                      <div className="lb-natural" style={{ width: 264, transform: `scale(${pickerFit.s})`, transformOrigin: '0 0' }}><PlayerCard card={card} /></div>
+                    </div>
                     <div className="lb-card-foot">
                       <span className={where && !here ? 'warn' : ''}>{here ? 'IN THIS SLOT' : where ? `NOW AT ${slotLabel(where)} · WILL MOVE` : 'AVAILABLE'}</span>
                       <button type="button" className={here ? 'on' : ''} onClick={() => (here ? closeSheet() : place(sheetSlot, card.id))}>{here ? 'SELECTED' : 'SELECT'}</button>

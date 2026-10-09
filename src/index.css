@@ -95,7 +95,7 @@ body{min-height:100vh;padding-bottom:138px;}
    matched, so it needs the same background itself rather than relying on #root to bleed
    through. Dark mode inverts to a navy ground where a "ball on leather" texture no longer
    reads, so both are switched off entirely below (see the html[data-theme="dark"] rule). */
-#root,.ts-body,.ts-sub-layer{
+#root,.ts-body,.ts-sub-layer,.lb-picker{
   background-color:#E3D8BD;
   background-image:
     radial-gradient(circle at 2px 2px, rgba(255,251,240,.7) .9px, transparent 1.5px),
@@ -136,9 +136,8 @@ p.lede{color:var(--file-body);font-size:14px;line-height:1.5;margin:0 0 14px;}
 .topbar-title{font-family:var(--font-display);font-size:20px;letter-spacing:.015em;flex:1;text-align:right;color:var(--file);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .topbar-tricode{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;color:var(--franchise);}
 .topbar-wordmark{display:inline-block;min-width:0;max-width:220px;height:32px;overflow:hidden;text-overflow:ellipsis;font-family:var(--font-display);font-size:28px;line-height:32px;letter-spacing:.015em;white-space:nowrap;vertical-align:middle;}
-.topbar-wordmark.crumb{max-width:none;flex:1 1 auto;font-size:19px;letter-spacing:.04em;}
-.topbar-wordmark .crumb-arrow{font-family:var(--font-mono);font-size:.8em;letter-spacing:0;color:var(--franchise);}
 .topbar-wordmark b{color:var(--file);font-weight:400;}
+.topbar-wordmark b.wordmark-nine{color:var(--stamp-ink);}
 .topbar-wordmark i{color:var(--franchise);font-style:normal;font-weight:400;}
 
 .era-bar-wrap{padding:0 16px 8px;}
@@ -3009,7 +3008,7 @@ body:has(.trans-screen){padding-bottom:0;}
 
 /* The full-screen player picker: one card at a time over everything (both bars included), dealt
    in from the right like the Team page's sub pages. */
-.lb-picker{position:fixed;inset:0;z-index:990;display:flex;flex-direction:column;gap:12px;box-sizing:border-box;padding:max(18px,env(safe-area-inset-top)) 0 max(18px,env(safe-area-inset-bottom));background:#E3D8BD;transform:translateX(106%) rotate(7deg);visibility:hidden;box-shadow:-14px 0 32px rgba(23,34,58,.4);transition:transform 440ms cubic-bezier(.2,.8,.2,1),visibility 0s linear 440ms;overscroll-behavior:contain;}
+.lb-picker{position:fixed;inset:0;z-index:990;display:flex;flex-direction:column;gap:12px;box-sizing:border-box;padding:max(18px,env(safe-area-inset-top)) 0 max(18px,env(safe-area-inset-bottom));transform:translateX(106%) rotate(7deg);visibility:hidden;box-shadow:-14px 0 32px rgba(23,34,58,.4);transition:transform 440ms cubic-bezier(.2,.8,.2,1),visibility 0s linear 440ms;overscroll-behavior:contain;}
 .lb-picker.open{transform:none;visibility:visible;transition:transform 440ms cubic-bezier(.2,.8,.2,1),visibility 0s;}
 .lb-picker-head{display:flex;justify-content:space-between;align-items:center;padding:0 16px;}
 .lb-picker-head div{display:flex;flex-direction:column;gap:4px;}
@@ -3043,22 +3042,9 @@ body:has(.trans-screen){padding-bottom:0;}
    rarity stamp, its own border stepping aside — and larger; a small lineup diagram above it
    shows which slot is being filled; sorting is a dropdown. */
 .lb-picker{gap:10px;}
-.lb-picker-tools{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:0 16px;}
-.lb-mini{flex:none;display:flex;flex-direction:column;gap:5px;}
-.lb-mini-court{position:relative;width:132px;height:112px;background:#EADFC4;box-shadow:inset 0 0 0 2px #1E2B47;overflow:hidden;}
-.lb-mini-court i{position:absolute;pointer-events:none;}
-.lb-mini-court .mini-key{left:32%;width:36%;top:0;height:46%;box-shadow:inset 0 0 0 1.5px rgba(30,43,71,.45);background:rgba(181,67,31,.08);}
-.lb-mini-court .mini-arc{left:4%;width:92%;top:-82px;height:178px;border-radius:50%;box-shadow:inset 0 0 0 1.5px rgba(30,43,71,.45);}
-.lb-mini-court .mini-rim{left:calc(50% - 4px);top:7px;width:8px;height:8px;border-radius:50%;box-shadow:inset 0 0 0 1.5px #B5431F;}
-.lb-mini-slot{position:absolute;transform:translate(-50%,-50%);width:22px;height:28px;box-sizing:border-box;border:1.5px dashed #1E2B47;background:rgba(242,235,220,.85);}
-.lb-mini-slot.filled{border:0;background:#1E2B47;}
-.lb-mini-slot.active{border:2px solid #1E2B47;background:#F0A03D;box-shadow:0 0 0 3px rgba(240,160,61,.45);}
-.lb-mini-bench{display:flex;gap:4px;}
-.lb-mini-bench span{flex:1;text-align:center;padding:3px 0;font:7px var(--font-label);letter-spacing:.06em;box-shadow:inset 0 0 0 1.5px #4E5B73;color:#4E5B73;}
-.lb-mini-bench span.filled{background:#4E5B73;color:#F2EBDC;}
-.lb-mini-bench span.active{background:#F0A03D;color:#1E2B47;box-shadow:inset 0 0 0 1.5px #1E2B47;}
-.lb-sort{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;}
-.lb-sort span{font:9px var(--font-mono);letter-spacing:.14em;color:#625A44;}
+.lb-picker-tools{display:flex;align-items:center;padding:0 16px;}
+.lb-sort{flex:1;min-width:0;display:flex;align-items:center;gap:12px;}
+.lb-sort span{flex:none;font:9px var(--font-mono);letter-spacing:.14em;color:#625A44;}
 .lb-sort select{width:100%;height:44px;box-sizing:border-box;padding:0 12px;border:2px solid #1E2B47;border-radius:0;background:#F2EBDC;color:#1E2B47;font:400 11px var(--font-label);letter-spacing:.08em;text-transform:uppercase;appearance:auto;}
 .lb-picker .lb-slide{padding:0 14px;overflow-y:auto;}
 .lb-picker .lb-slide-card{max-width:372px;padding-top:24px;margin:auto 0;}
@@ -3078,3 +3064,7 @@ body:has(.trans-screen){padding-bottom:0;}
 .bottombar-issues li{font-family:var(--font-display);font-size:22px;line-height:1;letter-spacing:.03em;text-transform:uppercase;color:var(--file);}
 .bottombar-issues li::before{content:none;}
 .bottombar-issues li button{font-family:var(--font-display);font-size:22px;line-height:1;letter-spacing:.03em;text-transform:uppercase;color:var(--franchise);text-decoration:none;}
+
+.lb-picker .lb-slide-card{max-width:none;}
+.lb-picker .lb-reveal-frame{overflow:visible;}
+.lb-picker .lb-natural .pcard{width:100%;}
