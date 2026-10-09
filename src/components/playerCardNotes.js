@@ -28,17 +28,9 @@ export const RARITY_DETAILS = {
   Legendary: 'The rarest and most powerful cards in the game.',
 };
 
-// The rarity mark filling a card's lower-right quadrant — tappable in the onboarding reveals.
-// `inset` shrinks the tap target to the glyph itself, so it doesn't swallow the quadrant's
-// other regions (stats, skillset, accolades).
-export const rarityNote = (rarity = 'Core') => ({
-  key: 'rarity', selector: '.rarity-ghost', inset: 0.8, label: `${rarity} Rarity`,
-  text: `How rare a card is: Core, Prime, Signature or Legendary. ${RARITY_DETAILS[rarity] || ''} Rarity reflects a card's existing power and scarcity. It does not add a separate bonus.`,
-});
-
 // The rarity label stamped on the card's top-right corner — opens the full rarity ladder
 // (RarityInfoPanel) rather than a text modal. `global` because the label sits on the reveal's
 // own chrome, outside the card face.
 export const rarityLabelNote = (rarity = 'Core') => ({
-  key: 'rarityLabel', selector: '.card-reveal-badge', global: true, panel: 'rarity', label: `${rarity} Rarity Scale`, text: '',
+  key: 'rarityLabel', selector: '.card-reveal-badge', global: true, pad: 14, panel: 'rarity', label: `${rarity} Rarity Scale`, text: '',
 });

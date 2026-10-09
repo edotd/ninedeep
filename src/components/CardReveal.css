@@ -27,3 +27,6 @@
 .card-reveal-modal button{align-self:stretch;margin-top:4px;}
 
 .card-reveal-face{will-change:transform;backface-visibility:hidden;}
+
+/* The rarity label's tap target sits above every other region it overlaps. */
+.card-reveal-hotspot.rarity-label{z-index:4;}

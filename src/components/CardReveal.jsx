@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import PlayerCard from './PlayerCard';
 import FrontOfficeCard from './FrontOfficeCard';
-import { PLAYER_NOTES, rarityNote, rarityLabelNote } from './playerCardNotes';
+import { PLAYER_NOTES, rarityLabelNote } from './playerCardNotes';
 import RarityInfoPanel from './RarityInfoPanel';
 import { COACH_NOTES, GM_NOTES } from './frontOfficeNotes';
 import { ensureCoachSystems } from '../game/strategyCards';
@@ -233,11 +233,11 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
   // with a region of its own that gives a generic explanation of accolades in the same modal as
   // everything else (never this particular player's accolade).
   const notes = useMemo(() => {
-    if (kind !== 'player') return [...(kind === 'coach' ? COACH_NOTES : GM_NOTES), rarityNote('Core'), rarityLabelNote('Core')];
+    if (kind !== 'player') return [...(kind === 'coach' ? COACH_NOTES : GM_NOTES), rarityLabelNote('Core')];
     return [...PLAYER_NOTES, {
       key: 'accolades', selector: '.pcard-accolade-block', label: 'Accolades',
       text: 'League honors a player earns over their career, like All-Star or MVP. Each one boosts the player\u2019s stats and shows up as a single icon on the card.',
-    }, rarityNote('Core'), rarityLabelNote('Core')];
+    }, rarityLabelNote('Core')];
   }, [kind]);
   const rarity = 'Core';
   const face = kind === 'player' ? <PlayerCard card={card} /> : <FrontOfficeCard kind={kind === 'coach' ? 'coach' : 'market'} team={team} />;
@@ -253,7 +253,7 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
   const measureRef = useRef(null);
   const stageRef = useRef(null);
   // Not until the rarity label has finished popping in, so its tap target is measured at rest.
-  const ready = t >= Math.max(tm.ui + 250, tm.badge + 600);
+  const ready = t >= Math.max(tm.ui + 250, tm.badge + 570);
   const ui = eo(P(t, tm.ui, 500));
   const active = boxes.find((box) => box.key === activeKey);
   // Where the selected region sits on screen (the stage is centred and scaled to fit), so the
@@ -310,7 +310,6 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
       if (!stage) return;
       const sr = stage.getBoundingClientRect();
       const sc = sr.width / STAGE_W || 1;
-      const pad = 5;
       setBoxes(notes.flatMap((note) => {
         const el = stage.querySelector((note.global ? '' : '.card-reveal-face ') + note.selector);
         if (!el) return [];
@@ -320,6 +319,7 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
           const size = Math.min(r.width, r.height) * note.inset;
           r = { left: r.left + (r.width - size) / 2, top: r.top + (r.height - size) / 2, width: size, height: size };
         }
+        const pad = note.pad ?? 5;
         return [{ ...note, left: (r.left - sr.left) / sc - pad, top: (r.top - sr.top) / sc - pad, width: r.width / sc + pad * 2, height: r.height / sc + pad * 2 }];
       }));
     };
@@ -342,7 +342,7 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
           <button
             key={box.key}
             type="button"
-            className={'card-reveal-hotspot' + (box.key === activeKey ? ' active' : '')}
+            className={'card-reveal-hotspot' + (box.key === 'rarityLabel' ? ' rarity-label' : '') + (box.key === activeKey ? ' active' : '')}
             style={{ left: box.left, top: box.top, width: box.width, height: box.height }}
             aria-label={`${box.label}: learn more`}
             onClick={() => setActiveKey(box.key)}
