@@ -249,7 +249,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             <>
               {!isDesktop && sub && <button type="button" className="tm-back" onClick={() => setSub(null)}>‹ Team</button>}
               {(isDesktop || !sub) && (
-                <TeamMain state={state} team={team} readOnly={readOnly} committed={committed} cap={cap} budgetSources={budgetSources} onOpen={openSub} />
+                <TeamMain team={team} readOnly={readOnly} committed={committed} cap={cap} budgetSources={budgetSources} onOpen={openSub} />
               )}
               {(isDesktop || sub === 'lineup') && (
                 <div id="team-lineup">

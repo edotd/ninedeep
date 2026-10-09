@@ -1,13 +1,13 @@
-import { jerseyNumber, retentionBonus, relationshipBonus } from '../game/cards';
+import { useState } from 'react';
+import { playerGrade, retentionBonus, relationshipBonus } from '../game/cards';
+import PlayerCard from './PlayerCard';
 import { formatCoins } from '../game/economy';
-import { teamOutput } from '../game/matchup';
 import { teamSynergy } from '../game/skillsets';
 
-// The Team page's main index (design: Team · Main) — one screen that answers "how good are we
-// and what does it cost", then hands off to the sub pages: Lineup & Chemistry, Coach, GM and
-// Budget. Each tile opens its page via `onOpen`. The franchise name, era clock and titles the
-// design also shows in its header already live in the persistent masthead above every screen,
-// so they aren't repeated here.
+// The Team page's main index (design: Team · Main) — one tile per sub page: Lineup & Chemistry,
+// Coach, GM and Budget. Each tile opens its page via `onOpen`. The design's header (franchise
+// name, era clock, titles, projected output / defense / bench) already lives in the persistent
+// masthead above every screen, so it isn't repeated here.
 
 const POSITION_ORDER = { Guard: 0, Forward: 1, Big: 2 };
 // The chemistry grades the game produces (game/chemistry.js), lowest to highest.
@@ -21,12 +21,6 @@ function gradeSeal(grade) {
   const C = 0.19 - 0.03 * Math.sin(Math.PI * t);
   return { color: `oklch(${L.toFixed(3)} ${C.toFixed(3)} ${hue.toFixed(0)})`, ink: L > 0.72 ? '#1E2B47' : '#F2EBDC' };
 }
-
-const ordinal = (n) => {
-  const v = n % 100;
-  const suffix = v >= 11 && v <= 13 ? 'TH' : ({ 1: 'ST', 2: 'ND', 3: 'RD' }[n % 10] || 'TH');
-  return `${n}${suffix}`;
-};
 
 const initials = (name) => name.replace(/&/g, ' ').split(/[\s-]+/).filter((w) => w && !/^(the|of|and)$/i.test(w)).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 const trim = (n) => `${Number(Number(n).toFixed(2))}`;
@@ -47,19 +41,34 @@ const colX = (i) => `calc((100% - 30px) / 7 * ${i + 0.5} + ${4 * i}px)`;
 
 function gmHeadline(team) {
   const trait = team.gmTrait;
-  if (!trait) return { name: 'Neutral', stat: '—' };
+  if (!trait) return { mod: 'Neutral', stat: '—' };
   const stat = trait.name === 'Third Eye' ? 'PEAK VIEW'
     : trait.name === 'Cap Architect' ? `+${trim(trait.value)} BUDGET`
       : trait.name === 'Talent Hawk' ? `+${trait.value} SCOUTED`
         : `+${(trait.value || 0) * 2}%`;
-  return { name: trait.name, stat };
+  return { mod: trait.name, stat };
+}
+
+// One lineup box: empty outline until the lineup is set, then the player's letter grade — tap it
+// to pull up their card.
+function PlayerBox({ card, top, bench, onPick }) {
+  if (!card) return <span className={'tm-num empty' + (bench ? ' bench' : '')} aria-hidden="true" />;
+  return (
+    <button
+      type="button"
+      className={'tm-num' + (top ? ' top' : '') + (bench ? ' bench' : '')}
+      aria-label={`${card.archetype} ${card.position}, grade ${playerGrade(card)}. Show card.`}
+      onClick={(event) => { event.stopPropagation(); onPick(card); }}
+    >{playerGrade(card)}</button>
+  );
 }
 
 function Tile({ sub, onOpen, className = '', children, label }) {
   return <button type="button" className={`tm-tile ${className}`} onClick={() => onOpen(sub)} aria-label={label}>{children}</button>;
 }
 
-export default function TeamMain({ state, team, readOnly, onOpen, committed, cap, budgetSources }) {
+export default function TeamMain({ team, readOnly, onOpen, committed, cap, budgetSources }) {
+  const [picked, setPicked] = useState(null);
   const activeSet = new Set(team.activeIds || []);
   const starters = (team.hand || []).filter((card) => activeSet.has(card.id))
     .sort((a, b) => (POSITION_ORDER[a.position] ?? 9) - (POSITION_ORDER[b.position] ?? 9));
@@ -71,17 +80,12 @@ export default function TeamMain({ state, team, readOnly, onOpen, committed, cap
   const synergy = lineupReady ? teamSynergy(team) : null;
   const seal = synergy ? gradeSeal(synergy.grade) : { color: '#A79A78', ink: '#F2EBDC' };
 
-  // Rank this franchise among every franchise with a set lineup.
-  const outputs = state.teams.map((t) => (t.coach && t.activeIds?.length === 5 && t.lineupSet ? teamOutput(t) : null));
-  const mine = lineupReady ? teamOutput(team) : null;
-  const projection = (key, label) => {
-    if (!mine) return { label, value: '—', rank: null };
-    const field = outputs.filter(Boolean);
-    const rank = field.filter((o) => o[key] > mine[key]).length + 1;
-    return { label, value: mine[key], rank, of: field.length, good: rank <= Math.ceil(field.length / 2) };
-  };
-  const projections = [projection('off', 'PROJ OFF'), projection('def', 'PROJ DEF'), projection('bench', 'BENCH')];
-  const topStarter = mine ? starters.reduce((best, card, i) => ((card.stats?.SCO + card.stats?.PLM + card.stats?.REB + card.stats?.DEF) > best.total ? { i, total: card.stats.SCO + card.stats.PLM + card.stats.REB + card.stats.DEF } : best), { i: -1, total: -1 }).i : -1;
+  const topStarter = lineupReady
+    ? starters.reduce((best, card, i) => {
+      const total = card.stats.SCO + card.stats.PLM + card.stats.REB + card.stats.DEF;
+      return total > best.total ? { i, total } : best;
+    }, { i: -1, total: -1 }).i
+    : -1;
 
   const indexOfSkill = (skillId) => starters.findIndex((card) => card.skillsetId === skillId);
   const pairs = (synergy?.pairs || []).map((rule) => ({ rule, at: rule.skills.map(indexOfSkill) })).filter((p) => p.at.every((i) => i >= 0));
@@ -102,29 +106,16 @@ export default function TeamMain({ state, team, readOnly, onOpen, committed, cap
 
   return (
     <div className="tm-main">
-      <div className="tm-projections">
-        {projections.map((p) => (
-          <div className="tm-proj" key={p.label}>
-            <span className="tm-proj-label">{p.label}</span>
-            <strong>{p.value}</strong>
-            <small className={p.rank == null ? '' : p.good ? 'good' : 'bad'}>{p.rank == null ? 'SET LINEUP' : `${ordinal(p.rank)} OF ${p.of}`}</small>
-          </div>
-        ))}
-      </div>
-
       <div className="tm-tiles">
-        <Tile onOpen={onOpen} sub="lineup" className="tm-lineup" label="Lineup and chemistry">
+        <div className="tm-tile tm-lineup" role="button" tabIndex={0} aria-label="Lineup and chemistry" onClick={() => onOpen('lineup')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen('lineup'); } }}>
           <span className="tm-seal" style={{ background: seal.color, color: seal.ink }}>{synergy ? synergy.grade : '—'}</span>
-          <span className="tm-tile-head"><b>Lineup &amp; Chemistry</b><i>›</i></span>
+          <span className="tm-tile-head"><b>Lineup &amp; Chemistry</b><svg className="tm-chev" viewBox="0 0 16 28" aria-hidden="true"><path d="M3 3l10 11L3 25" /></svg></span>
           <span className="tm-roster">
             <span className="tm-roster-row">
-              {Array.from({ length: 5 }, (_, i) => {
-                const card = starters[i];
-                return <span key={i} className={'tm-num' + (i === topStarter ? ' top' : '') + (card ? '' : ' empty')}>{card ? jerseyNumber(card) : '—'}</span>;
-              })}
+              {Array.from({ length: 5 }, (_, i) => <PlayerBox key={i} card={lineupReady ? starters[i] : null} top={i === topStarter} onPick={setPicked} />)}
               <span className="tm-gap" />
-              <span className="tm-bench"><span className="tm-num bench">{sixth ? jerseyNumber(sixth) : '—'}</span><small>6TH</small></span>
-              <span className="tm-bench"><span className="tm-num bench">{depth ? jerseyNumber(depth) : '—'}</span><small>DEPTH</small></span>
+              <span className="tm-bench"><PlayerBox card={lineupReady ? sixth : null} bench onPick={setPicked} /><small>6TH</small></span>
+              <span className="tm-bench"><PlayerBox card={lineupReady ? depth : null} bench onPick={setPicked} /><small>DEPTH</small></span>
             </span>
             {brackets.length > 0 && (
               <span className="tm-brackets" style={{ height: 14 + maxLevel * 12 + 14 }}>
@@ -146,17 +137,19 @@ export default function TeamMain({ state, team, readOnly, onOpen, committed, cap
               )) : <span className="tm-chip none">{lineupReady ? 'No pairings active' : 'Set your lineup to see pairings'}</span>}
             </span>
           </span>
-        </Tile>
+        </div>
 
         <div className="tm-pair">
           <Tile onOpen={onOpen} sub="coach" className={'tm-fo coach' + (coach ? ` rarity-${coach.rarity || 'Core'}` : '')} label="Coach">
             <span className="tm-fo-head"><b>COACH</b><i>›</i></span>
             <strong>{coach ? coach.archetype : 'Open Slot'}</strong>
+            <span className="tm-fo-mod">{coach ? coach.modifier : ''}</span>
             <span className="tm-fo-stat">{coach ? <><span>{`+${Math.round((coach.offBonus + bonus) * 100)}% OFF`}</span><span>{`+${Math.round((coach.defBonus + bonus) * 100)}% DEF`}</span></> : 'Hire in Free Agency'}</span>
           </Tile>
           <Tile onOpen={onOpen} sub="gm" className="tm-fo gm" label="General manager">
             <span className="tm-fo-head"><b>GM</b><i>›</i></span>
-            <strong>{gm ? gm.name : 'Open Slot'}</strong>
+            <strong>{gm ? 'General Manager' : 'Open Slot'}</strong>
+            <span className="tm-fo-mod">{gm ? gm.mod : ''}</span>
             <span className="tm-fo-stat">{gm ? gm.stat : '—'}</span>
           </Tile>
         </div>
@@ -170,6 +163,14 @@ export default function TeamMain({ state, team, readOnly, onOpen, committed, cap
           {room < 0 && <small className="tm-over">Over budget by {formatCoins(-room)}</small>}
         </Tile>
       </div>
+      {picked && (
+        <div className="tm-card-backdrop" role="presentation" onClick={() => setPicked(null)}>
+          <div className="tm-card-modal" role="dialog" aria-modal="true" aria-label={`${picked.archetype} card`} onClick={(event) => event.stopPropagation()}>
+            <PlayerCard card={picked} />
+            <button type="button" className="secondary" onClick={() => setPicked(null)}>Close</button>
+          </div>
+        </div>
+      )}
       {readOnly && <p className="tm-readonly">Viewing another franchise — read only.</p>}
     </div>
   );
