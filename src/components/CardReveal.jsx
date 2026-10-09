@@ -64,7 +64,7 @@ function Sheen({ t, tm, cw, ch }) {
   return <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>{pass(tm.sheen1, 560, 120)}{pass(tm.sheen2, 460, 60)}</div>;
 }
 
-// `bare` drops the full-screen chrome (ink ground, glow, flash, Continue button) and centres the
+// `bare` drops the full-screen chrome (ink ground and Continue button) and centres the
 // reveal in whatever box it's placed in — used by CardRevealPlayer below.
 function Chrome({ t, tm, rarity, cw, ch, onContinue, ctaLabel, bare, children }) {
   const L = rarity === 'Legendary';
@@ -73,10 +73,12 @@ function Chrome({ t, tm, rarity, cw, ch, onContinue, ctaLabel, bare, children })
   const glow = tm.flash != null && t >= tm.flash ? lerp(1, 0.45, eo(P(t, tm.flash, 900))) : 0;
   const bp = P(t, tm.badge, 260), bs = P(t, tm.badge + 260, 300);
   const badgeScale = bp > 0 ? (bs > 0 ? lerp(1.55, 1, back(bs)) : lerp(0.4, 1.55, eo(bp))) : 0;
+  // Boxed in a slide, the glow is sized to fit it; full-screen it keeps the design's 640px.
+  const glowD = bare ? Math.min(420, cw + 70) : 640;
   const bloom = bs > 0 ? 1 - eo(P(t, tm.badge + 260, 420)) : bp > 0 ? 1 : 0;
   return (
     <div style={bare ? { position: 'absolute', inset: 0 } : { position: 'absolute', inset: 0, background: INK, overflow: 'hidden' }}>
-      {!bare && glow > 0 && <div style={{ position: 'absolute', left: 201 - 320, top: 440 - 320, width: 640, height: 640, borderRadius: '50%', opacity: glow, background: 'radial-gradient(closest-side, rgba(240,160,61,0.42), rgba(240,160,61,0.12) 55%, transparent)' }} />}
+      {glow > 0 && <div style={{ position: 'absolute', ...(bare ? { left: `calc(50% - ${glowD / 2}px)`, top: `calc(50% - ${glowD / 2}px)`, width: glowD, height: glowD, pointerEvents: 'none' } : { left: 201 - 320, top: 440 - 320, width: 640, height: 640 }), borderRadius: '50%', opacity: glow, background: 'radial-gradient(closest-side, rgba(240,160,61,0.42), rgba(240,160,61,0.12) 55%, transparent)' }} />}
       <div style={{ position: 'absolute', left: bare ? '50%' : 201, top: bare ? '50%' : 440, width: 0, height: 0 }}>
         {children}
         {badgeScale > 0 && (
@@ -94,7 +96,7 @@ function Chrome({ t, tm, rarity, cw, ch, onContinue, ctaLabel, bare, children })
           style={{ alignSelf: 'stretch', height: 54, border: 0, background: FILE, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: ARC, fontSize: 14, letterSpacing: '0.16em', color: INK, cursor: 'pointer' }}
         >{ctaLabel}</button>
       </div>}
-      {!bare && flash > 0 && <div style={{ position: 'absolute', inset: 0, background: FR, opacity: 0.38 * flash, pointerEvents: 'none' }} />}
+      {flash > 0 && <div style={{ position: bare ? 'fixed' : 'absolute', inset: 0, background: FR, opacity: 0.38 * flash, pointerEvents: 'none', zIndex: bare ? 5 : undefined }} />}
     </div>
   );
 }
