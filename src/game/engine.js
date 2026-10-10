@@ -9,7 +9,7 @@ import { applySupplementalCard } from './supplementalEffects';
 // instead of assuming state.teams[0] — in solo mode the caller always passes 0; in a shared
 // room, the caller resolves teamIdx from the acting player's own seat (ownerUid) first. See
 // game/useLocalGame.js and game/useRoomGame.js for the two callers.
-import { HOME_COURT_BONUS, MAX_CAP_OVERAGE, ROSTER_SIZE } from './constants';
+import { HOME_COURT_BONUS, ROSTER_SIZE } from './constants';
 import { autoSelectFive, autoValidFive, validateLineup, rollAdjustmentCards, assignSixthMan } from './roster';
 import {
   buildStarPool, buildTeams, defaultSoloSeats, dealHands, initFrontOffice,
@@ -19,7 +19,7 @@ import {
   checkInjury, playCardEffect, playMatchup, wantsAdvantage, cardChoicesFor, playableCards,
   isMatchUnlocked, hasHomeCourt, applyLiveFanbaseMod, matchTeams, giantKillerBonus,
 } from './matchup';
-import { rosterSalary } from './economy';
+import { rosterSalary, maxOverage } from './economy';
 import { applyPlayoffWinMilestone, fanbaseEnabled } from './fanbase';
 import { activeCoachGameplan, applyGameplanToTurn, setCoachGameplan, syncSeasonGameplan } from './strategyCards';
 import { beginTurn as initializeTurn } from './turn';
@@ -103,9 +103,9 @@ export function confirmLineup(state, teamIdx) {
   if (!team.coach) return { valid: false, msg: 'Hire a coach before the season begins.' };
   if (team.hand.length > ROSTER_SIZE) return { valid: false, msg: `Resolve your roster before the season begins. You currently have ${team.hand.length} of ${ROSTER_SIZE} players.` };
   const committed = rosterSalary(team);
-  // Up to MAX_CAP_OVERAGE over is allowed — see benchScore (matchup.js) for the bench-roll
+  // Up to maxOverage(team) over is allowed — see benchScore (matchup.js) for the bench-roll
   // penalty that scales with how far over a team actually locks in.
-  if (committed > team.seasonCap + MAX_CAP_OVERAGE) return { valid: false, msg: `Get under budget before the season begins. You are using ${committed} of ${team.seasonCap} (up to ${MAX_CAP_OVERAGE} over is allowed).` };
+  if (committed > team.seasonCap + maxOverage(team)) return { valid: false, msg: `Get under budget before the season begins. You are using ${committed} of ${team.seasonCap} (up to ${maxOverage(team)} over is allowed).` };
   const overBudget = committed > team.seasonCap;
   // Not two seasons running — a team already over budget last season has to get back under the
   // cap this time before it's allowed to go over again (team.overBudgetLastSeason is set when the
@@ -121,13 +121,13 @@ export function confirmLineup(state, teamIdx) {
     // finalize and resolve the shared bid board exactly once before validating awarded rosters.
     humanTeams(state).forEach((candidate) => forceFinalizeTeamBids(state, candidate));
     resolveAllFreeAgentBidding(state);
-    const invalidTeams = humanTeams(state).filter((candidate) => candidate.hand.length > ROSTER_SIZE || rosterSalary(candidate) > candidate.seasonCap + MAX_CAP_OVERAGE);
+    const invalidTeams = humanTeams(state).filter((candidate) => candidate.hand.length > ROSTER_SIZE || rosterSalary(candidate) > candidate.seasonCap + maxOverage(candidate));
     if (invalidTeams.length) {
       invalidTeams.forEach((candidate) => { candidate.lineupConfirmed = false; });
       if (invalidTeams.includes(team)) {
         return { valid: false, msg: team.hand.length > ROSTER_SIZE
           ? `Resolve your roster before the season begins. You currently have ${team.hand.length} of ${ROSTER_SIZE} players.`
-          : `Get under budget before the season begins. You are using ${rosterSalary(team)} of ${team.seasonCap} (up to ${MAX_CAP_OVERAGE} over is allowed).` };
+          : `Get under budget before the season begins. You are using ${rosterSalary(team)} of ${team.seasonCap} (up to ${maxOverage(team)} over is allowed).` };
       }
       return { valid: true, msg: 'Waiting for another franchise to resolve its roster or budget.' };
     }

@@ -210,7 +210,7 @@ export default function GlossaryScreen({ state, onBack }) {
         ))}
 
         <h2 id="market">General Managers</h2>
-        <p className="lede">Every card is a General Manager with a rolled rarity and trait. Rarity controls the trait's strength. Cap Architect is the only GM trait that increases the franchise budget.</p>
+        <p className="lede">Every card is a General Manager with a rolled rarity and trait. Rarity controls the trait's strength. Cap Architect is the only GM trait that increases the franchise budget; Shady Dealer instead raises how far over budget you may lock in a season (15 by default).</p>
         <div className="statusline">GM types: {GM_TYPES.join(' · ')}</div>
         <div className="statusline">Traits: {GM_TRAITS.map((trait) => trait.name).join(' · ')}</div>
 

@@ -100,7 +100,9 @@ export const MIN_GM_COST = toBudget(0.5);
 // team can keep its stars at the cost of its depth instead of always being turned away outright.
 // Never two seasons running, though — confirmLineup also blocks a team from going over budget
 // again the season right after it already did.
-export const MAX_CAP_OVERAGE = toBudget(3);
+export const MAX_CAP_OVERAGE = 15;
+// Shady Dealer GMs add this much to MAX_CAP_OVERAGE per point of trait strength (1-4).
+export const SHADY_DEALER_STEP = 5;
 // Every this many cap points over, the bench score loses 1 — 3 over is -1, 6 over is -2.
 export const BENCH_OVERAGE_STEP = 3;
 
@@ -212,6 +214,7 @@ export const GM_RARITIES = [
 ];
 export const GM_TRAITS = [
   { name: 'Cap Architect', description: 'Increases the franchise budget.', unit: 'budget' },
+  { name: 'Shady Dealer', description: 'Lets the franchise run further over budget in a season.', unit: 'budget' },
   { name: 'Third Eye', description: "Reveals a scouted player's projected peak-prime stats.", unit: 'vision' },
   { name: 'Talent Hawk', description: 'Increases the number of players the franchise can scout.', unit: 'players' },
   { name: 'Hands-Off', description: 'Increases player and coach tenure bonuses.', unit: 'percent' },

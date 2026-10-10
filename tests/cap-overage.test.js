@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { spendableRoom, isOverLimit, remainingCap } from '../src/game/economy.js';
+import { spendableRoom, isOverLimit, remainingCap, maxOverage } from '../src/game/economy.js';
 import { MAX_CAP_OVERAGE } from '../src/game/constants.js';
 
 function team(extra = {}) {
@@ -38,4 +38,17 @@ test('retrying Begin Season after a failed confirm is not blocked by its own ear
   assert.equal(confirmLineup(state, 0).valid, true); // 1.0 over
   t.lineupConfirmed = false;
   assert.equal(confirmLineup(state, 0).valid, true); // still fine to retry
+});
+
+test('a Shady Dealer GM raises the over-budget allowance by its trait strength', () => {
+  const t = team({ gmTrait: { name: 'Shady Dealer', value: 3 } });
+  assert.equal(maxOverage(t), MAX_CAP_OVERAGE + 15);
+  assert.equal(spendableRoom(t), MAX_CAP_OVERAGE + 15);
+  t.hand.push({ salary: 29 });
+  assert.equal(isOverLimit(t), false);
+  t.hand.push({ salary: 2 });
+  assert.equal(isOverLimit(t), true);
+  // The consecutive-season rule still removes the allowance entirely.
+  assert.equal(spendableRoom({ ...t, hand: [{ salary: 100 }], overBudgetLastSeason: true }), 0);
+  assert.equal(maxOverage(team()), MAX_CAP_OVERAGE);
 });

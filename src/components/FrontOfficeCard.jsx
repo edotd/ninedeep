@@ -1,4 +1,4 @@
-import { formatCoins, gmCost, capArchitectBonus } from '../game/economy';
+import { formatCoins, gmCost, capArchitectBonus, shadyDealerBonus } from '../game/economy';
 import { retentionBonus, relationshipBonus } from '../game/cards';
 import CardTypeMark from './CardTypeMark';
 import BallMark from './BallMark';
@@ -95,9 +95,12 @@ function marketContent(team) {
   const traitValue = trait.name === 'Third Eye'
     ? 'Peak projection'
     : trait.name === 'Cap Architect' ? `+${formatCoins(capArchitectBonus(trait))}`
+      : trait.name === 'Shady Dealer' ? `+${formatCoins(shadyDealerBonus(trait))} over limit`
       : trait.name === 'Talent Hawk' ? `+${trait.value} scouted`
         : `+${trait.value * 2}%`;
-  const traitDetail = trait.name === 'Cap Architect'
+  const traitDetail = trait.name === 'Shady Dealer'
+    ? `${trait.name} — Raises how far over budget the franchise can go in a season by ${formatCoins(shadyDealerBonus(trait))}.`
+    : trait.name === 'Cap Architect'
     ? `${trait.name} — Increases the franchise budget by ${formatCoins(capArchitectBonus(trait))}.`
     : trait.name === 'Third Eye'
       ? `${trait.name} — Reveals a scouted player's projected peak-prime stats.`

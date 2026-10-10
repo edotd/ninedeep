@@ -1,4 +1,4 @@
-import { MIN_GM_COST, MAX_CAP_OVERAGE, BUDGET_SCALE } from './constants';
+import { MIN_GM_COST, MAX_CAP_OVERAGE, BUDGET_SCALE, SHADY_DEALER_STEP } from './constants';
 
 // The cap every franchise starts from — budgets are on a 100-point scale.
 export function baseCap() {
@@ -60,7 +60,16 @@ export function remainingCap(team) {
 // How far over its cap a team may sit: up to MAX_CAP_OVERAGE, but not two seasons running —
 // team.overBudgetLastSeason is set when a season locks (season.js's lockSeasonAndSeed).
 export function overageAllowance(team) {
-  return team.overBudgetLastSeason ? 0 : MAX_CAP_OVERAGE;
+  return team.overBudgetLastSeason ? 0 : maxOverage(team);
+}
+
+// How far over its cap a team may lock in at all: MAX_CAP_OVERAGE, plus what a Shady Dealer GM
+// adds (SHADY_DEALER_STEP per point of its rolled strength).
+export function shadyDealerBonus(trait) {
+  return trait?.name === 'Shady Dealer' ? (trait.value || 0) * SHADY_DEALER_STEP : 0;
+}
+export function maxOverage(team) {
+  return MAX_CAP_OVERAGE + shadyDealerBonus(team.gmTrait);
 }
 
 // What a human team can actually still commit to a signing or bid: its cap room plus the
