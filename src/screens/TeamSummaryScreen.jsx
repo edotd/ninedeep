@@ -472,7 +472,8 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
           steps={[{ targetRef: beginSeasonBtnRef, title: 'Lineup Set', body: 'Free Agency stays open if you want to upgrade — Begin Season locks it in when you’re ready.' }]}
         />
       </div>
-      <div className="bottombar">
+      {/* The lineup sub page has its own SAVE; Begin Season stays off it. */}
+      {!(sub === 'lineup' && !onBack) && <div className="bottombar">
         {onBack ? (
           <button className="primary" onClick={onBack}>Back</button>
         ) : (
@@ -522,7 +523,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             )}
           </div>
         )}
-      </div>
+      </div>}
     </>
   );
 }
