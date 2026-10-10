@@ -452,7 +452,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
                 <div className="lb-slide" key={card.id}>
                   <div className="lb-slide-card" style={{ width: 264 * pickerFit.s }}>
                     <div className="lb-reveal-box" style={{ height: pickerFit.h * pickerFit.s + 44 }}>
-                      {reveal.active === card.id && <CardRevealPlayer key={'live' + reveal.count} card={card} up={pickerFit.s} cardHeight={pickerFit.h} speed={2.25} delay={150} />}
+                      {reveal.active === card.id && <CardRevealPlayer key={'live' + reveal.count} card={card} up={pickerFit.s} cardHeight={pickerFit.h} quick delay={80} />}
                       {reveal.prev === card.id && reveal.active !== card.id && <CardRevealPlayer key="done" card={card} up={pickerFit.s} cardHeight={pickerFit.h} settled />}
                     </div>
                     <div className="lb-card-foot">
