@@ -16,7 +16,7 @@
 .card-reveal-measure .fo2-wrap .fo2-card.fo2-card{width:300px;max-width:none;margin:0;}
 
 /* "Tap to learn": regions are invisible tap targets; the selected one lights up behind a modal. */
-.card-reveal-hint{position:absolute;left:24px;right:24px;bottom:128px;text-align:center;font:11px var(--font-label);letter-spacing:.16em;text-transform:uppercase;color:#8E9BB5;pointer-events:none;}
+.card-reveal-hint{position:absolute;left:24px;right:24px;top:84px;text-align:center;font:11px var(--font-label);letter-spacing:.16em;text-transform:uppercase;color:#8E9BB5;pointer-events:none;}
 .card-reveal-hotspot{position:absolute;z-index:3;padding:0;background:transparent;border:0;border-radius:3px;cursor:pointer;-webkit-tap-highlight-color:transparent;min-width:0;min-height:0;}
 .card-reveal-hotspot:focus-visible{outline:2px solid #F0A03D;outline-offset:2px;}
 .card-reveal-spotlight{position:fixed;inset:0;width:100%;height:100%;z-index:10;pointer-events:none;}
@@ -32,9 +32,13 @@
 .card-reveal-hotspot.rarity-label{z-index:4;}
 
 /* The blurb that fades in above the card as it settles down. */
-.card-reveal-blurb{position:absolute;left:28px;right:28px;top:62px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;pointer-events:none;}
+.card-reveal-blurb{position:absolute;left:28px;right:28px;top:122px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;pointer-events:none;}
 .card-reveal-blurb strong{font:400 36px/.9 var(--font-display);letter-spacing:.03em;text-transform:uppercase;color:#E6DCC4;}
 .card-reveal-blurb span{font:13px/1.55 var(--font-mono);color:#A9B4C9;}
 /* The tap targets travel with the card. */
 .card-reveal-hotspots{position:absolute;inset:0;transform-origin:201px 440px;pointer-events:none;}
 .card-reveal-hotspots .card-reveal-hotspot{pointer-events:auto;}
+
+/* An invisible button laid over the rarity label (drawn by the reveal itself), live from the
+   moment the label appears and above every card region. */
+.card-reveal-badge-hit{position:absolute;z-index:6;transform-origin:100% 0;padding:11px 16px;margin:-6px -7px 0 0;border:0;background:transparent;color:transparent;font:13px var(--font-label);letter-spacing:.14em;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;}

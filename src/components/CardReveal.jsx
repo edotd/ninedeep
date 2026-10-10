@@ -46,7 +46,7 @@ const KINDS = {
 
 // Once a card has landed it slowly settles down (and, for the tall player card, shrinks a touch)
 // to make room for a short blurb that fades in above it.
-const SETTLE = { player: { dy: 38, s: 0.94 }, coach: { dy: 52, s: 1 }, gm: { dy: 52, s: 1 } };
+const SETTLE = { player: { dy: 66, s: 0.92 }, coach: { dy: 64, s: 1 }, gm: { dy: 64, s: 1 } };
 const SETTLE_MS = 1200;
 const BLURBS = {
   player: { title: 'Players', text: 'The building blocks of your team. Each player\u2019s stats contribute to your team\u2019s output.' },
@@ -243,11 +243,11 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
   // with a region of its own that gives a generic explanation of accolades in the same modal as
   // everything else (never this particular player's accolade).
   const notes = useMemo(() => {
-    if (kind !== 'player') return [...(kind === 'coach' ? COACH_NOTES : GM_NOTES), rarityLabelNote('Core')];
+    if (kind !== 'player') return (kind === 'coach' ? COACH_NOTES : GM_NOTES);
     return [...PLAYER_NOTES, {
       key: 'accolades', selector: '.pcard-accolade-block', label: 'Accolades',
       text: 'League honors a player earns over their career, like All-Star or MVP. Each one boosts the player\u2019s stats and shows up as a single icon on the card.',
-    }, rarityLabelNote('Core')];
+    }];
   }, [kind]);
   const rarity = 'Core';
   const face = useMemo(() => (kind === 'player' ? <PlayerCard card={card} /> : <FrontOfficeCard kind={kind === 'coach' ? 'coach' : 'market'} team={team} />), [kind, card, team]);
@@ -275,10 +275,11 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
   const shiftRef = useRef({ dy: 0, s: 1 });
   useLayoutEffect(() => { shiftRef.current = shift; });
   const ui = eo(P(t, tm.ui, 500));
-  const active = boxes.find((box) => box.key === activeKey);
+  const labelNote = useMemo(() => rarityLabelNote('Core'), []);
+  const active = activeKey === 'rarityLabel' ? labelNote : boxes.find((box) => box.key === activeKey);
   // Where the selected region sits on screen (the stage is centred and scaled to fit), so the
   // spotlight can feather around it and the modal can sit right beside it.
-  const spot = active ? {
+  const spot = active && !active.panel ? {
     left: (window.innerWidth - STAGE_W * scale) / 2 + (201 + shift.s * (active.left - 201)) * scale,
     top: (window.innerHeight - STAGE_H * scale) / 2 + (440 + shift.dy + shift.s * (active.top - 440)) * scale,
     width: active.width * shift.s * scale,
@@ -377,6 +378,15 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
           />
         ))}
         </div>
+        {t >= tm.badge && (
+          <button
+            type="button"
+            className="card-reveal-badge-hit"
+            aria-label="Rarity: Core. Show the rarity scale."
+            style={{ right: STAGE_W - (201 + shift.s * (cardW * up / 2 - 8)), top: 440 + shift.dy + shift.s * (-(cardHeight * up) / 2 - 13), transform: `scale(${shift.s})` }}
+            onClick={() => setActiveKey('rarityLabel')}
+          >CORE</button>
+        )}
       </div>
       {spot && !active.panel && (
         <svg className="card-reveal-spotlight" aria-hidden="true">
