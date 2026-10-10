@@ -85,6 +85,8 @@ test('accepting a counter that would blow the cap is rejected without signing an
   state.teams[0].seasonCap = 4.5;
   openNegotiation(state, 0, 'p1');
   mockRoll(3, () => submitNegotiationOffer(state, 0, 'p1', 4.5, 3));
+  // The counter fit when made; shrink the budget past the 3-point overage allowance afterwards.
+  state.teams[0].seasonCap = 1;
   const res = acceptNegotiationCounter(state, 0, 'p1');
   assert.equal(res.ok, false);
   assert.equal(state.teams[0].hand.length, 0);

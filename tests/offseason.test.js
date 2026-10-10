@@ -265,11 +265,9 @@ test('season start allows locking in up to 3 cap points over, but no further', (
   state.offseason = { freeAgencyClosed: { 0: true, 1: true } };
   // 14 committed vs an 11 cap is exactly 3.0 over — right at MAX_CAP_OVERAGE, still allowed.
   assert.equal(confirmLineup(state, 0).valid, true);
-  assert.equal(team.overBudgetLastSeason, true);
-  // Reset the just-set flag so this next check is isolated to the absolute cap, not the
-  // separate consecutive-season restriction (covered in its own test below).
+  // The consecutive-season flag is set when the season locks, not on confirm.
+  assert.equal(team.overBudgetLastSeason, undefined);
   team.lineupConfirmed = false;
-  team.overBudgetLastSeason = false;
   team.seasonCap = 10; // 4.0 over now — past the allowance.
   assert.match(confirmLineup(state, 0).msg, /under budget/);
 });
@@ -288,7 +286,6 @@ test('a team cannot go over budget in consecutive seasons', () => {
   // Getting back under the cap clears the restriction for next time.
   team.seasonCap = 14;
   assert.equal(confirmLineup(state, 0).valid, true);
-  assert.equal(team.overBudgetLastSeason, false);
 });
 
 test('Season Recap reads last season\'s frozen output, not a live recompute', () => {

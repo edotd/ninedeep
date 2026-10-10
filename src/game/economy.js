@@ -1,4 +1,4 @@
-import { MIN_GM_COST } from './constants';
+import { MIN_GM_COST, MAX_CAP_OVERAGE } from './constants';
 
 export function baseCap() {
   return 20;
@@ -49,4 +49,20 @@ export function rosterSalary(team) {
 // against this rather than re-deriving seasonCap - rosterSalary(team) inline at each call site.
 export function remainingCap(team) {
   return Math.round(((team.seasonCap || 0) - rosterSalary(team)) * 100) / 100;
+}
+
+// How far over its cap a team may sit: up to MAX_CAP_OVERAGE, but not two seasons running —
+// team.overBudgetLastSeason is set when a season locks (season.js's lockSeasonAndSeed).
+export function overageAllowance(team) {
+  return team.overBudgetLastSeason ? 0 : MAX_CAP_OVERAGE;
+}
+
+// What a human team can actually still commit to a signing or bid: its cap room plus the
+// overage it is allowed to carry into the season (see confirmLineup, engine.js).
+export function isOverLimit(team) {
+  return rosterSalary(team) > (team.seasonCap || 0) + overageAllowance(team) + 1e-9;
+}
+
+export function spendableRoom(team) {
+  return Math.round((remainingCap(team) + overageAllowance(team)) * 100) / 100;
 }

@@ -6,7 +6,7 @@
 // (see bidding.js) — an active negotiation simply doesn't stop anyone else from also placing a
 // bid; whichever resolves first (sign or a won auction) removes the card for good.
 import { rollDie } from './rng';
-import { remainingCap } from './economy';
+import { spendableRoom } from './economy';
 import { acquireOffseasonPlayer } from './gm';
 import { recordFreeAgencyActivity } from './freeAgencyActivity';
 import { MIN_PLAYER_SALARY, MAX_CONTRACT_YEARS } from './constants';
@@ -104,7 +104,7 @@ export function submitNegotiationOffer(state, teamIdx, cardId, salary, years) {
     if (salary < floor.salary || years < floor.years) return { ok: false, msg: 'You cannot lower salary or years after a counter.' };
     if (salary === floor.salary && years === floor.years) return { ok: false, msg: 'Raise at least one term to roll again.' };
   }
-  if (salary > remainingCap(team)) return { ok: false, msg: 'That offer would put you over the cap.' };
+  if (salary > spendableRoom(team)) return { ok: false, msg: 'That offer would put you over the cap.' };
 
   const ask = { salary: session.askSalary, years: session.askYears };
   const offer = { salary, years };
@@ -140,8 +140,8 @@ export function acceptNegotiationCounter(state, teamIdx, cardId) {
     return { ok: false, msg: 'No counter to accept.' };
   }
   const { salary, years } = session.pendingCounter;
-  if (salary > remainingCap(team)) {
-    return { ok: false, msg: `Not enough budget room. You need ${round1(salary - remainingCap(team))} more.` };
+  if (salary > spendableRoom(team)) {
+    return { ok: false, msg: `Not enough budget room. You need ${round1(salary - spendableRoom(team))} more.` };
   }
   signCard(state, team, cardId, salary, years);
   session.status = 'signed';

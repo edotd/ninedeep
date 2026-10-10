@@ -3,7 +3,7 @@ import { useIsDesktop } from '../hooks/useIsDesktop';
 import SetLineupScreen from '../components/SetLineupScreen';
 import FrontOfficeCard from '../components/FrontOfficeCard';
 import { PlayerLedgerIdentity, CostBlocks } from '../components/LedgerRow';
-import { formatCoins, rosterSalary, gmCost } from '../game/economy';
+import { formatCoins, rosterSalary, gmCost, isOverLimit, overageAllowance } from '../game/economy';
 import { FANBASE_BOOST_COST, ROSTER_SIZE } from '../game/constants';
 import CoachmarkTour from '../components/CoachmarkTour';
 import TeamMain from '../components/TeamMain';
@@ -201,7 +201,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   const seasonIssues = [];
   if (!team.coach) seasonIssues.push('Hire a coach');
   if (team.hand.length > ROSTER_SIZE) seasonIssues.push(`Resolve your roster (${team.hand.length}/${ROSTER_SIZE})`);
-  if (committed > cap) seasonIssues.push('Resolve team budget');
+  if (isOverLimit(team)) seasonIssues.push('Resolve team budget');
   if (!team.lineupSet || starters.length !== 5) seasonIssues.push('Set your lineup');
 
   // A Team main tile: sub pages are dealt in over the main page on a phone;
@@ -454,8 +454,8 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
             Resolve your roster before the season begins: release {team.hand.length - ROSTER_SIZE} player{team.hand.length - ROSTER_SIZE === 1 ? '' : 's'}.
           </div>
         )}
-        {preSeason && team.hand.length === ROSTER_SIZE && committed > cap && (
-          <div className="statusline" style={{ marginTop: 16 }}>Get under budget before the season begins. Reduce committed costs by {formatCoins(committed - cap)}.</div>
+        {preSeason && team.hand.length === ROSTER_SIZE && isOverLimit(team) && (
+          <div className="statusline" style={{ marginTop: 16 }}>Get under budget before the season begins. Reduce committed costs by {formatCoins(committed - cap - overageAllowance(team))}.</div>
         )}
         {showWelcome && (
           <div className="tw-backdrop" role="presentation">

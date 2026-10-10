@@ -108,14 +108,13 @@ export function confirmLineup(state, teamIdx) {
   if (committed > team.seasonCap + MAX_CAP_OVERAGE) return { valid: false, msg: `Get under budget before the season begins. You are using ${committed} of ${team.seasonCap} (up to ${MAX_CAP_OVERAGE} over is allowed).` };
   const overBudget = committed > team.seasonCap;
   // Not two seasons running — a team already over budget last season has to get back under the
-  // cap this time before it's allowed to go over again (team.overBudgetLastSeason is set below,
-  // read back here the next time this team confirms).
+  // cap this time before it's allowed to go over again (team.overBudgetLastSeason is set when the
+  // season locks, in season.js's lockSeasonAndSeed).
   if (overBudget && team.overBudgetLastSeason) return { valid: false, msg: 'You were over budget last season — get under the cap before the season begins. A team cannot go over budget in consecutive seasons.' };
   if (!team.lineupSet) return { valid: false, msg: 'Set your lineup before the season begins.' };
   const v = validateLineup(team);
   if (!v.valid) return v;
   team.lineupConfirmed = true;
-  team.overBudgetLastSeason = overBudget;
   if (allHumansReady(state, (t) => t.lineupConfirmed)) {
     // Begin Season is also the market deadline. Closing Free Agency remains available as an
     // optional early lock, but every human can ready up without using it; once all are ready,

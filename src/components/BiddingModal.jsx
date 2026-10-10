@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { jerseyNumber } from '../game/cards';
-import { formatCoins, remainingCap } from '../game/economy';
+import { formatCoins, spendableRoom } from '../game/economy';
 import { freeAgentPriority, pendingFaHoldTotal, winningValue } from '../game/bidding';
 import { MAX_CONTRACT_YEARS } from '../game/constants';
 
@@ -25,7 +25,7 @@ export default function BiddingModal({ state, actions, myTeamId, card, onClose, 
   const [error, setError] = useState(null);
 
   const floor = myBid ? { salary: myBid.salary, years: myBid.years } : { salary: minSalary, years: minYears };
-  const room = remainingCap(team) - pendingFaHoldTotal(state, team, card.id);
+  const room = spendableRoom(team) - pendingFaHoldTotal(state, team, card.id);
 
   const bumpSalary = (delta) => setOffer((o) => ({ ...o, salary: Math.max(floor.salary, Math.round((o.salary + delta) * 2) / 2) }));
   const setYears = (y) => setOffer((o) => ({ ...o, years: y }));

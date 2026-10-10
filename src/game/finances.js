@@ -9,7 +9,7 @@
 // charges count down each season transition. Hiring the replacement coach still costs its
 // own salary this season on top of the outgoing coach's dead cap.
 import { FANBASE_BOOST_COST, FANBASE_BOOST_AMOUNT, ROSTER_SIZE } from './constants';
-import { rosterSalary, gmCost } from './economy';
+import { rosterSalary, gmCost, overageAllowance } from './economy';
 import { drawGM } from './gm';
 import { recordFreeAgencyActivity } from './freeAgencyActivity';
 
@@ -57,8 +57,8 @@ export function hireFreeAgentCoach(state, teamIdx, coachId) {
     return { ok: false, msg: 'You cannot rehire a coach you fired this season.' };
   }
   const projectedCost = rosterSalary(team) + coach.salary;
-  if (projectedCost > team.seasonCap) {
-    return { ok: false, msg: `Not enough budget room to hire this coach. You need ${Math.round((projectedCost - team.seasonCap) * 100) / 100} more.` };
+  if (projectedCost > team.seasonCap + overageAllowance(team)) {
+    return { ok: false, msg: `Not enough budget room to hire this coach. You need ${Math.round((projectedCost - team.seasonCap - overageAllowance(team)) * 100) / 100} more.` };
   }
   state.freeAgentCoaches.splice(index, 1);
   const hiredCoach = { ...coach };

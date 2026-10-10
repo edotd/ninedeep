@@ -2,7 +2,7 @@
 // free agency early or every franchise readies for the season. Exact terms live in shared game state for server-side resolution, while the UI
 // only reveals a team's own terms; opponents see that an opening/final offer exists.
 import { rollDie } from './rng';
-import { remainingCap } from './economy';
+import { remainingCap, spendableRoom } from './economy';
 import { acquireOffseasonPlayer } from './gm';
 import { recordFreeAgencyActivity } from './freeAgencyActivity';
 import { cardTotal, neededPosition } from './cards';
@@ -77,7 +77,7 @@ function validateBid(state, team, session, salary, years) {
   years = Math.max(1, Math.min(MAX_CONTRACT_YEARS, Math.round(years)));
   if (salary < session.minSalary) return { ok: false, msg: `Minimum bid is ${session.minSalary}.` };
   if (years < session.minYears) return { ok: false, msg: `Minimum contract is ${session.minYears} year${session.minYears === 1 ? '' : 's'}.` };
-  const room = remainingCap(team) - pendingFaHoldTotal(state, team, session.cardId);
+  const room = spendableRoom(team) - pendingFaHoldTotal(state, team, session.cardId);
   if (salary > room) return { ok: false, msg: 'That bid would put you over the cap.' };
   return { ok: true, salary, years };
 }
@@ -119,7 +119,7 @@ export function resolveFreeAgentBidding(state, session) {
   const bids = Object.entries(session.bids).map(([teamId, bid]) => {
     const team = state.teams.find((candidate) => candidate.id === Number(teamId));
     return team ? { ...bid, winningValue: winningValue(team), team, teamId: team.id, teamName: team.name, stage: 'final' } : null;
-  }).filter((bid) => bid && bid.salary <= remainingCap(bid.team) - pendingFaHoldTotal(state, bid.team, session.cardId));
+  }).filter((bid) => bid && bid.salary <= spendableRoom(bid.team) - pendingFaHoldTotal(state, bid.team, session.cardId));
   if (!bids.length) return (session.result = { unsigned: true });
 
   const sorted = [...bids].sort((a, b) => priorityComparison(session.priority, a, b));

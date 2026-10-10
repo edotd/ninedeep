@@ -2,14 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import PlayerCard from '../components/PlayerCard';
 import FrontOfficeCard from '../components/FrontOfficeCard';
 import BiddingModal from '../components/BiddingModal';
-import { formatCoins, rosterSalary } from '../game/economy';
+import { formatCoins, isOverLimit } from '../game/economy';
 import { wasReleasedByTeamThisSeason } from '../game/season';
 import { freeAgentPriority, hasPendingBidDecision } from '../game/bidding';
 
 export default function FreeAgencyScreen({ state, actions, myTeamId, onBack, onGoToFranchise }) {
   const team = state.teams[myTeamId];
   const closed = state.offseason?.freeAgencyClosed?.[team.id];
-  const overBudget = rosterSalary(team) > team.seasonCap;
+  const overBudget = isOverLimit(team);
   const pendingDecision = hasPendingBidDecision(state, team);
   // Holds the actual card object, not just an id looked up live in state.freeAgents — a
   // resolved auction splices the winning card out of freeAgents immediately, and the modal

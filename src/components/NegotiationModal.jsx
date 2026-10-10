@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { jerseyNumber } from '../game/cards';
-import { formatCoins, remainingCap } from '../game/economy';
+import { formatCoins, remainingCap, spendableRoom } from '../game/economy';
 import { negotiationBand, negotiationAcceptThreshold, negotiationAcceptChance, MAX_NEGOTIATION_ROLLS } from '../game/negotiation';
 import { MAX_CONTRACT_YEARS } from '../game/constants';
 import DieFaceStrip from './DieFaceStrip';
@@ -82,16 +82,16 @@ export default function NegotiationModal({ state, actions, myTeamId, card, onClo
                 <div className="neg-microlabel">Agent Counters</div>
                 <div className="neg-counter-terms">{formatCoins(session.pendingCounter.salary)} × {session.pendingCounter.years} yrs</div>
                 <p className="neg-note">
-                  {remainingCap(team) >= session.pendingCounter.salary
+                  {spendableRoom(team) >= session.pendingCounter.salary
                     ? `No roll needed. Accepting leaves room ${formatCoins(remainingCap(team) - session.pendingCounter.salary)}.`
-                    : `${formatCoins(session.pendingCounter.salary - remainingCap(team))} over your cap — clear room first or let him walk.`}
+                    : `${formatCoins(session.pendingCounter.salary - spendableRoom(team))} over your cap — clear room first or let him walk.`}
                 </p>
                 {session.pendingCounter.final && <p className="neg-note">Final counter · no rolls left.</p>}
                 <div className="neg-actions">
                   <button
                     type="button"
                     className="primary"
-                    disabled={remainingCap(team) < session.pendingCounter.salary}
+                    disabled={spendableRoom(team) < session.pendingCounter.salary}
                     onClick={doAccept}
                   >
                     Accept Counter

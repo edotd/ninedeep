@@ -4,7 +4,7 @@ import { drawGM, acquireOffseasonPlayer } from './gm';
 import { advanceCareer } from './aging';
 import { shuffle, weightedPick } from './rng';
 import { makeCard, randomArch, randomArchForTier, neededPosition, drawCoachCard, applyCoachRetention, cardTotal } from './cards';
-import { finalizeCap, rosterSalary } from './economy';
+import { finalizeCap, isOverLimit, rosterSalary } from './economy';
 import { autoSelectFive, effectiveRating, activeStatSum, benchRatingContribution, validateLineup, assignSixthMan } from './roster';
 import { retentionBonus, relationshipBonus } from './cards';
 import { handsOffBonus } from './gm';
@@ -284,6 +284,7 @@ export function lockSeasonAndSeed(state) {
     const total9 = rosterSalary(team);
     let overage = Math.max(0, total9 - team.seasonCap);
     team.lastOverage = overage;
+    team.overBudgetLastSeason = overage > 0;
     team.total9Salary = total9;
     // Purely informational — see simulateSeasonOutput. Runs here (under the Simulating
     // Season loading beat, before Standings shows) rather than at matchup time; the player
@@ -519,7 +520,7 @@ export function fileContracts(state, teamIdx) {
 export function closeFreeAgency(state, teamIdx) {
   const team = state.teams[teamIdx];
   if (!team?.human) return { ok: false, msg: 'Only a human GM closes out free agency.' };
-  if (rosterSalary(team) > team.seasonCap) return { ok: false, msg: 'You are over the salary cap — fix your roster before closing out free agency.' };
+  if (isOverLimit(team)) return { ok: false, msg: 'You are over the allowed budget — fix your roster before closing out free agency.' };
   forceFinalizeTeamBids(state, team);
   state.offseason.freeAgencyClosed ||= {};
   state.offseason.freeAgencyClosed[team.id] = true;
