@@ -30,7 +30,7 @@ import WelcomeScreen from '../screens/WelcomeScreen';
 import { bestCard } from '../game/cards';
 import FranchiseMasthead from './FranchiseMasthead';
 import { guardedNavigate } from '../hooks/leaveGuard';
-import { LeagueStatsContext, leagueStatMax } from './LeagueStatsContext';
+import { LeagueStatsContext, RosterRolesContext, leagueStatMax, rosterRoles } from './LeagueStatsContext';
 
 const SCREENS = {
   cardoverview: CardOverviewScreen,
@@ -372,5 +372,6 @@ function GameShellBody({ state, actions, myTeamId, onNewEra, onDeleteRoom, hostN
 
 export default function GameShell(props) {
   const leagueMax = useMemo(() => leagueStatMax(props.state.teams), [props.state.teams]);
-  return <LeagueStatsContext.Provider value={leagueMax}><GameShellBody {...props} /></LeagueStatsContext.Provider>;
+  const roles = useMemo(() => rosterRoles(props.state.teams), [props.state.teams]);
+  return <LeagueStatsContext.Provider value={leagueMax}><RosterRolesContext.Provider value={roles}><GameShellBody {...props} /></RosterRolesContext.Provider></LeagueStatsContext.Provider>;
 }

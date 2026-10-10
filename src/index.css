@@ -574,8 +574,9 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
    Accolades) share. */
 .pcard-budgethit-row .pcard-microlabel,.pcard-years-row .pcard-microlabel{font-size:11px;}
 .pcard-budgethit{font-family:var(--font-display);font-size:32px;color:var(--ink);}
-.pcard-budgethit-row{justify-content:flex-start;gap:12px;}
-.pcard-role-slot{flex:1 1 0;min-width:0;display:flex;justify-content:flex-end;}
+.pcard-budgethit-row{justify-content:space-between;gap:12px;}
+.pcard-role-slot{flex:1 1 0;min-width:0;display:flex;justify-content:flex-start;}
+.pcard-cost-group{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-left:auto;}
 .pcard-role-slot .pcard-roster-badge{transform:none;font-size:11px;padding:3px 8px;white-space:nowrap;}
 .pcard-dots{display:flex;gap:5px;}
 .pcard-dot{width:9px;height:9px;border-radius:50%;background:var(--ink);}

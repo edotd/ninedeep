@@ -13,3 +13,18 @@ export function leagueStatMax(teams) {
   }
   return max;
 }
+
+// card id -> 'Starter' | 'Sixth Man' | 'Depth' for every card on a team with a saved lineup.
+export const RosterRolesContext = createContext(null);
+
+export function rosterRoles(teams) {
+  const roles = {};
+  for (const team of teams || []) {
+    if (!team.lineupSet) continue;
+    const active = new Set(team.activeIds || []);
+    for (const card of team.hand || []) {
+      roles[card.id] = active.has(card.id) ? 'Starter' : card.id === team.sixthManId ? 'Sixth Man' : 'Depth';
+    }
+  }
+  return roles;
+}

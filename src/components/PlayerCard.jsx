@@ -1,5 +1,5 @@
 import { useContext, useRef, useState } from 'react';
-import { LeagueStatsContext } from './LeagueStatsContext';
+import { LeagueStatsContext, RosterRolesContext } from './LeagueStatsContext';
 import { skillsetFor } from '../game/skillsets';
 import { formatCoins } from '../game/economy';
 import { careerLevel, careerMultiplier } from '../game/aging';
@@ -24,6 +24,8 @@ const STAT_KEYS = ['SCO', 'PLM', 'REB', 'DEF'];
 
 export default function PlayerCard({ card, onClick, selected, rosterLabel, compact, onRelease, onDevelop, onScout, scouted, revealPeak, alwaysShowOptions, contractLabel, signingNote }) {
   const leagueMax = useContext(LeagueStatsContext);
+  const roles = useContext(RosterRolesContext);
+  const roleLabel = rosterLabel || roles?.[card.id] || null;
   const tier = cardTier(card);
   const skillset = skillsetFor(card);
   const level = careerLevel(card);
@@ -115,11 +117,13 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
         </div>
       </div>
       <div className="pcard-contract pcard-budgethit-row">
-        <span className="pcard-microlabel">Cost</span>
-        <span className="pcard-budgethit">{formatCoins(card.salary)}</span>
-        {/* Role slot (Starter / Sixth Man / Depth) — fills whatever space is left of the cost.
-            Text for now; icons will replace it. */}
-        {!compact && <span className="pcard-role-slot">{rosterLabel && <span className="pcard-roster-badge">{rosterLabel}</span>}</span>}
+        {/* Role (Starter / Sixth Man / Depth) sits left in the same row; Cost label and value
+            stay right-aligned. Text for now; icons will replace it. */}
+        {!compact && <span className="pcard-role-slot">{roleLabel && <span className="pcard-roster-badge">{roleLabel}</span>}</span>}
+        <span className="pcard-cost-group">
+          <span className="pcard-microlabel">Cost</span>
+          <span className="pcard-budgethit">{formatCoins(card.salary)}</span>
+        </span>
       </div>
       {!compact && (
         <div className="pcard-contract pcard-years-row">
