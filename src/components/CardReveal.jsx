@@ -205,7 +205,7 @@ function BallReveal({ t, face, cardW, up, rarity, cardHeight, onContinue, ctaLab
 // optionally sped up by `speed`. `quick` plays only its last stretch — the circle growing out into
 // the full card — which is what the player picker uses. `delay` holds the start back a moment.
 // Remounting it (change its key) plays it again.
-export function CardRevealPlayer({ card, up, cardHeight, speed = 1, delay = 0, settled = false, quick = false }) {
+export function CardRevealPlayer({ card, up, cardHeight, speed = 1, delay = 0, settled = false, quick = false, rosterLabel }) {
   const rarity = RAR[card.rarity] ? card.rarity : 'Core';
   const total = BALL_T[rarity].total;
   const t0 = quick ? BALL_T[rarity].reveal - 40 : 0;
@@ -225,19 +225,21 @@ export function CardRevealPlayer({ card, up, cardHeight, speed = 1, delay = 0, s
   }, [total, reduced, settled, speed, delay]);
   const t = reduced || settled ? total : Math.min(total, t0 + Math.max(0, clock - delay) * speed);
   // One element for the card's whole life, so a frame of the animation never re-renders the card.
-  const face = useMemo(() => <PlayerCard card={card} />, [card]);
+  const face = useMemo(() => <PlayerCard card={card} rosterLabel={rosterLabel} />, [card, rosterLabel]);
   return <BallReveal t={t} face={face} cardW={264} up={up} rarity={rarity} cardHeight={cardHeight} bare quick={quick} />;
 }
 
 const HINT = 'Tap any part of the card to learn more';
 
 // kind: 'player' reveals `card`; 'coach' / 'gm' reveal the Front Office card off `team`.
-export default function CardReveal({ kind = 'player', card: dealtCard, team: dealtTeam, onContinue }) {
+// `learn` reuses the onboarding screen as a card's "Learn More": the card keeps its real rarity and
+// the button reads DONE.
+export default function CardReveal({ kind = 'player', card: dealtCard, team: dealtTeam, onContinue, learn = false }) {
   const { cardW, up, label } = KINDS[kind];
   // Onboarding always teaches with the Core version of a card — the simplest frame and the
   // shortest reveal — whatever rarity was actually dealt. Display-only copies; the real hand is
   // untouched. (The coach's gameplans are rolled on the real team first so they match the game.)
-  const card = useMemo(() => (dealtCard ? { ...dealtCard, rarity: 'Core' } : dealtCard), [dealtCard]);
+  const card = useMemo(() => (dealtCard && !learn ? { ...dealtCard, rarity: 'Core' } : dealtCard), [dealtCard, learn]);
   const team = useMemo(() => {
     if (!dealtTeam?.coach) return dealtTeam;
     ensureCoachSystems(dealtTeam);
@@ -253,7 +255,7 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
       text: 'League honors a player earns over their career, like All-Star or MVP. Each one boosts the player\u2019s stats and shows up as a single icon on the card.',
     }];
   }, [kind]);
-  const rarity = 'Core';
+  const rarity = learn && RAR[card?.rarity] ? card.rarity : 'Core';
   const face = useMemo(() => (kind === 'player' ? <PlayerCard card={card} /> : <FrontOfficeCard kind={kind === 'coach' ? 'coach' : 'market'} team={team} />), [kind, card, team]);
   const tm = BALL_T[rarity];
   // The card is read-ready once its rarity label has landed; a beat later it settles down.
@@ -279,7 +281,7 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
   const shiftRef = useRef({ dy: 0, s: 1 });
   useLayoutEffect(() => { shiftRef.current = shift; });
   const ui = eo(P(t, tm.ui, 500));
-  const labelNote = useMemo(() => rarityLabelNote('Core'), []);
+  const labelNote = useMemo(() => rarityLabelNote(rarity), [rarity]);
   const active = activeKey === 'rarityLabel' ? labelNote : boxes.find((box) => box.key === activeKey);
   // Where the selected region sits on screen (the stage is centred and scaled to fit), so the
   // spotlight can feather around it and the modal can sit right beside it.
@@ -357,14 +359,14 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
   }, [ready, scale, notes, cardHeight]);
 
   return (
-    <div className="card-reveal-overlay" role="dialog" aria-modal="true" aria-label={label}>
+    <div className="card-reveal-overlay" style={learn ? { zIndex: 1100 } : undefined} role="dialog" aria-modal="true" aria-label={label}>
       <div ref={measureRef} className={'card-reveal-measure kind-' + kind} style={{ width: cardW }} aria-hidden="true">{face}</div>
       <div
         ref={stageRef}
         className={'card-reveal-stage kind-' + kind}
         style={{ width: STAGE_W, height: STAGE_H, marginLeft: -STAGE_W / 2, marginTop: -STAGE_H / 2, transform: `scale(${scale})` }}
       >
-        <BallReveal t={t} face={face} cardW={cardW} up={up} rarity={rarity} cardHeight={cardHeight} onContinue={onContinue} ctaLabel={kind === 'gm' ? 'START GAME' : 'CONTINUE'} shift={shift} onBadge={() => setActiveKey('rarityLabel')} />
+        <BallReveal t={t} face={face} cardW={cardW} up={up} rarity={rarity} cardHeight={cardHeight} onContinue={onContinue} ctaLabel={learn ? 'DONE' : kind === 'gm' ? 'START GAME' : 'CONTINUE'} shift={shift} onBadge={() => setActiveKey('rarityLabel')} />
         <div className="card-reveal-blurb" style={{ opacity: blurbIn, transform: `translateY(${lerp(-10, 0, blurbIn)}px)` }}>
           <strong>{blurb.title}</strong>
           <span>{blurb.text}</span>
@@ -386,10 +388,10 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
           <button
             type="button"
             className="card-reveal-badge-hit"
-            aria-label="Rarity: Core. Show the rarity scale."
+            aria-label={`Rarity: ${rarity}. Show the rarity scale.`}
             style={{ right: STAGE_W - (201 + shift.s * (cardW * up / 2 - 8)), top: 440 + shift.dy + shift.s * (-(cardHeight * up) / 2 - 13), transform: `scale(${shift.s})` }}
             onClick={() => setActiveKey('rarityLabel')}
-          >CORE</button>
+          >{rarity.toUpperCase()}</button>
         )}
       </div>
       {spot && !active.panel && (
@@ -404,7 +406,7 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
           <rect width="100%" height="100%" fill="rgba(18,26,46,0.78)" mask="url(#crHole)" />
         </svg>
       )}
-      {active?.panel === 'rarity' && <RarityInfoPanel rarity="Core" onClose={() => setActiveKey(null)} />}
+      {active?.panel === 'rarity' && <RarityInfoPanel rarity={rarity} onClose={() => setActiveKey(null)} />}
       {active && !active.panel && (
         <div className="card-reveal-modal-backdrop" role="presentation" onClick={() => setActiveKey(null)}>
           <section

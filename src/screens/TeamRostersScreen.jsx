@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useIsDesktop } from '../hooks/useIsDesktop';
 import PlayerCard from '../components/PlayerCard';
 import PlayerFilterBar from '../components/PlayerFilterBar';
+import PlayerCardMenu from '../components/PlayerCardMenu';
+import CardReveal from '../components/CardReveal';
+import { createPortal } from 'react-dom';
 import { formatCoins } from '../game/economy';
 import { jerseyNumber, playerGrade } from '../game/cards';
 import { sortPlayers } from '../game/playerFilters';
@@ -93,6 +96,10 @@ export default function TeamRostersScreen({ state, actions, myTeamId, onBack }) 
   const [viewMode, setViewMode] = useState('carousel');
   const [rotationIndex, setRotationIndex] = useState(0);
   const [developPlayer, setDevelopPlayer] = useState(null);
+  // Tapping a card in the carousel presses it in and opens its menu (Develop / Release / Learn More).
+  const [pressId, setPressId] = useState(null);
+  const [menuCard, setMenuCard] = useState(null);
+  const [learnCard, setLearnCard] = useState(null);
   const sortedRoster = sortPlayers(team.hand, playerSort);
   const mobileCardCount = sortedRoster.length + starterOpenSlots + benchOpenSlots;
   const rotoScrollRef = useRef(null);
@@ -198,16 +205,22 @@ export default function TeamRostersScreen({ state, actions, myTeamId, onBack }) 
               <div className="ts-roto-grid">
                 {(isDesktop ? sortedRoster : sortedRoster).map((c) => (
                   <div className="ts-roto-slot" key={c.id}>
+                    <div
+                      className={'ts-roto-tap' + (pressId === c.id ? ' pressed' : '')}
+                      onPointerDown={() => setPressId(c.id)}
+                      onPointerUp={() => setPressId(null)}
+                      onPointerLeave={() => setPressId(null)}
+                      onPointerCancel={() => setPressId(null)}
+                    >
                     <PlayerCard
                       card={c}
                       rosterLabel={activeSet.has(c.id) ? 'Starter' : c.id === team.sixthManId ? 'Sixth Man' : 'Depth'}
-                      onRelease={canEdit ? handleRelease : undefined}
-                      onDevelop={canEdit && team.developmentPoints > 0 ? setDevelopPlayer : undefined}
-                      alwaysShowOptions={!isDesktop}
+                      onClick={() => setMenuCard(c)}
                       onScout={!isOwnTeam ? toggleScout : undefined}
                       scouted={viewerTeam.scoutingReport?.includes(c.id)}
                       revealPeak={!isOwnTeam && viewerTeam.gmTrait?.name === 'Third Eye' && viewerTeam.scoutingReport?.includes(c.id)}
                     />
+                    </div>
                   </div>
                 ))}
                 {Array.from({ length: starterOpenSlots }, (_, i) => <div className="ts-roto-slot" key={'starter-open-' + i}><div className="ts-bench-open starter">OPEN STARTER</div></div>)}
@@ -222,6 +235,20 @@ export default function TeamRostersScreen({ state, actions, myTeamId, onBack }) 
           </div>
         )}
       </div>
+
+      {menuCard && (
+        <PlayerCardMenu
+          card={menuCard}
+          team={team}
+          actions={actions}
+          myTeamId={myTeamId}
+          canEdit={canEdit}
+          readOnly={!isOwnTeam}
+          onLearn={setLearnCard}
+          onClose={() => setMenuCard(null)}
+        />
+      )}
+      {learnCard && createPortal(<CardReveal kind="player" card={learnCard} learn onContinue={() => setLearnCard(null)} />, document.body)}
 
       {developPlayer && (
         <div className="development-picker-backdrop" onClick={() => setDevelopPlayer(null)}>

@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Header from './Header';
 import PersistentBar from './PersistentBar';
 import Sidebar from './Sidebar';
@@ -392,7 +392,9 @@ function GameShellBody({ state, actions, myTeamId, onNewEra, onDeleteRoom, hostN
 }
 
 export default function GameShell(props) {
-  const leagueMax = useMemo(() => leagueStatMax(props.state.teams), [props.state.teams]);
-  const roles = useMemo(() => rosterRoles(props.state.teams), [props.state.teams]);
+  // Recomputed every render: in solo play the teams array is mutated in place (same reference),
+  // so memoizing on it left the role labels and gold stat shines stuck at their first values.
+  const leagueMax = leagueStatMax(props.state.teams);
+  const roles = rosterRoles(props.state.teams);
   return <LeagueStatsContext.Provider value={leagueMax}><RosterRolesContext.Provider value={roles}><GameShellBody {...props} /></RosterRolesContext.Provider></LeagueStatsContext.Provider>;
 }

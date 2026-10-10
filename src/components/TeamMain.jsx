@@ -65,6 +65,8 @@ function Tile({ sub, onOpen, className = '', children, label }) {
 export default function TeamMain({ team, readOnly, onOpen, committed, cap, budgetSources }) {
   const [picked, setPicked] = useState(null);
   const [openPair, setOpenPair] = useState(null);
+  const [lastPair, setLastPair] = useState(null);
+  const togglePair = (name) => { setLastPair(name); setOpenPair((v) => (v === name ? null : name)); };
   const activeSet = new Set(team.activeIds || []);
   const starters = (team.hand || []).filter((card) => activeSet.has(card.id))
     .sort((a, b) => (POSITION_ORDER[a.position] ?? 9) - (POSITION_ORDER[b.position] ?? 9));
@@ -89,6 +91,7 @@ export default function TeamMain({ team, readOnly, onOpen, committed, cap, budge
   const maxLevel = brackets.reduce((m, b) => Math.max(m, b.level), 0);
   const shownPairs = [...pairs].sort((a, b) => b.rule.percent - a.rule.percent);
   const openPairRule = shownPairs.find(({ rule }) => rule.name === openPair)?.rule || null;
+  const shownRule = shownPairs.find(({ rule }) => rule.name === (openPair || lastPair))?.rule || null;
 
   const room = cap - committed;
   const span = Math.max(cap, committed) || 1;
@@ -125,6 +128,7 @@ export default function TeamMain({ team, readOnly, onOpen, committed, cap, budge
               <span className="tm-bench"><PlayerBox card={lineupReady ? sixth : null} bench onPick={setPicked} /><small>6TH</small></span>
               <span className="tm-bench"><PlayerBox card={lineupReady ? depth : null} bench onPick={setPicked} /><small>DEPTH</small></span>
             </span>
+            <span className="tm-chips-wrap">
             <span className="tm-chips">
               {shownPairs.length ? shownPairs.map(({ rule }) => (
                 <span
@@ -134,18 +138,23 @@ export default function TeamMain({ team, readOnly, onOpen, committed, cap, budge
                   tabIndex={0}
                   aria-label={`${rule.name}. Show description.`}
                   aria-pressed={openPair === rule.name}
-                  onClick={(event) => { event.stopPropagation(); setOpenPair((v) => (v === rule.name ? null : rule.name)); }}
-                  onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.stopPropagation(); setOpenPair((v) => (v === rule.name ? null : rule.name)); } }}
+                  onClick={(event) => { event.stopPropagation(); togglePair(rule.name); }}
+                  onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.stopPropagation(); togglePair(rule.name); } }}
                 ><BonusIcon name={rule.name} size={44} /></span>
               )) : <span className="tm-chip none">{lineupReady ? 'No pairings active' : 'Set your lineup to see pairings'}</span>}
             </span>
-            {openPairRule && (
-              <span className="tm-pair-desc" onClick={(event) => event.stopPropagation()}>
-                <b className={openPairRule.side}>{openPairRule.name}</b>
-                <em>+{openPairRule.percent}% {openPairRule.side === 'offense' ? 'Offense' : 'Defense'}</em>
-                <small>{pairDescription(openPairRule)}</small>
-              </span>
-            )}
+            {/* A flyout under the icons: it overlays what follows instead of pushing the page taller,
+                and slides open/closed. It keeps the last pairing's text so it can slide away. */}
+            <span className={'tm-pair-desc' + (openPairRule ? ' open' : '')} aria-hidden={!openPairRule} onClick={(event) => event.stopPropagation()}>
+              {shownRule && (
+                <>
+                  <b className={shownRule.side}>{shownRule.name}</b>
+                  <em>+{shownRule.percent}% {shownRule.side === 'offense' ? 'Offense' : 'Defense'}</em>
+                  <small>{pairDescription(shownRule)}</small>
+                </>
+              )}
+            </span>
+            </span>
           </span>
         </div>
 

@@ -1,7 +1,7 @@
 {
   "name": "nine-deep-mp",
   "private": true,
-  "version": "1.0.151",
+  "version": "1.0.152",
   "type": "module",
   "scripts": {
     "dev": "vite",
