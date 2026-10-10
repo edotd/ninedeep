@@ -8,6 +8,8 @@ export const BUDGET_SCALE = 5;
 export const toBudget = (n) => Math.round(n * BUDGET_SCALE);
 
 export const POSITIONS = ['Guard', 'Forward', 'Big'];
+// Floor Balance: +this % Offense and Defense when the starting five has a Guard, a Forward and a Big.
+export const FLOOR_BALANCE_PERCENT = 3;
 export const ERA_LENGTH = 9;
 export const LEAGUE_TEAM_COUNT = 9;
 export const ROSTER_SIZE = 7;

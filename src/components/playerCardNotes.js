@@ -14,7 +14,7 @@ export const PLAYER_NOTES = [
   { key: 'tier', selector: '.pcard-header-tier', label: 'Tier',
     text: "The player's ceiling. Applies bonuses to specific stats." },
   { key: 'position', selector: '.pcard-header-pos', label: 'Position',
-    text: 'Guard, Forward, or Big. Your starting five needs at least one of each.' },
+    text: 'Guard, Forward, or Big. Starting one of each in your five earns the Floor Balance bonus.' },
   { key: 'grade', selector: '.pcard-grade', label: 'Grade',
     text: "A single letter summarizing this player's overall quality, at a glance." },
   { key: 'cost', selector: '.pcard-budgethit-row', label: 'Cost',

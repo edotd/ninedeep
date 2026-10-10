@@ -1,6 +1,7 @@
 import { chemistryDetails } from './chemistry';
 import { weightedPick } from './rng';
 import { careerMultiplier } from './aging';
+import { POSITIONS, FLOOR_BALANCE_PERCENT } from './constants';
 
 // `positions` and `families` are both hard eligibility gates, not weights — a player can only
 // roll a skillset whose position list includes their own position, and whose family list
@@ -165,11 +166,12 @@ export function teamSynergy(team, ids = team.activeIds || []) {
     + statBonuses.filter((b) => b.side === 'defense').reduce((n,b) => n+b.percent, 0)
     + positionBonuses.filter((b) => b.side === 'defense').reduce((n,b) => n+b.percent, 0);
   const leadership = (team.hand || []).some((p) => p.skillsetId === 'skill-03') ? 1 : 0;
+  const floorBalance = starters.length === 5 && POSITIONS.every((position) => starters.some((p) => p.position === position)) ? FLOOR_BALANCE_PERCENT : 0;
   const skillOffense = Math.min(SYNERGY_CAP, rawOffense);
   const skillDefense = Math.min(SYNERGY_CAP, rawDefense);
   const chemistry = chemistryDetails(team, ids, skillOffense, skillDefense, leadership);
-  return { pairs, statBonuses, positionBonuses, rawOffense, rawDefense, skillOffense, skillDefense, leadership, ...chemistry,
-    offense: skillOffense + chemistry.continuity + leadership, defense: skillDefense + chemistry.continuity + leadership };
+  return { pairs, statBonuses, positionBonuses, rawOffense, rawDefense, skillOffense, skillDefense, leadership, floorBalance, ...chemistry,
+    offense: skillOffense + chemistry.continuity + leadership + floorBalance, defense: skillDefense + chemistry.continuity + leadership + floorBalance };
 }
 
 export function applySynergy(base, team, ids, side) {

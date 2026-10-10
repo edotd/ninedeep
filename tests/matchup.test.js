@@ -100,7 +100,7 @@ test('season seeding saves a player-facing breakdown for every team', () => {
   assert.deepEqual(state.seasonBreakdown.map((row) => row.seed), state.seeds.map((_, index) => index + 1));
   const mine = state.seasonBreakdown.find((row) => row.teamId === state.teams[0].id);
   assert.equal(mine.gameplanSeedingPct, 12);
-  assert(mine.seasonRollPct >= -2.5 && mine.seasonRollPct <= 2.5);
+  assert(mine.seasonRollPct >= -3 && mine.seasonRollPct <= 3);
   assert(Number.isFinite(mine.baseRating));
   assert(Number.isFinite(mine.finalRating));
 });

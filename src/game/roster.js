@@ -44,9 +44,8 @@ export function autoValidFive(hand) {
 
 export function validateLineup(team) {
   if (team.activeIds.length !== 5) return { valid: false, msg: 'Select exactly 5 players for your active roster.' };
-  const positions = new Set(team.activeIds.map((id) => team.hand.find((h) => h.id === id)?.position).filter(Boolean));
-  if (!positions.has('Guard') || !positions.has('Forward') || !positions.has('Big'))
-    return { valid: false, msg: 'Your active five needs at least one Guard, Forward, and Big.' };
+  // No position requirement — a Guard, Forward and Big all starting earns the Floor Balance
+  // bonus instead (see skillsets.js's teamSynergy).
   return { valid: true };
 }
 

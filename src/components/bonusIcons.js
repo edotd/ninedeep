@@ -72,6 +72,7 @@ const G = {
   glass: '<g transform="rotate(-10 12 9)">' + '<rect x="5" y="3" width="14" height="10" opacity="0.3"/>' + box(5, 3, 14, 10, 1.6) + '<path d="M8 10.5 L11.5 5.5 L12.6 5.5 L9.1 10.5 Z M11 10.5 L13.8 6.5 L14.6 6.5 L11.8 10.5 Z" opacity="0.75"/>' + '</g>' + Ar(12, 23, 12, 15.2, 2.4) + Q(6, 22.5, 6, 19.5, 6, 16.5, 1.4, 'end', F) + Q(18, 22.5, 18, 19.5, 18, 16.5, 1.4, 'end', F),
   iron: Q(1.5, 6.5, 12, 4.5, 22.5, 6.5, 2.6, 'mid') + Q(1.5, 12, 12, 10, 22.5, 12, 2.6, 'mid') + Q(1.5, 17.5, 12, 15.5, 22.5, 17.5, 2.6, 'mid') + Q(12, 6.5, 12.4, 8.5, 12, 11, 1.3, 'mid', F) + Q(7, 12, 7.4, 14, 7, 16.5, 1.3, 'mid', F) + Q(17, 12, 17.4, 14, 17, 16.5, 1.3, 'mid', F),
   pace: Q(3, 3, 9, 8, 11, 12, 2.6, 'start', F) + Q(3, 21, 9, 16, 11, 12, 2.6, 'start', F) + Q(10, 3, 16, 8, 19.5, 12, 2.8, 'start') + Q(10, 21, 16, 16, 19.5, 12, 2.8, 'start'),
+  balance: dot(12, 5, 2.4) + dot(5.5, 17.5, 2.4) + dot(18.5, 17.5, 2.4) + Q(12, 7.6, 8, 12, 6.4, 15.1, 1.4, 'mid') + Q(12, 7.6, 16, 12, 17.6, 15.1, 1.4, 'mid') + Q(8.2, 17.5, 12, 17.5, 15.8, 17.5, 1.4, 'mid'),
   veteran: dot(12, 4.4, 2.3) + '<path d="M9.4 7.6 H14.6 L13.8 14.6 H10.2 Z"/>' + Q(9.6, 8.4, 6.2, 10.5, 5.2, 15.6, 1.8, 'mid') + Q(14.4, 8.4, 17.8, 10.5, 18.8, 15.6, 1.8, 'mid') + '<path d="M2.5 17.2 Q12 13.4 21.5 17.2 Q21.5 20.2 12 20.2 Q2.5 20.2 2.5 17.2 Z"/>' + Arc(12, 11, 11, 200, 340, 1.3, 'mid', F) + Q(4, 22.6, 12, 22, 20, 22.6, 1.2, 'mid', F),
 };
 
@@ -97,6 +98,7 @@ export const BONUS_META = {};
 for (const [, , side, pct, name, glyph] of PAIRS) BONUS_META[name] = { glyph, side, pct, shape: 'square' };
 for (const [name, , side, glyph] of STATS) BONUS_META[name] = { glyph, side, pct: 15, shape: 'framed' };
 BONUS_META.Pace = { glyph: 'pace', side: 'o', pct: 5, shape: 'round' };
+BONUS_META['Floor Balance'] = { glyph: 'balance', side: 'b', pct: 3, shape: 'round' };
 BONUS_META['Wise Veteran'] = { glyph: 'veteran', side: 'b', pct: 1, shape: 'round' };
 
 export const BONUS_SIDE = SIDE;

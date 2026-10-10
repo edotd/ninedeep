@@ -25,7 +25,7 @@ const LINEUP_TOUR_KEY = 'nine-deep-lineup-coachmark-v2-seen';
 //
 // The five court spots are a fixed, purely cosmetic layout (this game only tracks
 // Guard/Forward/Big, so a starter can occupy any spot) — nothing enforces which spot a position
-// "belongs" in beyond what saveLineup already requires: one of each Guard/Forward/Big.
+// "belongs" in; a Guard, Forward and Big all starting earns the Floor Balance bonus.
 const COURT = [
   { key: 'S0', n: 1, x: 50, y: 80 },
   { key: 'S1', n: 2, x: 16, y: 54 },
@@ -132,6 +132,9 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
   for (const rule of synergy?.positionBonuses || []) {
     const holder = starters.find((card) => card.skillsetId === rule.skillsetId && card.position === rule.position);
     bonusRows.push({ name: rule.name, side: rule.side, value: tag(rule.side, rule.percent), players: holder ? `${who(holder)} at ${rule.position}` : rule.position });
+  }
+  if (synergy?.floorBalance) {
+    bonusRows.push({ name: 'Floor Balance', side: 'both', value: `+${synergy.floorBalance}% OFF & DEF`, players: 'Guard + Forward + Big starting' });
   }
   if (synergy?.leadership) {
     const vet = team.hand.find((card) => card.skillsetId === 'skill-03');
@@ -596,7 +599,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
         <CoachmarkTour
           storageKey={LINEUP_TOUR_KEY}
           steps={[
-            { targetRef: courtRef, title: 'Set Your Lineup', body: 'Tap an open spot to add a starter. You need at least one Guard, one Forward, and one Big among your five.' },
+            { targetRef: courtRef, title: 'Set Your Lineup', body: 'Tap an open spot to add a starter. Start a Guard, a Forward and a Big together to earn the Floor Balance bonus.' },
             ...(plans.length > 0 ? [{ targetRef: gameplanBtnRef, title: 'Pick a Gameplan', body: 'Choose your coach’s primary or secondary Gameplan for a team-wide bonus this season.' }] : []),
             { targetRef: saveBtnRef, title: 'Save Your Lineup', body: 'Two starters sharing a Skillset pairing light up a bonus — look for the lines between them. When you’re happy with your five, Save Lineup to lock it in.' },
           ]}

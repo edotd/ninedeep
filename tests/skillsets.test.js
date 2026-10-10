@@ -4,7 +4,7 @@ import { SKILLSETS, SKILLSET_PAIRS, STAT_THRESHOLD_BONUSES, POSITION_SKILLSET_BO
 import { careerMultiplier } from '../src/game/aging.js';
 import { makeCard, drawCoachCard, drawMatchupModifierCard } from '../src/game/cards.js';
 import { REPLACEMENT_TIER, COACH_MODIFIERS } from '../src/game/constants.js';
-import { offenseModifier, defenseModifier } from '../src/game/roster.js';
+import { offenseModifier, defenseModifier, validateLineup } from '../src/game/roster.js';
 import { playMatchup, teamOutput, simulateSeasonOutput } from '../src/game/matchup.js';
 import { beginTurn, advanceTurn } from '../src/game/turn.js';
 import { swapStarter } from '../src/game/engine.js';
@@ -13,7 +13,7 @@ const sid = (n) => `skill-${String(n).padStart(2,'0')}`;
 function team(numbers) {
   return {id:0,name:'Test',human:true,activeIds:numbers.map((_,i)=>`p${i}`),
     coach:{offBonus:0,defBonus:0,offDie:6,defDie:6},matchupCards:[],
-    hand:numbers.map((n,i)=>({id:`p${i}`,skillsetId:sid(n),position:['Guard','Guard','Forward','Big','Big'][i%5],archetype:'Balanced',stats:{SCO:10,PLM:10,DEF:10,REB:10},salary:1,age:27,careerRoll:0.5}))};
+    hand:numbers.map((n,i)=>({id:`p${i}`,skillsetId:sid(n),position:['Guard','Guard','Forward','Guard','Guard'][i%5],archetype:'Balanced',stats:{SCO:10,PLM:10,DEF:10,REB:10},salary:1,age:27,careerRoll:0.5}))};
 }
 test('24 skillsets, 25 unique mutual pairings; every pairing resolves at its approved strength',()=>{
   assert.equal(SKILLSETS.length,24);assert.equal(SKILLSET_PAIRS.length,25);
@@ -123,11 +123,10 @@ test('each open roster spot costs one Offense and Defense unless the coach has M
 // between starters and bench" in the brand handoff's Bar behaviour. The only hard block left
 // is a match this team is actively playing turn-by-turn, since that's mid-roll state the swap
 // would invalidate.
-test('swap validates positions and ownership; blocked only mid-live-match; updates chemistry',()=>{
+test('swap validates ownership; blocked only mid-live-match; updates chemistry',()=>{
   const t=team([6,1,10,9,2]);t.hand.push({...t.hand[0],id:'bench',skillsetId:sid(18),position:'Guard'});
   const state={phase:'teamsummary',teams:[t],playoff:{matches:[]}};
   assert.equal(swapStarter(state,0,'p0','missing').ok,false);
-  assert.equal(swapStarter(state,0,'p2','bench').ok,false); // only Forward
   assert.equal(swapStarter(state,0,'p0','bench').ok,true);assert.notEqual(teamSynergy(t).offense,30);
   t.lineupConfirmed=true;assert.equal(swapStarter(state,0,'bench','p0').ok,true);
   state.phase='playoffs';assert.equal(swapStarter(state,0,'p0','bench').ok,true);
@@ -144,4 +143,18 @@ test('turn-by-turn scoring retains skillsets after each multiplayer serializatio
   const result=state.playoff.matches[0].result;assert(result);
   assert.equal(result.aOffMod,offenseModifier(state.teams[0]));
   assert.equal(result.bDefMod,defenseModifier(state.teams[1]));
+});
+
+test('a Guard, Forward and Big all starting earns Floor Balance; no position is required',()=>{
+  const t=team([1,2,3,4,5]);
+  assert.equal(teamSynergy(t).floorBalance,0);
+  const before=teamSynergy(t);
+  t.hand[3].position='Big';
+  const after=teamSynergy(t);
+  assert.equal(after.floorBalance,3);
+  assert.equal(after.offense,before.offense+3);
+  assert.equal(after.defense,before.defense+3);
+  assert.equal(validateLineup(t).valid,true);
+  t.hand[3].position='Guard';
+  assert.equal(validateLineup(t).valid,true);
 });
