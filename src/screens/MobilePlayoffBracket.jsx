@@ -18,7 +18,7 @@ const NAMES = { 0: 'Quarterfinal 1', 1: 'Quarterfinal 2', 2: 'Quarterfinal 3', 3
 const fmt = (n) => (n === null || n === undefined ? '—' : n.toFixed(2));
 const outputOf = (team) => (team && team.coach && team.activeIds && team.activeIds.length > 0 ? teamOutput(team).total : null);
 
-export default function MobilePlayoffBracket({ state, actions, myTeamId, onOpenSeries }) {
+export default function MobilePlayoffBracket({ state, actions, myTeamId, onOpenSeries, onViewTeam }) {
   const matches = state.playoff.matches;
   const allDone = matches.every((m) => m.result);
   const trackRef = useRef(null);
@@ -87,9 +87,7 @@ export default function MobilePlayoffBracket({ state, actions, myTeamId, onOpenS
         aria-pressed={selected === i}
         aria-label={`${NAMES[i]}, ${statusOf(x).toLowerCase()}`}
       >
-        {(x.mine || champion) && (
-          <span className="pb-card-top"><span>{x.mine ? 'YOUR SERIES' : NAMES[i].toUpperCase()}</span><span>{champion ? `CHAMPION · ${champion.tricode || champion.name}` : ''}</span></span>
-        )}
+        <span className="pb-card-top"><span>{x.mine ? 'YOUR SERIES · ' : ''}{NAMES[i].toUpperCase()}</span><span className={'pb-status ' + statusOf(x).toLowerCase()}>{champion ? `CHAMPION · ${champion.tricode || champion.name}` : statusOf(x)}</span></span>
         {rows.map((r, k) => (
           <span key={k} className={'pb-row' + (r.win ? ' win' : '') + (r.lost ? ' lost' : '') + (r.empty ? ' empty' : '')}>
             <span className="pb-seed">{r.seed}</span>
@@ -97,7 +95,6 @@ export default function MobilePlayoffBracket({ state, actions, myTeamId, onOpenS
             <span className={'pb-score' + (result ? '' : ' proj')}>{r.score}</span>
           </span>
         ))}
-        <span className="pb-card-foot"><span>{NAMES[i].toUpperCase()}{!result && x.unlocked ? ' · PROJECTED OUTPUT' : ''}</span><span className={'pb-status ' + statusOf(x).toLowerCase()}>{statusOf(x)}</span></span>
       </button>
     );
   };
@@ -136,6 +133,7 @@ export default function MobilePlayoffBracket({ state, actions, myTeamId, onOpenS
           {!allDone ? <button type="button" className="pb-link" onClick={() => actions.simulateAllPlayoffs(myTeamId)}>SIMULATE CPU SERIES ▸▸</button> : <span className="pb-foot-done">ALL SERIES DECIDED</span>}
         </div>
         <div className="pb-foot-btns">
+          {onViewTeam && <button type="button" className="pb-btn ghost" onClick={() => onViewTeam(myTeamId)}>TEAM FILE</button>}
           {btn.secondary && <button type="button" className="pb-btn ghost" onClick={btn.secondary.run}>{btn.secondary.label}</button>}
           <button type="button" className="pb-btn solid" disabled={btn.primary.disabled} onClick={btn.primary.run}>{btn.primary.label}</button>
           {allDone && <button type="button" className="pb-btn accent" onClick={actions.finishPlayoffs}>SEE RESULTS</button>}

@@ -194,7 +194,7 @@ function ZoomedBracket({ matches, myTeamId, actions, onOpenSeries, segment, onSe
   );
 }
 
-export default function PlayoffBracketScreen({ state, actions, myTeamId, onOpenSeries }) {
+export default function PlayoffBracketScreen({ state, actions, myTeamId, onOpenSeries, onViewTeam }) {
   const matches = state.playoff.matches;
   const allDone = matches.every((m) => m.result);
   const seasonNum = Math.min(state.season, ERA_LENGTH);
@@ -202,7 +202,7 @@ export default function PlayoffBracketScreen({ state, actions, myTeamId, onOpenS
   const isDesktop = useIsDesktop();
 
   if (!isDesktop) {
-    return <MobilePlayoffBracket state={state} actions={actions} myTeamId={myTeamId} onOpenSeries={onOpenSeries} />;
+    return <MobilePlayoffBracket state={state} actions={actions} myTeamId={myTeamId} onOpenSeries={onOpenSeries} onViewTeam={onViewTeam} />;
   }
 
   if (zoom) {

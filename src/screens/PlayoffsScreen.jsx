@@ -2,7 +2,7 @@ import { useState } from 'react';
 import PlayoffBracketScreen from './PlayoffBracketScreen';
 import PlayoffSeriesScreen from './PlayoffSeriesScreen';
 
-export default function PlayoffsScreen({ state, actions, myTeamId }) {
+export default function PlayoffsScreen({ state, actions, myTeamId, onViewTeam }) {
   // Which series this browser is watching is local UI state. The match turn/result remains
   // shared in Firestore, but another player starting or simming a series must not navigate
   // everybody else's browser away from the bracket.
@@ -16,5 +16,5 @@ export default function PlayoffsScreen({ state, actions, myTeamId }) {
   if (viewingMatchIndex !== null) {
     return <PlayoffSeriesScreen state={state} actions={actions} myTeamId={myTeamId} matchIndex={viewingMatchIndex} onClose={() => setViewingMatchIndex(null)} />;
   }
-  return <PlayoffBracketScreen state={state} actions={actions} myTeamId={myTeamId} onOpenSeries={openSeries} />;
+  return <PlayoffBracketScreen state={state} actions={actions} myTeamId={myTeamId} onOpenSeries={openSeries} onViewTeam={onViewTeam} />;
 }
