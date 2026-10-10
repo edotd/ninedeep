@@ -212,7 +212,7 @@ export default function DesktopBar({ state, myTeamId, actions, dealProgress }) {
         <div className="db-heading">Front Office</div>
         <div className="db-slots">
           <FrontOfficeSlot
-            label={<>Coach{coach && activeGameplan && <span className="persistent-bar-gameplan-active" title={`${activeGameplan.name} is active`}><CardTypeMark type="gameplan" size={11} color="var(--franchise)" /></span>}</>}
+            label={<>Coach{coach && activeGameplan && <span className="persistent-bar-gameplan-active" title={`${activeGameplan.name} is active`}><CardTypeMark type="gameplan" size={16} color="var(--franchise)" /></span>}</>}
             value={coach ? coach.modifier : null}
             kind="coach"
             team={frontOfficeTeam}
