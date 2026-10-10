@@ -59,6 +59,20 @@ export default function MobilePlayoffBracket({ state, actions, myTeamId, onOpenS
     if (i !== page) setPage(i);
   };
 
+  // When the last series of a round is decided, swipe on to the next round (after a beat so the
+  // result can be read) and let the selection fall back to the next playable series.
+  const doneKey = ROUNDS.map((r) => (r.indices.every((n) => matches[n].result) ? '1' : '0')).join('');
+  const prevDone = useRef(doneKey);
+  useEffect(() => {
+    const before = prevDone.current;
+    prevDone.current = doneKey;
+    const finished = [...doneKey].findIndex((d, i) => d === '1' && before[i] === '0');
+    if (finished < 0 || finished >= ROUNDS.length - 1) return undefined;
+    const timer = setTimeout(() => { setPicked(null); goTo(finished + 1); }, 650);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [doneKey]);
+
   const statusOf = (x) => (!x.unlocked ? 'PENDING' : x.m.result ? 'FINAL' : x.live ? 'LIVE' : 'READY');
   const roundStatus = (r) => {
     const done = r.indices.filter((i) => matches[i].result).length;

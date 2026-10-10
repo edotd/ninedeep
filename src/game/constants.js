@@ -148,6 +148,15 @@ export const COACH_ARCHETYPES = {
 // exactly two possessions, so this fires at most once per matchup, at the exchange 1 -> 2
 // changeover.
 export const ON_THE_FLY_CHANCE = 0.3;
+// The seeding "season roll": every team's rating is multiplied by a random factor drawn
+// uniformly from -SEASON_ROLL_SPREAD to +SEASON_ROLL_SPREAD (see season.js's lockSeasonAndSeed).
+export const SEASON_ROLL_SPREAD = 0.03;
+// High Ceiling coaches stretch only the top of that range by this much.
+export const HIGH_CEILING_BONUS = 0.02;
+// Giant Killer coaches add a random whole-number output bonus in this range whenever their team
+// is seeded below (a higher number than) its opponent.
+export const GIANT_KILLER_MIN = 1;
+export const GIANT_KILLER_MAX = 3;
 // Salary is rolled once, at draw time, within each modifier's own [salaryMin, salaryMax] band
 // (see cards.js's drawCoachCard) — a range instead of one fixed number, so two coaches with the
 // same modifier aren't always identically priced.
@@ -163,6 +172,8 @@ export const COACH_MODIFIERS = [
   { name: 'Genius', mult: 1.5, die: 6, weight: 10, salaryMin: toBudget(1.5), salaryMax: toBudget(2.5), ability: '', rarity: 'Signature' },
   { name: 'Gamemaster', mult: 1.2, die: 6, weight: 12, salaryMin: toBudget(1.0), salaryMax: toBudget(1.75), ability: 'Boosts the coach’s chosen Gameplan by 4–10%, based on rarity.', rarity: 'Signature' },
   { name: 'Fully Prepared', mult: 1.2, die: 6, weight: 15, salaryMin: toBudget(0.75), salaryMax: toBudget(1.25), ability: 'The secondary Gameplan takes no reduction.', rarity: 'Prime' },
+  { name: 'High Ceiling', mult: 1.2, die: 6, weight: 12, salaryMin: toBudget(0.75), salaryMax: toBudget(1.25), ability: `Raises the top end of the season roll by ${Math.round(HIGH_CEILING_BONUS * 100)}%.`, rarity: 'Prime' },
+  { name: 'Giant Killer', mult: 1.2, die: 6, weight: 12, salaryMin: toBudget(0.75), salaryMax: toBudget(1.25), ability: `As the lower seed in a matchup, adds +${GIANT_KILLER_MIN} to +${GIANT_KILLER_MAX} Output.`, rarity: 'Prime' },
   { name: 'Hall of Fame', mult: 2.0, hofDie: true, weight: 8, salaryMin: toBudget(2.5), salaryMax: toBudget(3.5), ability: '', rarity: 'Legendary' },
 ];
 // Fanbase archetype — drawn once per era, like Coach. Attendance itself is computed fresh

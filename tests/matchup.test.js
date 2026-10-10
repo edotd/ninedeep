@@ -8,7 +8,7 @@ import { startEra, rollCurrentMatchup, openSeries, simulateOneMatch } from '../s
 import { beginTurn, advanceTurn } from '../src/game/turn.js';
 import { rehydrateState } from '../src/game/rehydrate.js';
 import { benchRatingContribution, effectiveRating, matchupCardCountFor } from '../src/game/roster.js';
-import { benchScore } from '../src/game/matchup.js';
+import { benchScore, giantKillerBonus } from '../src/game/matchup.js';
 import { rosterSalary } from '../src/game/economy.js';
 const card = (name) => ({ ...deck.find((c) => c.name === name), id: name, used: false });
 function game() {
@@ -105,17 +105,45 @@ test('season seeding saves a player-facing breakdown for every team', () => {
   assert(Number.isFinite(mine.finalRating));
 });
 
-test('season roll variance is limited to plus or minus 2.5 percent', () => {
-  const lowState = game();
+test('season roll variance is limited to plus or minus 3 percent', () => {
+  const pinned = (state) => { state.teams.forEach((t) => { if (t.coach) t.coach.modifier = 'Strategist'; }); return state; };
+  const lowState = pinned(game());
   const originalRandom = Math.random;
   Math.random = () => 0;
   try { lockSeasonAndSeed(lowState); } finally { Math.random = originalRandom; }
-  assert(lowState.seasonBreakdown.every((row) => row.seasonRollPct === -2.5));
+  assert(lowState.seasonBreakdown.every((row) => row.seasonRollPct === -3));
 
-  const highState = game();
+  const highState = pinned(game());
   Math.random = () => 0.999999;
   try { lockSeasonAndSeed(highState); } finally { Math.random = originalRandom; }
-  assert(highState.seasonBreakdown.every((row) => row.seasonRollPct === 2.5));
+  assert(highState.seasonBreakdown.every((row) => row.seasonRollPct === 3));
+});
+
+test('a High Ceiling coach raises only the top end of the season roll', () => {
+  const pinned = (state) => { state.teams.forEach((t) => { if (t.coach) t.coach.modifier = 'High Ceiling'; }); return state; };
+  const originalRandom = Math.random;
+  const low = pinned(game());
+  Math.random = () => 0;
+  try { lockSeasonAndSeed(low); } finally { Math.random = originalRandom; }
+  assert(low.seasonBreakdown.every((row) => row.seasonRollPct === -3));
+  const high = pinned(game());
+  Math.random = () => 0.999999;
+  try { lockSeasonAndSeed(high); } finally { Math.random = originalRandom; }
+  assert(high.seasonBreakdown.every((row) => row.seasonRollPct === 5));
+});
+
+test('a Giant Killer coach adds a ranged Output bonus only as the lower seed', () => {
+  const underdog = { seed: 6, coach: { modifier: 'Giant Killer' } };
+  const favourite = { seed: 3, coach: { modifier: 'Strategist' } };
+  const originalRandom = Math.random;
+  try {
+    Math.random = () => 0;
+    assert.equal(giantKillerBonus(underdog, favourite), 1);
+    Math.random = () => 0.999999;
+    assert.equal(giantKillerBonus(underdog, favourite), 3);
+  } finally { Math.random = originalRandom; }
+  assert.equal(giantKillerBonus(favourite, underdog), 0);
+  assert.equal(giantKillerBonus({ seed: 3, coach: { modifier: 'Giant Killer' } }, underdog), 0);
 });
 
 test('incomplete rosters lose seeding rating unless the coach has More with Less', () => {

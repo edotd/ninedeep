@@ -24,6 +24,11 @@ export function DarkModeProvider({ children }) {
   );
 }
 
+// Reads the dark-mode flag without requiring the provider (false when there isn't one).
+export function useIsDark() {
+  return Boolean(useContext(DarkModeContext)?.darkMode);
+}
+
 export function useDarkMode() {
   const ctx = useContext(DarkModeContext);
   if (!ctx) throw new Error('useDarkMode must be used inside a DarkModeProvider');

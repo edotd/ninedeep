@@ -1,9 +1,17 @@
 import { supplementalRoll } from './supplementalEffects';
-import { INJURY_CHANCE, BENCH_OVERAGE_STEP } from './constants';
+import { INJURY_CHANCE, BENCH_OVERAGE_STEP, GIANT_KILLER_MIN, GIANT_KILLER_MAX } from './constants';
 import { rollDie } from './rng';
 import { offenseDieSize, defenseDieSize, offenseModifier, defenseModifier } from './roster';
 import { cardTotal } from './cards';
 import { rosterSalary } from './economy';
+
+// Giant Killer coach: a random whole-number Output bonus (GIANT_KILLER_MIN..MAX) whenever the
+// team is seeded below its opponent (a higher seed number). Returns 0 otherwise.
+export function giantKillerBonus(team, opponent) {
+  if (team?.coach?.modifier !== 'Giant Killer') return 0;
+  if (!(team.seed > opponent?.seed)) return 0;
+  return GIANT_KILLER_MIN + Math.floor(Math.random() * (GIANT_KILLER_MAX - GIANT_KILLER_MIN + 1));
+}
 
 // A team locked in over its own salary cap (see confirmLineup, engine.js's MAX_CAP_OVERAGE)
 // keeps its stars, but its depth suffers — every BENCH_OVERAGE_STEP points over costs 1 off the

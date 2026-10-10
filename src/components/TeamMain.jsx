@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { playerGrade } from '../game/cards';
 import PlayerCard from './PlayerCard';
 import { formatCoins } from '../game/economy';
-import { teamSynergy } from '../game/skillsets';
+import { teamSynergy, SKILLSETS } from '../game/skillsets';
+import BonusIcon from './BonusIcon';
 
 // The Team page's main index (design: Team · Main) — one tile per sub page: Lineup & Chemistry,
 // Scouting Report and Manage Budget (Coach and GM live in the bottom bar). Each tile opens its page via `onOpen`. The design's header (franchise
@@ -22,7 +23,9 @@ function gradeSeal(grade) {
   return { color: `oklch(${L.toFixed(3)} ${C.toFixed(3)} ${hue.toFixed(0)})`, ink: L > 0.72 ? '#1E2B47' : '#F2EBDC' };
 }
 
-const initials = (name) => name.replace(/&/g, ' ').split(/[\s-]+/).filter((w) => w && !/^(the|of|and)$/i.test(w)).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+// What a pairing needs, in words: the two Skillsets that have to start together.
+const skillName = (id) => SKILLSETS.find((s) => s.id === id)?.name || id;
+const pairDescription = (rule) => `Earned when a starter with ${skillName(rule.skills[0])} and a starter with ${skillName(rule.skills[1])} are in your lineup together. Adds ${rule.percent}% to your team's ${rule.side}.`;
 const trim = (n) => `${Number(Number(n).toFixed(2))}`;
 
 // Pairing brackets under the starters: a stub down from each paired starter joined by a bar,
@@ -61,6 +64,7 @@ function Tile({ sub, onOpen, className = '', children, label }) {
 
 export default function TeamMain({ team, readOnly, onOpen, committed, cap, budgetSources }) {
   const [picked, setPicked] = useState(null);
+  const [openPair, setOpenPair] = useState(null);
   const activeSet = new Set(team.activeIds || []);
   const starters = (team.hand || []).filter((card) => activeSet.has(card.id))
     .sort((a, b) => (POSITION_ORDER[a.position] ?? 9) - (POSITION_ORDER[b.position] ?? 9));
@@ -83,7 +87,8 @@ export default function TeamMain({ team, readOnly, onOpen, committed, cap, budge
   const pairs = (synergy?.pairs || []).map((rule) => ({ rule, at: rule.skills.map(indexOfSkill) })).filter((p) => p.at.every((i) => i >= 0));
   const brackets = bracketLayout(pairs.map((p) => p.at));
   const maxLevel = brackets.reduce((m, b) => Math.max(m, b.level), 0);
-  const shownPairs = [...pairs].sort((a, b) => b.rule.percent - a.rule.percent).slice(0, 3);
+  const shownPairs = [...pairs].sort((a, b) => b.rule.percent - a.rule.percent);
+  const openPairRule = shownPairs.find(({ rule }) => rule.name === openPair)?.rule || null;
 
   const room = cap - committed;
   const span = Math.max(cap, committed) || 1;
@@ -122,9 +127,25 @@ export default function TeamMain({ team, readOnly, onOpen, committed, cap, budge
             </span>
             <span className="tm-chips">
               {shownPairs.length ? shownPairs.map(({ rule }) => (
-                <span className="tm-chip" key={rule.name}><b className={rule.side}>{initials(rule.name)}</b><em>{rule.name}</em></span>
+                <span
+                  className={'tm-pair-icon' + (openPair === rule.name ? ' open' : '')}
+                  key={rule.name}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${rule.name}. Show description.`}
+                  aria-pressed={openPair === rule.name}
+                  onClick={(event) => { event.stopPropagation(); setOpenPair((v) => (v === rule.name ? null : rule.name)); }}
+                  onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.stopPropagation(); setOpenPair((v) => (v === rule.name ? null : rule.name)); } }}
+                ><BonusIcon name={rule.name} size={44} /></span>
               )) : <span className="tm-chip none">{lineupReady ? 'No pairings active' : 'Set your lineup to see pairings'}</span>}
             </span>
+            {openPairRule && (
+              <span className="tm-pair-desc" onClick={(event) => event.stopPropagation()}>
+                <b className={openPairRule.side}>{openPairRule.name}</b>
+                <em>+{openPairRule.percent}% {openPairRule.side === 'offense' ? 'Offense' : 'Defense'}</em>
+                <small>{pairDescription(openPairRule)}</small>
+              </span>
+            )}
           </span>
         </div>
 

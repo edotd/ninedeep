@@ -21,6 +21,12 @@ export function nextCardId(state) {
 // mutually-exclusive tierName value instead of a real, separate honor. See makeCard below.
 export function cardTier(card) {
   if (card.contract <= 1) return 'EXP';
+  return baseCardTier(card);
+}
+
+// The tier a card has apart from its contract — what an expiring card looks like when the navy
+// expiring treatment (dark mode only) isn't in play.
+export function baseCardTier(card) {
   if (card.accolade) return 'A';
   if (card.tierName === 'Undrafted') return 'D';
   return 'B';

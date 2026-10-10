@@ -16,7 +16,7 @@ import { offenseDieSize, defenseDieSize, rollAdjustmentCards } from './roster';
 import { drawMatchupModifierCard } from './cards';
 import {
   checkInjury, playCardEffect, playableCards,
-  benchScore, hasHomeCourt, applyLiveFanbaseMod, wantsAdvantage,
+  benchScore, hasHomeCourt, applyLiveFanbaseMod, wantsAdvantage, giantKillerBonus,
 } from './matchup';
 import { applyPlayoffWinMilestone } from './fanbase';
 import { activeCoachGameplan, applyGameplanToTurn } from './strategyCards';
@@ -70,6 +70,13 @@ export function beginTurn(state) {
   if (hcaB) { extraB.offPercent = (extraB.offPercent || 0) + HOME_COURT_BONUS; extraB.defPercent = (extraB.defPercent || 0) + HOME_COURT_BONUS; }
   idsB = applyLiveFanbaseMod(m.a, m.b, extraA, idsB, cardNotes);
   idsA = applyLiveFanbaseMod(m.b, m.a, extraB, idsA, cardNotes);
+  for (const [team, opp, extra] of [[m.a, m.b, extraA], [m.b, m.a, extraB]]) {
+    const bonus = giantKillerBonus(team, opp);
+    if (bonus) {
+      extra.leagueMod += bonus;
+      cardNotes.push({ text: `${team.name}'s Giant Killer coach adds +${bonus} Output as the lower seed.`, cardName: 'Giant Killer' });
+    }
+  }
 
   m.turn = {
     stage: 'coinflip',

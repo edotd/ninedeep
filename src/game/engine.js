@@ -17,7 +17,7 @@ import {
 } from './season';
 import {
   checkInjury, playCardEffect, playMatchup, wantsAdvantage, cardChoicesFor, playableCards,
-  isMatchUnlocked, hasHomeCourt, applyLiveFanbaseMod, matchTeams,
+  isMatchUnlocked, hasHomeCourt, applyLiveFanbaseMod, matchTeams, giantKillerBonus,
 } from './matchup';
 import { rosterSalary } from './economy';
 import { applyPlayoffWinMilestone, fanbaseEnabled } from './fanbase';
@@ -196,6 +196,9 @@ export function autoSetLineup(state, teamIdx) {
   const team = state.teams[teamIdx];
   if (!team) return { ok: false, msg: 'Nothing to set yet.' };
   team.activeIds = autoValidFive(team.hand);
+  // ...and a random one of the coach's Gameplans to go with it.
+  const plans = team.coach?.gameplans || [];
+  if (plans.length) team.activeGameplanId = plans[Math.floor(Math.random() * plans.length)].id;
   return { ok: true };
 }
 
@@ -290,6 +293,13 @@ export function rollCurrentMatchup(state, matchIndex = state.playoff.activeMatch
 
   idsB = applyLiveFanbaseMod(m.a, m.b, extraA, idsB, cardNotes);
   idsA = applyLiveFanbaseMod(m.b, m.a, extraB, idsA, cardNotes);
+  for (const [team, opp, extra] of [[m.a, m.b, extraA], [m.b, m.a, extraB]]) {
+    const bonus = giantKillerBonus(team, opp);
+    if (bonus) {
+      extra.leagueMod += bonus;
+      cardNotes.push({ text: `${team.name}'s Giant Killer coach adds +${bonus} Output as the lower seed.`, cardName: 'Giant Killer' });
+    }
+  }
 
   const planTurn = { extraA, extraB, gameplanNotes: [] };
   for (const [side, team] of [['a', m.a], ['b', m.b]]) {

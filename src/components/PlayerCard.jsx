@@ -1,9 +1,10 @@
 import { useContext, useRef, useState } from 'react';
 import { LeagueStatsContext, RosterRolesContext } from './LeagueStatsContext';
-import { skillsetFor } from '../game/skillsets';
+import { skillsetFor, SKILLSETS, SKILLSET_PAIRS } from '../game/skillsets';
 import { formatCoins } from '../game/economy';
 import { careerLevel, careerMultiplier } from '../game/aging';
-import { cardTier, jerseyNumber, playerGrade } from '../game/cards';
+import { cardTier, baseCardTier, jerseyNumber, playerGrade } from '../game/cards';
+import { useIsDark } from '../hooks/useDarkMode';
 import { LEAGUE_ACCOLADES, RARITY_CORNERS } from '../game/constants';
 import CardTypeMark from './CardTypeMark';
 import BallMark from './BallMark';
@@ -22,12 +23,20 @@ const LEGACY_DEVELOPMENT_CHANGES = {
 const LONG_PRESS_MS = 500;
 const STAT_KEYS = ['SCO', 'PLM', 'REB', 'DEF'];
 
-export default function PlayerCard({ card, onClick, selected, rosterLabel, compact, onRelease, onDevelop, onScout, scouted, revealPeak, alwaysShowOptions, contractLabel, signingNote }) {
+export default function PlayerCard({ card, onClick, selected, rosterLabel, compact, onRelease, onDevelop, onScout, scouted, revealPeak, alwaysShowOptions, contractLabel, signingNote, showPairings }) {
   const leagueMax = useContext(LeagueStatsContext);
   const roles = useContext(RosterRolesContext);
   const roleLabel = rosterLabel || roles?.[card.id] || null;
-  const tier = cardTier(card);
+  // Expiring contracts wear the navy treatment only in dark mode; otherwise they look like any other card.
+  const dark = useIsDark();
+  const tier = dark ? cardTier(card) : baseCardTier(card);
   const skillset = skillsetFor(card);
+  // Every named pairing this card's Skillset can form, with the Skillset it needs beside it.
+  const skillPairings = skillset
+    ? SKILLSET_PAIRS.filter((rule) => rule.skills.includes(skillset.id)).map((rule) => ({
+      rule, partner: SKILLSETS.find((s) => s.id === rule.skills.find((id) => id !== skillset.id))?.name || '',
+    })).sort((a, b) => b.rule.percent - a.rule.percent)
+    : [];
   const level = careerLevel(card);
   const positionClass = ` position-${card.position.toLowerCase()}`;
   const developmentChanges = card.development?.statChanges || LEGACY_DEVELOPMENT_CHANGES[card.development?.cardName] || {};
@@ -50,6 +59,7 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
   const hasOptions = !compact && (onRelease || onDevelop);
   const [expanded, setExpanded] = useState(false);
   const [accoladeInfoOpen, setAccoladeInfoOpen] = useState(false);
+  const [pairingsOpen, setPairingsOpen] = useState(Boolean(showPairings));
   const accoladeDef = accolade ? LEAGUE_ACCOLADES.find((a) => a.name === accolade) : null;
   const rarity = card.rarity || 'Core';
   const rarityCorners = compact ? [] : (RARITY_CORNERS[rarity] || []);
@@ -161,8 +171,27 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
         <div className="pcard-skillset">
           <div className="pcard-skillset-head">
             <span className="pcard-microlabel">Skillset</span>
+            {skillPairings.length > 0 && (
+              <button
+                type="button"
+                className={'pcard-skillset-caret' + (pairingsOpen ? ' open' : '')}
+                aria-expanded={pairingsOpen}
+                aria-label={pairingsOpen ? 'Hide possible pairings' : 'Show possible pairings'}
+                onClick={(event) => { event.stopPropagation(); setPairingsOpen((v) => !v); }}
+              ><svg viewBox="0 0 12 8" aria-hidden="true"><path d="M1 1.5l5 5 5-5" /></svg></button>
+            )}
           </div>
           <div className="pcard-skillset-name" title={skillset?.description}>{skillset?.name || 'None · Legacy Card'}</div>
+          {pairingsOpen && skillPairings.length > 0 && (
+            <ul className="pcard-pairings" onClick={(event) => event.stopPropagation()}>
+              {skillPairings.map(({ rule, partner }) => (
+                <li key={rule.name}>
+                  <span className={'pcard-pairing-pct ' + rule.side}>+{rule.percent}% {rule.side === 'offense' ? 'OFF' : 'DEF'}</span>
+                  <span className="pcard-pairing-text"><b>{rule.name}</b><small>with {partner}</small></span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
       {/* Career Stage and Tier moved up into the header; this row (Release/Develop's old

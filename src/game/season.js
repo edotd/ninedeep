@@ -1,5 +1,5 @@
 import { addToRoster, creditTeamSeason } from './chemistry';
-import { TIERS, LEAGUE_ACCOLADES, REPLACEMENT_TIER, FREE_AGENT_TIER, BARGAIN_FREE_AGENT_TIER, BARGAIN_FREE_AGENT_COUNT, FREE_AGENT_POOL_SIZE, AI_NAMES, AI_TRICODES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_ARCHETYPES, LEAGUE_TEAM_COUNT, ROSTER_SIZE } from './constants';
+import { TIERS, LEAGUE_ACCOLADES, REPLACEMENT_TIER, FREE_AGENT_TIER, BARGAIN_FREE_AGENT_TIER, BARGAIN_FREE_AGENT_COUNT, FREE_AGENT_POOL_SIZE, AI_NAMES, AI_TRICODES, POSITIONS, CHAMPIONSHIP_BAR_MULT, INJURY_CHANCE, FANBASE_ARCHETYPES, LEAGUE_TEAM_COUNT, ROSTER_SIZE, SEASON_ROLL_SPREAD, HIGH_CEILING_BONUS } from './constants';
 import { drawGM, acquireOffseasonPlayer } from './gm';
 import { advanceCareer } from './aging';
 import { shuffle, weightedPick } from './rng';
@@ -316,8 +316,10 @@ export function lockSeasonAndSeed(state) {
       const base = effectiveRating(t);
       // Keep season outcomes close to the roster users built. The roll provides enough
       // movement for neighboring teams to trade places without overwhelming a clear output
-      // advantage: uniformly distributed from -2.5% through +2.5%.
-      const randomMult = 0.975 + Math.random() * 0.05;
+      // advantage: uniformly distributed from -3.0% through +3.0% (a High Ceiling coach raises
+      // only the top of that range).
+      const rollTop = SEASON_ROLL_SPREAD + (t.coach?.modifier === 'High Ceiling' ? HIGH_CEILING_BONUS : 0);
+      const randomMult = 1 - SEASON_ROLL_SPREAD + Math.random() * (SEASON_ROLL_SPREAD + rollTop);
       let val = base * randomMult;
       val *= 1 + ((t.seasonGameplanEffects?.seedingPercent || 0) / 100);
       const seedingCards = (t.matchupCards || []).filter((c) => c.effectType === 'SEEDING_PERCENT' && !c.used);

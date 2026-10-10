@@ -9,7 +9,8 @@ import { CardRevealPlayer } from './CardReveal';
 import CoachmarkTour from './CoachmarkTour';
 import BonusIcon from './BonusIcon';
 import { BONUS_SIDE } from './bonusIcons';
-import { gameplanEffects } from '../game/strategyCards';
+import { gameplanEffects, DEVELOPMENT_STATS_BY_STYLE } from '../game/strategyCards';
+import { formatCoins } from '../game/economy';
 import { setLeaveGuard } from '../hooks/leaveGuard';
 
 // Shown once per browser — the first time anyone opens this editor, not once per team/era, so
@@ -251,6 +252,8 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
     const next = {};
     ids.forEach((id, i) => { next[`S${i}`] = id; });
     setAssign(next);
+    // A random Gameplan goes with it (any of the coach's plans, never "None" when one exists).
+    if (plans.length) setPlanId(plans[Math.floor(Math.random() * plans.length)].id);
     flash('LINEUP SET');
   };
 
@@ -283,6 +286,30 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
   const pickerOpen = sheet?.type === 'player' && !sheet.closing && !sheet.entering;
   const carouselRef = useRef(null);
   const [cardIndex, setCardIndex] = useState(0);
+  // Tapping a card in the picker presses it in (scaled down while the finger is on it) and opens
+  // a small menu: Select, Develop, Release, Learn More.
+  const [pressId, setPressId] = useState(null);
+  const [menu, setMenu] = useState(null); // { card, view: 'main' | 'develop' | 'learn' }
+  const closeMenu = () => setMenu(null);
+  useEffect(() => { if (!sheetSlot) setMenu(null); }, [sheetSlot]);
+  const releaseFromPicker = (card) => {
+    const years = card.contract;
+    const dead = Math.round((card.salary / 2) * 100) / 100;
+    const note = years <= 0
+      ? 'Their contract is already expired, so this leaves no dead cap.'
+      : `Leaves ${formatCoins(dead)} in dead cap against your budget ${years === 1 ? 'this season' : `for each of the next ${years} seasons, starting this season`}.`;
+    if (!window.confirm(`Release ${card.archetype} · ${card.position}? ${note}`)) return;
+    const res = actions.releasePlayer(myTeamId, card.id);
+    if (res && res.ok === false) { alert(res.msg); return; }
+    closeMenu();
+    setCardIndex((i) => Math.max(0, Math.min(i, roster.length - 2)));
+  };
+  const developFromPicker = (card, stat) => {
+    const res = actions.applyDevelopmentPoint(myTeamId, card.id, stat);
+    if (res && res.ok === false) { alert(res.msg); return; }
+    closeMenu();
+    flash(`+1 ${stat} · ${card.archetype}`);
+  };
   // The cards are drawn at their natural 264px width and scaled up to fill the screen — as wide
   // as the screen allows, or as tall as fits above the status line and SELECT button.
   const [pickerFit, setPickerFit] = useState({ s: 1.3, h: 405 });
@@ -476,7 +503,19 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
               return (
                 <div className="lb-slide" key={card.id}>
                   <div className="lb-slide-card" style={{ width: 264 * pickerFit.s }}>
-                    <div className="lb-reveal-box" style={{ height: pickerFit.h * pickerFit.s + 44 }}>
+                    <div
+                      className={'lb-reveal-box tappable' + (pressId === card.id ? ' pressed' : '')}
+                      style={{ height: pickerFit.h * pickerFit.s + 44 }}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`${card.archetype} ${card.position}. Open card options.`}
+                      onPointerDown={() => setPressId(card.id)}
+                      onPointerUp={() => setPressId(null)}
+                      onPointerLeave={() => setPressId(null)}
+                      onPointerCancel={() => setPressId(null)}
+                      onClick={() => setMenu({ card, view: 'main' })}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMenu({ card, view: 'main' }); } }}
+                    >
                       {reveal.live === card.id
                         ? <CardRevealPlayer key={'live' + card.id} card={card} up={pickerFit.s} cardHeight={pickerFit.h} delay={150} />
                         : SEEN_CARDS.has(card.id) && <CardRevealPlayer key={'done' + card.id} card={card} up={pickerFit.s} cardHeight={pickerFit.h} settled />}
@@ -491,6 +530,43 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
             })}
           </div>
           <div className="lb-measure" aria-hidden="true">{roster.map((card) => <div className="lb-natural" key={card.id} style={{ width: 264 }}><PlayerCard card={card} /></div>)}</div>
+          {menu && (() => {
+            const card = menu.card;
+            const here = slotOf(card.id) === sheetSlot;
+            const stats = DEVELOPMENT_STATS_BY_STYLE[team.coach?.archetype] || [];
+            const points = team.developmentPoints || 0;
+            if (menu.view === 'learn') {
+              return (
+                <div className="lb-ctx-backdrop" onClick={closeMenu}>
+                  <div className="lb-card-modal lb-ctx-learn" role="dialog" aria-modal="true" aria-label={`${card.archetype} card`} onClick={(e) => e.stopPropagation()}>
+                    <PlayerCard card={card} rosterLabel={roleLabel(slotOf(card.id))} showPairings />
+                    <button type="button" className="secondary" onClick={closeMenu}>Close</button>
+                  </div>
+                </div>
+              );
+            }
+            return (
+              <div className="lb-ctx-backdrop" onClick={closeMenu}>
+                <div className="lb-ctx" role="menu" aria-label={`${card.archetype} options`} onClick={(e) => e.stopPropagation()}>
+                  <div className="lb-ctx-head"><b>{card.archetype}</b><span>{card.position} · {playerGrade(card)}</span></div>
+                  {menu.view === 'develop' ? (
+                    <>
+                      <div className="lb-ctx-note">{points} Development {points === 1 ? 'Point' : 'Points'} · {team.coach?.archetype} coaches develop {stats.join(' or ')}</div>
+                      {stats.map((stat) => <button type="button" role="menuitem" key={stat} disabled={!points} onClick={() => developFromPicker(card, stat)}>+1 {stat}</button>)}
+                      <button type="button" className="ghost" onClick={() => setMenu({ card, view: 'main' })}>Back</button>
+                    </>
+                  ) : (
+                    <>
+                      <button type="button" role="menuitem" className="primary" onClick={() => { closeMenu(); if (here) closeSheet(); else place(sheetSlot, card.id); }}>{here ? 'Selected — Close' : 'Select'}</button>
+                      <button type="button" role="menuitem" disabled={!canEdit || !points} onClick={() => setMenu({ card, view: 'develop' })}>Develop<small>{canEdit ? `${points} ${points === 1 ? 'point' : 'points'}` : 'Locked'}</small></button>
+                      <button type="button" role="menuitem" disabled={!canEdit} onClick={() => releaseFromPicker(card)}>Release<small>{canEdit ? '' : 'Locked'}</small></button>
+                      <button type="button" role="menuitem" onClick={() => setMenu({ card, view: 'learn' })}>Learn More</button>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
           <div className="lb-picker-pager" aria-live="polite">
             <span>{Math.min(cardIndex + 1, roster.length)} / {roster.length}</span>
             <i>{roster.map((card, index) => <b key={card.id} className={index === cardIndex ? 'on' : ''} />)}</i>
