@@ -19,9 +19,9 @@
 .card-reveal-hint{position:absolute;left:24px;right:24px;top:84px;text-align:center;font:11px var(--font-label);letter-spacing:.16em;text-transform:uppercase;color:#8E9BB5;pointer-events:none;}
 .card-reveal-hotspot{position:absolute;z-index:3;padding:0;background:transparent;border:0;border-radius:3px;cursor:pointer;-webkit-tap-highlight-color:transparent;min-width:0;min-height:0;}
 .card-reveal-hotspot:focus-visible{outline:2px solid #F0A03D;outline-offset:2px;}
-.card-reveal-spotlight{position:fixed;inset:0;width:100%;height:100%;z-index:10;pointer-events:none;}
+.card-reveal-spotlight{animation:cr-fade .32s ease-out both;position:fixed;inset:0;width:100%;height:100%;z-index:10;pointer-events:none;}
 .card-reveal-modal-backdrop{position:absolute;inset:0;z-index:11;}
-.card-reveal-modal{position:absolute;left:50%;transform:translateX(-50%);width:calc(100% - 48px);max-width:340px;box-sizing:border-box;padding:22px 22px 18px;background:#F2EBDC;border:2px solid #F0A03D;display:flex;flex-direction:column;gap:12px;}
+.card-reveal-modal{animation:cr-modal-in .36s cubic-bezier(.2,.8,.2,1) .06s both;position:absolute;left:50%;transform:translateX(-50%);width:calc(100% - 48px);max-width:340px;box-sizing:border-box;padding:22px 22px 18px;background:#F2EBDC;border:2px solid #F0A03D;display:flex;flex-direction:column;gap:12px;}
 .card-reveal-modal h2{margin:0;font:13px var(--font-label);letter-spacing:.16em;text-transform:uppercase;color:#9C3818;}
 .card-reveal-modal p{margin:0;font:14px/1.5 var(--font-mono);color:#2E2A1E;}
 .card-reveal-modal button{align-self:stretch;margin-top:4px;}
@@ -44,3 +44,7 @@
 /* An invisible button laid over the rarity label (drawn by the reveal itself), live from the
    moment the label appears and above every card region. */
 .card-reveal-badge-hit{position:absolute;z-index:6;transform-origin:100% 0;padding:11px 16px;margin:-6px -7px 0 0;border:0;background:transparent;color:transparent;font:13px var(--font-label);letter-spacing:.14em;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+
+@keyframes cr-fade{from{opacity:0;}to{opacity:1;}}
+@keyframes cr-modal-in{from{opacity:0;transform:translateX(-50%) translateY(8px);}to{opacity:1;transform:translateX(-50%);}}
+@media (prefers-reduced-motion: reduce){.card-reveal-spotlight,.card-reveal-modal{animation:none;}}
