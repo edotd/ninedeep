@@ -44,6 +44,19 @@ test('one of the coach primary or secondary Gameplans can be selected', () => {
   assert.deepEqual(team.seasonGameplanEffects, { offPercent: gameplanEffects(team, second).offPercent || 0, defPercent: gameplanEffects(team, second).defPercent || 0, benchBonus: gameplanEffects(team, second).benchBonus || 0, seedingPercent: 0 });
 });
 
+test('secondary Gameplans are halved unless the coach is Fully Prepared; Gamemaster boosts by rarity', () => {
+  const { team } = fixture();
+  team.coach.gameplans = [{ id: 'a', name: 'A', effects: { offPercent: 8 } }, { id: 'b', name: 'B', effects: { offPercent: 8 } }];
+  assert.equal(gameplanEffects(team, team.coach.gameplans[0]).offPercent, 8);
+  assert.equal(gameplanEffects(team, team.coach.gameplans[1]).offPercent, 4);
+  team.coach.modifier = 'Fully Prepared';
+  assert.equal(gameplanEffects(team, team.coach.gameplans[1]).offPercent, 8);
+  team.coach.modifier = 'Gamemaster';
+  team.coach.rarity = 'Legendary';
+  assert.ok(Math.abs(gameplanEffects(team, team.coach.gameplans[0]).offPercent - 8.8) < 1e-9);
+  assert.ok(Math.abs(gameplanEffects(team, team.coach.gameplans[1]).offPercent - 4.4) < 1e-9);
+});
+
 test('position-based Gameplan cards resolve against the lineup at play time', () => {
   const { state, team } = fixture();
   team.hand = [

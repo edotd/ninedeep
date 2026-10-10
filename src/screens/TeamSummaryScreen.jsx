@@ -10,6 +10,7 @@ import TeamMain from '../components/TeamMain';
 import { teamOutput } from '../game/matchup';
 import { teamSynergy } from '../game/skillsets';
 import { jerseyNumber, playerGrade } from '../game/cards';
+import { guardedNavigate } from '../hooks/leaveGuard';
 
 // The Team page opens on its main index; its sub pages (lineup, coach, GM, budget) are dealt in
 // over it. League is its own tab beside Team. A
@@ -76,7 +77,8 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   // section still shows stacked in one scroll.
   const isDesktop = useIsDesktop();
   // Which Team sub page is open (null = the main index): 'lineup' | 'coach' | 'gm' | 'budget'.
-  const [tab, setTab] = useState(() => (focusSection?.section === 'league' ? 'league' : 'team'));
+  const [tab, setTabRaw] = useState(() => (focusSection?.section === 'league' ? 'league' : 'team'));
+  const setTab = (next) => guardedNavigate(() => setTabRaw(next));
   const [sub, setSubRaw] = useState(() => subForSection(focusSection?.section));
   // The sub page slides over the main page like a dealt card (design: page transitions, Deal).
   // `sub` is the page that's mounted, `subOpen` drives the slide, `subBusy` is true while it's
@@ -109,6 +111,9 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   };
   const leaveSub = () => {
     if (!sub || subBusy) return;
+    guardedNavigate(leaveSubNow);
+  };
+  const leaveSubNow = () => {
     if (reduceMotion) { setSub(null); return; }
     clearTimeout(subTimer.current);
     setSubBusy(true);
@@ -126,7 +131,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   }).filter((entry) => entry.card);
   useEffect(() => {
     if (!focusSection) return;
-    setTab(focusSection.section === 'league' ? 'league' : 'team');
+    setTabRaw(focusSection.section === 'league' ? 'league' : 'team');
     setSub(subForSection(focusSection.section));
     const targetId = focusSection.section === 'office'
       ? 'team-coach-card'

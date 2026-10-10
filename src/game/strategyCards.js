@@ -1,5 +1,5 @@
 import { POSITION_GAMEPLAN_TYPES } from './supplementalCards';
-import { POSITIONS } from './constants';
+import { POSITIONS, SECONDARY_GAMEPLAN_FACTOR, GAMEMASTER_BOOST_BY_RARITY } from './constants';
 
 export const COACH_GAMEPLANS = [
   { name: 'Run And Gun', description: '+8% team Offense.', effects: { offPercent: 8 } },
@@ -62,9 +62,22 @@ export function activeCoachGameplan(team) {
   return team.coach?.gameplans?.find((plan) => plan.id === team.activeGameplanId) || null;
 }
 
+// Secondary Gameplan (second in the coach's list) is halved unless the coach is Fully Prepared;
+// Gamemaster then boosts whichever plan is chosen by a rarity-based 4–10%.
+function scaleGameplanEffects(team, plan, effects) {
+  const modifier = team?.coach?.modifier;
+  let factor = 1;
+  const isSecondary = (team?.coach?.gameplans || []).findIndex((candidate) => candidate.id === plan.id) === 1;
+  if (isSecondary && modifier !== 'Fully Prepared') factor *= SECONDARY_GAMEPLAN_FACTOR;
+  if (modifier === 'Gamemaster') factor *= 1 + (GAMEMASTER_BOOST_BY_RARITY[team.coach.rarity] ?? GAMEMASTER_BOOST_BY_RARITY.Core);
+  if (factor === 1) return effects;
+  return Object.fromEntries(Object.entries(effects).map(([key, value]) => [key, typeof value === 'number' ? value * factor : value]));
+}
+
 export function gameplanEffects(team, plan = activeCoachGameplan(team)) {
   if (!plan) return {};
-  return plan.dynamicEffect ? resolveDynamicEffects(team, plan.dynamicEffect) : { ...(plan.effects || {}) };
+  const base = plan.dynamicEffect ? resolveDynamicEffects(team, plan.dynamicEffect) : { ...(plan.effects || {}) };
+  return scaleGameplanEffects(team, plan, base);
 }
 
 export function syncSeasonGameplan(team) {

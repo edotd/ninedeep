@@ -29,6 +29,7 @@ import TeamRostersScreen from '../screens/TeamRostersScreen';
 import WelcomeScreen from '../screens/WelcomeScreen';
 import { bestCard } from '../game/cards';
 import FranchiseMasthead from './FranchiseMasthead';
+import { guardedNavigate } from '../hooks/leaveGuard';
 
 const SCREENS = {
   cardoverview: CardOverviewScreen,
@@ -115,14 +116,16 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
   const [lineupPreview, setLineupPreview] = useState(null);
   const persistentBarRef = useRef(null);
   const [persistentBarHeight, setPersistentBarHeight] = useState(0);
-  const [overlay, setOverlay] = useState(null); // null | 'glossary' | 'settings' | 'standings' | 'team' | 'freeagency' | 'draftclass' | 'teamrosters' | 'cardtypes'
+  const [overlay, setOverlayRaw] = useState(null); // null | 'glossary' | 'settings' | 'standings' | 'team' | 'freeagency' | 'draftclass' | 'teamrosters' | 'cardtypes'
   // Clicking another team in Standings opens the Team overlay on THEIR file instead of the
   // caller's own (viewTeamId), remembering whatever overlay (or none, for a phase screen like
   // StandingsScreen) was showing so Back returns there rather than dumping out to the base game.
   const [viewTeamId, setViewTeamId] = useState(null);
   const [returnOverlay, setReturnOverlay] = useState(null);
   const [teamFocus, setTeamFocus] = useState(null);
-  const toggleOverlay = (name) => setOverlay((o) => (o === name ? null : name));
+  // Every overlay change goes through the lineup page's unsaved-changes guard.
+  const setOverlay = (next) => guardedNavigate(() => setOverlayRaw(next));
+  const toggleOverlay = (name) => guardedNavigate(() => setOverlayRaw((o) => (o === name ? null : name)));
   // Free agency stays open through Contracts, the Draft, and right up until this team confirms
   // its lineup for the season. Manual closeout is optional; Begin Season also locks this user
   // out of further moves while the other franchises ready up.

@@ -123,6 +123,11 @@ export const LEAGUE_ACCOLADES = [
     description: 'The league’s single most valuable player this season — the rarest honor in the game. +25% to every stat, plus a further +55% on the player’s peak stat.' },
 ];
 
+// Gameplan scaling: a coach's secondary Gameplan only delivers half its effect unless the coach
+// is Fully Prepared; Gamemaster boosts whichever Gameplan is chosen by a rarity-based percent.
+export const SECONDARY_GAMEPLAN_FACTOR = 0.5;
+export const GAMEMASTER_BOOST_BY_RARITY = { Core: 0.04, Prime: 0.06, Signature: 0.08, Legendary: 0.10 };
+
 export const COACH_ARCHETYPES = {
   'Offensive Minded': { offBase: 10, defBase: 2 },
   'Defensive Minded': { offBase: 2, defBase: 10 },
@@ -150,6 +155,8 @@ export const COACH_MODIFIERS = [
   { name: 'Team Builder', mult: 1.2, die: 6, weight: 20, salaryMin: 0.5, salaryMax: 1.0, ability: '+0.25% Off/Def for every consecutive season retained (stacks).', rarity: 'Core' },
   { name: 'Deep Rotation', mult: 1.2, die: 6, weight: 18, salaryMin: 0.75, salaryMax: 1.25, ability: '+1d6 Bench Output in every matchup.', rarity: 'Prime' },
   { name: 'Genius', mult: 1.5, die: 6, weight: 10, salaryMin: 1.5, salaryMax: 2.5, ability: '', rarity: 'Signature' },
+  { name: 'Gamemaster', mult: 1.2, die: 6, weight: 12, salaryMin: 1.0, salaryMax: 1.75, ability: 'Boosts the coach’s chosen Gameplan by 4–10%, based on rarity.', rarity: 'Signature' },
+  { name: 'Fully Prepared', mult: 1.2, die: 6, weight: 15, salaryMin: 0.75, salaryMax: 1.25, ability: 'The secondary Gameplan takes no reduction.', rarity: 'Prime' },
   { name: 'Hall of Fame', mult: 2.0, hofDie: true, weight: 8, salaryMin: 2.5, salaryMax: 3.5, ability: '', rarity: 'Legendary' },
 ];
 // Fanbase archetype — drawn once per era, like Coach. Attendance itself is computed fresh

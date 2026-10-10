@@ -2954,6 +2954,9 @@ body:has(.trans-screen){padding-bottom:0;}
 .lb-plan-row em{font:normal 9px var(--font-mono);letter-spacing:.1em;color:#6FA383;}
 .lb-toast{position:fixed;left:50%;top:120px;transform:translateX(-50%);z-index:970;background:#3F6B52;color:#F2EBDC;padding:10px 16px;font:400 10px var(--font-label);letter-spacing:.14em;opacity:0;transition:opacity 200ms ease;pointer-events:none;}
 .lb-toast.show{opacity:1;}
+.lb-leave{background:#F2EBDC;border:2px solid #F0A03D;padding:20px;width:calc(100% - 48px);max-width:340px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px;color:#2A2A2A;}
+.lb-leave p{margin:0;font-size:14px;line-height:1.4;}
+.lb-leave-actions{display:flex;flex-direction:column;gap:8px;}
 .lb-card-backdrop{position:fixed;inset:0;z-index:960;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(18,26,46,.78);overflow:auto;}
 .lb-card-modal{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:300px;}
 .lb-card-modal .pcard{margin:0;cursor:default;}

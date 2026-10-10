@@ -10,6 +10,7 @@ import CoachmarkTour from './CoachmarkTour';
 import BonusIcon from './BonusIcon';
 import { BONUS_SIDE } from './bonusIcons';
 import { gameplanEffects } from '../game/strategyCards';
+import { setLeaveGuard } from '../hooks/leaveGuard';
 
 // Shown once per browser — the first time anyone opens this editor, not once per team/era, so
 // re-explaining after a fresh solo game or a new room would be redundant.
@@ -216,6 +217,29 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
     if (result && result.valid === false) { alert(result.msg); return; }
     setSavedSignature(signature);
     flash('LINEUP SAVED');
+  };
+
+  // Leaving the page (another tab, the sidebar, closing the browser) with unsaved changes asks
+  // whether to save first. Navigation points go through hooks/leaveGuard.js's guardedNavigate.
+  const hasUnsaved = canEdit && dirty && (starterIds.length > 0 || Boolean(team.lineupSet));
+  const [leavePrompt, setLeavePrompt] = useState(null); // { proceed }
+  useEffect(() => {
+    if (!hasUnsaved) return undefined;
+    const release = setLeaveGuard((proceed) => setLeavePrompt({ proceed }));
+    const beforeUnload = (event) => { event.preventDefault(); event.returnValue = ''; };
+    window.addEventListener('beforeunload', beforeUnload);
+    return () => { release(); window.removeEventListener('beforeunload', beforeUnload); };
+  }, [hasUnsaved]);
+  const leaveWith = (save) => {
+    const { proceed } = leavePrompt;
+    if (save) {
+      const check = validateLineup({ ...team, activeIds: starterIds });
+      if (!check.valid) { alert(check.msg); return; }
+      const result = actions.saveLineup(myTeamId, starterIds, planId, sixthMan?.id || '');
+      if (result && result.valid === false) { alert(result.msg); return; }
+    }
+    setLeavePrompt(null);
+    proceed();
   };
 
   // A valid five, never the strongest one (see roster.js's autoValidFive) — an escape hatch for
@@ -489,6 +513,21 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
             ))}
           </div>
         </>,
+        document.body,
+      )}
+
+      {leavePrompt && createPortal(
+        <div className="lb-card-backdrop" role="dialog" aria-modal="true" aria-label="Unsaved lineup changes" onClick={() => setLeavePrompt(null)}>
+          <div className="lb-leave" onClick={(event) => event.stopPropagation()}>
+            <strong>Unsaved lineup changes</strong>
+            <p>{complete ? 'You have changes to your lineup that haven’t been saved. Save before leaving?' : 'Your lineup has changes that haven’t been saved, and it isn’t complete yet. Leave without saving?'}</p>
+            <div className="lb-leave-actions">
+              {complete && <button type="button" onClick={() => leaveWith(true)}>Save &amp; leave</button>}
+              <button type="button" className="secondary" onClick={() => leaveWith(false)}>Discard</button>
+              <button type="button" className="secondary" onClick={() => setLeavePrompt(null)}>Keep editing</button>
+            </div>
+          </div>
+        </div>,
         document.body,
       )}
 

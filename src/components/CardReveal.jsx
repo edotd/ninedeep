@@ -46,7 +46,7 @@ const KINDS = {
 
 // Once a card has landed it slowly settles down (and, for the tall player card, shrinks a touch)
 // to make room for a short blurb that fades in above it.
-const SETTLE = { player: { dy: 42, s: 0.92 }, coach: { dy: 44, s: 1 }, gm: { dy: 44, s: 1 } };
+const SETTLE = { player: { dy: 42, s: 0.92 }, coach: { dy: 44, s: 1 }, gm: { dy: 22, s: 1 } };
 const SETTLE_MS = 1200;
 const BLURBS = {
   player: { title: 'Players', text: 'The building blocks of your team. Each player\u2019s stats contribute to your team\u2019s output.' },
