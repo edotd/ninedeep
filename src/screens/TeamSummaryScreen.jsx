@@ -399,7 +399,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
 
   return (
     <>
-      <div className="screen ts-screen">
+      <div className={'screen ts-screen' + (!isDesktop && tab === 'team' && sub === 'lineup' ? ' ts-lineup-lock' : '')}>
         <div className="ts-viewing-franchise"><span>{readOnly ? 'Viewing Franchise' : 'Your Franchise'}</span><strong>{team.name}</strong></div>
         {sub ? (
           <div className="ts-pagebar">
