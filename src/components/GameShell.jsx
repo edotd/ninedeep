@@ -30,7 +30,7 @@ import WelcomeScreen from '../screens/WelcomeScreen';
 import { bestCard } from '../game/cards';
 import FranchiseMasthead from './FranchiseMasthead';
 import { guardedNavigate } from '../hooks/leaveGuard';
-import { LeagueStatsContext, RosterRolesContext, leagueStatMax, rosterRoles } from './LeagueStatsContext';
+import { LeagueStatsContext, RosterRolesContext, RosterCostsContext, leagueStatMax, rosterRoles, rosterCostRanks } from './LeagueStatsContext';
 import FrontOfficeOverlay, { OUT_MS } from './FrontOfficeOverlay';
 
 const SCREENS = {
@@ -396,5 +396,6 @@ export default function GameShell(props) {
   // so memoizing on it left the role labels and gold stat shines stuck at their first values.
   const leagueMax = leagueStatMax(props.state.teams);
   const roles = rosterRoles(props.state.teams);
-  return <LeagueStatsContext.Provider value={leagueMax}><RosterRolesContext.Provider value={roles}><GameShellBody {...props} /></RosterRolesContext.Provider></LeagueStatsContext.Provider>;
+  const costRanks = rosterCostRanks(props.state.teams);
+  return <LeagueStatsContext.Provider value={leagueMax}><RosterRolesContext.Provider value={roles}><RosterCostsContext.Provider value={costRanks}><GameShellBody {...props} /></RosterCostsContext.Provider></RosterRolesContext.Provider></LeagueStatsContext.Provider>;
 }

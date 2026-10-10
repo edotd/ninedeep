@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { playerGrade } from '../game/cards';
 import { formatCoins } from '../game/economy';
 import { DEVELOPMENT_STATS_BY_STYLE } from '../game/strategyCards';
 
@@ -34,7 +33,6 @@ export default function PlayerCardMenu({ card, team, actions, myTeamId, canEdit,
   return createPortal(
     <div className="lb-ctx-backdrop" onClick={onClose}>
       <div className="lb-ctx" role="menu" aria-label={`${card.archetype} options`} onClick={(e) => e.stopPropagation()}>
-        <div className="lb-ctx-head"><b>{card.archetype}</b><span>{card.position} · {playerGrade(card)}</span></div>
         {view === 'develop' ? (
           <>
             <div className="lb-ctx-note">{team.coach?.archetype} coaches develop {stats.join(' or ')}.</div>

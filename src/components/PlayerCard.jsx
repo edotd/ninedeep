@@ -1,6 +1,6 @@
 import { useContext, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { LeagueStatsContext, RosterRolesContext } from './LeagueStatsContext';
+import { LeagueStatsContext, RosterRolesContext, RosterCostsContext } from './LeagueStatsContext';
 import { skillsetFor, SKILLSETS, SKILLSET_PAIRS } from '../game/skillsets';
 import { formatCoins } from '../game/economy';
 import { careerLevel, careerMultiplier } from '../game/aging';
@@ -27,6 +27,7 @@ const STAT_KEYS = ['SCO', 'PLM', 'REB', 'DEF'];
 export default function PlayerCard({ card, onClick, selected, rosterLabel, compact, onRelease, onDevelop, onScout, scouted, revealPeak, alwaysShowOptions, contractLabel, signingNote }) {
   const leagueMax = useContext(LeagueStatsContext);
   const roles = useContext(RosterRolesContext);
+  const costRank = useContext(RosterCostsContext)?.[card.id] || null; // 'high' | 'low' | null
   const roleLabel = rosterLabel || roles?.[card.id] || null;
   // Expiring contracts wear the navy treatment only in dark mode; otherwise they look like any other card.
   const dark = useIsDark();
@@ -132,7 +133,9 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
         {!compact && <span className="pcard-role-slot">{roleLabel && <span className="pcard-roster-badge">{roleLabel}</span>}</span>}
         <span className="pcard-cost-group">
           <span className="pcard-microlabel">Cost</span>
-          <span className="pcard-budgethit">{formatCoins(card.salary)}</span>
+          <span className={'pcard-budgethit' + (costRank ? ` cost-${costRank}` : '')} title={costRank === 'high' ? 'Highest cost on the team' : costRank === 'low' ? 'Lowest cost on the team' : undefined}>
+            <span className="pcard-coin" aria-hidden="true">🪙</span>{formatCoins(card.salary).replace('🪙', '')}
+          </span>
         </span>
       </div>
       {!compact && (
@@ -186,7 +189,7 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
             <div className="pcard-pairings-backdrop" role="presentation" onClick={(event) => { event.stopPropagation(); setPairingsOpen(false); }}>
               <div className="pcard-pairings-modal" role="dialog" aria-modal="true" aria-label={`${skillset.name} pairings`} onClick={(event) => event.stopPropagation()}>
                 <div className="pcard-pairings-head"><span>Skillset</span><b>{skillset.name}</b></div>
-                <p>Start a player with one of these Skillsets beside this one to earn the bonus.</p>
+                <p>Pair with any of the following skillsets for a bonus</p>
                 <ul>
                   {skillPairings.map(({ rule, partner }) => (
                     <li key={rule.name}>

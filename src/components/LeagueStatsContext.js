@@ -28,3 +28,23 @@ export function rosterRoles(teams) {
   }
   return roles;
 }
+
+// card id -> 'high' | 'low' for the costliest / cheapest player(s) on each team (ties share it).
+// A team with every cost equal, or fewer than two players, has neither.
+export const RosterCostsContext = createContext(null);
+
+export function rosterCostRanks(teams) {
+  const ranks = {};
+  for (const team of teams || []) {
+    const hand = team.hand || [];
+    if (hand.length < 2) continue;
+    const costs = hand.map((card) => card.salary);
+    const max = Math.max(...costs), min = Math.min(...costs);
+    if (max === min) continue;
+    for (const card of hand) {
+      if (card.salary === max) ranks[card.id] = 'high';
+      else if (card.salary === min) ranks[card.id] = 'low';
+    }
+  }
+  return ranks;
+}
