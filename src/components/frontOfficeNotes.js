@@ -22,7 +22,7 @@ export const COACH_NOTES = [
 export const GM_NOTES = [
   { key: 'type', selector: '.fo2-name', label: 'General Manager',
     text: 'Your front office lead. Where the coach runs the games, the GM works the business side of the franchise.' },
-  { key: 'rarity', selector: '.fo2-qualifier', label: 'Rarity',
+  { key: 'rarity', selector: '.fo2-header .pcard-rarity-label', label: 'Rarity',
     text: 'How rare this GM is: Core, Prime, Signature or Legendary. Rarer GMs carry stronger traits.' },
   { key: 'trait', selector: '.fo2-disposition', label: 'Trait',
     text: 'The one special ability this GM brings. The full effect is spelled out at the bottom of the card.' },
@@ -30,8 +30,6 @@ export const GM_NOTES = [
     text: 'How much this GM counts towards your budget every turn.' },
   { key: 'budget', selector: '.fo2-effect-budget-increase', label: 'Budget Increase',
     text: 'Extra budget this GM adds to your franchise. Only some GMs have it.' },
-  { key: 'effect', selector: '.fo2-effect-trait', label: 'Trait Effect',
-    text: 'The size of the trait’s effect, like better deals in negotiations, earlier looks at young talent or a bigger budget.' },
   { key: 'detail', selector: '.fo2-mod-detail', label: 'What It Does',
     text: 'Exactly what this GM’s trait does for your franchise.' },
 ];

@@ -11,11 +11,19 @@ const PATHS = {
     </>
   ),
   frontoffice: (
-    <>
+    <g transform="translate(0 1.5)">
       <rect x="10" y="9" width="40" height="46" strokeWidth="2.5" />
       <path d="M23 9V5h14v4" strokeWidth="2.5" />
       <rect x="24" y="2" width="12" height="7" fill="currentColor" stroke="none" />
       <path d="M18 24h24M18 33h24M18 42h13" strokeWidth="2.5" />
+    </g>
+  ),
+  // General Manager — a suit-and-tie bust, centered vertically in the box.
+  gm: (
+    <>
+      <circle cx="30" cy="16" r="9" strokeWidth="2.5" />
+      <path d="M9 53c0-12 8-19 21-19s21 7 21 19z" strokeWidth="2.5" strokeLinejoin="round" />
+      <path d="M30 34l-4 5 3 3-2 9h6l-2-9 3-3z" fill="currentColor" stroke="none" />
     </>
   ),
   matchup: (
@@ -29,12 +37,12 @@ const PATHS = {
   // plain-ruled clipboard) — used on the mobile persistent bar and the live match board's
   // gameplan dock in place of a tiny, illegible scaled-down StrategyCard.
   gameplan: (
-    <>
+    <g transform="translate(0 2.5)">
       <rect x="14" y="10" width="32" height="42" strokeWidth="2.5" />
       <path d="M24 10V6h12v4" strokeWidth="2.5" />
       <rect x="22" y="3" width="16" height="8" fill="currentColor" stroke="none" />
       <path d="M20 27l6 6 13-15" strokeWidth="2.5" />
-    </>
+    </g>
   ),
   // League accolades (game/constants.js's LEAGUE_ACCOLADES) — one mark per honor, shown on
   // PlayerCard in place of the full name (still available via a hover/long-press tooltip) so a

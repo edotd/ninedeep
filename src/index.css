@@ -481,11 +481,12 @@ button.primary.needs-attention:hover:not(:disabled){background:var(--depth);}
 .persistent-bar-budget b{font-family:var(--font-display);font-size:22px;color:var(--approved-ink);line-height:1;}
 .persistent-bar-budget.over b{color:var(--stamp);}
 .persistent-bar-coach{flex:1.35;text-align:left;text-transform:uppercase;overflow:hidden;}
-.persistent-bar-coach span,.persistent-bar-coach small{display:block;font:8px var(--font-mono);letter-spacing:.08em;color:var(--ink-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.persistent-bar-coach span,.persistent-bar-coach small{display:block;font:10px var(--font-mono);letter-spacing:.08em;color:var(--ink-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 /* A currently-active Gameplan card, flagged right on the Coach slot both bars share — see
    PersistentBar.jsx / DesktopBar.jsx. */
 .persistent-bar-gameplan-active{display:inline-flex;vertical-align:middle;margin-left:4px;}
 .persistent-bar-box-heading{display:flex!important;align-items:center;gap:5px;}
+.persistent-bar-coach .persistent-bar-box-heading,.persistent-bar-gm .persistent-bar-box-heading{font-size:12px!important;letter-spacing:.1em;}
 .persistent-card-count.gameplan{align-items:flex-start;justify-content:flex-start;text-align:left;}
 .persistent-card-count.gameplan>b{display:block;margin-top:4px;}
 .slf-sixth-man{margin:12px 24px 0;padding:12px 14px;border:1px solid var(--ink-rule);display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:center;color:var(--file);}
@@ -496,7 +497,7 @@ button.primary.needs-attention:hover:not(:disabled){background:var(--depth);}
 .pcard-scout.active{background:var(--franchise);color:var(--ink);}
 .pcard-peak-projection{padding:10px 14px;border-top:1px solid var(--form-rule);display:flex;flex-direction:column;gap:4px;background:rgba(240,160,61,.08);}.pcard-peak-projection span{font:9px var(--font-label);letter-spacing:.1em;text-transform:uppercase;color:var(--franchise);}.pcard-peak-projection strong{font:10px var(--font-mono);color:var(--ink);}
 .scouting-report-list{display:grid;gap:8px;margin-top:12px}.scouting-report-row{border:1px solid var(--ink-rule);padding:12px;display:flex;flex-direction:column;gap:5px}.scouting-report-row strong{font:16px var(--font-display);color:var(--file)}.scouting-report-row small{font:10px/1.4 var(--font-mono);color:var(--ink-muted)}
-.persistent-bar-coach b{display:block;margin:2px 0 1px;font:18px/1 var(--font-display);font-weight:400;color:var(--franchise);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.persistent-bar-coach b{display:block;margin:2px 0 1px;font:23px/1 var(--font-display);font-weight:400;color:var(--franchise);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 button{font-family:var(--font-label);letter-spacing:.05em;}
 button.primary{flex:1;background:var(--franchise);color:var(--ink);border:none;padding:14px;font-size:13px;font-weight:400;text-transform:uppercase;letter-spacing:.1em;transition:background 120ms ease-out;}
 button.primary:hover:not(:disabled){background:#ffb455;}
@@ -922,6 +923,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .fo2-header{display:flex;justify-content:space-between;align-items:center;padding:10px 13px;border-bottom:1px solid var(--ink-rule);}
 .fo2-kind-group{display:inline-flex;align-items:center;gap:8px;color:var(--file);}
 .fo2-kind-label{font-family:var(--font-display);font-size:26px;line-height:1;letter-spacing:.02em;text-transform:uppercase;color:var(--file);}
+.fo2-header-right{display:inline-flex;align-items:center;gap:8px;}
 .fo2-dice{font-family:var(--font-display);font-size:19px;letter-spacing:.02em;color:#F5D033;white-space:nowrap;}
 .fo2-kind-badge{font-family:var(--font-label);font-size:9px;letter-spacing:.06em;}
 .fo2-kind-badge.franchise{color:var(--franchise);}
@@ -3225,8 +3227,8 @@ body:has(.trans-screen){padding-bottom:0;}
 /* ---- Bottom bar: Coach + GM slots open their card full screen (FrontOfficeOverlay) ---- */
 .persistent-bar-section.on{background:rgba(240,160,61,.16);border-color:var(--franchise);box-shadow:inset 0 0 0 1px var(--franchise);}
 .persistent-bar-gm{flex:1;text-align:left;text-transform:uppercase;overflow:hidden;}
-.persistent-bar-gm span,.persistent-bar-gm small{display:block;font:8px var(--font-mono);letter-spacing:.08em;color:var(--ink-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.persistent-bar-gm b{display:block;margin:2px 0 1px;font:18px/1 var(--font-display);font-weight:400;color:var(--franchise);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.persistent-bar-gm span,.persistent-bar-gm small{display:block;font:10px var(--font-mono);letter-spacing:.08em;color:var(--ink-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.persistent-bar-gm b{display:block;margin:2px 0 1px;font:23px/1 var(--font-display);font-weight:400;color:var(--franchise);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .persistent-bar-gm .persistent-bar-box-heading{display:flex!important;align-items:center;gap:5px;}
 
 .fo-overlay{position:fixed;left:0;right:0;top:0;bottom:var(--mobile-persistent-bar-height,72px);z-index:7;display:flex;align-items:center;justify-content:center;padding:16px 12px;box-sizing:border-box;overflow:hidden;background:rgba(14,22,40,.94);animation:fo-dim .3s ease-out both;}

@@ -57,7 +57,7 @@ const PersistentBar = forwardRef(function PersistentBar({ state, myTeamId, overl
         {coachDealt && team.coach && <small>{team.coach.modifier}</small>}
       </button>
       <button className={'persistent-bar-section persistent-bar-gm' + (officeOpen === 'gm' ? ' on' : '')} aria-pressed={officeOpen === 'gm'} onClick={() => (onToggleOffice ? onToggleOffice('gm') : onNavigate('office'))}>
-        <span className="persistent-bar-box-heading"><CardTypeMark type="frontoffice" size={24} color="var(--franchise)" /> GM</span>
+        <span className="persistent-bar-box-heading"><CardTypeMark type="gm" size={24} color="var(--franchise)" /> GM</span>
         {fullyDealt && team.gmType && <span className="res-chips"><ResourceChip kind="scouts" count={scoutingLimit(team)} /></span>}
         <b>{fullyDealt ? (team.gmType ? team.gmTrait?.name || 'Neutral' : 'Open Slot') : 'Pending'}</b>
         {fullyDealt && team.gmType && <small>General Manager</small>}

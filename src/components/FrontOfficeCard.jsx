@@ -92,12 +92,6 @@ function marketContent(team) {
   const type = 'General Manager';
   const trait = team.gmTrait || { name: 'Neutral', value: 0, description: 'No additional front-office effect.' };
   const percentValue = (trait.value || 0) * 2;
-  const traitValue = trait.name === 'Third Eye'
-    ? 'Peak projection'
-    : trait.name === 'Cap Architect' ? `+${formatCoins(capArchitectBonus(trait))}`
-      : trait.name === 'Shady Dealer' ? `+${formatCoins(shadyDealerBonus(trait))} over limit`
-      : trait.name === 'Talent Hawk' ? `+${trait.value} scouted`
-        : `+${trait.value * 2}%`;
   const traitDetail = trait.name === 'Shady Dealer'
     ? `${trait.name} — Raises how far over budget the franchise can go in a season by ${formatCoins(shadyDealerBonus(trait))}.`
     : trait.name === 'Cap Architect'
@@ -113,13 +107,12 @@ function marketContent(team) {
             : `${trait.name} — ${trait.description}`;
   return {
     name: type,
-    qualifier: team.gmRarity || 'Core',
+    qualifier: null,
     disposition: trait.name,
     dispositionTone: 'approved-ink',
     effects: [
       { label: 'Cost', value: formatCoins(gmCost(type)), tone: 'file' },
       { label: 'Budget Increase', value: trait.name === 'Cap Architect' ? `+${formatCoins(capArchitectBonus(trait))}` : '—', tone: trait.name === 'Cap Architect' ? 'approved-ink' : 'file' },
-      { label: 'Trait', value: traitValue, tone: 'approved-ink' },
     ],
     detail: traitDetail,
     duration: 'Holds Until Fired',
@@ -139,10 +132,13 @@ export default function FrontOfficeCard({ kind, team }) {
         <div className="fo2-logo-mark"><BallMark size={44} variant="onInk" /></div>
         <div className="fo2-header">
           <span className="fo2-kind-group">
-            <CardTypeMark type="frontoffice" size={16} />
+            <CardTypeMark type={kind === 'market' ? 'gm' : 'frontoffice'} size={16} />
             <span className="fo2-kind-label">{meta.label}</span>
           </span>
-          {kind === 'coach' && <span className="fo2-dice">🎲 Off {offenseDieSize(team)} · Def {defenseDieSize(team)}</span>}
+          <span className="fo2-header-right">
+            {kind === 'coach' && <span className="fo2-dice">🎲 Off {offenseDieSize(team)} · Def {defenseDieSize(team)}</span>}
+            {coachRarity && <span className={`pcard-rarity-label r-${coachRarity}`}>{coachRarity.toUpperCase()}</span>}
+          </span>
         </div>
         <div className="fo2-name-row">
           <div className="fo2-name-col">
