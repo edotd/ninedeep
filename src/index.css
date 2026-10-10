@@ -2805,9 +2805,13 @@ body:has(.trans-screen){padding-bottom:0;}
 .tm-main{display:flex;flex-direction:column;gap:8px;}
 .tm-tiles{display:flex;flex-direction:column;gap:8px;}
 .tm-tile{display:flex;flex-direction:column;width:100%;box-sizing:border-box;margin:0;border:0;text-align:left;cursor:pointer;font:inherit;-webkit-tap-highlight-color:transparent;}
-.tm-lineup,.tm-budget{position:relative;background:#F2EBDC;color:#1E2B47;box-shadow:inset 0 0 0 1px #C9BC9C,0 2px 0 rgba(30,43,71,.2);}
+.tm-lineup,.tm-budget,.tm-scout{position:relative;background:#F2EBDC;color:#1E2B47;box-shadow:inset 0 0 0 1px #C9BC9C,0 2px 0 rgba(30,43,71,.2);}
 .tm-lineup{padding:14px 14px 12px;gap:12px;}
 .tm-budget{padding:14px;gap:10px;}
+.tm-scout{padding:14px;gap:8px;}
+.tm-scout-count{display:flex;align-items:baseline;gap:8px;}
+.tm-scout-count strong{font:400 34px/.8 var(--font-display);}
+.tm-scout-count em{font:11px var(--font-mono);font-style:normal;letter-spacing:.08em;text-transform:uppercase;color:#625A44;}
 .tm-tile-head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:26px;}
 .tm-tile-head b{font:400 31px/.8 var(--font-display);text-transform:uppercase;letter-spacing:.01em;}
 .tm-tile-head i{font:400 28px/.7 var(--font-display);font-style:normal;color:#B5431F;}
@@ -3216,3 +3220,27 @@ body:has(.trans-screen){padding-bottom:0;}
   .pb-row{gap:10px;}
   .pb-page{gap:7px;padding-top:8px;}
 }
+
+/* ---- Bottom bar: Coach + GM slots open their card full screen (FrontOfficeOverlay) ---- */
+.persistent-bar-section.on{background:rgba(240,160,61,.16);border-color:var(--franchise);box-shadow:inset 0 0 0 1px var(--franchise);}
+.persistent-bar-gm{flex:1;text-align:left;text-transform:uppercase;overflow:hidden;}
+.persistent-bar-gm span,.persistent-bar-gm small{display:block;font:8px var(--font-mono);letter-spacing:.08em;color:var(--ink-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.persistent-bar-gm b{display:block;margin:2px 0 1px;font:18px/1 var(--font-display);font-weight:400;color:var(--franchise);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.persistent-bar-gm .persistent-bar-box-heading{display:flex!important;align-items:center;gap:5px;}
+
+.fo-overlay{position:fixed;left:0;right:0;top:0;bottom:var(--mobile-persistent-bar-height,72px);z-index:7;display:flex;align-items:center;justify-content:center;padding:16px 12px;box-sizing:border-box;overflow:hidden;background:rgba(14,22,40,.94);animation:fo-dim .3s ease-out both;}
+.fo-overlay.leaving{animation:fo-dim-out .26s ease-in both;pointer-events:none;}
+.fo-overlay-body{width:300px;display:flex;flex-direction:column;gap:12px;transform-origin:50% 100%;animation:fo-card-in .46s cubic-bezier(.2,.8,.2,1) both;}
+.fo-overlay.coach .fo-overlay-body{transform-origin:25% 100%;}
+.fo-overlay.gm .fo-overlay-body{transform-origin:75% 100%;}
+.fo-overlay.leaving .fo-overlay-body{animation:fo-card-out .26s ease-in both;}
+.fo-overlay-body .fo2-wrap{width:100%;max-width:none;}
+.fo-overlay-body .fo2-wrap .fo2-card{margin:0;}
+.fo-overlay-action{width:100%;}
+.fo-overlay-hint{text-align:center;font:9px var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:#8E9BB5;}
+.mobile-shell.fo-open .bottombar{display:none;}
+@keyframes fo-dim{from{opacity:0;}to{opacity:1;}}
+@keyframes fo-dim-out{from{opacity:1;}to{opacity:0;}}
+@keyframes fo-card-in{from{opacity:0;transform:translateY(55%) scale(calc(var(--fo-scale,1.2) * .3));}to{opacity:1;transform:scale(var(--fo-scale,1.2));}}
+@keyframes fo-card-out{from{opacity:1;transform:scale(var(--fo-scale,1.2));}to{opacity:0;transform:translateY(55%) scale(calc(var(--fo-scale,1.2) * .3));}}
+@media (prefers-reduced-motion: reduce){.fo-overlay,.fo-overlay-body{animation:none;}}

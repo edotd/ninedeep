@@ -18,7 +18,7 @@ import { guardedNavigate } from '../hooks/leaveGuard';
 // on the matching sub page.
 const subForSection = (section) => (section === 'office' ? 'coach' : section === 'gameplan' ? 'lineup' : section === 'ledger' || section === 'budget' ? 'budget' : null);
 // Page names for the title bar.
-const SUB_TITLES = { lineup: 'Lineup & Chemistry', coach: 'Coach', gm: 'GM', budget: 'Budget' };
+const SUB_TITLES = { lineup: 'Lineup & Chemistry', coach: 'Coach', gm: 'GM', budget: 'Manage Budget', scouting: 'Scouting Report' };
 
 // The Team Summary screen — "the file the league keeps on you" (design brand handoff, 1a).
 // Serves two roles from the same markup: as the 'teamsummary' phase (shown once per season,
@@ -208,7 +208,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   // on desktop everything is already stacked on one page, so the tile scrolls to its section.
   const openSub = (target) => {
     if (isDesktop) {
-      const id = { lineup: 'team-lineup', coach: 'team-coach-card', gm: 'team-gm-card', budget: 'team-ledger' }[target];
+      const id = { lineup: 'team-lineup', coach: 'team-coach-card', gm: 'team-gm-card', budget: 'team-ledger', scouting: 'team-league' }[target];
       document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
@@ -216,9 +216,23 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
     enterSub(target);
   };
 
+  const scoutingList = (
+    scoutingRows.length ? <div className="scouting-report-list">{scoutingRows.map(({ cardId, card, history }) => (
+                <div className="scouting-report-row" key={cardId}>
+                  <strong>#{jerseyNumber(card)} · {playerGrade(card)} · {card.archetype} · {card.position}</strong>
+                  {history.length ? history.map((entry) => <small key={`${entry.season}-${entry.game}`}>Season {entry.season}: Starter {entry.starterOutput} · Sixth Man {entry.sixthManOutput} · Depth {entry.depthOutput}</small>) : <small>Tracking begins with your next season simulation.</small>}
+                </div>
+              ))}</div> : <div className="ts-ledger-empty">Add players from Teams, Free Agency, or Draft Class.</div>
+  );
+  const scoutingPage = (
+    <div className="ts-section" id="team-scouting">
+      <div className="ts-heading">Scouting Report</div>
+      {scoutingList}
+    </div>
+  );
   const leaguePage = (
     <>
-            <div className="ts-section league-overview">
+            <div className="ts-section league-overview" id="team-league">
               <div className="ts-heading">League</div>
               <div className="league-jump-actions">
                 {onTeamRosters && <button type="button" className="league-jump-button rosters" onClick={onTeamRosters}>Teams</button>}
@@ -226,12 +240,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                 <button type="button" className="league-jump-button draft" onClick={onDraftClass}>Draft Class</button>
               </div>
               <div className="ts-heading league-standings-heading">Scouting Report</div>
-              {scoutingRows.length ? <div className="scouting-report-list">{scoutingRows.map(({ cardId, card, history }) => (
-                <div className="scouting-report-row" key={cardId}>
-                  <strong>#{jerseyNumber(card)} · {playerGrade(card)} · {card.archetype} · {card.position}</strong>
-                  {history.length ? history.map((entry) => <small key={`${entry.season}-${entry.game}`}>Season {entry.season}: Starter {entry.starterOutput} · Sixth Man {entry.sixthManOutput} · Depth {entry.depthOutput}</small>) : <small>Tracking begins with your next season simulation.</small>}
-                </div>
-              ))}</div> : <div className="ts-ledger-empty">Add players from Teams, Free Agency, or Draft Class.</div>}
+              {scoutingList}
               <div className="league-output-grid">
                 <div><span>League Output</span><strong>{Math.round(leagueTotal * 100) / 100}</strong><small>Total collective output from all teams</small></div>
                 <div><span>Best Offense</span><strong>{bestFor('off').output.off}</strong><small>{bestFor('off').team.name}</small></div>
@@ -443,6 +452,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                   {sub === 'lineup' && lineupPage}
                   {(sub === 'coach' || sub === 'gm') && team.gmType && officePage(sub)}
                   {sub === 'budget' && ledgerPage}
+                  {sub === 'scouting' && scoutingPage}
                 </div>
               )}
             </>

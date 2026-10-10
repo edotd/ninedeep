@@ -10,7 +10,7 @@ import { formatCoins, remainingCap } from '../game/economy';
 // one place those numbers change.
 const CAP_FOCUSED_PHASES = new Set(['contracts', 'draft']);
 
-const PersistentBar = forwardRef(function PersistentBar({ state, myTeamId, overlay, onNavigate, onFreeAgency, freeAgencyLocked, dealProgress }, ref) {
+const PersistentBar = forwardRef(function PersistentBar({ state, myTeamId, overlay, officeOpen, onToggleOffice, onNavigate, onFreeAgency, freeAgencyLocked, dealProgress }, ref) {
   const team = state.teams[myTeamId];
   const capFocused = CAP_FOCUSED_PHASES.has(state.phase) || overlay === 'freeagency';
   if (capFocused) {
@@ -42,12 +42,16 @@ const PersistentBar = forwardRef(function PersistentBar({ state, myTeamId, overl
 
   return (
     <div className="persistent-bar" ref={ref}>
-      <button className="persistent-bar-section persistent-bar-coach" onClick={() => onNavigate('office')}>
+      <button className={'persistent-bar-section persistent-bar-coach' + (officeOpen === 'coach' ? ' on' : '')} aria-pressed={officeOpen === 'coach'} onClick={() => (onToggleOffice ? onToggleOffice('coach') : onNavigate('office'))}>
         <span className="persistent-bar-box-heading"><CardTypeMark type="frontoffice" size={15} color="var(--franchise)" /> Coach{activeGameplan && <span className="persistent-bar-gameplan-active" title={`${activeGameplan.name} is active`} />}</span>
         <b>{coachDealt ? team.coach?.archetype || 'Open Slot' : 'Pending'}</b>
         {coachDealt && team.coach && <small>{team.coach.modifier}</small>}
       </button>
-      <button className="persistent-bar-section persistent-card-count gameplan" onClick={() => onNavigate('gameplan')} aria-label="Active Gameplan"><span className="persistent-bar-box-heading"><CardTypeMark type="gameplan" size={15} /> Gameplan</span><b>{fullyDealt ? activeGameplan?.name || '—' : '—'}</b></button>
+      <button className={'persistent-bar-section persistent-bar-gm' + (officeOpen === 'gm' ? ' on' : '')} aria-pressed={officeOpen === 'gm'} onClick={() => (onToggleOffice ? onToggleOffice('gm') : onNavigate('office'))}>
+        <span className="persistent-bar-box-heading"><CardTypeMark type="frontoffice" size={15} color="var(--franchise)" /> GM</span>
+        <b>{fullyDealt ? (team.gmType ? team.gmTrait?.name || 'Neutral' : 'Open Slot') : 'Pending'}</b>
+        {fullyDealt && team.gmType && <small>General Manager</small>}
+      </button>
     </div>
   );
 });

@@ -31,6 +31,7 @@ import { bestCard } from '../game/cards';
 import FranchiseMasthead from './FranchiseMasthead';
 import { guardedNavigate } from '../hooks/leaveGuard';
 import { LeagueStatsContext, RosterRolesContext, leagueStatMax, rosterRoles } from './LeagueStatsContext';
+import FrontOfficeOverlay, { OUT_MS } from './FrontOfficeOverlay';
 
 const SCREENS = {
   cardoverview: CardOverviewScreen,
@@ -127,6 +128,25 @@ function GameShellBody({ state, actions, myTeamId, onNewEra, onDeleteRoom, hostN
   // Every overlay change goes through the lineup page's unsaved-changes guard.
   const setOverlay = (next) => guardedNavigate(() => setOverlayRaw(next));
   const toggleOverlay = (name) => guardedNavigate(() => setOverlayRaw((o) => (o === name ? null : name)));
+  // The bottom bar's Coach / GM slots open that card full screen; the same slot closes it.
+  const [office, setOffice] = useState(null); // null | { which: 'coach' | 'gm', leaving: boolean }
+  const officeTimer = useRef(null);
+  useEffect(() => () => clearTimeout(officeTimer.current), []);
+  const closeOffice = () => {
+    clearTimeout(officeTimer.current);
+    setOffice((o) => (o ? { ...o, leaving: true } : o));
+    officeTimer.current = setTimeout(() => setOffice(null), OUT_MS);
+  };
+  const toggleOffice = (which) => {
+    if (office && !office.leaving && office.which === which) { closeOffice(); return; }
+    clearTimeout(officeTimer.current);
+    setOffice({ which, leaving: false });
+  };
+  // Any navigation (a new phase, or another overlay) puts the card away.
+  useEffect(() => {
+    clearTimeout(officeTimer.current);
+    setOffice(null);
+  }, [state.phase, overlay]);
   // Free agency stays open through Contracts, the Draft, and right up until this team confirms
   // its lineup for the season. Manual closeout is optional; Begin Season also locks this user
   // out of further moves while the other franchises ready up.
@@ -353,7 +373,7 @@ function GameShellBody({ state, actions, myTeamId, onNewEra, onDeleteRoom, hostN
   }
 
   return (
-    <div className="mobile-shell" style={{
+    <div className={'mobile-shell' + (office ? ' fo-open' : '')} style={{
       '--mobile-persistent-top-height': `${mobileTopHeight}px`,
       '--mobile-persistent-bar-height': `${persistentBarHeight}px`,
       ...(viewportPx ? {
@@ -364,7 +384,8 @@ function GameShellBody({ state, actions, myTeamId, onNewEra, onDeleteRoom, hostN
     }}>
       {showChrome && <div className="mobile-persistent-top" ref={mobileTopRef}><Header {...headerProps} /><FranchiseMasthead state={state} teamId={mastheadTeamId} lineupPreview={lineupPreview} /></div>}
       {mainBody}
-      {showBar && <PersistentBar ref={persistentBarRef} state={state} myTeamId={myTeamId} overlay={overlay} onNavigate={openTeamSection} onFreeAgency={openFreeAgency} freeAgencyLocked={freeAgencyLocked} dealProgress={dealProgress} />}
+      {showBar && office && <FrontOfficeOverlay state={state} actions={actions} myTeamId={myTeamId} which={office.which} leaving={office.leaving} />}
+      {showBar && <PersistentBar ref={persistentBarRef} state={state} myTeamId={myTeamId} overlay={overlay} officeOpen={office && !office.leaving ? office.which : null} onToggleOffice={toggleOffice} onNavigate={openTeamSection} onFreeAgency={openFreeAgency} freeAgencyLocked={freeAgencyLocked} dealProgress={dealProgress} />}
       <ScrollToTopButton />
     </div>
   );

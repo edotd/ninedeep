@@ -5,7 +5,7 @@ import { formatCoins } from '../game/economy';
 import { teamSynergy } from '../game/skillsets';
 
 // The Team page's main index (design: Team · Main) — one tile per sub page: Lineup & Chemistry,
-// Coach, GM and Budget. Each tile opens its page via `onOpen`. The design's header (franchise
+// Scouting Report and Manage Budget (Coach and GM live in the bottom bar). Each tile opens its page via `onOpen`. The design's header (franchise
 // name, era clock, titles, projected output / defense / bench) already lives in the persistent
 // masthead above every screen, so it isn't repeated here.
 
@@ -84,8 +84,6 @@ export default function TeamMain({ team, readOnly, onOpen, committed, cap, budge
   const maxLevel = brackets.reduce((m, b) => Math.max(m, b.level), 0);
   const shownPairs = [...pairs].sort((a, b) => b.rule.percent - a.rule.percent).slice(0, 3);
 
-  const coach = team.coach;
-
   const room = cap - committed;
   const span = Math.max(cap, committed) || 1;
   const budgetSegments = [
@@ -128,21 +126,13 @@ export default function TeamMain({ team, readOnly, onOpen, committed, cap, budge
           </span>
         </div>
 
-        <div className="tm-pair">
-          <Tile onOpen={onOpen} sub="coach" className={'tm-fo coach' + (coach ? ` rarity-${coach.rarity || 'Core'}` : '')} label="Coach">
-            <span className="tm-fo-head"><b>COACH</b><i>›</i></span>
-            <strong>{coach ? coach.archetype : 'Open Slot'}</strong>
-            <span className="tm-fo-stat">{coach ? coach.modifier : 'Hire in Free Agency'}</span>
-          </Tile>
-          <Tile onOpen={onOpen} sub="gm" className="tm-fo gm" label="General manager">
-            <span className="tm-fo-head"><b>GM</b><i>›</i></span>
-            <strong>{team.gmType ? 'General Manager' : 'Open Slot'}</strong>
-            <span className="tm-fo-stat">{team.gmType ? (team.gmTrait?.name || 'Neutral') : '—'}</span>
-          </Tile>
-        </div>
+        <Tile onOpen={onOpen} sub="scouting" className="tm-scout" label="Scouting report">
+          <span className="tm-tile-head"><b>SCOUTING REPORT</b><i>›</i></span>
+          <span className="tm-scout-count"><strong>{(team.scoutingReport || []).length}</strong><em>{(team.scoutingReport || []).length === 1 ? 'player tracked' : 'players tracked'}</em></span>
+        </Tile>
 
-        <Tile onOpen={onOpen} sub="budget" className="tm-budget" label="Budget">
-          <span className="tm-tile-head"><b>BUDGET</b><i>›</i></span>
+        <Tile onOpen={onOpen} sub="budget" className="tm-budget" label="Manage budget">
+          <span className="tm-tile-head"><b>MANAGE BUDGET</b><i>›</i></span>
           <span className={'tm-budget-nums' + (room < 0 ? ' over' : '')}><strong>{trim(committed)}</strong><em>/ {trim(cap)}</em></span>
           <span className="tm-budget-bar">
             {budgetSegments.map((s) => <i key={s.key} className={s.key} style={{ width: `${(s.amount / span) * 100}%` }} />)}
