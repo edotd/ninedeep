@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react';
+import { useContext, useRef, useState } from 'react';
+import { LeagueStatsContext } from './LeagueStatsContext';
 import { skillsetFor } from '../game/skillsets';
 import { formatCoins } from '../game/economy';
 import { careerLevel, careerMultiplier } from '../game/aging';
@@ -19,8 +20,10 @@ const LEGACY_DEVELOPMENT_CHANGES = {
 // How long a touch has to sit still before it counts as a hold rather than a tap — long enough
 // that a normal card-select tap never trips it, short enough that it doesn't feel unresponsive.
 const LONG_PRESS_MS = 500;
+const STAT_KEYS = ['SCO', 'PLM', 'REB', 'DEF'];
 
 export default function PlayerCard({ card, onClick, selected, rosterLabel, compact, onRelease, onDevelop, onScout, scouted, revealPeak, alwaysShowOptions, contractLabel, signingNote }) {
+  const leagueMax = useContext(LeagueStatsContext);
   const tier = cardTier(card);
   const skillset = skillsetFor(card);
   const level = careerLevel(card);
@@ -33,6 +36,8 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
     ? (level === 'Prime' ? '#8FD9B0' : level === 'Declining' ? 'var(--franchise)' : 'var(--ink-muted)')
     : (level === 'Prime' ? 'var(--approved)' : level === 'Declining' ? 'var(--stamp)' : 'var(--depth)');
   const accolade = card.accolade || null;
+  const topValue = Math.max(...STAT_KEYS.map((stat) => card.stats[stat]));
+  const topCount = STAT_KEYS.filter((stat) => card.stats[stat] === topValue).length;
 
   // Release/Develop are destructive/rare actions, not something every glance at the roster
   // needs to see in the carousel/row contexts — they live behind a hold (mobile) or the expand
@@ -107,12 +112,14 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
         <div className="pcard-jersey" aria-label={`Jersey number ${jerseyNumber(card)}`}>#{jerseyNumber(card)}</div>
         <div className="pcard-name-col">
           <div className="pcard-name">{card.archetype}</div>
-          {!compact && rosterLabel && <span className="pcard-roster-badge">{rosterLabel}</span>}
         </div>
       </div>
       <div className="pcard-contract pcard-budgethit-row">
         <span className="pcard-microlabel">Cost</span>
         <span className="pcard-budgethit">{formatCoins(card.salary)}</span>
+        {/* Role slot (Starter / Sixth Man / Depth) — fills whatever space is left of the cost.
+            Text for now; icons will replace it. */}
+        {!compact && <span className="pcard-role-slot">{rosterLabel && <span className="pcard-roster-badge">{rosterLabel}</span>}</span>}
       </div>
       {!compact && (
         <div className="pcard-contract pcard-years-row">
@@ -130,7 +137,14 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
       {!compact && scouted && <div className="pcard-scouted-mark" title="On your scouting report" aria-label="On your scouting report">⌖</div>}
       {!compact && (
         <div className="pcard-stats">
-          {['SCO', 'PLM', 'REB', 'DEF'].map((stat) => <div className="pcard-stat" key={stat}><div className="pcard-stat-value"><b>{card.stats[stat]}</b>{developmentChanges[stat] > 0 && <em>+{developmentChanges[stat]}</em>}</div><span>{stat}</span></div>)}
+          {STAT_KEYS.map((stat) => {
+            const value = card.stats[stat];
+            const isTop = value === topValue;
+            // Gold + shine: the card's top stat when two or more stats tie for it, or any stat
+            // that matches the league-high for that stat. Otherwise just the top stat is colored.
+            const gold = (isTop && topCount > 1) || (leagueMax && value > 0 && value >= leagueMax[stat]);
+            return <div className={'pcard-stat' + (gold ? ' gold' : isTop ? ' top' : '')} key={stat}><div className="pcard-stat-value"><b>{value}</b>{developmentChanges[stat] > 0 && <em>+{developmentChanges[stat]}</em>}</div><span>{stat}</span></div>;
+          })}
         </div>
       )}
       {!compact && revealPeak && (

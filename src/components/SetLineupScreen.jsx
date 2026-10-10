@@ -40,6 +40,8 @@ const SLOT_KEYS = [...COURT.map((s) => s.key), ...BENCH.map((b) => b.key)];
 const RARITY_COLOR = { Legendary: '#F0A03D', Signature: '#8E9BB5', Prime: '#C9BC9C', Core: '#A79A78' };
 const SORTS = [['Position', 'position'], ['Grade', 'grade'], ['Scoring', 'SCO'], ['Playmaking', 'PLM'], ['Rebounding', 'REB'], ['Defense', 'DEF'], ['Cost', 'cost']];
 
+const roleLabel = (slot) => (!slot ? undefined : slot.startsWith('S') ? 'Starter' : slot === 'B6' ? 'Sixth Man' : 'Depth');
+
 const sortRoster = (cards, sort) => (sort === 'cost' ? [...cards].sort((a, b) => a.salary - b.salary) : sortPlayers(cards, sort));
 
 export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPreviewChange }) {
@@ -536,7 +538,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
       {viewCard && (
         <div className="lb-card-backdrop" onClick={() => setViewCard(null)}>
           <div className="lb-card-modal" role="dialog" aria-modal="true" aria-label="Player card" onClick={(e) => e.stopPropagation()}>
-            <PlayerCard card={viewCard} />
+            <PlayerCard card={viewCard} rosterLabel={roleLabel(slotOf(viewCard.id))} />
             <button type="button" className="secondary" onClick={() => setViewCard(null)}>Close</button>
           </div>
         </div>

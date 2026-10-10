@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Header from './Header';
 import PersistentBar from './PersistentBar';
 import Sidebar from './Sidebar';
@@ -30,6 +30,7 @@ import WelcomeScreen from '../screens/WelcomeScreen';
 import { bestCard } from '../game/cards';
 import FranchiseMasthead from './FranchiseMasthead';
 import { guardedNavigate } from '../hooks/leaveGuard';
+import { LeagueStatsContext, leagueStatMax } from './LeagueStatsContext';
 
 const SCREENS = {
   cardoverview: CardOverviewScreen,
@@ -92,7 +93,7 @@ const PAGE_LABELS = {
 // shell changes at the desktop breakpoint: a Sidebar + full-width persistent bar per the
 // brand handoff, instead of the phone-width top bar + collapsed bottom bar. Same
 // `overlay`/`Screen` resolution feeds both shells so the two never drift out of sync.
-export default function GameShell({ state, actions, myTeamId, onNewEra, onDeleteRoom, hostNotifications, roomCode }) {
+function GameShellBody({ state, actions, myTeamId, onNewEra, onDeleteRoom, hostNotifications, roomCode }) {
   const welcomeKey = `nine-deep-welcome-seen:${state.eraId}`;
   const WELCOME_STEPS = ['welcome', 'cards', 'reveal', 'reveal-coach', 'reveal-gm'];
   const [welcomeStep, setWelcomeStep] = useState(() => {
@@ -367,4 +368,9 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
       <ScrollToTopButton />
     </div>
   );
+}
+
+export default function GameShell(props) {
+  const leagueMax = useMemo(() => leagueStatMax(props.state.teams), [props.state.teams]);
+  return <LeagueStatsContext.Provider value={leagueMax}><GameShellBody {...props} /></LeagueStatsContext.Provider>;
 }
