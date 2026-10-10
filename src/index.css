@@ -3302,3 +3302,7 @@ body:has(.trans-screen){padding-bottom:0;}
 .ts-roto-tap{transition:transform .14s ease;-webkit-tap-highlight-color:transparent;cursor:pointer;}
 .ts-roto-tap.pressed{transform:scale(.96);}
 @media (prefers-reduced-motion: reduce){.ts-roto-tap{transition:none;}}
+/* Role label (Starter / Sixth Man / Depth) on the cost row, a touch larger. */
+.pcard-role-slot .pcard-roster-badge{font-size:13px;padding:4px 10px;}
+/* Every context-menu button is the same size, Select included (the global .primary button style is larger). */
+.lb-ctx button,.lb-ctx button.primary{box-sizing:border-box;width:100%;height:46px;min-height:46px;padding:0 14px;font:400 11px var(--font-label);letter-spacing:.14em;line-height:1;}
