@@ -31,6 +31,9 @@ const COURT = [
   { key: 'S3', n: 4, x: 24, y: 22 },
   { key: 'S4', n: 5, x: 76, y: 22 },
 ];
+// Cards the player has already looked at in the lineup picker (for the session): their reveal
+// only plays the first time.
+const SEEN_CARDS = new Set();
 const BENCH = [{ key: 'B6', label: '6TH MAN' }, { key: 'BD', label: 'DEPTH' }];
 const SLOT_KEYS = [...COURT.map((s) => s.key), ...BENCH.map((b) => b.key)];
 const RARITY_COLOR = { Legendary: '#F0A03D', Signature: '#8E9BB5', Prime: '#C9BC9C', Core: '#A79A78' };
@@ -271,24 +274,20 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
     window.addEventListener('resize', fit);
     return () => window.removeEventListener('resize', fit);
   }, [sheetSlot]);
-  // Each card plays the onboarding reveal when it's swiped to, and again every time it comes
-  // back. A card is blank until it's the one in view, so you never see it finished before it
-  // plays; only the card being swiped away from stays on its finished frame until the swipe lands.
-  const [reveal, setReveal] = useState({ active: null, prev: null, count: 0 });
-  useEffect(() => { if (!sheetSlot) setReveal({ active: null, prev: null, count: 0 }); }, [sheetSlot]);
+  // A card plays the full onboarding reveal only the first time it's swiped to; after that it
+  // just shows finished. An unseen card is blank until it's the one in view, so you never see it
+  // finished before it plays. `reveal.live` is the card whose reveal is running now.
+  const [reveal, setReveal] = useState({ active: null, live: null });
+  useEffect(() => { if (!sheetSlot) setReveal({ active: null, live: null }); }, [sheetSlot]);
   useEffect(() => {
     if (!sheetSlot) return;
     const card = roster[cardIndex];
     if (!card) return;
-    setReveal((r) => (r.active === card.id ? r : { active: card.id, prev: r.active, count: r.count + 1 }));
+    const unseen = !SEEN_CARDS.has(card.id);
+    SEEN_CARDS.add(card.id);
+    setReveal((r) => ({ active: card.id, live: unseen ? card.id : (r.live === card.id ? card.id : null) }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sheetSlot, cardIndex]);
-  const settleTimer = useRef(null);
-  useEffect(() => () => clearTimeout(settleTimer.current), []);
-  const settleSoon = () => {
-    clearTimeout(settleTimer.current);
-    settleTimer.current = setTimeout(() => setReveal((r) => (r.prev ? { ...r, prev: null } : r)), 140);
-  };
   // Start on the player already in this slot (or the first card), and keep the page behind the
   // picker from scrolling while it's up.
   useEffect(() => {
@@ -443,7 +442,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
           <div
             className="lb-cards"
             ref={carouselRef}
-            onScroll={(event) => { setCardIndex(Math.round(event.currentTarget.scrollLeft / (event.currentTarget.clientWidth || 1))); settleSoon(); }}
+            onScroll={(event) => { setCardIndex(Math.round(event.currentTarget.scrollLeft / (event.currentTarget.clientWidth || 1))) }}
           >
             {roster.map((card) => {
               const where = slotOf(card.id);
@@ -452,8 +451,9 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
                 <div className="lb-slide" key={card.id}>
                   <div className="lb-slide-card" style={{ width: 264 * pickerFit.s }}>
                     <div className="lb-reveal-box" style={{ height: pickerFit.h * pickerFit.s + 44 }}>
-                      {reveal.active === card.id && <CardRevealPlayer key={'live' + reveal.count} card={card} up={pickerFit.s} cardHeight={pickerFit.h} quick delay={80} />}
-                      {reveal.prev === card.id && reveal.active !== card.id && <CardRevealPlayer key="done" card={card} up={pickerFit.s} cardHeight={pickerFit.h} settled />}
+                      {reveal.live === card.id
+                        ? <CardRevealPlayer key={'live' + card.id} card={card} up={pickerFit.s} cardHeight={pickerFit.h} delay={150} />
+                        : SEEN_CARDS.has(card.id) && <CardRevealPlayer key={'done' + card.id} card={card} up={pickerFit.s} cardHeight={pickerFit.h} settled />}
                     </div>
                     <div className="lb-card-foot">
                       <span className={where && !here ? 'warn' : ''}>{here ? 'IN THIS SLOT' : where ? `NOW AT ${slotLabel(where)} · WILL MOVE` : 'AVAILABLE'}</span>
