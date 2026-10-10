@@ -3346,10 +3346,10 @@ body:has(.trans-screen){padding-bottom:0;}
 
 /* Resource counters on the bottom bar's Coach and GM boxes (development points, in-game adjustments, scouts). */
 .persistent-bar-coach,.persistent-bar-gm{position:relative;}
-.persistent-bar-section .res-chips{position:absolute;top:6px;right:7px;display:flex;gap:7px;align-items:center;overflow:visible;}
+.persistent-bar-section .res-chips{position:absolute;top:5px;right:7px;display:flex;gap:8px;align-items:center;overflow:visible;}
 .persistent-bar-section .res-chip{display:inline-flex;align-items:center;gap:3px;overflow:visible;}
-.persistent-bar-section .res-chip-tile{flex:none;width:17px;height:17px;padding:2px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;overflow:visible;}
-.persistent-bar-section .res-chip b{margin:0;font:400 11px/1 var(--font-label);color:var(--file);letter-spacing:0;display:inline;}
+.persistent-bar-section .res-chip-tile{flex:none;width:24px;height:24px;padding:2px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;overflow:visible;}
+.persistent-bar-section .res-chip b{margin:0;font:400 14px/1 var(--font-label);color:var(--file);letter-spacing:0;display:inline;}
 
 /* Lineup page: a selected bonus row gets a yellow outline; its line / ring goes yellow and pulses. */
 .lb-pairs-row.selectable{cursor:pointer;-webkit-tap-highlight-color:transparent;}
