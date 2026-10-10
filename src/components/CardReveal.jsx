@@ -44,6 +44,16 @@ const KINDS = {
   gm: { cardW: 300, up: 1.2, label: 'Your general manager' },
 };
 
+// Once a card has landed it slowly settles down (and, for the tall player card, shrinks a touch)
+// to make room for a short blurb that fades in above it.
+const SETTLE = { player: { dy: 38, s: 0.94 }, coach: { dy: 52, s: 1 }, gm: { dy: 52, s: 1 } };
+const SETTLE_MS = 1200;
+const BLURBS = {
+  player: { title: 'Players', text: 'The building blocks of your team. Each player\u2019s stats contribute to your team\u2019s output.' },
+  coach: { title: 'The Coach', text: 'Drives your team\u2019s success with an overarching gameplan, stat bonuses and offensive and defensive die values.' },
+  gm: { title: 'The GM', text: 'Determines your team\u2019s budget and ability to acquire new talent.' },
+};
+
 const BALL_T = {
   Core: { pop: 0, light: 99999, stag: 0, grow: 420, fly: 440, reveal: 720, strike: 1000, badge: 1080, ui: 1100, total: 1700 },
   Prime: { pop: 0, light: 300, stag: 25, grow: 620, fly: 650, reveal: 950, strike: 1250, badge: 1330, ui: 1380, total: 1950 },
@@ -66,7 +76,7 @@ function Sheen({ t, tm, cw, ch }) {
 
 // `bare` drops the full-screen chrome (ink ground and Continue button) and centres the
 // reveal in whatever box it's placed in — used by CardRevealPlayer below.
-function Chrome({ t, tm, rarity, cw, ch, onContinue, ctaLabel, bare, children }) {
+function Chrome({ t, tm, rarity, cw, ch, onContinue, ctaLabel, bare, shift, children }) {
   const L = rarity === 'Legendary';
   const ui = eo(P(t, tm.ui, 500));
   const flash = tm.flash != null ? Math.max(0, 1 - P(t, tm.flash, 320)) * (t >= tm.flash ? 1 : 0) : 0;
@@ -79,7 +89,7 @@ function Chrome({ t, tm, rarity, cw, ch, onContinue, ctaLabel, bare, children })
   return (
     <div style={bare ? { position: 'absolute', inset: 0 } : { position: 'absolute', inset: 0, background: INK, overflow: 'hidden' }}>
       {glow > 0 && <div style={{ position: 'absolute', ...(bare ? { left: `calc(50% - ${glowD / 2}px)`, top: `calc(50% - ${glowD / 2}px)`, width: glowD, height: glowD, pointerEvents: 'none' } : { left: 201 - 320, top: 440 - 320, width: 640, height: 640 }), borderRadius: '50%', opacity: glow, background: 'radial-gradient(closest-side, rgba(240,160,61,0.42), rgba(240,160,61,0.12) 55%, transparent)' }} />}
-      <div style={{ position: 'absolute', left: bare ? '50%' : 201, top: bare ? '50%' : 440, width: 0, height: 0 }}>
+      <div style={{ position: 'absolute', left: bare ? '50%' : 201, top: bare ? '50%' : 440 + (shift?.dy || 0), width: 0, height: 0, transform: shift && shift.s !== 1 ? `scale(${shift.s})` : undefined, transformOrigin: '0 0' }}>
         {children}
         {badgeScale > 0 && (
           <div className="card-reveal-badge" style={{ position: 'absolute', left: cw / 2 - 8, top: -ch / 2 - 13, transform: `translateX(-100%) scale(${badgeScale})`, transformOrigin: '100% 0',
@@ -101,7 +111,7 @@ function Chrome({ t, tm, rarity, cw, ch, onContinue, ctaLabel, bare, children })
   );
 }
 
-function BallReveal({ t, face, cardW, up, rarity, cardHeight, onContinue, ctaLabel, bare }) {
+function BallReveal({ t, face, cardW, up, rarity, cardHeight, onContinue, ctaLabel, bare, shift }) {
   const tm = BALL_T[rarity], L = rarity === 'Legendary';
   const cw = cardW * up, ch = cardHeight * up;
   const S = 132, pitch = S * 0.196, dot = S * 0.1;
@@ -162,7 +172,7 @@ function BallReveal({ t, face, cardW, up, rarity, cardHeight, onContinue, ctaLab
   });
   const pw = lerp(dot * 1.5, cw, g), ph = lerp(dot * 1.5, ch, g);
   return (
-    <Chrome t={t} tm={tm} rarity={rarity} cw={cw} ch={ch} onContinue={onContinue} ctaLabel={ctaLabel} bare={bare}>
+    <Chrome t={t} tm={tm} rarity={rarity} cw={cw} ch={ch} onContinue={onContinue} ctaLabel={ctaLabel} bare={bare} shift={shift}>
       {ballOut < 1 && (
         <div style={{ position: 'absolute', left: -S / 2, top: -S / 2, width: S, height: S, transform: `translate(${sx}px,${sy}px) scale(${c01(pop) * csc * (1 + 0.4 * ballOut)}) rotate(${spin}deg)`, opacity: 1 - ballOut }}>
           <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: FILE }} />
@@ -240,9 +250,12 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
     }, rarityLabelNote('Core')];
   }, [kind]);
   const rarity = 'Core';
-  const face = kind === 'player' ? <PlayerCard card={card} /> : <FrontOfficeCard kind={kind === 'coach' ? 'coach' : 'market'} team={team} />;
+  const face = useMemo(() => (kind === 'player' ? <PlayerCard card={card} /> : <FrontOfficeCard kind={kind === 'coach' ? 'coach' : 'market'} team={team} />), [kind, card, team]);
   const tm = BALL_T[rarity];
-  const total = tm.total;
+  // The card is read-ready once its rarity label has landed; a beat later it settles down.
+  const readyAt = Math.max(tm.ui + 250, tm.badge + 570);
+  const moveStart = readyAt + 250;
+  const total = Math.max(tm.total, moveStart + SETTLE_MS + 100);
   const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const [clock, setT] = useState(0);
   const t = reduced ? total : clock;
@@ -253,16 +266,23 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
   const measureRef = useRef(null);
   const stageRef = useRef(null);
   // Not until the rarity label has finished popping in, so its tap target is measured at rest.
-  const ready = t >= Math.max(tm.ui + 250, tm.badge + 570);
+  const ready = t >= readyAt;
+  const settle = eo(P(t, moveStart, SETTLE_MS));
+  const target = SETTLE[kind];
+  const shift = { dy: target.dy * settle, s: lerp(1, target.s, settle) };
+  const blurb = BLURBS[kind];
+  const blurbIn = eo(P(t, moveStart, 900));
+  const shiftRef = useRef({ dy: 0, s: 1 });
+  useLayoutEffect(() => { shiftRef.current = shift; });
   const ui = eo(P(t, tm.ui, 500));
   const active = boxes.find((box) => box.key === activeKey);
   // Where the selected region sits on screen (the stage is centred and scaled to fit), so the
   // spotlight can feather around it and the modal can sit right beside it.
   const spot = active ? {
-    left: (window.innerWidth - STAGE_W * scale) / 2 + active.left * scale,
-    top: (window.innerHeight - STAGE_H * scale) / 2 + active.top * scale,
-    width: active.width * scale,
-    height: active.height * scale,
+    left: (window.innerWidth - STAGE_W * scale) / 2 + (201 + shift.s * (active.left - 201)) * scale,
+    top: (window.innerHeight - STAGE_H * scale) / 2 + (440 + shift.dy + shift.s * (active.top - 440)) * scale,
+    width: active.width * shift.s * scale,
+    height: active.height * shift.s * scale,
   } : null;
   const modalBelow = spot ? window.innerHeight - (spot.top + spot.height) >= 300 : true;
   const MODAL_GAP = 14;
@@ -320,7 +340,10 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
           r = { left: r.left + (r.width - size) / 2, top: r.top + (r.height - size) / 2, width: size, height: size };
         }
         const pad = note.pad ?? 5;
-        return [{ ...note, left: (r.left - sr.left) / sc - pad, top: (r.top - sr.top) / sc - pad, width: r.width / sc + pad * 2, height: r.height / sc + pad * 2 }];
+        // Undo the settle shift so the boxes are in the card's own (unshifted) stage coordinates.
+        const { dy, s: sh } = shiftRef.current;
+        const x = (r.left - sr.left) / sc, y = (r.top - sr.top) / sc;
+        return [{ ...note, left: (x - 201) / sh + 201 - pad, top: (y - 440 - dy) / sh + 440 - pad, width: r.width / sc / sh + pad * 2, height: r.height / sc / sh + pad * 2 }];
       }));
     };
     measure();
@@ -336,8 +359,13 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
         className={'card-reveal-stage kind-' + kind}
         style={{ width: STAGE_W, height: STAGE_H, marginLeft: -STAGE_W / 2, marginTop: -STAGE_H / 2, transform: `scale(${scale})` }}
       >
-        <BallReveal t={t} face={face} cardW={cardW} up={up} rarity={rarity} cardHeight={cardHeight} onContinue={onContinue} ctaLabel={kind === 'gm' ? 'START GAME' : 'CONTINUE'} />
+        <BallReveal t={t} face={face} cardW={cardW} up={up} rarity={rarity} cardHeight={cardHeight} onContinue={onContinue} ctaLabel={kind === 'gm' ? 'START GAME' : 'CONTINUE'} shift={shift} />
+        <div className="card-reveal-blurb" style={{ opacity: blurbIn, transform: `translateY(${lerp(-10, 0, blurbIn)}px)` }}>
+          <strong>{blurb.title}</strong>
+          <span>{blurb.text}</span>
+        </div>
         <div className="card-reveal-hint" style={{ opacity: ui }}>{HINT}</div>
+        <div className="card-reveal-hotspots" style={{ transform: `translateY(${shift.dy}px) scale(${shift.s})` }}>
         {ready && boxes.map((box) => (
           <button
             key={box.key}
@@ -348,6 +376,7 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
             onClick={() => setActiveKey(box.key)}
           />
         ))}
+        </div>
       </div>
       {spot && !active.panel && (
         <svg className="card-reveal-spotlight" aria-hidden="true">
