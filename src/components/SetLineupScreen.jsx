@@ -346,7 +346,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
 
   const missing = 5 - starterIds.length;
   const saveLabel = !complete ? `FILL ${missing} MORE` : dirty ? 'SAVE' : 'SAVED';
-  const pairNames = bonusRows.length ? bonusRows.map((row) => row.name).join(' · ') : 'NO PAIRINGS LIVE';
+  const pairNames = bonusRows.map((row) => row.name).join(' · ');
 
   // Randomize and Save live in the page's title bar (the Team page renders a slot for them);
   // with no title bar (desktop stacks everything) they sit under the court instead.
@@ -416,7 +416,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
         </div>
 
         <div className="lb-bench-wrap">
-          <div className="lb-bench-head"><span>BENCH</span><span className="lb-pairnames">{pairNames}</span></div>
+          {bonusRows.length > 0 && <div className="lb-bench-head"><span className="lb-pairnames">{pairNames}</span></div>}
           <div className="lb-bench">
             {BENCH.map((b) => {
               const card = benchCards[b.key];
