@@ -3133,25 +3133,25 @@ body:has(.trans-screen){padding-bottom:0;}
 .lb-slot-ring{position:absolute;border:3px solid;pointer-events:none;border-radius:2px;}
 
 /* ---- Phone playoff bracket: rounds as pages (MobilePlayoffBracket) ---- */
-.pb-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:0 18px;background:#1E2B47;flex:none;}
+.pb-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:0 12px;background:#1E2B47;flex:none;}
 .pb-tabs button{border:0;background:none;border-bottom:3px solid transparent;padding:11px 2px;font:400 9px var(--font-label);letter-spacing:.1em;color:#8E9BB5;cursor:pointer;text-align:center;}
 .pb-tabs button.on{color:#E6DCC4;border-bottom-color:#F0A03D;}
-.pb-track{flex:1;min-height:0;display:flex;gap:18px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scroll-padding-left:18px;padding:0 18px;scrollbar-width:none;overscroll-behavior:contain;touch-action:pan-x;}
+.pb-track{flex:1;min-height:0;display:flex;gap:12px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scroll-padding-left:12px;padding:0 12px;scrollbar-width:none;overscroll-behavior:contain;touch-action:pan-x;}
 .pb-track::-webkit-scrollbar{display:none;}
-.pb-page{flex:none;width:min(354px,calc(100% - 36px));scroll-snap-align:start;min-height:0;box-sizing:border-box;padding:12px 0 10px;display:flex;flex-direction:column;gap:9px;}
+.pb-page{flex:none;width:100%;scroll-snap-align:start;min-height:0;box-sizing:border-box;padding:12px 0 10px;display:flex;flex-direction:column;gap:9px;}
 .pb-page-head{display:flex;justify-content:space-between;gap:8px;font:9px var(--font-mono);letter-spacing:.14em;color:#625A44;}
-.pb-card{flex:0 1 auto;min-height:0;width:100%;box-sizing:border-box;border:0;padding:10px 12px 9px;display:flex;flex-direction:column;gap:7px;text-align:left;cursor:pointer;background:#F2EBDC;box-shadow:inset 0 0 0 1px #C9BC9C;color:#1E2B47;font:inherit;-webkit-tap-highlight-color:transparent;}
+.pb-card{flex:1 1 0;max-height:190px;min-height:0;width:100%;box-sizing:border-box;border:0;padding:12px 16px 11px;display:flex;flex-direction:column;justify-content:center;gap:10px;text-align:left;cursor:pointer;background:#F2EBDC;box-shadow:inset 0 0 0 1px #C9BC9C;color:#1E2B47;font:inherit;-webkit-tap-highlight-color:transparent;}
 .pb-card.mine{background:#1E2B47;box-shadow:inset 0 0 0 2px #F0A03D;color:#E6DCC4;}
 .pb-card.picked{outline:2px solid #B5431F;outline-offset:2px;}
 .pb-card.mine.picked{outline-color:#F0A03D;}
 .pb-card-top{display:flex;justify-content:space-between;gap:8px;font:9px var(--font-mono);letter-spacing:.16em;color:#625A44;}
 .pb-card.mine .pb-card-top{color:#F0A03D;}
 .pb-card.mine .pb-card-top span:last-child{color:#A9B4C9;}
-.pb-row{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:10px;align-items:center;}
-.pb-seed{font:400 20px/.8 var(--font-display);color:#625A44;}
-.pb-name{font:400 23px/.86 var(--font-display);color:#1E2B47;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.pb-score{font:400 25px/.8 var(--font-display);color:#1E2B47;}
-.pb-score.proj{font-size:19px;opacity:.75;}
+.pb-row{display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:12px;align-items:center;}
+.pb-seed{font:400 24px/.8 var(--font-display);color:#625A44;}
+.pb-name{font:400 29px/.86 var(--font-display);color:#1E2B47;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pb-score{font:400 31px/.8 var(--font-display);color:#1E2B47;}
+.pb-score.proj{font-size:24px;opacity:.75;}
 .pb-row.win .pb-seed{color:#B5431F;}
 .pb-row.lost{opacity:.55;}
 .pb-row.empty .pb-name{color:#A79A78;}
@@ -3164,7 +3164,7 @@ body:has(.trans-screen){padding-bottom:0;}
 .pb-card.mine .pb-card-foot{border-top-color:#3C4A69;color:#A9B4C9;}
 .pb-status.ready,.pb-status.live{color:#B5431F;}
 .pb-card.mine .pb-status.ready,.pb-card.mine .pb-status.live{color:#F0A03D;}
-.pb-foot{flex:none;border-top:1px solid #C9BC9C;padding:10px 18px 12px;display:flex;flex-direction:column;gap:9px;}
+.pb-foot{flex:none;border-top:1px solid #C9BC9C;padding:10px 12px 12px;display:flex;flex-direction:column;gap:9px;}
 .pb-foot-line{display:flex;justify-content:space-between;align-items:center;gap:8px;font:9px var(--font-mono);letter-spacing:.12em;color:#625A44;}
 .pb-link{border:0;background:none;padding:0;font:9px var(--font-mono);letter-spacing:.1em;color:#B5431F;cursor:pointer;}
 .pb-foot-btns{display:flex;gap:8px;}
@@ -3177,7 +3177,7 @@ body:has(.trans-screen){padding-bottom:0;}
 @media(max-width:999px){
   /* The bracket and the Lineup page never scroll vertically: the shell is pinned and the page
      is exactly the space between the persistent top bar and the bottom bar. */
-  .mobile-shell:has(.pb-screen),.mobile-shell:has(.ts-lineup-lock){position:fixed;inset:0;width:100%;height:var(--app-vh,100dvh);overflow:hidden;}
+  .mobile-shell:has(.pb-screen){position:fixed;inset:0;width:100%;height:var(--app-vh,100dvh);overflow:hidden;}
   .screen.pb-screen{height:calc(100% - var(--mobile-persistent-top-height,0px) - var(--mobile-persistent-bar-height,0px));min-height:0;padding:0;box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;background:radial-gradient(circle at 2px 2px,rgba(255,251,240,.7) .9px,transparent 1.5px) 0 0/5px 5px,radial-gradient(circle at 2.7px 2.9px,rgba(30,43,71,.17) 1.1px,transparent 1.7px) 0 0/5px 5px,radial-gradient(circle at 2px 2px,rgba(255,251,240,.7) .9px,transparent 1.5px) 2.5px 2.5px/5px 5px,radial-gradient(circle at 2.7px 2.9px,rgba(30,43,71,.17) 1.1px,transparent 1.7px) 2.5px 2.5px/5px 5px,#E3D8BD;}
 
   .ts-screen.ts-lineup-lock{height:calc(100% - var(--mobile-persistent-top-height,0px) - var(--mobile-persistent-bar-height,0px));box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;}

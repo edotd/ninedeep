@@ -7,7 +7,7 @@ import { matchTeams, isMatchUnlocked, teamOutput } from '../game/matchup';
 // share its height. Tapping a series selects it and the footer carries that series' actions
 // (Begin / Sim / Review …), the same ones the desktop nodes have.
 
-const GAP = 18; // between pages
+const GAP = 12; // between pages
 const ROUNDS = [
   { key: 'first', label: 'FIRST ROUND', title: 'FIRST ROUND', indices: [0, 1, 2, 3] },
   { key: 'semis', label: 'SEMIS', title: 'SEMIS', indices: [4, 5] },
