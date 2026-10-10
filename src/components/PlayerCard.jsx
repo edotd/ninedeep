@@ -39,7 +39,6 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
     : (level === 'Prime' ? 'var(--approved)' : level === 'Declining' ? 'var(--stamp)' : 'var(--depth)');
   const accolade = card.accolade || null;
   const topValue = Math.max(...STAT_KEYS.map((stat) => card.stats[stat]));
-  const topCount = STAT_KEYS.filter((stat) => card.stats[stat] === topValue).length;
 
   // Release/Develop are destructive/rare actions, not something every glance at the roster
   // needs to see in the carousel/row contexts — they live behind a hold (mobile) or the expand
@@ -144,9 +143,9 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
           {STAT_KEYS.map((stat) => {
             const value = card.stats[stat];
             const isTop = value === topValue;
-            // Gold + shine: the card's top stat when two or more stats tie for it, or any stat
-            // that matches the league-high for that stat. Otherwise just the top stat is colored.
-            const gold = (isTop && topCount > 1) || (leagueMax && value > 0 && value >= leagueMax[stat]);
+            // Gold + shine: only a stat that matches the league-high for that stat (ties with the
+            // league-high included). The card's own top stat is just colored.
+            const gold = Boolean(leagueMax) && value > 0 && value >= leagueMax[stat];
             return <div className={'pcard-stat' + (gold ? ' gold' : isTop ? ' top' : '')} key={stat}><div className="pcard-stat-value"><b>{value}</b>{developmentChanges[stat] > 0 && <em>+{developmentChanges[stat]}</em>}</div><span>{stat}</span></div>;
           })}
         </div>
