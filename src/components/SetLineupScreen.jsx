@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { effectiveStat, findSkillPair, teamSynergy } from '../game/skillsets';
-import { jerseyNumber, playerGrade } from '../game/cards';
+import { effectiveStat, findSkillPair, teamSynergy, skillsetFor } from '../game/skillsets';
+import { playerGrade } from '../game/cards';
 import { autoValidFive, validateLineup } from '../game/roster';
 import { sortPlayers } from '../game/playerFilters';
 import PlayerCard from './PlayerCard';
@@ -122,7 +122,8 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
   // teamSynergy folds into the team's Offense/Defense.
   const synergy = starterIds.length === 5 ? teamSynergy({ ...team, activeIds: starterIds }, starterIds) : null;
   const tag = (side, percent) => `+${percent}% ${side === 'offense' ? 'OFF' : 'DEF'}`;
-  const who = (card) => `#${jerseyNumber(card)} ${card.archetype}`;
+  // The pairing table names the Skillsets involved rather than the players holding them.
+  const who = (card) => skillsetFor(card)?.name || 'No Skillset';
   const bonusRows = [];
   for (const { i, j, pair } of pairings) bonusRows.push({ name: pair.name, side: pair.side, value: tag(pair.side, pair.percent), players: `${who(starters[i])} + ${who(starters[j])}` });
   for (const rule of synergy?.statBonuses || []) {
@@ -162,12 +163,15 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
     const off = (n - (pairCount[k] - 1) / 2) * 2.2;
     w.ox = (-dy / len) * off; w.oy = (dx / len) * off;
   }
+  // Tapping a row in the bonus table selects it: its line (or ring) goes yellow and pulses.
+  const [selBonus, setSelBonus] = useState(null);
+  const isSel = (w) => selBonus != null && w.key.startsWith(selBonus + ':');
   const rings = starters.map(() => []);
   for (const rule of synergy?.positionBonuses || []) {
-    starters.forEach((card, i) => { if (card && card.skillsetId === rule.skillsetId && card.position === rule.position) rings[i].push(sideColor(rule.side)); });
+    starters.forEach((card, i) => { if (card && card.skillsetId === rule.skillsetId && card.position === rule.position) rings[i].push({ color: sideColor(rule.side), name: rule.name }); });
   }
   if (synergy?.leadership) {
-    starters.forEach((card, i) => { if (card?.skillsetId === 'skill-03') rings[i].push(sideColor('both')); });
+    starters.forEach((card, i) => { if (card?.skillsetId === 'skill-03') rings[i].push({ color: sideColor('both'), name: 'Wise Veteran' }); });
   }
 
   // Feed the masthead's live Offense/Defense/Bench preview.
@@ -379,8 +383,8 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
           <div className="lb-board" />
           <div className="lb-center" />
           <svg className="lb-wires" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-            {wires.map((w) => (
-              <line key={w.key} x1={COURT[w.i].x + w.ox} y1={COURT[w.i].y + w.oy} x2={COURT[w.j].x + w.ox} y2={COURT[w.j].y + w.oy} stroke={w.color} strokeDasharray={w.dashed ? '7 6' : undefined} vectorEffect="non-scaling-stroke" />
+            {[...wires].sort((a, b) => Number(isSel(a)) - Number(isSel(b))).map((w) => (
+              <line className={isSel(w) ? 'selected' : undefined} key={w.key} x1={COURT[w.i].x + w.ox} y1={COURT[w.i].y + w.oy} x2={COURT[w.j].x + w.ox} y2={COURT[w.j].y + w.oy} stroke={isSel(w) ? '#F0A03D' : w.color} strokeDasharray={w.dashed ? '7 6' : undefined} vectorEffect="non-scaling-stroke" />
             ))}
           </svg>
           {COURT.map((slot, i) => {
@@ -396,7 +400,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
                 onClick={() => openSlot(slot.key)}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSlot(slot.key); } }}
               >
-                {rings[i].map((color, r) => <span key={r} className="lb-slot-ring" style={{ borderColor: color, inset: -(4 + r * 5) }} aria-hidden="true" />)}
+                {rings[i].map(({ color, name }, r) => <span key={r} className={'lb-slot-ring' + (selBonus === name ? ' selected' : '')} style={{ borderColor: selBonus === name ? '#F0A03D' : color, inset: -(4 + r * 5) }} aria-hidden="true" />)}
                 {card ? (
                   <span className="lb-slot-card" style={{ borderTopColor: RARITY_COLOR[card.rarity] || RARITY_COLOR.Core }}>
                     <b>{playerGrade(card)}</b>
@@ -441,9 +445,17 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
 
         <div className="lb-pairs">
           <div className="lb-pairs-table">
-            <div className="lb-pairs-row head"><span>ACTIVE PAIRINGS</span><span>PLAYERS</span></div>
+            <div className="lb-pairs-row head"><span>ACTIVE PAIRINGS</span><span>SKILLSETS</span></div>
             {bonusRows.length ? bonusRows.map((row) => (
-              <div className="lb-pairs-row" key={row.name}>
+              <div
+                className={'lb-pairs-row selectable' + (selBonus === row.name ? ' selected' : '')}
+                key={row.name}
+                role="button"
+                tabIndex={0}
+                aria-pressed={selBonus === row.name}
+                onClick={() => setSelBonus((v) => (v === row.name ? null : row.name))}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelBonus((v) => (v === row.name ? null : row.name)); } }}
+              >
                 <span className={'lb-bonus ' + row.side}>
                   <BonusIcon name={row.name} size={40} />
                   <span><b>{row.name}</b><em>{row.value}</em></span>

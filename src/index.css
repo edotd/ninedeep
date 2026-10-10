@@ -3336,3 +3336,25 @@ body:has(.trans-screen){padding-bottom:0;}
 .pcard-budgethit.cost-high{background:linear-gradient(100deg,#9A6B07 0%,#E8B923 30%,#FFF1A8 50%,#E8B923 70%,#9A6B07 100%);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 5px rgba(240,190,50,.65)) drop-shadow(1px 2px 0 rgba(90,60,0,.35));animation:pcard-gold-shine 2.6s linear infinite;}
 .pcard-budgethit.cost-high .pcard-coin{-webkit-text-fill-color:initial;}
 @media (prefers-reduced-motion: reduce){.pcard-budgethit.cost-high{animation:none;}}
+
+/* Scouting Report page: a solid navy panel (its rows are light-on-dark) so nothing sits on the textured ground. */
+#team-scouting{background:var(--ink,#1E2B47);padding:16px;box-shadow:0 2px 0 rgba(30,43,71,.25);}
+#team-scouting .ts-heading{color:#E6DCC4;}
+#team-scouting .scouting-report-row{border-color:#3C4A69;background:rgba(255,255,255,.03);}
+#team-scouting .scouting-report-row small{color:#A9B4C9;}
+#team-scouting .ts-ledger-empty{color:#A9B4C9;padding:8px 0 4px;}
+
+/* Resource counters on the bottom bar's Coach and GM boxes (development points, in-game adjustments, scouts). */
+.persistent-bar-coach,.persistent-bar-gm{position:relative;}
+.persistent-bar-section .res-chips{position:absolute;top:6px;right:7px;display:flex;gap:7px;align-items:center;overflow:visible;}
+.persistent-bar-section .res-chip{display:inline-flex;align-items:center;gap:3px;overflow:visible;}
+.persistent-bar-section .res-chip-tile{flex:none;width:17px;height:17px;padding:2px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;overflow:visible;}
+.persistent-bar-section .res-chip b{margin:0;font:400 11px/1 var(--font-label);color:var(--file);letter-spacing:0;display:inline;}
+
+/* Lineup page: a selected bonus row gets a yellow outline; its line / ring goes yellow and pulses. */
+.lb-pairs-row.selectable{cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.lb-pairs-row.selected{box-shadow:inset 0 0 0 2px #F0A03D;background:rgba(240,160,61,.1);}
+.lb-wires line.selected{stroke-width:4;animation:lb-wire-pulse 1.6s ease-in-out infinite;}
+.lb-slot-ring.selected{animation:lb-wire-pulse 1.6s ease-in-out infinite;}
+@keyframes lb-wire-pulse{0%,100%{opacity:1;}50%{opacity:.45;}}
+@media (prefers-reduced-motion: reduce){.lb-wires line.selected,.lb-slot-ring.selected{animation:none;}}

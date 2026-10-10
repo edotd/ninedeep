@@ -1,6 +1,9 @@
 // Compact mobile card tray. Team metrics live in the persistent franchise masthead.
 import { forwardRef } from 'react';
 import CardTypeMark from './CardTypeMark';
+import ResourceChip from './ResourceChip';
+import { matchupCardCountFor } from '../game/roster';
+import { scoutingLimit } from '../game/gm';
 import { formatCoins, remainingCap } from '../game/economy';
 
 // Coach/Gameplan/Adjustment only mean something while there's a live season roster to manage —
@@ -44,11 +47,18 @@ const PersistentBar = forwardRef(function PersistentBar({ state, myTeamId, overl
     <div className="persistent-bar" ref={ref}>
       <button className={'persistent-bar-section persistent-bar-coach' + (officeOpen === 'coach' ? ' on' : '')} aria-pressed={officeOpen === 'coach'} onClick={() => (onToggleOffice ? onToggleOffice('coach') : onNavigate('office'))}>
         <span className="persistent-bar-box-heading"><CardTypeMark type="frontoffice" size={15} color="var(--franchise)" /> Coach{activeGameplan && <span className="persistent-bar-gameplan-active" title={`${activeGameplan.name} is active`} />}</span>
+        {coachDealt && team.coach && (
+          <span className="res-chips">
+            <ResourceChip kind="development" count={team.developmentPoints ?? 0} />
+            <ResourceChip kind="adjustments" count={matchupCardCountFor(team)} />
+          </span>
+        )}
         <b>{coachDealt ? team.coach?.archetype || 'Open Slot' : 'Pending'}</b>
         {coachDealt && team.coach && <small>{team.coach.modifier}</small>}
       </button>
       <button className={'persistent-bar-section persistent-bar-gm' + (officeOpen === 'gm' ? ' on' : '')} aria-pressed={officeOpen === 'gm'} onClick={() => (onToggleOffice ? onToggleOffice('gm') : onNavigate('office'))}>
         <span className="persistent-bar-box-heading"><CardTypeMark type="frontoffice" size={15} color="var(--franchise)" /> GM</span>
+        {fullyDealt && team.gmType && <span className="res-chips"><ResourceChip kind="scouts" count={scoutingLimit(team)} /></span>}
         <b>{fullyDealt ? (team.gmType ? team.gmTrait?.name || 'Neutral' : 'Open Slot') : 'Pending'}</b>
         {fullyDealt && team.gmType && <small>General Manager</small>}
       </button>
