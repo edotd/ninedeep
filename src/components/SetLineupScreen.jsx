@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { findSkillPair, teamSynergy } from '../game/skillsets';
+import { effectiveStat, findSkillPair, teamSynergy } from '../game/skillsets';
 import { jerseyNumber, playerGrade } from '../game/cards';
 import { autoValidFive, validateLineup } from '../game/roster';
 import { sortPlayers } from '../game/playerFilters';
@@ -8,6 +8,7 @@ import PlayerCard from './PlayerCard';
 import { CardRevealPlayer } from './CardReveal';
 import CoachmarkTour from './CoachmarkTour';
 import BonusIcon from './BonusIcon';
+import { BONUS_SIDE } from './bonusIcons';
 import { gameplanEffects } from '../game/strategyCards';
 
 // Shown once per browser — the first time anyone opens this editor, not once per team/era, so
@@ -127,6 +128,39 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
   if (synergy?.leadership) {
     const vet = team.hand.find((card) => card.skillsetId === 'skill-03');
     bonusRows.push({ name: 'Wise Veteran', side: 'both', value: '+1% OFF & DEF', players: vet ? who(vet) : 'On your roster' });
+  }
+
+  // What the court draws for those bonuses, in each bonus's own colour: a line between every
+  // starter pair that earns a named pairing (all of them, not just the first the table lists), a
+  // dashed line between the starters clearing a stat threshold, and a ring round the player a
+  // position or leadership bonus rests on.
+  const sideColor = (side) => (side === 'offense' ? BONUS_SIDE.o : side === 'defense' ? BONUS_SIDE.d : BONUS_SIDE.b).bg;
+  const wires = [];
+  for (let i = 0; i < starters.length; i++) {
+    for (let j = i + 1; j < starters.length; j++) {
+      const pair = findSkillPair(starters[i], starters[j]);
+      if (pair) wires.push({ key: `${pair.name}:${i}-${j}`, i, j, color: sideColor(pair.side) });
+    }
+  }
+  for (const rule of synergy?.statBonuses || []) {
+    const idx = starters.map((card, i) => (card && effectiveStat(card, rule.stat) >= rule.threshold ? i : -1)).filter((i) => i >= 0);
+    for (let a = 0; a < idx.length; a++) for (let b = a + 1; b < idx.length; b++) wires.push({ key: `${rule.name}:${idx[a]}-${idx[b]}`, i: idx[a], j: idx[b], color: sideColor(rule.side), dashed: true });
+  }
+  // Lines sharing the same two players fan out sideways so none hides another.
+  const pairCount = {}, pairSeen = {};
+  for (const w of wires) pairCount[`${w.i}-${w.j}`] = (pairCount[`${w.i}-${w.j}`] || 0) + 1;
+  for (const w of wires) {
+    const k = `${w.i}-${w.j}`, n = pairSeen[k] = (pairSeen[k] ?? -1) + 1;
+    const dx = COURT[w.j].x - COURT[w.i].x, dy = COURT[w.j].y - COURT[w.i].y, len = Math.hypot(dx, dy) || 1;
+    const off = (n - (pairCount[k] - 1) / 2) * 2.2;
+    w.ox = (-dy / len) * off; w.oy = (dx / len) * off;
+  }
+  const rings = starters.map(() => []);
+  for (const rule of synergy?.positionBonuses || []) {
+    starters.forEach((card, i) => { if (card && card.skillsetId === rule.skillsetId && card.position === rule.position) rings[i].push(sideColor(rule.side)); });
+  }
+  if (synergy?.leadership) {
+    starters.forEach((card, i) => { if (card?.skillsetId === 'skill-03') rings[i].push(sideColor('both')); });
   }
 
   // Feed the masthead's live Offense/Defense/Bench preview.
@@ -310,8 +344,8 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
           <div className="lb-board" />
           <div className="lb-center" />
           <svg className="lb-wires" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-            {pairings.map(({ i, j, pair }) => (
-              <line key={pair.name} x1={COURT[i].x} y1={COURT[i].y} x2={COURT[j].x} y2={COURT[j].y} className={pair.side} vectorEffect="non-scaling-stroke" />
+            {wires.map((w) => (
+              <line key={w.key} x1={COURT[w.i].x + w.ox} y1={COURT[w.i].y + w.oy} x2={COURT[w.j].x + w.ox} y2={COURT[w.j].y + w.oy} stroke={w.color} strokeDasharray={w.dashed ? '7 6' : undefined} vectorEffect="non-scaling-stroke" />
             ))}
           </svg>
           {COURT.map((slot, i) => {
@@ -327,6 +361,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
                 onClick={() => openSlot(slot.key)}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSlot(slot.key); } }}
               >
+                {rings[i].map((color, r) => <span key={r} className="lb-slot-ring" style={{ borderColor: color, inset: -(4 + r * 5) }} aria-hidden="true" />)}
                 {card ? (
                   <span className="lb-slot-card" style={{ borderTopColor: RARITY_COLOR[card.rarity] || RARITY_COLOR.Core }}>
                     <b>{playerGrade(card)}</b>

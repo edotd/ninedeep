@@ -147,7 +147,7 @@ export const POSITION_SKILLSET_BONUSES = [
   { name: 'Pace', skillsetId: 'skill-16', position: 'Guard', side: 'offense', percent: 5 },
 ];
 
-function effectiveStat(player, stat) {
+export function effectiveStat(player, stat) {
   return (player.stats?.[stat] || 0) * careerMultiplier(player, player.careerRoll);
 }
 

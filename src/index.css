@@ -2870,8 +2870,7 @@ body:has(.trans-screen){padding-bottom:0;}
 .lb-board{left:calc(50% - 24px);top:16px;width:48px;height:2px;background:#1E2B47;}
 .lb-center{left:calc(50% - 60px);bottom:-60px;width:120px;height:120px;border-radius:50%;box-shadow:inset 0 0 0 2px rgba(30,43,71,.45);}
 .lb-wires{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
-.lb-wires line{stroke:#3F6B52;stroke-width:3;stroke-linecap:round;}
-.lb-wires line.defense{stroke:#4E5B73;}
+.lb-wires line{stroke-width:3;stroke-linecap:round;}
 .lb-slot{position:absolute;transform:translate(-50%,-50%);width:64px;height:76px;cursor:pointer;outline-offset:3px;}
 .lb-slot-card{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;width:100%;height:100%;box-sizing:border-box;background:#1E2B47;border-top:5px solid #A79A78;box-shadow:0 2px 0 rgba(30,43,71,.3);color:#E6DCC4;}
 .lb-slot-card b{font:400 34px/.8 var(--font-display);}
@@ -3129,3 +3128,6 @@ body:has(.trans-screen){padding-bottom:0;}
 .rarity-info-panel{animation:cr-modal-rise .36s cubic-bezier(.2,.8,.2,1) .05s both;}
 @keyframes cr-modal-rise{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
 @media (prefers-reduced-motion: reduce){.rarity-info-backdrop,.rarity-info-panel{animation:none;}}
+
+/* Position / leadership bonuses: a ring round the player, in the bonus's colour. */
+.lb-slot-ring{position:absolute;border:3px solid;pointer-events:none;border-radius:2px;}
