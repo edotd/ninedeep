@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { teamSynergy } from '../game/skillsets';
 import { teamOutput } from '../game/matchup';
 import { modifierBreakdown, offenseDieSize, defenseDieSize } from '../game/roster';
@@ -63,6 +63,22 @@ const BREAKDOWN_NOTES = {
 export default function FranchiseMasthead({ state, teamId, lineupPreview }) {
   const team = state.teams[teamId];
   const lineupStats = lineupPreview?.teamId === teamId ? lineupPreview.stats : null;
+  // Switching between the franchise metrics and the lineup's SCO/PLM/REB/DEF animates: the old
+  // fields roll out, the content swaps, then the new fields roll in. `shownMode` lags `mode`
+  // so the outgoing fields stay on screen (using the last lineup stats) while they leave.
+  const mode = lineupStats ? 'lineup' : 'franchise';
+  const [shownMode, setShownMode] = useState(mode);
+  const [swapPhase, setSwapPhase] = useState(null);
+  const lastLineupStats = useRef(lineupStats);
+  if (lineupStats) lastLineupStats.current = lineupStats;
+  useEffect(() => {
+    if (mode === shownMode) return undefined;
+    setSwapPhase('out');
+    const toIn = setTimeout(() => { setShownMode(mode); setSwapPhase('in'); }, 260);
+    const done = setTimeout(() => setSwapPhase(null), 260 + 560);
+    return () => { clearTimeout(toIn); clearTimeout(done); };
+  }, [mode, shownMode]);
+  const shownLineupStats = shownMode === 'lineup' ? (lineupStats || lastLineupStats.current) : null;
   const [openMetric, setOpenMetric] = useState(null);
   const [selectedRow, setSelectedRow] = useState(null);
   // A human team's chemistry/output/offense/defense are only meaningful once they've actually
@@ -138,17 +154,17 @@ export default function FranchiseMasthead({ state, teamId, lineupPreview }) {
           <div className="ts-titles"><div className="ts-titles-value">{team.titles}</div><div className="ts-titles-label">CHAMPIONSHIP{team.titles === 1 ? '' : 'S'}</div></div>
         </div>
       </div>
-      <div className="ts-masthead-right persistent">
-        {lineupStats ? ['SCO', 'PLM', 'REB', 'DEF'].map((stat) => (
-          <div key={stat} className={'ts-hero-metric lineup-stat' + (stat === 'SCO' ? ' first' : '') + (pulsing[stat] ? ' pulsing' : '')}>
-            {tallyBadge(stat)}<div className="ts-proj-label">{stat}</div><div className="ts-hero-value">{lineupStats[stat]}</div><div className="ts-proj-rank ts-proj-rank-spacer" aria-hidden="true">&nbsp;</div>
+      <div className={'ts-masthead-right persistent' + (swapPhase ? ' swap-' + swapPhase : '')}>
+        {shownLineupStats ? ['SCO', 'PLM', 'REB', 'DEF'].map((stat, i) => (
+          <div key={stat} style={{ '--i': i }} className={'ts-hero-metric lineup-stat' + (stat === 'SCO' ? ' first' : '') + (pulsing[stat] ? ' pulsing' : '')}>
+            {tallyBadge(stat)}<div className="ts-proj-label">{stat}</div><div className="ts-hero-value">{shownLineupStats[stat]}</div><div className="ts-proj-rank ts-proj-rank-spacer" aria-hidden="true">&nbsp;</div>
           </div>
         )) : (
           <>
-            <button type="button" className={'ts-hero-metric chemistry' + (openMetric === 'chemistry' ? ' open' : '') + (pulsing.chemistry ? ' pulsing' : '')} onClick={synergy ? toggleMetric('chemistry') : undefined} disabled={!synergy}>{tallyBadge('chemistry')}<div className="ts-proj-label">Chemistry</div><div className="ts-hero-value">{synergy ? synergy.grade : '—'}</div><div className="ts-proj-rank">{synergy ? synergy.score : '—'}</div></button>
-            <button type="button" className={'ts-hero-metric' + (openMetric === 'output' ? ' open' : '') + (pulsing.output ? ' pulsing' : '')} onClick={output ? toggleMetric('output') : undefined} disabled={!output}>{tallyBadge('output')}<div className="ts-proj-label">Output</div><div className="ts-hero-value accent">{output ? output.total : '—'}</div><div className="ts-proj-rank">{output ? `${ordinal(rankFor('total'))} of ${rankedCount}` : '—'}</div></button>
-            <button type="button" className={'ts-hero-metric' + (openMetric === 'offense' ? ' open' : '') + (pulsing.offense ? ' pulsing' : '')} onClick={output ? toggleMetric('offense') : undefined} disabled={!output}>{tallyBadge('offense')}<div className="ts-proj-label">Offense</div><div className="ts-hero-value">{output ? output.off : '—'}</div><div className="ts-proj-rank">{output ? ordinal(rankFor('off')) : '—'}</div></button>
-            <button type="button" className={'ts-hero-metric' + (openMetric === 'defense' ? ' open' : '') + (pulsing.defense ? ' pulsing' : '')} onClick={output ? toggleMetric('defense') : undefined} disabled={!output}>{tallyBadge('defense')}<div className="ts-proj-label">Defense</div><div className="ts-hero-value">{output ? output.def : '—'}</div><div className="ts-proj-rank">{output ? ordinal(rankFor('def')) : '—'}</div></button>
+            <button type="button" style={{ '--i': 0 }} className={'ts-hero-metric chemistry' + (openMetric === 'chemistry' ? ' open' : '') + (pulsing.chemistry ? ' pulsing' : '')} onClick={synergy ? toggleMetric('chemistry') : undefined} disabled={!synergy}>{tallyBadge('chemistry')}<div className="ts-proj-label">Chemistry</div><div className="ts-hero-value">{synergy ? synergy.grade : '—'}</div><div className="ts-proj-rank">{synergy ? synergy.score : '—'}</div></button>
+            <button type="button" style={{ '--i': 1 }} className={'ts-hero-metric' + (openMetric === 'output' ? ' open' : '') + (pulsing.output ? ' pulsing' : '')} onClick={output ? toggleMetric('output') : undefined} disabled={!output}>{tallyBadge('output')}<div className="ts-proj-label">Output</div><div className="ts-hero-value accent">{output ? output.total : '—'}</div><div className="ts-proj-rank">{output ? `${ordinal(rankFor('total'))} of ${rankedCount}` : '—'}</div></button>
+            <button type="button" style={{ '--i': 2 }} className={'ts-hero-metric' + (openMetric === 'offense' ? ' open' : '') + (pulsing.offense ? ' pulsing' : '')} onClick={output ? toggleMetric('offense') : undefined} disabled={!output}>{tallyBadge('offense')}<div className="ts-proj-label">Offense</div><div className="ts-hero-value">{output ? output.off : '—'}</div><div className="ts-proj-rank">{output ? ordinal(rankFor('off')) : '—'}</div></button>
+            <button type="button" style={{ '--i': 3 }} className={'ts-hero-metric' + (openMetric === 'defense' ? ' open' : '') + (pulsing.defense ? ' pulsing' : '')} onClick={output ? toggleMetric('defense') : undefined} disabled={!output}>{tallyBadge('defense')}<div className="ts-proj-label">Defense</div><div className="ts-hero-value">{output ? output.def : '—'}</div><div className="ts-proj-rank">{output ? ordinal(rankFor('def')) : '—'}</div></button>
           </>
         )}
       </div>

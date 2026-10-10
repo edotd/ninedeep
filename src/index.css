@@ -3086,3 +3086,25 @@ body:has(.trans-screen){padding-bottom:0;}
 .lb-actions.in-header .lb-save{padding:0 10px;font-size:9px;letter-spacing:.1em;white-space:nowrap;background:#3C4A69;color:#A9B4C9;}
 .lb-actions.in-header .lb-save.ready{background:var(--stamp);color:var(--form);}
 .lb-actions:not(.in-header) .lb-auto{display:flex;align-items:center;justify-content:center;}
+
+/* Top bar metric swap (franchise metrics <-> lineup stats): roll out, then roll in, staggered. */
+@keyframes ts-metric-out{to{opacity:0;transform:translateY(-14px);filter:blur(2px);}}
+@keyframes ts-metric-in{from{opacity:0;transform:translateY(16px);filter:blur(2px);}to{opacity:1;transform:none;filter:none;}}
+.ts-masthead-right.swap-out .ts-hero-metric{animation:ts-metric-out .19s cubic-bezier(.4,0,1,1) both;animation-delay:calc(var(--i,0) * 22ms);}
+.ts-masthead-right.swap-in .ts-hero-metric{animation:ts-metric-in .42s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0) * 55ms);}
+@media (prefers-reduced-motion: reduce){.ts-masthead-right.swap-out .ts-hero-metric,.ts-masthead-right.swap-in .ts-hero-metric{animation:none;}}
+
+/* Rarity label on every real player card (free agency, contracts, draft, rosters): a small tab
+   in the header beside the grade, colored like the reveal's label. The card reveal draws its own
+   label above the card, so the in-card one is hidden there. */
+.pcard-header-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.pcard-rarity-label{font:9px/1 var(--font-label);letter-spacing:.12em;padding:4px 6px 3px;background:#6B7894;color:#E6DCC4;white-space:nowrap;}
+.pcard-rarity-label.r-Prime{background:#8E9BB5;color:var(--ink);}
+.pcard-rarity-label.r-Signature{background:#E8825C;color:var(--ink);}
+.pcard-rarity-label.r-Legendary{background:#F0A03D;color:var(--ink);}
+.card-reveal-face .pcard-rarity-label{display:none;}
+.pcard:not(.pcard-compact) .pcard-header-tier{max-width:84px;}
+/* Lineup title bar: Save grows to fill the space beside the title (randomize stays fixed). */
+.ts-pagebar-actions{flex:1;min-width:0;}
+.lb-actions.in-header{width:100%;}
+.lb-actions.in-header .lb-save{flex:1;min-width:96px;padding:0 14px;font-size:11px;letter-spacing:.12em;}

@@ -98,7 +98,10 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
             <span className="pcard-header-pos">{card.position}</span>
           </div>
         )}
-        <span className="pcard-grade" aria-label={`Player grade ${playerGrade(card)}`}>{playerGrade(card)}</span>
+        <div className="pcard-header-right">
+          {!compact && <span className={`pcard-rarity-label r-${rarity}`}>{rarity.toUpperCase()}</span>}
+          <span className="pcard-grade" aria-label={`Player grade ${playerGrade(card)}`}>{playerGrade(card)}</span>
+        </div>
       </div>
       <div className="pcard-name-block">
         <div className="pcard-jersey" aria-label={`Jersey number ${jerseyNumber(card)}`}>#{jerseyNumber(card)}</div>

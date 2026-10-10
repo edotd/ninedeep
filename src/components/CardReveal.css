@@ -27,6 +27,8 @@
 .card-reveal-modal button{align-self:stretch;margin-top:4px;}
 
 .card-reveal-face{will-change:transform;backface-visibility:hidden;}
+/* Onboarding's full-screen reveal: no forced compositing layer on the face, so Safari hit-tests the rarity label above it normally. */
+.card-reveal-overlay .card-reveal-face{will-change:auto;backface-visibility:visible;}
 
 /* The rarity label's tap target sits above every other region it overlaps. */
 .card-reveal-hotspot.rarity-label{z-index:4;}

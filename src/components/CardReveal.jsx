@@ -76,7 +76,7 @@ function Sheen({ t, tm, cw, ch }) {
 
 // `bare` drops the full-screen chrome (ink ground and Continue button) and centres the
 // reveal in whatever box it's placed in — used by CardRevealPlayer below.
-function Chrome({ t, tm, rarity, cw, ch, onContinue, ctaLabel, bare, shift, children }) {
+function Chrome({ t, tm, rarity, cw, ch, onContinue, ctaLabel, bare, shift, onBadge, children }) {
   const L = rarity === 'Legendary';
   const ui = eo(P(t, tm.ui, 500));
   const flash = tm.flash != null ? Math.max(0, 1 - P(t, tm.flash, 320)) * (t >= tm.flash ? 1 : 0) : 0;
@@ -92,7 +92,7 @@ function Chrome({ t, tm, rarity, cw, ch, onContinue, ctaLabel, bare, shift, chil
       <div style={{ position: 'absolute', left: bare ? '50%' : 201, top: bare ? '50%' : 440 + (shift?.dy || 0), width: 0, height: 0, transform: shift && shift.s !== 1 ? `scale(${shift.s})` : undefined, transformOrigin: '0 0' }}>
         {children}
         {badgeScale > 0 && (
-          <div className="card-reveal-badge" style={{ position: 'absolute', left: cw / 2 - 8, top: -ch / 2 - 13, transform: `translateX(-100%) scale(${badgeScale})`, transformOrigin: '100% 0',
+          <div className="card-reveal-badge" onClick={onBadge} style={{ pointerEvents: onBadge ? 'auto' : undefined, cursor: onBadge ? 'pointer' : undefined, position: 'absolute', left: cw / 2 - 8, top: -ch / 2 - 13, transform: `translateX(-100%) scale(${badgeScale})`, transformOrigin: '100% 0',
             background: RAR[rarity].color, padding: '6px 9px', fontFamily: ARC, fontSize: 13, letterSpacing: '0.14em', color: rarity === 'Core' ? FILE : INK, whiteSpace: 'nowrap',
             boxShadow: L ? `0 0 ${26 * bloom}px ${6 * bloom}px rgba(240,160,61,${0.75 * bloom})` : 'none' }}
           >{rarity.toUpperCase()}</div>
@@ -111,7 +111,7 @@ function Chrome({ t, tm, rarity, cw, ch, onContinue, ctaLabel, bare, shift, chil
   );
 }
 
-function BallReveal({ t, face, cardW, up, rarity, cardHeight, onContinue, ctaLabel, bare, shift }) {
+function BallReveal({ t, face, cardW, up, rarity, cardHeight, onContinue, ctaLabel, bare, shift, onBadge }) {
   const tm = BALL_T[rarity], L = rarity === 'Legendary';
   const cw = cardW * up, ch = cardHeight * up;
   const S = 132, pitch = S * 0.196, dot = S * 0.1;
@@ -172,7 +172,7 @@ function BallReveal({ t, face, cardW, up, rarity, cardHeight, onContinue, ctaLab
   });
   const pw = lerp(dot * 1.5, cw, g), ph = lerp(dot * 1.5, ch, g);
   return (
-    <Chrome t={t} tm={tm} rarity={rarity} cw={cw} ch={ch} onContinue={onContinue} ctaLabel={ctaLabel} bare={bare} shift={shift}>
+    <Chrome t={t} tm={tm} rarity={rarity} cw={cw} ch={ch} onContinue={onContinue} ctaLabel={ctaLabel} bare={bare} shift={shift} onBadge={onBadge}>
       {ballOut < 1 && (
         <div style={{ position: 'absolute', left: -S / 2, top: -S / 2, width: S, height: S, transform: `translate(${sx}px,${sy}px) scale(${c01(pop) * csc * (1 + 0.4 * ballOut)}) rotate(${spin}deg)`, opacity: 1 - ballOut }}>
           <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: FILE }} />
@@ -360,7 +360,7 @@ export default function CardReveal({ kind = 'player', card: dealtCard, team: dea
         className={'card-reveal-stage kind-' + kind}
         style={{ width: STAGE_W, height: STAGE_H, marginLeft: -STAGE_W / 2, marginTop: -STAGE_H / 2, transform: `scale(${scale})` }}
       >
-        <BallReveal t={t} face={face} cardW={cardW} up={up} rarity={rarity} cardHeight={cardHeight} onContinue={onContinue} ctaLabel={kind === 'gm' ? 'START GAME' : 'CONTINUE'} shift={shift} />
+        <BallReveal t={t} face={face} cardW={cardW} up={up} rarity={rarity} cardHeight={cardHeight} onContinue={onContinue} ctaLabel={kind === 'gm' ? 'START GAME' : 'CONTINUE'} shift={shift} onBadge={() => setActiveKey('rarityLabel')} />
         <div className="card-reveal-blurb" style={{ opacity: blurbIn, transform: `translateY(${lerp(-10, 0, blurbIn)}px)` }}>
           <strong>{blurb.title}</strong>
           <span>{blurb.text}</span>
