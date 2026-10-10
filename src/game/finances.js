@@ -9,7 +9,7 @@
 // charges count down each season transition. Hiring the replacement coach still costs its
 // own salary this season on top of the outgoing coach's dead cap.
 import { FANBASE_BOOST_COST, FANBASE_BOOST_AMOUNT, ROSTER_SIZE } from './constants';
-import { rosterSalary, gmCost, overageAllowance } from './economy';
+import { rosterSalary, gmCost, overageAllowance, capArchitectBonus } from './economy';
 import { drawGM } from './gm';
 import { recordFreeAgencyActivity } from './freeAgencyActivity';
 
@@ -76,8 +76,8 @@ export function fireGM(state, teamIdx) {
   if (!team?.gmType) return { ok: false, msg: 'No GM to fire.' };
   if (team.gmChangeSeason === state.season) return { ok: false, msg: 'GM already replaced this season.' };
   const next = drawGM();
-  const oldCapBonus = team.gmTrait?.name === 'Cap Architect' ? (team.gmTrait.value || 0) : 0;
-  const newCapBonus = next.trait?.name === 'Cap Architect' ? (next.trait.value || 0) : 0;
+  const oldCapBonus = capArchitectBonus(team.gmTrait);
+  const newCapBonus = capArchitectBonus(next.trait);
   const capChange = newCapBonus - oldCapBonus;
   addDeadCap(team, gmCost(team.gmType) / 2, 1, {
     kind: 'gm', label: team.gmType || 'General Manager', detail: team.gmTrait?.name || '',

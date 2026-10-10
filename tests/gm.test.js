@@ -13,7 +13,7 @@ test('Deal Maker GM discounts offseason signings', () => {
   assert.equal(GM_BONUS_RATE, 0.02);
   assert.equal(signed.salary, 2.94);
   assert.equal(card.salary, 3);
-  assert.equal(rosterSalary(team), 3.94);
+  assert.equal(rosterSalary(team), Math.round((0.5 + 2.94 + gmCost('General Manager')) * 100) / 100);
   assert.equal(formatCoins(signed.salary), '🪙2.94');
   assert.equal(offseasonPrice({ gmType: 'General Manager' }, 3), 3);
 });
@@ -35,14 +35,14 @@ test('hands-off bonus follows coach and complete starting-five continuity', () =
 test('Cap Architect is the only GM source of additional base budget', () => {
   const team = { hand: [], coach: { salary: 0 }, gmType: 'General Manager', gmTrait: { name: 'Deal Maker', value: 4 }, market: { name: 'Massive', capAdj: 99 }, attendance: 1 };
   finalizeCap(team);
-  assert.equal(team.seasonCap, 20);
+  assert.equal(team.seasonCap, 100);
   team.gmTrait = { name: 'Cap Architect', value: 4 };
   finalizeCap(team);
-  assert.equal(team.seasonCap, 24);
+  assert.equal(team.seasonCap, 120);
 });
 
 test('firing a GM draws a new rarity and trait, leaves one season of dead cap, and is once per season', () => {
-  const team = { id: 0, gmType: 'General Manager', gmRarity: 'Core', gmTrait: { name: 'Deal Maker', value: 1 }, seasonCap: 20, attendance: 0.5, hand: [], coach: { salary: 0 } };
+  const team = { id: 0, gmType: 'General Manager', gmRarity: 'Core', gmTrait: { name: 'Deal Maker', value: 1 }, seasonCap: 100, attendance: 0.5, hand: [], coach: { salary: 0 } };
   const state = { season: 2, teams: [team], settings: { coachChangesEnabled: true } };
   const outgoingCost = gmCost(team.gmType);
   const result = fireGM(state, 0);
@@ -60,7 +60,7 @@ test('firing a GM draws a new rarity and trait, leaves one season of dead cap, a
     detail: 'Deal Maker',
   }]);
   assert.equal(rosterSalary(team), gmCost(team.gmType) + Math.round((outgoingCost / 2) * 100) / 100);
-  assert(team.seasonCap >= 20 && team.seasonCap <= 24);
+  assert(team.seasonCap >= 100 && team.seasonCap <= 120);
   assert.equal(fireGM(state, 0).ok, false);
   const otherGM = drawGM();
   assert.equal(otherGM.market, undefined);

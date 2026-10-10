@@ -2819,14 +2819,15 @@ body:has(.trans-screen){padding-bottom:0;}
 .tm-budget .tm-tile-head b{font:400 11px var(--font-label);letter-spacing:.14em;}
 .tm-budget .tm-tile-head i{font-size:24px;}
 .tm-seal{position:absolute;top:0;right:0;width:70px;height:66px;border-radius:0 0 0 14px;box-shadow:-4px 4px 0 #E3D8BD;display:flex;align-items:center;justify-content:center;font:400 46px/.76 var(--font-display);}
-.tm-roster{display:flex;flex-direction:column;padding-top:18px;}
-.tm-roster-row{display:flex;gap:4px;align-items:flex-start;}
-.tm-num{flex:1;min-width:0;box-sizing:border-box;margin:0;padding:12px 0;min-height:60px;border:0;text-align:center;background:#1E2B47;color:#E6DCC4;font:400 38px/.84 var(--font-display);cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.tm-roster{--w:clamp(40px,13.6vw,54px);--g:8px;display:flex;flex-direction:column;padding-top:18px;}
+.tm-roster-row{display:flex;justify-content:center;gap:var(--g);align-items:flex-start;}
+.tm-bench-row{margin-top:12px;}
+.tm-num{flex:0 0 var(--w);width:var(--w);min-width:0;box-sizing:border-box;margin:0;padding:12px 0;min-height:60px;border:0;text-align:center;background:#1E2B47;color:#E6DCC4;font:400 38px/.84 var(--font-display);cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .tm-num.top{box-shadow:inset 0 -3px 0 #F0A03D;}
 .tm-num.empty{background:transparent;box-shadow:inset 0 0 0 1.5px #4E5B73;cursor:inherit;}
-.tm-num.bench{flex:none;width:100%;background:transparent;color:#4E5B73;box-shadow:inset 0 0 0 1.5px #4E5B73;}
+.tm-num.bench{flex:none;width:var(--w);background:transparent;color:#4E5B73;box-shadow:inset 0 0 0 1.5px #4E5B73;}
 .tm-gap{width:6px;flex:none;}
-.tm-bench{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
+.tm-bench{flex:0 0 var(--w);min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;}
 .tm-bench small{font:9px var(--font-mono);letter-spacing:.1em;color:#625A44;text-align:center;}
 .tm-brackets{position:relative;display:block;margin-top:-8px;}
 .tm-stub{position:absolute;top:0;width:2px;margin-left:-1px;background:#3F6B52;}
@@ -3230,9 +3231,11 @@ body:has(.trans-screen){padding-bottom:0;}
 
 .fo-overlay{position:fixed;left:0;right:0;top:0;bottom:var(--mobile-persistent-bar-height,72px);z-index:7;display:flex;align-items:center;justify-content:center;padding:16px 12px;box-sizing:border-box;overflow:hidden;background:rgba(14,22,40,.94);animation:fo-dim .3s ease-out both;}
 .fo-overlay.leaving{animation:fo-dim-out .26s ease-in both;pointer-events:none;}
-.fo-overlay-body{width:300px;display:flex;flex-direction:column;gap:12px;transform-origin:50% 100%;animation:fo-card-in .46s cubic-bezier(.2,.8,.2,1) both;}
-.fo-overlay.coach .fo-overlay-body{transform-origin:25% 100%;}
-.fo-overlay.gm .fo-overlay-body{transform-origin:75% 100%;}
+.fo-overlay-body{width:300px;flex:none;transform-origin:50% 50%;animation:fo-card-in .46s cubic-bezier(.2,.8,.2,1) both;}
+.fo-overlay.coach{--fo-from-x:-35%;}
+.fo-overlay.gm{--fo-from-x:35%;}
+.fo-overlay-actions{position:absolute;left:16px;right:16px;bottom:12px;display:flex;flex-direction:column;gap:8px;max-width:340px;margin:0 auto;}
+.fo-overlay.leaving .fo-overlay-actions{opacity:0;transition:opacity .15s;}
 .fo-overlay.leaving .fo-overlay-body{animation:fo-card-out .26s ease-in both;}
 .fo-overlay-body .fo2-wrap{width:100%;max-width:none;}
 .fo-overlay-body .fo2-wrap .fo2-card{margin:0;}
@@ -3241,6 +3244,6 @@ body:has(.trans-screen){padding-bottom:0;}
 .mobile-shell.fo-open .bottombar{display:none;}
 @keyframes fo-dim{from{opacity:0;}to{opacity:1;}}
 @keyframes fo-dim-out{from{opacity:1;}to{opacity:0;}}
-@keyframes fo-card-in{from{opacity:0;transform:translateY(55%) scale(calc(var(--fo-scale,1.2) * .3));}to{opacity:1;transform:scale(var(--fo-scale,1.2));}}
-@keyframes fo-card-out{from{opacity:1;transform:scale(var(--fo-scale,1.2));}to{opacity:0;transform:translateY(55%) scale(calc(var(--fo-scale,1.2) * .3));}}
+@keyframes fo-card-in{from{opacity:0;transform:translate(var(--fo-from-x,0),40vh) scale(calc(var(--fo-scale,1.2) * .3));}to{opacity:1;transform:scale(var(--fo-scale,1.2));}}
+@keyframes fo-card-out{from{opacity:1;transform:scale(var(--fo-scale,1.2));}to{opacity:0;transform:translate(var(--fo-from-x,0),40vh) scale(calc(var(--fo-scale,1.2) * .3));}}
 @media (prefers-reduced-motion: reduce){.fo-overlay,.fo-overlay-body{animation:none;}}

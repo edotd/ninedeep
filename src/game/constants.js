@@ -1,6 +1,12 @@
 // Ported verbatim from nine-deep.html — the single-player prototype is the spec.
 // Do not change values or behavior here without checking against that file.
 
+// Every budget figure in the game (the cap, salaries, dead cap, bids, fanbase investment…) is
+// written on a 100-point scale: the cap starts at 100. These were authored when the cap was 20,
+// so toBudget(x) lifts an old-scale figure onto the current one, rounded to a whole point.
+export const BUDGET_SCALE = 5;
+export const toBudget = (n) => Math.round(n * BUDGET_SCALE);
+
 export const POSITIONS = ['Guard', 'Forward', 'Big'];
 export const ERA_LENGTH = 9;
 export const LEAGUE_TEAM_COUNT = 9;
@@ -10,8 +16,8 @@ export const BENCH_SIZE = ROSTER_SIZE - STARTER_COUNT;
 
 // Forfeiting a pick's cap bonus scales from FORFEIT_BONUS_MAX (1st overall) down to
 // FORFEIT_BONUS_MIN (last) — see draft.js's forfeitBonusForPosition.
-export const FORFEIT_BONUS_MAX = 2;
-export const FORFEIT_BONUS_MIN = 0.5;
+export const FORFEIT_BONUS_MAX = toBudget(2);
+export const FORFEIT_BONUS_MIN = toBudget(0.5);
 
 export const ARCHETYPES = {
   'Pass-First': { base: { SCO: 4, PLM: 10, REB: 3, DEF: 5 }, peak: 'PLM' },
@@ -85,8 +91,8 @@ export const FREE_AGENT_TIER = { name: 'Undrafted', uniform: 0.7, peak: 1, contr
 export const BARGAIN_FREE_AGENT_TIER = { name: 'Undrafted', uniform: 0.5, peak: 1, contract: 2, rarity: 'Core' };
 export const BARGAIN_FREE_AGENT_COUNT = 3;
 export const FREE_AGENT_POOL_SIZE = 12;
-export const MIN_PLAYER_SALARY = 0.25;
-export const MIN_GM_COST = 0.5;
+export const MIN_PLAYER_SALARY = toBudget(0.25);
+export const MIN_GM_COST = toBudget(0.5);
 
 // A team can lock in its lineup up to this many points over its own salary cap (see
 // confirmLineup, engine.js) rather than being forced to cut down to the exact number — the
@@ -94,9 +100,9 @@ export const MIN_GM_COST = 0.5;
 // team can keep its stars at the cost of its depth instead of always being turned away outright.
 // Never two seasons running, though — confirmLineup also blocks a team from going over budget
 // again the season right after it already did.
-export const MAX_CAP_OVERAGE = 3;
-// Every this many cap points over, the bench score loses 1 — 0.5 over is -1, 1.0 over is -2.
-export const BENCH_OVERAGE_STEP = 0.5;
+export const MAX_CAP_OVERAGE = toBudget(3);
+// Every this many cap points over, the bench score loses 1 — 3 over is -1, 6 over is -2.
+export const BENCH_OVERAGE_STEP = 3;
 
 // League Accolades — elite, statistical-distinction tiers. These only roll on players in
 // the Prime career stage and never appear in the draft. `description` is shown to the user
@@ -146,18 +152,18 @@ export const ON_THE_FLY_CHANCE = 0.3;
 // (see cards.js's drawCoachCard) — a range instead of one fixed number, so two coaches with the
 // same modifier aren't always identically priced.
 export const COACH_MODIFIERS = [
-  { name: 'Strategist', mult: 1.3, die: 6, weight: 30, salaryMin: 0.25, salaryMax: 0.75, ability: 'Deals the team one extra Adjustment card every season.', rarity: 'Core' },
-  { name: 'Former Player', mult: 1.6, die: 6, weight: 25, salaryMin: 1.0, salaryMax: 1.5, ability: '+3 to the coach’s rolled player relationship.', rarity: 'Prime' },
-  { name: 'Collegiate Success', mult: 1.1, die: 6, weight: 25, salaryMin: 0.25, salaryMax: 0.75, ability: '+3% Off/Def and +1 die size for every consecutive season retained (stacks).', rarity: 'Prime' },
-  { name: 'Hot Headed', mult: 1.4, die: 7, weight: 12, salaryMin: 0.75, salaryMax: 1.25, ability: '', rarity: 'Signature' },
-  { name: 'On The Fly', mult: 1.15, die: 6, weight: 15, salaryMin: 0.75, salaryMax: 1.25, ability: `${Math.round(ON_THE_FLY_CHANCE * 100)}% chance to draw a new Adjustment card when possession changes during a matchup.`, rarity: 'Prime' },
-  { name: 'More with Less', mult: 1.2, die: 6, weight: 15, salaryMin: 0.75, salaryMax: 1.25, ability: 'Avoids Offense and Defense penalties for carrying fewer than nine players.', rarity: 'Prime' },
-  { name: 'Team Builder', mult: 1.2, die: 6, weight: 20, salaryMin: 0.5, salaryMax: 1.0, ability: '+0.25% Off/Def for every consecutive season retained (stacks).', rarity: 'Core' },
-  { name: 'Deep Rotation', mult: 1.2, die: 6, weight: 18, salaryMin: 0.75, salaryMax: 1.25, ability: '+1d6 Bench Output in every matchup.', rarity: 'Prime' },
-  { name: 'Genius', mult: 1.5, die: 6, weight: 10, salaryMin: 1.5, salaryMax: 2.5, ability: '', rarity: 'Signature' },
-  { name: 'Gamemaster', mult: 1.2, die: 6, weight: 12, salaryMin: 1.0, salaryMax: 1.75, ability: 'Boosts the coach’s chosen Gameplan by 4–10%, based on rarity.', rarity: 'Signature' },
-  { name: 'Fully Prepared', mult: 1.2, die: 6, weight: 15, salaryMin: 0.75, salaryMax: 1.25, ability: 'The secondary Gameplan takes no reduction.', rarity: 'Prime' },
-  { name: 'Hall of Fame', mult: 2.0, hofDie: true, weight: 8, salaryMin: 2.5, salaryMax: 3.5, ability: '', rarity: 'Legendary' },
+  { name: 'Strategist', mult: 1.3, die: 6, weight: 30, salaryMin: toBudget(0.25), salaryMax: toBudget(0.75), ability: 'Deals the team one extra Adjustment card every season.', rarity: 'Core' },
+  { name: 'Former Player', mult: 1.6, die: 6, weight: 25, salaryMin: toBudget(1.0), salaryMax: toBudget(1.5), ability: '+3 to the coach’s rolled player relationship.', rarity: 'Prime' },
+  { name: 'Collegiate Success', mult: 1.1, die: 6, weight: 25, salaryMin: toBudget(0.25), salaryMax: toBudget(0.75), ability: '+3% Off/Def and +1 die size for every consecutive season retained (stacks).', rarity: 'Prime' },
+  { name: 'Hot Headed', mult: 1.4, die: 7, weight: 12, salaryMin: toBudget(0.75), salaryMax: toBudget(1.25), ability: '', rarity: 'Signature' },
+  { name: 'On The Fly', mult: 1.15, die: 6, weight: 15, salaryMin: toBudget(0.75), salaryMax: toBudget(1.25), ability: `${Math.round(ON_THE_FLY_CHANCE * 100)}% chance to draw a new Adjustment card when possession changes during a matchup.`, rarity: 'Prime' },
+  { name: 'More with Less', mult: 1.2, die: 6, weight: 15, salaryMin: toBudget(0.75), salaryMax: toBudget(1.25), ability: 'Avoids Offense and Defense penalties for carrying fewer than nine players.', rarity: 'Prime' },
+  { name: 'Team Builder', mult: 1.2, die: 6, weight: 20, salaryMin: toBudget(0.5), salaryMax: toBudget(1.0), ability: '+0.25% Off/Def for every consecutive season retained (stacks).', rarity: 'Core' },
+  { name: 'Deep Rotation', mult: 1.2, die: 6, weight: 18, salaryMin: toBudget(0.75), salaryMax: toBudget(1.25), ability: '+1d6 Bench Output in every matchup.', rarity: 'Prime' },
+  { name: 'Genius', mult: 1.5, die: 6, weight: 10, salaryMin: toBudget(1.5), salaryMax: toBudget(2.5), ability: '', rarity: 'Signature' },
+  { name: 'Gamemaster', mult: 1.2, die: 6, weight: 12, salaryMin: toBudget(1.0), salaryMax: toBudget(1.75), ability: 'Boosts the coach’s chosen Gameplan by 4–10%, based on rarity.', rarity: 'Signature' },
+  { name: 'Fully Prepared', mult: 1.2, die: 6, weight: 15, salaryMin: toBudget(0.75), salaryMax: toBudget(1.25), ability: 'The secondary Gameplan takes no reduction.', rarity: 'Prime' },
+  { name: 'Hall of Fame', mult: 2.0, hofDie: true, weight: 8, salaryMin: toBudget(2.5), salaryMax: toBudget(3.5), ability: '', rarity: 'Legendary' },
 ];
 // Fanbase archetype — drawn once per era, like Coach. Attendance itself is computed fresh
 // each season (see game/fanbase.js) from the archetype's formula, a shared floor, performance,
@@ -206,7 +212,7 @@ export const HANDS_OFF_BONUS_CAP = 0.12;
 // Front-office moves (fire coach, fire GM, invest in fanbase) spend budget room —
 // see game/finances.js — rather than a separate currency, so these costs are tuned to
 // typical budget-room magnitudes (a few coins), not a standalone balance's larger scale.
-export const FANBASE_BOOST_COST = 2;
+export const FANBASE_BOOST_COST = toBudget(2);
 export const FANBASE_BOOST_AMOUNT = 0.02;
 
 // Season milestone bumps — permanent additions to a team's fanbaseBaseline (see

@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { jerseyNumber } from '../game/cards';
 import { formatCoins, spendableRoom } from '../game/economy';
-import { freeAgentPriority, pendingFaHoldTotal, winningValue } from '../game/bidding';
+import { freeAgentPriority, pendingFaHoldTotal, winningValue, BID_SALARY_STEP } from '../game/bidding';
 import { MAX_CONTRACT_YEARS } from '../game/constants';
 
 const YEAR_OPTIONS = Array.from({ length: MAX_CONTRACT_YEARS }, (_, i) => i + 1);
 const BONUS_LABEL = {
-  Salary: (min, tier) => `${formatCoins(min + tier * 0.5)}${tier === 3 ? '+' : ''}`,
+  Salary: (min, tier) => `${formatCoins(min + tier * BID_SALARY_STEP)}${tier === 3 ? '+' : ''}`,
   Contract: (min, tier) => `${min + tier}${tier === 3 ? '+' : ''} yr${min + tier === 1 ? '' : 's'}`,
   Winning: (min, tier) => ['Missed playoffs', 'Made playoffs', 'Conference finals', 'Won it all'][tier],
 };
@@ -27,7 +27,7 @@ export default function BiddingModal({ state, actions, myTeamId, card, onClose, 
   const floor = myBid ? { salary: myBid.salary, years: myBid.years } : { salary: minSalary, years: minYears };
   const room = spendableRoom(team) - pendingFaHoldTotal(state, team, card.id);
 
-  const bumpSalary = (delta) => setOffer((o) => ({ ...o, salary: Math.max(floor.salary, Math.round((o.salary + delta) * 2) / 2) }));
+  const bumpSalary = (delta) => setOffer((o) => ({ ...o, salary: Math.max(floor.salary, Math.round(o.salary + delta)) }));
   const setYears = (y) => setOffer((o) => ({ ...o, years: y }));
 
   const submitOpen = () => {
@@ -101,9 +101,9 @@ export default function BiddingModal({ state, actions, myTeamId, card, onClose, 
             <div className="neg-stepper-row">
               <span className="neg-microlabel">Salary / Season</span>
               <div className="neg-stepper">
-                <button type="button" onClick={() => bumpSalary(-0.5)} disabled={offer.salary <= minSalary}>−</button>
+                <button type="button" onClick={() => bumpSalary(-BID_SALARY_STEP)} disabled={offer.salary <= minSalary}>−</button>
                 <span>{formatCoins(offer.salary)}</span>
-                <button type="button" onClick={() => bumpSalary(0.5)}>+</button>
+                <button type="button" onClick={() => bumpSalary(BID_SALARY_STEP)}>+</button>
               </div>
             </div>
             <div className="neg-years-row">
@@ -126,9 +126,9 @@ export default function BiddingModal({ state, actions, myTeamId, card, onClose, 
             <div className="neg-stepper-row">
               <span className="neg-microlabel">Salary / Season · was {formatCoins(floor.salary)}</span>
               <div className="neg-stepper">
-                <button type="button" onClick={() => bumpSalary(-0.5)} disabled={offer.salary <= floor.salary}>−</button>
+                <button type="button" onClick={() => bumpSalary(-BID_SALARY_STEP)} disabled={offer.salary <= floor.salary}>−</button>
                 <span>{formatCoins(offer.salary)}</span>
-                <button type="button" onClick={() => bumpSalary(0.5)}>+</button>
+                <button type="button" onClick={() => bumpSalary(BID_SALARY_STEP)}>+</button>
               </div>
             </div>
             <div className="neg-years-row">

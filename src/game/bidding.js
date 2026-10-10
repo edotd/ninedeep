@@ -10,7 +10,7 @@ import { teamOutput } from './matchup';
 import { wasReleasedByTeamThisSeason } from './season';
 import { MAX_CONTRACT_YEARS, ROSTER_SIZE } from './constants';
 
-export const BID_SALARY_STEP = 0.5;
+export const BID_SALARY_STEP = 3;
 export const BID_PRIORITIES = ['Salary', 'Contract', 'Winning'];
 const RESULT_BONUS = { MISSED: 0, R1: 1, R2: 2, FINALS: 2.5, TITLE: 3 };
 
@@ -18,7 +18,7 @@ const RESULT_BONUS = { MISSED: 0, R1: 1, R2: 2, FINALS: 2.5, TITLE: 3 };
 // NOT to BID_SALARY_STEP's own 0.5, which would incorrectly round a genuine quarter-point
 // minimum (MIN_PLAYER_SALARY is 0.25) up to the next half-point, rejecting a bid at the exact
 // displayed minimum as "over the cap" before the cap check even runs.
-function round1(n) { return Math.round(n * 4) / 4; }
+function round1(n) { return Math.round(n); }
 function hashSeed(str) {
   let h = 0;
   for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
@@ -47,9 +47,10 @@ export function winningValue(team) {
 export function bonusForPriority(priority, team, bidSalary, bidYears, minSalary, minYears) {
   if (priority === 'Salary') {
     const over = round1(bidSalary - minSalary);
-    if (over >= 1.5) return 3;
-    if (over >= 1) return 2;
-    if (over >= 0.5) return 1;
+    // One bonus point per BID_SALARY_STEP over the player's minimum, up to 3.
+    if (over >= BID_SALARY_STEP * 3) return 3;
+    if (over >= BID_SALARY_STEP * 2) return 2;
+    if (over >= BID_SALARY_STEP) return 1;
     return 0;
   }
   if (priority === 'Contract') return Math.min(3, Math.max(0, bidYears - minYears));

@@ -39,7 +39,7 @@ test('Adjustment definitions exclude seeding and per-position cards, and draw wi
 test('every playable definition resolves and consumes once without mutating roster stats', () => {
   for (const definition of deck.filter(c => c.playable)) {
     const state = game(); const [a,b] = state.teams; const c = card(definition.name);
-    if (c.maxSalary != null) a.hand.find(p => p.id === a.activeIds[0]).salary = 1;
+    if (c.maxSalary != null) a.hand.find(p => p.id === a.activeIds[0]).salary = c.maxSalary;
     a.matchupCards = [c]; b.matchupCards = [card('Friendly Bounce')];
     const before = JSON.stringify([a.hand,b.hand]); const ea = extra(), eb = extra();
     assert(applySupplementalCard(state,a,b,c,ea,eb,a.activeIds,b.activeIds,null,'SCO','offense'), c.name);
@@ -240,7 +240,7 @@ test('CPU playoff series can be started or simulated without a human participant
 
 test('cap hit preserves fractions for every chosen stat without changing salary or permanent stats', () => {
   const state=game(), [a,b]=state.teams;
-  const starter=a.hand.find(p=>p.id===a.activeIds[0]); starter.salary=3.5;
+  const starter=a.hand.find(p=>p.id===a.activeIds[0]); starter.salary=17.5;
   const before=JSON.stringify(a.hand);
   for (const stat of ['SCO','PLM','REB','DEF']) {
     const c=card('Earn Your Contract'), effects=extra();
@@ -285,8 +285,8 @@ test('per-position and 3-of-a-kind bonuses moved from Adjustment to Gameplan car
 
 test('Bargain Production rejects expensive starters and bench players; AI finds eligible starter', () => {
   const state=game(), [a,b]=state.teams;
-  a.hand.forEach(p=>{p.salary=3.5;});
-  const cheap=a.hand.find(p=>p.id===a.activeIds[1]);cheap.salary=1;
+  a.hand.forEach(p=>{p.salary=17.5;});
+  const cheap=a.hand.find(p=>p.id===a.activeIds[1]);cheap.salary=5;
   const c=card('Bargain Production'),effects=extra();
   assert.equal(applySupplementalCard(state,a,b,c,effects,extra(),a.activeIds,b.activeIds,a.activeIds[0]),null);
   assert.equal(c.used,false);
@@ -303,10 +303,10 @@ test('a roster locked in over its own cap loses bench score proportionally', () 
   const used = rosterSalary(a);
   a.seasonCap = used; // exactly at cap: no penalty
   assert.equal(benchScore(a), baseline);
-  a.seasonCap = used - 0.5; // 0.5 over -> -1
+  a.seasonCap = used - 3; // 3 over -> -1
   assert.equal(benchScore(a), baseline - 1);
-  a.seasonCap = used - 1.0; // 1.0 over -> -2
+  a.seasonCap = used - 6; // 6 over -> -2
   assert.equal(benchScore(a), baseline - 2);
-  a.seasonCap = used - 2.0; // 2.0 over (the max confirmLineup allows) -> -4
+  a.seasonCap = used - 12; // 12 over (within the 15 confirmLineup allows) -> -4
   assert.equal(benchScore(a), baseline - 4);
 });

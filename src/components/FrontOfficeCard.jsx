@@ -1,4 +1,4 @@
-import { formatCoins, gmCost } from '../game/economy';
+import { formatCoins, gmCost, capArchitectBonus } from '../game/economy';
 import { retentionBonus, relationshipBonus } from '../game/cards';
 import CardTypeMark from './CardTypeMark';
 import BallMark from './BallMark';
@@ -94,11 +94,11 @@ function marketContent(team) {
   const percentValue = (trait.value || 0) * 2;
   const traitValue = trait.name === 'Third Eye'
     ? 'Peak projection'
-    : trait.name === 'Cap Architect' ? `+${formatCoins(trait.value)}`
+    : trait.name === 'Cap Architect' ? `+${formatCoins(capArchitectBonus(trait))}`
       : trait.name === 'Talent Hawk' ? `+${trait.value} scouted`
         : `+${trait.value * 2}%`;
   const traitDetail = trait.name === 'Cap Architect'
-    ? `${trait.name} — Increases the franchise budget by ${formatCoins(trait.value || 0)}.`
+    ? `${trait.name} — Increases the franchise budget by ${formatCoins(capArchitectBonus(trait))}.`
     : trait.name === 'Third Eye'
       ? `${trait.name} — Reveals a scouted player's projected peak-prime stats.`
       : trait.name === 'Talent Hawk'
@@ -115,7 +115,7 @@ function marketContent(team) {
     dispositionTone: 'approved-ink',
     effects: [
       { label: 'Cost', value: formatCoins(gmCost(type)), tone: 'file' },
-      { label: 'Budget Increase', value: trait.name === 'Cap Architect' ? `+${formatCoins(trait.value)}` : '—', tone: trait.name === 'Cap Architect' ? 'approved-ink' : 'file' },
+      { label: 'Budget Increase', value: trait.name === 'Cap Architect' ? `+${formatCoins(capArchitectBonus(trait))}` : '—', tone: trait.name === 'Cap Architect' ? 'approved-ink' : 'file' },
       { label: 'Trait', value: traitValue, tone: 'approved-ink' },
     ],
     detail: traitDetail,

@@ -4,7 +4,7 @@ import { spendableRoom, isOverLimit, remainingCap } from '../src/game/economy.js
 import { MAX_CAP_OVERAGE } from '../src/game/constants.js';
 
 function team(extra = {}) {
-  return { seasonCap: 20, hand: [{ salary: 20 }], coach: null, gmType: null, deadCap: [], ...extra };
+  return { seasonCap: 100, hand: [{ salary: 100 }], coach: null, gmType: null, deadCap: [], ...extra };
 }
 
 test('a team at its cap can still commit up to MAX_CAP_OVERAGE more', () => {
@@ -12,10 +12,10 @@ test('a team at its cap can still commit up to MAX_CAP_OVERAGE more', () => {
   assert.equal(remainingCap(t), 0);
   assert.equal(spendableRoom(t), MAX_CAP_OVERAGE);
   assert.equal(isOverLimit(t), false);
-  t.hand.push({ salary: 2.5 });
+  t.hand.push({ salary: 12.5 });
   assert.equal(isOverLimit(t), false);
-  assert.equal(spendableRoom(t), 0.5);
-  t.hand.push({ salary: 1 });
+  assert.equal(spendableRoom(t), 2.5);
+  t.hand.push({ salary: 5 });
   assert.equal(isOverLimit(t), true);
 });
 

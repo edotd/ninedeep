@@ -9,9 +9,9 @@ import { rollDie } from './rng';
 import { spendableRoom } from './economy';
 import { acquireOffseasonPlayer } from './gm';
 import { recordFreeAgencyActivity } from './freeAgencyActivity';
-import { MIN_PLAYER_SALARY, MAX_CONTRACT_YEARS } from './constants';
+import { MIN_PLAYER_SALARY, MAX_CONTRACT_YEARS, toBudget } from './constants';
 
-export const SALARY_STEP = 0.5;
+export const SALARY_STEP = 3;
 export const MAX_NEGOTIATION_ROLLS = 3;
 export const NEGOTIATION_BANDS = ['Lowball', 'Discounted', 'Fair', 'Premium'];
 const BAND_THRESHOLD = { Lowball: 7, Discounted: 5, Fair: 3, Premium: 2 };
@@ -19,13 +19,13 @@ const BAND_THRESHOLD = { Lowball: 7, Discounted: 5, Fair: 3, Premium: 2 };
 // Snaps to the game's real salary granularity (quarter-point, same as makeCard/statsToCoins) —
 // NOT SALARY_STEP's own 0.5, which would incorrectly round a genuine quarter-point minimum
 // (MIN_PLAYER_SALARY is 0.25) up to the next half-point (see bidding.js's identical fix).
-function round1(n) { return Math.round(n * 4) / 4; }
+function round1(n) { return Math.round(n); }
 
 // Salary band against the ask, then dropped one band if the offered term is shorter than
 // requested — see the design doc's band table. Longer terms never raise the band by themselves.
 export function negotiationBand(askSalary, askYears, offerSalary, offerYears) {
   const diff = round1(offerSalary - askSalary);
-  let idx = diff >= 0.5 ? 3 : diff === 0 ? 2 : diff === -0.5 ? 1 : 0;
+  let idx = diff >= SALARY_STEP ? 3 : diff === 0 ? 2 : diff === -SALARY_STEP ? 1 : 0;
   if (offerYears < askYears) idx = Math.max(0, idx - 1);
   return NEGOTIATION_BANDS[idx];
 }
@@ -74,7 +74,7 @@ export function openNegotiation(state, teamIdx, cardId) {
     teamId: team.id,
     askSalary: card.salary,
     askYears: card.maxContract,
-    minSalary: Math.max(MIN_PLAYER_SALARY, round1(card.salary - 1)),
+    minSalary: Math.max(MIN_PLAYER_SALARY, round1(card.salary - toBudget(1))),
     offer: { salary: card.salary, years: card.maxContract },
     rollsUsed: 0,
     history: [],

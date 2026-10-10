@@ -162,12 +162,12 @@ export function overallPickPosition(state) {
 
 // Scales linearly from FORFEIT_BONUS_MAX at the 1st overall pick down to FORFEIT_BONUS_MIN at
 // the last — mirrors that an early pick (worst record, first choice of the pool) was worth more
-// than a late one, so giving it up should pay more too. Rounded to the same 0.25 granularity
-// salaries use.
+// than a late one, so giving it up should pay more too. Rounded to a whole point, like
+// salaries.
 export function forfeitBonusForPosition(position) {
   const span = LEAGUE_TEAM_COUNT - 1;
   const raw = span <= 0 ? FORFEIT_BONUS_MAX : FORFEIT_BONUS_MAX - ((position - 1) * (FORFEIT_BONUS_MAX - FORFEIT_BONUS_MIN)) / span;
-  return Math.round(raw * 4) / 4;
+  return Math.round(raw);
 }
 
 // Pass on this pick entirely for a cap bonus next season, scaled by how valuable the forfeited

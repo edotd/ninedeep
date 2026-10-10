@@ -1,4 +1,4 @@
-import { POSITIONS } from './constants';
+import { POSITIONS, BUDGET_SCALE } from './constants';
 import { drawMatchupModifierCard } from './cards';
 import { modifierBreakdown } from './roster';
 
@@ -23,7 +23,8 @@ export function applySupplementalCard(state, user, opponent, card, ownExtra, opp
     const player = targetId ? candidates.find((p) => p.id === targetId) : candidates[0];
     if (!player) return null;
     const playerId = player.id;
-    const value = card.effectType === 'CAP_HIT_STAT' ? player.salary : card.value;
+    // Earn Your Contract was written for the old 20-point cap: it adds the cost on that scale.
+    const value = card.effectType === 'CAP_HIT_STAT' ? Math.round((player.salary / BUDGET_SCALE) * 100) / 100 : card.value;
     if (!Number.isFinite(value)) return null;
     extra.statChanges ||= [];
     extra.statChanges.push({ playerId, stat, value });

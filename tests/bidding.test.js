@@ -39,11 +39,12 @@ test('freeAgentPriority is stable for a given card id', () => {
 });
 
 test('bonusForPriority matches the design doc\'s 0-3 category table', () => {
-  assert.equal(bonusForPriority('Salary', {}, 5, 2, 5, 2), 0);
-  assert.equal(bonusForPriority('Salary', {}, 5.5, 2, 5, 2), 1);
-  assert.equal(bonusForPriority('Salary', {}, 6, 2, 5, 2), 2);
-  assert.equal(bonusForPriority('Salary', {}, 6.5, 2, 5, 2), 3);
-  assert.equal(bonusForPriority('Salary', {}, 8, 2, 5, 2), 3);
+  // One bonus point per BID_SALARY_STEP (3) over the minimum, capped at 3.
+  assert.equal(bonusForPriority('Salary', {}, 25, 2, 25, 2), 0);
+  assert.equal(bonusForPriority('Salary', {}, 28, 2, 25, 2), 1);
+  assert.equal(bonusForPriority('Salary', {}, 31, 2, 25, 2), 2);
+  assert.equal(bonusForPriority('Salary', {}, 34, 2, 25, 2), 3);
+  assert.equal(bonusForPriority('Salary', {}, 40, 2, 25, 2), 3);
 
   assert.equal(bonusForPriority('Contract', {}, 5, 2, 5, 2), 0);
   assert.equal(bonusForPriority('Contract', {}, 5, 3, 5, 2), 1);
@@ -95,8 +96,8 @@ test('a raise must improve at least one term and cannot lower either', () => {
   const state = baseState();
   openFreeAgentBid(state, 0, 'p1', 5, 2);
   assert.equal(raiseFreeAgentBid(state, 0, 'p1', 5, 2).ok, false);
-  assert.equal(raiseFreeAgentBid(state, 0, 'p1', 4.5, 3).ok, false);
-  const res = raiseFreeAgentBid(state, 0, 'p1', 5.5, 2);
+  assert.equal(raiseFreeAgentBid(state, 0, 'p1', 4, 3).ok, false);
+  const res = raiseFreeAgentBid(state, 0, 'p1', 8, 2);
   assert.equal(res.ok, true);
   assert.equal(res.resolved, false);
   assert.equal(state.offseason.bidding.p1.bids[0].stage, 'final');
@@ -195,15 +196,15 @@ test('bidding on a card is blocked once this team has closed out free agency', (
 });
 
 test('a bid at the exact minimum salary is accepted even when it uses all remaining room', () => {
-  // MIN_PLAYER_SALARY (0.25) isn't a multiple of BID_SALARY_STEP (0.5) — a prior bug rounded
-  // every submitted salary to the nearest 0.5 before checking it against the cap, which bumped
-  // an exact 0.25 minimum bid up to 0.5 and rejected it as over the cap even though it used
-  // exactly all the room available.
+  // MIN_PLAYER_SALARY (1) isn't a multiple of BID_SALARY_STEP (3) — a prior bug rounded every
+  // submitted salary to the step before checking it against the cap, which bumped an exact
+  // minimum bid up and rejected it as over the cap even though it used exactly all the room
+  // available.
   const state = baseState();
-  state.teams[0].seasonCap = 0.25;
-  state.freeAgents[0].salary = 0.25;
+  state.teams[0].seasonCap = 1;
+  state.freeAgents[0].salary = 1;
   state.freeAgents[0].contract = 3;
-  const res = openFreeAgentBid(state, 0, 'p1', 0.25, 3);
+  const res = openFreeAgentBid(state, 0, 'p1', 1, 3);
   assert.equal(res.ok, true);
-  assert.equal(res.session.bids[0].salary, 0.25);
+  assert.equal(res.session.bids[0].salary, 1);
 });

@@ -1,5 +1,5 @@
 import { rollSkillset } from './skillsets';
-import { ARCHETYPES, POSITIONS, POSITION_MOD, COACH_ARCHETYPES, COACH_MODIFIERS, MATCHUP_MODIFIER_TYPES, PLAYER_RELATIONSHIP_MIN, PLAYER_RELATIONSHIP_MAX, MIN_PLAYER_SALARY } from './constants';
+import { ARCHETYPES, POSITIONS, POSITION_MOD, COACH_ARCHETYPES, COACH_MODIFIERS, MATCHUP_MODIFIER_TYPES, PLAYER_RELATIONSHIP_MIN, PLAYER_RELATIONSHIP_MAX, MIN_PLAYER_SALARY, BUDGET_SCALE, toBudget } from './constants';
 import { rollWithVariance, weightedPick, shuffle } from './rng';
 import { randomCareerStage, careerMultiplier } from './aging';
 
@@ -50,8 +50,8 @@ export function playerGrade(card) {
 }
 
 export function statsToCoins(total) {
-  let v = Math.round(((total - 12) / 6) * 4) / 4;
-  return Math.max(MIN_PLAYER_SALARY, Math.min(5, v));
+  const v = Math.round(((total - 12) / 6) * BUDGET_SCALE);
+  return Math.max(MIN_PLAYER_SALARY, Math.min(toBudget(5), v));
 }
 
 // `tier` always names the card's genuine, independent tier (Role Player, High IQ, Undrafted,
@@ -81,7 +81,7 @@ export function makeCard(state, archName, position, tier, forcedCareerStage = nu
   const contract = Math.max(1, rollWithVariance(shaper.contract, shaper.contractVariance ?? 1));
   const contractDeviation = shaper.contract - contract; // positive = shorter than typical for this shaper
   let salary = statsToCoins(total) * (1 + contractDeviation * 0.15);
-  salary = Math.max(MIN_PLAYER_SALARY, Math.round(salary * 4) / 4);
+  salary = Math.max(MIN_PLAYER_SALARY, Math.round(salary));
   // League Accolades only roll on players in their prime.
   const careerStage = forcedCareerStage || (accolade ? 'Prime' : randomCareerStage());
   return {
@@ -184,11 +184,11 @@ export function drawCoachCard({ excludeHallOfFame = false } = {}) {
 }
 
 // Rolls a coach's salary within their modifier's [salaryMin, salaryMax] band, rounded to the
-// nearest quarter-point like every other salary in the game.
+// whole point like every other salary in the game.
 function rollCoachSalary(mod) {
   if (mod.salaryMin == null || mod.salaryMax == null) return mod.salary;
   const raw = mod.salaryMin + Math.random() * (mod.salaryMax - mod.salaryMin);
-  return Math.round(raw * 4) / 4;
+  return Math.round(raw);
 }
 
 // A coach who's a Former Player relates to the roster better than most — add a flat bonus

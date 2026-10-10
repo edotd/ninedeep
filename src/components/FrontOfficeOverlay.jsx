@@ -28,6 +28,8 @@ export default function FrontOfficeOverlay({ state, actions, myTeamId, which, le
         {isCoach
           ? (team.coach ? <FrontOfficeCard kind="coach" team={team} /> : <div className="ts-empty-coach"><span>Coach</span><strong>Open Slot</strong><small>Choose a replacement in Free Agency.</small></div>)
           : <FrontOfficeCard kind="market" team={team} />}
+      </div>
+      <div className="fo-overlay-actions">
         {canChange && isCoach && team.coach && (
           <button type="button" className="secondary fo-overlay-action" onClick={() => run(actions.fireCoach(myTeamId))}>Fire Coach ({formatCoins(fireCoachDeadCap)})</button>
         )}

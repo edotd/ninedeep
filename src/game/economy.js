@@ -1,7 +1,13 @@
-import { MIN_GM_COST, MAX_CAP_OVERAGE } from './constants';
+import { MIN_GM_COST, MAX_CAP_OVERAGE, BUDGET_SCALE } from './constants';
 
+// The cap every franchise starts from — budgets are on a 100-point scale.
 export function baseCap() {
-  return 20;
+  return 100;
+}
+
+// What a Cap Architect GM adds to the cap: its rolled strength (1-4) in budget points.
+export function capArchitectBonus(trait) {
+  return trait?.name === 'Cap Architect' ? (trait.value || 0) * BUDGET_SCALE : 0;
 }
 
 export function formatCoins(n) {
@@ -12,10 +18,10 @@ export function formatCoins(n) {
 
 export function finalizeCap(team) {
   const base = baseCap();
-  const gmBudget = team.gmTrait?.name === 'Cap Architect' ? (team.gmTrait.value || 0) : 0;
+  const gmBudget = capArchitectBonus(team.gmTrait);
   let cap = base + gmBudget + (team.draftTradeBonus || 0) - (team.lastOverage || 0);
   cap = Math.max(cap, Math.round(base * 0.7));
-  cap = Math.round(cap * 2) / 2;
+  cap = Math.round(cap);
   team.seasonCap = cap;
   team.lastOverage = 0;
   team.draftTradeBonus = 0;

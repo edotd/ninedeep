@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { jerseyNumber } from '../game/cards';
 import { formatCoins, remainingCap, spendableRoom } from '../game/economy';
-import { negotiationBand, negotiationAcceptThreshold, negotiationAcceptChance, MAX_NEGOTIATION_ROLLS } from '../game/negotiation';
-import { MAX_CONTRACT_YEARS } from '../game/constants';
+import { negotiationBand, negotiationAcceptThreshold, negotiationAcceptChance, MAX_NEGOTIATION_ROLLS, SALARY_STEP } from '../game/negotiation';
+import { MAX_CONTRACT_YEARS, toBudget } from '../game/constants';
 import DieFaceStrip from './DieFaceStrip';
 
 const YEAR_OPTIONS = Array.from({ length: MAX_CONTRACT_YEARS }, (_, i) => i + 1);
@@ -33,7 +33,7 @@ export default function NegotiationModal({ state, actions, myTeamId, card, onClo
   const floor = session.pendingCounter ? session.offer : { salary: session.minSalary, years: 1 };
   const rollsLeft = MAX_NEGOTIATION_ROLLS - session.rollsUsed;
 
-  const bumpSalary = (delta) => setOffer((o) => ({ ...o, salary: Math.max(session.minSalary, Math.min(session.askSalary + 4, Math.round((o.salary + delta) * 2) / 2)) }));
+  const bumpSalary = (delta) => setOffer((o) => ({ ...o, salary: Math.max(session.minSalary, Math.min(session.askSalary + toBudget(4), Math.round(o.salary + delta))) }));
   const setYears = (y) => setOffer((o) => ({ ...o, years: y }));
 
   const doRoll = () => {
@@ -107,9 +107,9 @@ export default function NegotiationModal({ state, actions, myTeamId, card, onClo
                 <div className="neg-stepper-row">
                   <span className="neg-microlabel">Salary / Season{floor.salary > session.minSalary ? ` · was ${formatCoins(floor.salary)}` : ''}</span>
                   <div className="neg-stepper">
-                    <button type="button" onClick={() => bumpSalary(-0.5)} disabled={offer.salary <= floor.salary}>−</button>
+                    <button type="button" onClick={() => bumpSalary(-SALARY_STEP)} disabled={offer.salary <= floor.salary}>−</button>
                     <span>{formatCoins(offer.salary)}</span>
-                    <button type="button" onClick={() => bumpSalary(0.5)}>+</button>
+                    <button type="button" onClick={() => bumpSalary(SALARY_STEP)}>+</button>
                   </div>
                 </div>
                 <div className="neg-years-row">

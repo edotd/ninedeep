@@ -37,7 +37,8 @@ function bracketLayout(pairs) {
   return placed;
 }
 
-const colX = (i) => `calc((100% - 30px) / 7 * ${i + 0.5} + ${4 * i}px)`;
+// Centre of starter box i in the centred row of five (box width --w, gap --g, set on .tm-roster).
+const colX = (i) => `calc((100% - (5 * var(--w) + 4 * var(--g))) / 2 + ${i} * (var(--w) + var(--g)) + var(--w) / 2)`;
 
 
 // One lineup box: empty outline until the lineup is set, then the player's letter grade — tap it
@@ -100,9 +101,6 @@ export default function TeamMain({ team, readOnly, onOpen, committed, cap, budge
           <span className="tm-roster">
             <span className="tm-roster-row">
               {Array.from({ length: 5 }, (_, i) => <PlayerBox key={i} card={lineupReady ? starters[i] : null} top={i === topStarter} onPick={setPicked} />)}
-              <span className="tm-gap" />
-              <span className="tm-bench"><PlayerBox card={lineupReady ? sixth : null} bench onPick={setPicked} /><small>6TH</small></span>
-              <span className="tm-bench"><PlayerBox card={lineupReady ? depth : null} bench onPick={setPicked} /><small>DEPTH</small></span>
             </span>
             {brackets.length > 0 && (
               <span className="tm-brackets" style={{ height: 14 + maxLevel * 12 + 14 }}>
@@ -118,6 +116,10 @@ export default function TeamMain({ team, readOnly, onOpen, committed, cap, budge
                 })}
               </span>
             )}
+            <span className="tm-roster-row tm-bench-row">
+              <span className="tm-bench"><PlayerBox card={lineupReady ? sixth : null} bench onPick={setPicked} /><small>6TH</small></span>
+              <span className="tm-bench"><PlayerBox card={lineupReady ? depth : null} bench onPick={setPicked} /><small>DEPTH</small></span>
+            </span>
             <span className="tm-chips">
               {shownPairs.length ? shownPairs.map(({ rule }) => (
                 <span className="tm-chip" key={rule.name}><b className={rule.side}>{initials(rule.name)}</b><em>{rule.name}</em></span>
