@@ -183,6 +183,10 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
   // The Rotation tab's locked carousel now keeps the persistent bar on screen (it used to hide
   // it entirely), so it needs this bar's real height to reserve space for it, the same way it
   // already reserves space for the header via --mobile-persistent-top-height.
+  // The bar unmounts during the simulating/transition phases and mounts a fresh element after,
+  // so the measurement has to re-attach whenever it comes back — otherwise the height stays at
+  // 0 and any screen sized around it (the phone bracket) runs underneath the bar.
+  const barVisible = showChrome && !HIDE_BAR_PHASES.has(state.phase);
   useEffect(() => {
     if (isDesktop || !persistentBarRef.current) return undefined;
     const updateHeight = () => setPersistentBarHeight(persistentBarRef.current?.getBoundingClientRect().height || 0);
@@ -190,7 +194,7 @@ export default function GameShell({ state, actions, myTeamId, onNewEra, onDelete
     const observer = new ResizeObserver(updateHeight);
     observer.observe(persistentBarRef.current);
     return () => observer.disconnect();
-  }, [isDesktop, showChrome, welcomeStep]);
+  }, [isDesktop, showChrome, welcomeStep, barVisible]);
 
   // The live match board and the Rotation tab's locked carousel both need to know the TRUE
   // visible viewport height and the real safe-area inset sizes, in px, to fit their content
