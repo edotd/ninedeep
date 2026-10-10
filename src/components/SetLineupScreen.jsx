@@ -467,7 +467,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
             <div><span>SELECT PLAYER</span><strong>{slotLabel(sheetSlot)}</strong></div>
             <button type="button" aria-label="Close" onClick={closeSheet}>×</button>
           </div>
-          <div className="lb-picker-tools">
+          <div className="lb-picker-tools" style={{ width: 264 * pickerFit.s }}>
             <label className="lb-sort">
               <span>SORT BY</span>
               <select value={sort} onChange={(event) => { setSort(event.target.value); if (carouselRef.current) carouselRef.current.scrollLeft = 0; setCardIndex(0); }}>

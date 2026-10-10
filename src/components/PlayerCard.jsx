@@ -1,4 +1,5 @@
 import { useContext, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { LeagueStatsContext, RosterRolesContext } from './LeagueStatsContext';
 import { skillsetFor, SKILLSETS, SKILLSET_PAIRS } from '../game/skillsets';
 import { formatCoins } from '../game/economy';
@@ -23,7 +24,7 @@ const LEGACY_DEVELOPMENT_CHANGES = {
 const LONG_PRESS_MS = 500;
 const STAT_KEYS = ['SCO', 'PLM', 'REB', 'DEF'];
 
-export default function PlayerCard({ card, onClick, selected, rosterLabel, compact, onRelease, onDevelop, onScout, scouted, revealPeak, alwaysShowOptions, contractLabel, signingNote, showPairings }) {
+export default function PlayerCard({ card, onClick, selected, rosterLabel, compact, onRelease, onDevelop, onScout, scouted, revealPeak, alwaysShowOptions, contractLabel, signingNote }) {
   const leagueMax = useContext(LeagueStatsContext);
   const roles = useContext(RosterRolesContext);
   const roleLabel = rosterLabel || roles?.[card.id] || null;
@@ -59,7 +60,7 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
   const hasOptions = !compact && (onRelease || onDevelop);
   const [expanded, setExpanded] = useState(false);
   const [accoladeInfoOpen, setAccoladeInfoOpen] = useState(false);
-  const [pairingsOpen, setPairingsOpen] = useState(Boolean(showPairings));
+  const [pairingsOpen, setPairingsOpen] = useState(false);
   const accoladeDef = accolade ? LEAGUE_ACCOLADES.find((a) => a.name === accolade) : null;
   const rarity = card.rarity || 'Core';
   const rarityCorners = compact ? [] : (RARITY_CORNERS[rarity] || []);
@@ -174,23 +175,30 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
             {skillPairings.length > 0 && (
               <button
                 type="button"
-                className={'pcard-skillset-caret' + (pairingsOpen ? ' open' : '')}
-                aria-expanded={pairingsOpen}
-                aria-label={pairingsOpen ? 'Hide possible pairings' : 'Show possible pairings'}
-                onClick={(event) => { event.stopPropagation(); setPairingsOpen((v) => !v); }}
-              ><svg viewBox="0 0 12 8" aria-hidden="true"><path d="M1 1.5l5 5 5-5" /></svg></button>
+                className="pcard-pair-with"
+                aria-haspopup="dialog"
+                onClick={(event) => { event.stopPropagation(); setPairingsOpen(true); }}
+              >Pair With</button>
             )}
           </div>
           <div className="pcard-skillset-name" title={skillset?.description}>{skillset?.name || 'None · Legacy Card'}</div>
-          {pairingsOpen && skillPairings.length > 0 && (
-            <ul className="pcard-pairings" onClick={(event) => event.stopPropagation()}>
-              {skillPairings.map(({ rule, partner }) => (
-                <li key={rule.name}>
-                  <span className={'pcard-pairing-pct ' + rule.side}>+{rule.percent}% {rule.side === 'offense' ? 'OFF' : 'DEF'}</span>
-                  <span className="pcard-pairing-text"><b>{rule.name}</b><small>with {partner}</small></span>
-                </li>
-              ))}
-            </ul>
+          {pairingsOpen && skillPairings.length > 0 && createPortal(
+            <div className="pcard-pairings-backdrop" role="presentation" onClick={(event) => { event.stopPropagation(); setPairingsOpen(false); }}>
+              <div className="pcard-pairings-modal" role="dialog" aria-modal="true" aria-label={`${skillset.name} pairings`} onClick={(event) => event.stopPropagation()}>
+                <div className="pcard-pairings-head"><span>Skillset</span><b>{skillset.name}</b></div>
+                <p>Start a player with one of these Skillsets beside this one to earn the bonus.</p>
+                <ul>
+                  {skillPairings.map(({ rule, partner }) => (
+                    <li key={rule.name}>
+                      <span className={'pcard-pairing-pct ' + rule.side}>+{rule.percent}% {rule.side === 'offense' ? 'OFF' : 'DEF'}</span>
+                      <span className="pcard-pairing-text"><b>{rule.name}</b><small>with {partner}</small></span>
+                    </li>
+                  ))}
+                </ul>
+                <button type="button" className="secondary" onClick={() => setPairingsOpen(false)}>Close</button>
+              </div>
+            </div>,
+            document.body,
           )}
         </div>
       )}

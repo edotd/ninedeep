@@ -3306,10 +3306,25 @@ body:has(.trans-screen){padding-bottom:0;}
 .pcard-role-slot .pcard-roster-badge{font-size:13px;padding:4px 10px;}
 /* Every context-menu button is the same size, Select included (the global .primary button style is larger). */
 .lb-ctx button,.lb-ctx button.primary{box-sizing:border-box;width:100%;height:46px;min-height:46px;padding:0 14px;font:400 11px var(--font-label);letter-spacing:.14em;line-height:1;}
-/* Expanded skillset pairings float over the card, above the Skillset block, instead of growing
-   it — a card's height is fixed everywhere it's framed or scaled to fit (picker reveal frame,
-   roster carousel), so growing it left the frame and fill behind the overflowing list. */
-.pcard-skillset{position:relative;}
-.pcard-pairings{position:absolute;left:0;right:0;bottom:100%;z-index:6;margin:0;padding:10px 12px 8px;background:var(--form);border-top:1px solid var(--form-rule,#C9BC9C);border-bottom:1px solid var(--form-rule,#C9BC9C);box-shadow:0 -10px 18px rgba(30,43,71,.22);max-height:220px;overflow-y:auto;box-sizing:border-box;animation:pcard-pairings-in .22s cubic-bezier(.2,.8,.2,1) both;}
-@keyframes pcard-pairings-in{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
-@media (prefers-reduced-motion: reduce){.pcard-pairings{animation:none;}}
+
+/* Skillset block: a PAIR WITH button opens a modal listing every pairing the Skillset can form. */
+.pcard-pair-with{margin:-3px -3px -3px 0;padding:5px 9px 4px;border:0;background:#1E2B47;color:#E6DCC4;font:400 9px/1 var(--font-label);letter-spacing:.12em;text-transform:uppercase;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.pcard-pair-with:active{transform:scale(.95);}
+.pcard-pairings-backdrop{position:fixed;inset:0;z-index:1200;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(14,22,40,.78);animation:cr-fade .18s ease-out both;}
+.pcard-pairings-modal{width:min(340px,100%);max-height:calc(100% - 36px);display:flex;flex-direction:column;gap:10px;padding:16px;background:#F2EBDC;color:#1E2B47;box-shadow:0 18px 40px rgba(8,13,26,.55),inset 0 0 0 1px #C9BC9C;animation:cr-modal-rise .22s cubic-bezier(.2,.8,.2,1) both;}
+.pcard-pairings-head{display:flex;flex-direction:column;gap:2px;}
+.pcard-pairings-head span{font:9px var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:#625A44;}
+.pcard-pairings-head b{font:400 28px/.9 var(--font-display);text-transform:uppercase;}
+.pcard-pairings-modal p{margin:0;font:10px/1.45 var(--font-mono);color:#4A4433;}
+.pcard-pairings-modal ul{list-style:none;margin:0;padding:8px 0 0;border-top:1px solid #C9BC9C;display:flex;flex-direction:column;gap:7px;overflow-y:auto;min-height:0;}
+.pcard-pairings-modal li{display:grid;grid-template-columns:64px minmax(0,1fr);gap:10px;align-items:center;}
+.pcard-pairings-modal .pcard-pairing-text b{font-size:10px;}
+.pcard-pairings-modal .pcard-pairing-text small{font-size:10px;white-space:normal;}
+.pcard-pairings-modal>button{height:44px;border:0;background:#E6DCC4;color:#1E2B47;font:400 11px var(--font-label);letter-spacing:.14em;text-transform:uppercase;box-shadow:inset 0 0 0 1px #C9BC9C;cursor:pointer;}
+@media (prefers-reduced-motion: reduce){.pcard-pairings-backdrop,.pcard-pairings-modal{animation:none;}}
+
+/* Lineup picker: SORT BY sits above the box, the box is exactly as wide as the card. */
+.lb-picker-tools{align-self:center;padding:0;box-sizing:border-box;max-width:100%;}
+.lb-sort{flex-direction:column;align-items:stretch;gap:6px;}
+.lb-sort span{font:400 13px var(--font-label);letter-spacing:.14em;color:#1E2B47;}
+.lb-sort select{font-size:13px;}
