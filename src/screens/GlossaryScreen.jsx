@@ -144,8 +144,8 @@ export default function GlossaryScreen({ state, onBack }) {
         ))}
         <p className="lede">A player's career roll is fixed, so their relative place within each stage's bonus range stays consistent. Stages advance as seasons pass. Team Experience combines roster career stages, coach tenure, titles, and playoff appearances.</p>
         <div className="matchup-box">
-          <div className="matchup-title">Player Relations <span className="tier-pill">1–10</span></div>
-          <p className="lede" style={{ margin: '8px 0' }}>Every coach has a Player Relations rating — how well they connect with the roster. It adds a small Off/Def bonus on top of the coach's base bonuses: +0.5% per point, up to +5% at the maximum of 10.</p>
+          <div className="matchup-title">Player Relationships <span className="tier-pill">1–10</span></div>
+          <p className="lede" style={{ margin: '8px 0' }}>Every coach has a Player Relationships rating — how well they connect with the roster. It adds a small Off/Def bonus on top of the coach's base bonuses: +0.5% per point, up to +5% at the maximum of 10.</p>
         </div>
         <div className="matchup-box">
           <div className="matchup-title">Chemistry <span className="tier-pill">1–10</span></div>

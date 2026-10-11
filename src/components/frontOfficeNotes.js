@@ -11,7 +11,7 @@ export const COACH_NOTES = [
     text: "This coach's Defense bonus, shown here as a percentage — and as a die size (Off/Def) next to the Coach label at the top of the card." },
   { key: 'gameplan', selector: '.fo2-rarity-lead', label: 'Gameplan',
     text: 'Every coach permanently holds two Gameplans, Primary and Secondary — pick one per season on the Set Lineup screen for a team-wide bonus.' },
-  { key: 'relations', selector: '.fo2-effect-player-relations', label: 'Player Relations',
+  { key: 'relations', selector: '.fo2-effect-player-relationships', label: 'Player Relationships',
     text: "How well this coach works with the roster — a stronger relationship adds to both the Offense and Defense bonus above." },
   { key: 'development', selector: '.fo2-effect-development-points', label: 'Development Points',
     text: 'Points awarded each season to permanently improve a player’s stats, in whichever categories this coach’s style favors.' },

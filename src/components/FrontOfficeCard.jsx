@@ -49,7 +49,7 @@ function coachContent(team) {
       { label: 'Cost', value: formatCoins(coach.salary), tone: 'file' },
       { label: 'Off Bonus', value: `+${Math.round((coach.offBonus + bonus) * 100)}%`, tone: 'approved-ink' },
       { label: 'Def Bonus', value: `+${Math.round((coach.defBonus + bonus) * 100)}%`, tone: 'approved-ink' },
-      { label: 'Player Relations', value: coach.playerRelationship, tone: 'file' },
+      { label: 'Player Relationships', value: coach.playerRelationship, tone: 'file' },
       { label: 'Development Points', value: team.developmentPoints || 0, tone: 'approved-ink' },
       { label: 'In-Game Adjustments', value: `${matchupCardCountFor(team)} per match`, tone: 'approved-ink' },
     ],
