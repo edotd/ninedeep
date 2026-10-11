@@ -76,16 +76,17 @@ function Sheen({ t, tm, cw, ch }) {
 
 // `bare` drops the full-screen chrome (ink ground and Continue button) and centres the
 // reveal in whatever box it's placed in — used by CardRevealPlayer below.
-function Chrome({ t, tm, rarity, cw, ch, onContinue, ctaLabel, bare, shift, onBadge, children }) {
+function Chrome({ t, tm, rarity, cw, ch, onContinue, ctaLabel, bare, shift, onBadge, badgeStatic, children }) {
   const L = rarity === 'Legendary';
   const ui = eo(P(t, tm.ui, 500));
   const flash = tm.flash != null ? Math.max(0, 1 - P(t, tm.flash, 320)) * (t >= tm.flash ? 1 : 0) : 0;
   const glow = tm.flash != null && t >= tm.flash ? lerp(1, 0.45, eo(P(t, tm.flash, 900))) : 0;
   const bp = P(t, tm.badge, 260), bs = P(t, tm.badge + 260, 300);
-  const badgeScale = bp > 0 ? (bs > 0 ? lerp(1.55, 1, back(bs)) : lerp(0.4, 1.55, eo(bp))) : 0;
+  // `badgeStatic`: the rarity label is simply there at full size — no pop-in, no bloom.
+  const badgeScale = badgeStatic ? 1 : bp > 0 ? (bs > 0 ? lerp(1.55, 1, back(bs)) : lerp(0.4, 1.55, eo(bp))) : 0;
   // Boxed in a slide, the glow is sized to fit it; full-screen it keeps the design's 640px.
   const glowD = bare ? Math.min(420, cw + 70) : 640;
-  const bloom = bs > 0 ? 1 - eo(P(t, tm.badge + 260, 420)) : bp > 0 ? 1 : 0;
+  const bloom = badgeStatic ? 0 : bs > 0 ? 1 - eo(P(t, tm.badge + 260, 420)) : bp > 0 ? 1 : 0;
   return (
     <div style={bare ? { position: 'absolute', inset: 0 } : { position: 'absolute', inset: 0, background: INK, overflow: 'hidden' }}>
       {glow > 0 && <div style={{ position: 'absolute', ...(bare ? { left: `calc(50% - ${glowD / 2}px)`, top: `calc(50% - ${glowD / 2}px)`, width: glowD, height: glowD, pointerEvents: 'none' } : { left: 201 - 320, top: 440 - 320, width: 640, height: 640 }), borderRadius: '50%', opacity: glow, background: 'radial-gradient(closest-side, rgba(240,160,61,0.42), rgba(240,160,61,0.12) 55%, transparent)' }} />}
@@ -174,7 +175,7 @@ function BallReveal({ t, face, cardW, up, rarity, cardHeight, onContinue, ctaLab
   });
   const pw = lerp(dot * 1.5, cw, g), ph = lerp(dot * 1.5, ch, g);
   return (
-    <Chrome t={t} tm={tm} rarity={rarity} cw={cw} ch={ch} onContinue={onContinue} ctaLabel={ctaLabel} bare={bare} shift={shift} onBadge={onBadge}>
+    <Chrome t={t} tm={tm} rarity={rarity} cw={cw} ch={ch} onContinue={onContinue} ctaLabel={ctaLabel} bare={bare} shift={shift} onBadge={onBadge} badgeStatic={finale}>
       {ballOut < 1 && (
         <div style={{ position: 'absolute', left: -S / 2, top: -S / 2, width: S, height: S, transform: `translate(${sx}px,${sy}px) scale(${c01(pop) * csc * (1 + 0.4 * ballOut)}) rotate(${spin}deg)`, opacity: 1 - ballOut }}>
           <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: FILE }} />
