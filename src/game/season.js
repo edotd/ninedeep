@@ -265,7 +265,7 @@ export function startNewSeasonRoster(state) {
     team.lineupConfirmed = false;
     // Human teams must revisit Set Lineup each season; AI teams' auto-selected five never
     // gets (or needs) manual review, so treat it as already set.
-    team.lineupSet = !team.human;
+    team.lineupSet = !team.human || Boolean(team.lineupPreserved);
     team.financeBoostUsedThisSeason = false;
   });
   prepareDraftClass(state);

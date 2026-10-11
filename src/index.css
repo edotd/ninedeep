@@ -918,7 +918,7 @@ input.text-input{width:100%;padding:14px;background:var(--form);border:1px solid
 .fo2-card.rarity-Signature{--rarity-accent:var(--stamp-text);border-color:var(--rarity-accent);border-width:4px;}
 .fo2-card.rarity-Legendary{--rarity-accent:var(--franchise);border-color:var(--rarity-accent);border-width:5px;box-shadow:0 0 16px rgba(240,160,61,.4);}
 .fo2-card.rarity-Legendary::after{content:'';position:absolute;inset:4px;border:2px solid var(--rarity-accent);pointer-events:none;z-index:2;}
-.fo2-watermark{position:absolute;right:-20px;bottom:-18px;z-index:-1;opacity:.16;pointer-events:none;}
+.fo2-watermark{position:absolute;right:-20px;top:50%;transform:translateY(-50%);z-index:-1;opacity:.16;pointer-events:none;}
 .fo2-logo-mark{position:absolute;left:-20px;bottom:-18px;z-index:-1;opacity:.18;pointer-events:none;}
 .fo2-header{display:flex;justify-content:space-between;align-items:center;padding:10px 13px;border-bottom:1px solid var(--ink-rule);}
 .fo2-kind-group{display:inline-flex;align-items:center;gap:8px;color:var(--file);}
@@ -3425,3 +3425,13 @@ body:has(.trans-screen){padding-bottom:0;}
 @keyframes gs-lo{0%,30%{opacity:.62;filter:blur(0);}43%{opacity:0;filter:blur(5px);}72%{opacity:0;filter:blur(5px);}85%,100%{opacity:.62;filter:blur(0);}}
 @keyframes gs-hi{0%,30%{opacity:0;filter:blur(5px);}43%,60%{opacity:.62;filter:blur(0);}72%,100%{opacity:0;filter:blur(5px);}}
 @media (prefers-reduced-motion: reduce){.gs-v{animation:none;}.gs-hi{display:none;}.gs-lo{opacity:.62;}}
+
+/* Tenure pips under a lineup slot's player (see SetLineupScreen's TenurePips). */
+.lb-tenure{display:inline-flex;align-items:center;justify-content:center;gap:2px;min-height:6px;}
+.lb-tenure i{display:block;width:5px;height:5px;background:#F0A03D;font-style:normal;}
+.lb-tenure i.new{width:auto;height:auto;background:none;font:7px var(--font-mono);letter-spacing:.1em;color:#A9B4C9;}
+.lb-tenure i.more{width:auto;height:auto;background:none;font:700 8px/5px var(--font-mono);color:#F0A03D;}
+.lb-bench-card .lb-tenure{justify-content:flex-start;margin-top:1px;}
+.lb-bench-card .lb-tenure i.new{color:#625A44;}
+.lb-bench-card .lb-tenure i{background:#C97F1E;}
+.lb-bench-card .lb-tenure i.more{color:#C97F1E;background:none;}

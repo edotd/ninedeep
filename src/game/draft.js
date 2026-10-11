@@ -113,8 +113,30 @@ function finishDraftIfDone(state) {
       team.lineupSet = true;
     });
     state.teams.filter((team) => team.human).forEach((team) => {
-      team.activeIds = autoSelectFive(team.hand);
-      assignSixthMan(team);
+      // Keep every surviving player in the slot they held last season; a slot whose player left
+      // (contract expired, released) is simply open. A fully intact lineup stays set.
+      const inHand = (id) => (id && team.hand.some((card) => card.id === id) ? id : null);
+      const slots = team.lineupSlots;
+      if (slots) {
+        const starters = Array.from({ length: 5 }, (_, i) => inHand(slots.starters?.[i]));
+        const sixth = inHand(slots.sixth);
+        const depth = inHand(slots.depth);
+        team.lineupSlots = { starters, sixth: sixth && !starters.includes(sixth) ? sixth : null, depth: depth && !starters.includes(depth) && depth !== sixth ? depth : null };
+        team.lineupPreserved = starters.every(Boolean);
+        if (team.lineupPreserved) {
+          team.activeIds = [...starters];
+          team.sixthManId = team.lineupSlots.sixth;
+          team.depthId = team.lineupSlots.depth;
+          assignSixthMan(team);
+        } else {
+          team.activeIds = autoSelectFive(team.hand);
+          assignSixthMan(team);
+        }
+      } else {
+        team.lineupPreserved = false;
+        team.activeIds = autoSelectFive(team.hand);
+        assignSixthMan(team);
+      }
       team.lineupConfirmed = false;
       team.lineupSet = false;
     });

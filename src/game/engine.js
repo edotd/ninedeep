@@ -153,7 +153,7 @@ export function markLineupSet(state, teamIdx) {
 // Commits the Set Lineup screen's local draft in one write. Individual editor interactions
 // never touch shared room state, preventing multiplayer snapshots from replaying Auto Set and
 // keeping the Franchise page's chemistry/output unchanged until Save Lineup is pressed.
-export function saveLineup(state, teamIdx, activeIds, activeGameplanId, sixthManId = null) {
+export function saveLineup(state, teamIdx, activeIds, activeGameplanId, sixthManId = null, depthId = null) {
   const team = state.teams[teamIdx];
   if (!team || !Array.isArray(activeIds)) return { valid: false, msg: 'Nothing to save yet.' };
   const uniqueIds = [...new Set(activeIds)];
@@ -172,6 +172,11 @@ export function saveLineup(state, teamIdx, activeIds, activeGameplanId, sixthMan
     team.activeGameplanId = null;
     syncSeasonGameplan(team);
   }
+  // The slot layout (starter order, sixth man, depth) is remembered so a new season can keep
+  // every surviving player in the same slot (see draft.js's finishDraftIfDone).
+  const depthPick = eligibleBench.some((card) => card.id === depthId && card.id !== team.sixthManId) ? depthId : null;
+  team.depthId = depthPick;
+  team.lineupSlots = { starters: [...uniqueIds], sixth: team.sixthManId || null, depth: depthPick };
   team.lineupSet = true;
   team.lineupConfirmed = false;
   return { valid: true };

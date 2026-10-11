@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { effectiveStat, findSkillPair, teamSynergy, skillsetFor } from '../game/skillsets';
 import { playerGrade } from '../game/cards';
-import { autoValidFive, validateLineup } from '../game/roster';
+import { validateLineup } from '../game/roster';
 import { sortPlayers } from '../game/playerFilters';
 import PlayerCard from './PlayerCard';
 import CardReveal from './CardReveal';
@@ -12,6 +12,7 @@ import CoachmarkTour from './CoachmarkTour';
 import BonusIcon from './BonusIcon';
 import { BONUS_SIDE } from './bonusIcons';
 import { gameplanEffects } from '../game/strategyCards';
+import { completedTeamYears } from '../game/chemistry';
 import { setLeaveGuard } from '../hooks/leaveGuard';
 
 // Shown once per browser — the first time anyone opens this editor, not once per team/era, so
@@ -39,6 +40,18 @@ const SLOT_KEYS = [...COURT.map((s) => s.key), ...BENCH.map((b) => b.key)];
 const RARITY_COLOR = { Legendary: '#F0A03D', Signature: '#8E9BB5', Prime: '#C9BC9C', Core: '#A79A78' };
 const SORTS = [['Position', 'position'], ['Grade', 'grade'], ['Scoring', 'SCO'], ['Playmaking', 'PLM'], ['Rebounding', 'REB'], ['Defense', 'DEF'], ['Cost', 'cost']];
 
+// Seasons with this club, as pips under a slot's player: up to five filled pips, a "+" past that,
+// and a "NEW" tag for a player who hasn't completed a season here yet.
+function TenurePips({ years }) {
+  const shown = Math.min(5, years);
+  return (
+    <span className="lb-tenure" title={years ? `${years} season${years === 1 ? '' : 's'} with the club` : 'New to the club'} aria-label={years ? `${years} seasons with the club` : 'New to the club'}>
+      {years === 0 ? <i className="new">NEW</i> : Array.from({ length: shown }, (_, i) => <i key={i} />)}
+      {years > 5 && <i className="more">+</i>}
+    </span>
+  );
+}
+
 const roleLabel = (slot) => (!slot ? undefined : slot.startsWith('S') ? 'Starter' : slot === 'B6' ? 'Sixth Man' : 'Depth');
 
 const sortRoster = (cards, sort) => (sort === 'cost' ? [...cards].sort((a, b) => a.salary - b.salary) : sortPlayers(cards, sort));
@@ -49,7 +62,15 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
   // already-saved lineup opens with its current five intact.
   const [assign, setAssign] = useState(() => {
     const next = {};
-    if (team.lineupSet) {
+    const inHand = (id) => (id && team.hand.some((c) => c.id === id) ? id : null);
+    const slots = team.lineupSlots;
+    if (slots) {
+      // The remembered slot layout (kept across seasons): every player still on the roster sits
+      // in the slot they held, and a slot whose player left is open.
+      (slots.starters || []).slice(0, 5).forEach((id, i) => { if (inHand(id)) next[`S${i}`] = id; });
+      if (inHand(slots.sixth)) next.B6 = slots.sixth;
+      if (inHand(slots.depth)) next.BD = slots.depth;
+    } else if (team.lineupSet) {
       (team.activeIds || []).slice(0, 5).forEach((id, i) => { next[`S${i}`] = id; });
       const bench = team.hand.filter((c) => !(team.activeIds || []).includes(c.id));
       const sixth = bench.find((c) => c.id === team.sixthManId) || bench[0];
@@ -212,20 +233,27 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
   };
 
   const complete = starterIds.length === 5;
-  const signature = JSON.stringify([starterIds, sixthMan?.id || null, planId]);
+  const depthCard = benchCards.BD || null;
+  const signature = JSON.stringify([starterIds, sixthMan?.id || null, depthCard?.id || null, planId]);
   const [savedSignature, setSavedSignature] = useState(() => (team.lineupSet ? signature : null));
   const dirty = signature !== savedSignature;
   const canSave = canEdit && complete && dirty;
 
-  const handleSave = () => {
-    if (!canSave) return;
+  // The lineup saves itself the moment all five starters are in place and anything changes.
+  const save = () => {
     const check = validateLineup({ ...team, activeIds: starterIds });
-    if (!check.valid) { alert(check.msg); return; }
-    const result = actions.saveLineup(myTeamId, starterIds, planId, sixthMan?.id || '');
-    if (result && result.valid === false) { alert(result.msg); return; }
+    if (!check.valid) return check;
+    const result = actions.saveLineup(myTeamId, starterIds, planId, sixthMan?.id || '', depthCard?.id || '');
+    return result && result.valid === false ? result : null;
+  };
+  useEffect(() => {
+    if (!canSave) return;
+    const failure = save();
+    if (failure) { flash(failure.msg); return; }
     setSavedSignature(signature);
     flash('LINEUP SAVED');
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canSave, signature]);
 
   // Leaving the page (another tab, the sidebar, closing the browser) with unsaved changes asks
   // whether to save first. Navigation points go through hooks/leaveGuard.js's guardedNavigate.
@@ -238,28 +266,14 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
     window.addEventListener('beforeunload', beforeUnload);
     return () => { release(); window.removeEventListener('beforeunload', beforeUnload); };
   }, [hasUnsaved]);
-  const leaveWith = (save) => {
+  const leaveWith = (doSave) => {
     const { proceed } = leavePrompt;
-    if (save) {
-      const check = validateLineup({ ...team, activeIds: starterIds });
-      if (!check.valid) { alert(check.msg); return; }
-      const result = actions.saveLineup(myTeamId, starterIds, planId, sixthMan?.id || '');
-      if (result && result.valid === false) { alert(result.msg); return; }
+    if (doSave) {
+      const failure = save();
+      if (failure) { alert(failure.msg); return; }
     }
     setLeavePrompt(null);
     proceed();
-  };
-
-  // A valid five, never the strongest one (see roster.js's autoValidFive) — an escape hatch for
-  // someone who doesn't want to hand-pick, not a "set my best lineup" shortcut.
-  const handleAutoSet = () => {
-    const ids = autoValidFive(team.hand);
-    const next = {};
-    ids.forEach((id, i) => { next[`S${i}`] = id; });
-    setAssign(next);
-    // A random Gameplan goes with it (any of the coach's plans, never "None" when one exists).
-    if (plans.length) setPlanId(plans[Math.floor(Math.random() * plans.length)].id);
-    flash('LINEUP SET');
   };
 
   const openSlot = (key) => {
@@ -273,7 +287,6 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
 
   const courtRef = useRef(null);
   const gameplanBtnRef = useRef(null);
-  const saveBtnRef = useRef(null);
 
   const sheetSlot = sheet?.type === 'player' ? sheet.slot : null;
   const roster = sortRoster(team.hand, sort);
@@ -308,12 +321,15 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
     const fit = () => {
       const el = carouselRef.current;
       if (!el) return;
-      const natural = [...document.querySelectorAll('.lb-measure .lb-natural')].reduce((m, node) => Math.max(m, node.offsetHeight), 0) || 405;
+      const nodes = [...document.querySelectorAll('.lb-measure .lb-natural')];
+      const natural = nodes.reduce((m, node) => Math.max(m, node.offsetHeight), 0) || 405;
+      // Each card's own height, so every frame hugs its card instead of the tallest one.
+      const hs = Object.fromEntries(nodes.map((node) => [node.dataset.cardId, node.offsetHeight]));
       // The fan peeks out either side of the top card, so it leaves a little width; height is
       // everything the deck area has (the status line and BACK/NEXT sit below it).
       const availW = el.clientWidth - 40;
       const availH = el.clientHeight - 44 - 18;
-      setPickerFit({ s: Math.max(1, Math.min(availW / 264, availH / natural)), h: natural });
+      setPickerFit({ s: Math.max(1, Math.min(availW / 264, availH / natural)), h: natural, hs });
     };
     fit();
     window.addEventListener('resize', fit);
@@ -337,26 +353,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sheetSlot]);
 
-  const missing = 5 - starterIds.length;
-  const saveLabel = !complete ? `FILL ${missing} MORE` : dirty ? 'SAVE' : 'SAVED';
   const pairNames = bonusRows.map((row) => row.name).join(' · ');
-
-  // Randomize and Save live in the page's title bar (the Team page renders a slot for them);
-  // with no title bar (desktop stacks everything) they sit under the court instead.
-  const [actionSlot, setActionSlot] = useState(null);
-  useEffect(() => { setActionSlot(document.getElementById('lineup-header-actions')); }, []);
-  const actions_ = canEdit ? (
-    <div className={actionSlot ? 'lb-actions in-header' : 'lb-actions'}>
-      <button type="button" className="lb-auto" onClick={handleAutoSet} aria-label="Randomize lineup" title="Randomize lineup">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" aria-hidden="true">
-          <path d="M3 7h3.2c1.6 0 3 .8 3.9 2.1l3.8 5.8c.9 1.3 2.3 2.1 3.9 2.1H21" />
-          <path d="M3 17h3.2c1.6 0 3-.8 3.9-2.1M13.9 9.1c.9-1.3 2.3-2.1 3.9-2.1H21" />
-          <path d="M18.5 4.5L21 7l-2.5 2.5M18.5 14.5L21 17l-2.5 2.5" />
-        </svg>
-      </button>
-      <button type="button" ref={saveBtnRef} className={'lb-save' + (canSave ? ' ready' : '')} disabled={!canSave} onClick={handleSave}>{saveLabel}</button>
-    </div>
-  ) : null;
 
   return (
     <div className="lb" role="region" aria-label="Your Lineup">
@@ -399,6 +396,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
                     <b>{playerGrade(card)}</b>
                     <em>{card.archetype}</em>
                     <small>{card.position}</small>
+                    <TenurePips years={completedTeamYears(card, team.id)} />
                   </span>
                 ) : (
                   <span className="lb-slot-empty"><b>+</b><small>{slot.n}</small></span>
@@ -425,7 +423,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
                   {card ? (
                     <span className="lb-bench-card" style={{ borderLeftColor: RARITY_COLOR[card.rarity] || RARITY_COLOR.Core }}>
                       <b>{playerGrade(card)}</b>
-                      <span><em>{card.archetype}</em><small>{b.label}</small></span>
+                      <span><em>{card.archetype}</em><small>{b.label}</small><TenurePips years={completedTeamYears(card, team.id)} /></span>
                     </span>
                   ) : (
                     <span className="lb-bench-empty"><b>+</b><small>{b.label}</small></span>
@@ -461,9 +459,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
           </div>
         </div>
 
-        {!actionSlot && actions_}
       </div>
-      {actionSlot && actions_ && createPortal(actions_, actionSlot)}
 
 
       {sheetSlot && createPortal(
@@ -490,7 +486,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
             labelFor={(card) => roleLabel(slotOf(card.id))}
             onOpen={setMenu}
           />
-          <div className="lb-measure" aria-hidden="true">{roster.map((card) => <div className="lb-natural" key={card.id} style={{ width: 264 }}><PlayerCard card={card} /></div>)}</div>
+          <div className="lb-measure" aria-hidden="true">{roster.map((card) => <div className="lb-natural" key={card.id} data-card-id={card.id} style={{ width: 264 }}><PlayerCard card={card} /></div>)}</div>
           {menu && (
             <PlayerCardMenu
               card={menu}
@@ -565,7 +561,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
           steps={[
             { targetRef: courtRef, title: 'Set Your Lineup', body: 'Tap an open spot to add a starter. Start a Guard, a Forward and a Big together to earn the Floor Balance bonus.' },
             ...(plans.length > 0 ? [{ targetRef: gameplanBtnRef, title: 'Pick a Gameplan', body: 'Choose your coach’s primary or secondary Gameplan for a team-wide bonus this season.' }] : []),
-            { targetRef: saveBtnRef, title: 'Save Your Lineup', body: 'Two starters sharing a Skillset pairing light up a bonus — look for the lines between them. When you’re happy with your five, Save Lineup to lock it in.' },
+            { targetRef: courtRef, title: 'Saved Automatically', body: 'Two starters sharing a Skillset pairing light up a bonus — look for the lines between them. Your lineup saves itself as soon as all five spots are filled.' },
           ]}
         />
       )}

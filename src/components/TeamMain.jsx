@@ -89,7 +89,13 @@ export default function TeamMain({ team, readOnly, onOpen, committed, cap, budge
   const pairs = (synergy?.pairs || []).map((rule) => ({ rule, at: rule.skills.map(indexOfSkill) })).filter((p) => p.at.every((i) => i >= 0));
   const brackets = bracketLayout(pairs.map((p) => p.at));
   const maxLevel = brackets.reduce((m, b) => Math.max(m, b.level), 0);
-  const shownPairs = [...pairs].sort((a, b) => b.rule.percent - a.rule.percent);
+  // Wise Veteran and Floor Balance aren't skillset pairings, so they're added after the pairings
+  // (no bracket) as icons of their own.
+  const extras = [
+    synergy?.floorBalance ? { rule: { name: 'Floor Balance', side: 'both', percent: synergy.floorBalance, description: 'A Guard, a Forward and a Big are all starting.' }, at: [] } : null,
+    synergy?.leadership ? { rule: { name: 'Wise Veteran', side: 'both', percent: synergy.leadership, description: 'A Wise Veteran is on your roster. Doesn’t stack.' }, at: [] } : null,
+  ].filter(Boolean);
+  const shownPairs = [...[...pairs].sort((a, b) => b.rule.percent - a.rule.percent), ...extras];
   const openPairRule = shownPairs.find(({ rule }) => rule.name === openPair)?.rule || null;
   const shownRule = shownPairs.find(({ rule }) => rule.name === (openPair || lastPair))?.rule || null;
 
@@ -103,9 +109,9 @@ export default function TeamMain({ team, readOnly, onOpen, committed, cap, budge
   return (
     <div className="tm-main">
       <div className="tm-tiles">
-        <div className="tm-tile tm-lineup" role="button" tabIndex={0} aria-label="Lineup and chemistry" onClick={() => onOpen('lineup')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen('lineup'); } }}>
+        <div className="tm-tile tm-lineup" role="button" tabIndex={0} aria-label="Team" onClick={() => onOpen('lineup')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen('lineup'); } }}>
           <span className="tm-seal" style={{ background: seal.color, color: seal.ink }}>{synergy ? synergy.grade : '—'}</span>
-          <span className="tm-tile-head"><b>Lineup &amp; Chemistry</b><svg className="tm-chev" viewBox="0 0 16 28" aria-hidden="true"><path d="M3 3l10 11L3 25" /></svg></span>
+          <span className="tm-tile-head"><b>Team</b><svg className="tm-chev" viewBox="0 0 16 28" aria-hidden="true"><path d="M3 3l10 11L3 25" /></svg></span>
           <span className="tm-roster">
             <span className="tm-roster-row">
               {Array.from({ length: 5 }, (_, i) => <PlayerBox key={i} card={lineupReady ? starters[i] : null} top={i === topStarter} onPick={setPicked} />)}
@@ -141,7 +147,7 @@ export default function TeamMain({ team, readOnly, onOpen, committed, cap, budge
                   onClick={(event) => { event.stopPropagation(); togglePair(rule.name); }}
                   onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.stopPropagation(); togglePair(rule.name); } }}
                 ><BonusIcon name={rule.name} size={44} /></span>
-              )) : <span className="tm-chip none">{lineupReady ? 'No pairings active' : 'Set your lineup to see pairings'}</span>}
+              )) : lineupReady ? <span className="tm-chip none">No pairings active</span> : null}
             </span>
             {/* A flyout under the icons: it overlays what follows instead of pushing the page taller,
                 and slides open/closed. It keeps the last pairing's text so it can slide away. */}
@@ -149,8 +155,8 @@ export default function TeamMain({ team, readOnly, onOpen, committed, cap, budge
               {shownRule && (
                 <>
                   <b className={shownRule.side}>{shownRule.name}</b>
-                  <em>+{shownRule.percent}% {shownRule.side === 'offense' ? 'Offense' : 'Defense'}</em>
-                  <small>{pairDescription(shownRule)}</small>
+                  <em>+{shownRule.percent}% {shownRule.side === 'offense' ? 'Offense' : shownRule.side === 'defense' ? 'Defense' : 'Offense & Defense'}</em>
+                  <small>{shownRule.description || pairDescription(shownRule)}</small>
                 </>
               )}
             </span>

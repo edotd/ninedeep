@@ -10,8 +10,9 @@ const DEPTH = 3;
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const fanAt = (d) => `translateX(${d * 16}px) translateY(${-d * 8}px) rotate(${d * 3.5}deg) scale(${1 - d * 0.055})`;
 
-const DeckFace = memo(function DeckFace({ card, up, h, label, finale }) {
-  return <CardRevealPlayer card={card} up={up} cardHeight={h} rosterLabel={label} finale={finale} settled={!finale} delay={finale ? 420 : 0} />;
+// Every face is simply there, frame and all — nothing animates in.
+const DeckFace = memo(function DeckFace({ card, up, h, label }) {
+  return <CardRevealPlayer card={card} up={up} cardHeight={h} rosterLabel={label} settled />;
 });
 
 export default function PickerDeck({ roster, index, onIndex, fit, labelFor, onOpen, containerRef, live }) {
@@ -117,11 +118,7 @@ export default function PickerDeck({ roster, index, onIndex, fit, labelFor, onOp
             onClick={top ? () => { if (moved.current) return; setPressId(card.id); setTimeout(() => setPressId(null), 150); onOpen(card); } : undefined}
             onKeyDown={top ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(card); } } : undefined}
           >
-            {/* The top card plays only the finish of the reveal — the frame striking on and, for a
-                Legendary, the sheen — once it has moved into place; every other card is just the card. */}
-            {top
-              ? <DeckFace key={'top' + card.id} card={card} up={fit.s} h={fit.h} label={labelFor(card)} finale />
-              : k >= -1 && k <= DEPTH + 1 && <DeckFace key={'rest' + card.id} card={card} up={fit.s} h={fit.h} label={labelFor(card)} />}
+            {k >= -1 && k <= DEPTH + 1 && <DeckFace key={card.id} card={card} up={fit.s} h={fit.hs?.[card.id] ?? fit.h} label={labelFor(card)} />}
             {(!top || pRight > 0) && shade > 0 && <div className="lb-deck-shade" style={{ opacity: shade, transition: !live || drag.active ? 'none' : 'opacity 400ms cubic-bezier(.16,.9,.24,1)' }} />}
           </div>
         );
