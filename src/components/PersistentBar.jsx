@@ -3,7 +3,7 @@ import { forwardRef } from 'react';
 import CardTypeMark from './CardTypeMark';
 import ResourceChip from './ResourceChip';
 import LineupPairingsRow from './LineupPairingsRow';
-import { matchupCardCountFor } from '../game/roster';
+import { MATCHUP_CARD_DRAW_COUNT } from '../game/constants';
 import { scoutingLimit } from '../game/gm';
 import { formatCoins, remainingCap } from '../game/economy';
 
@@ -59,7 +59,7 @@ const PersistentBar = forwardRef(function PersistentBar({ state, myTeamId, overl
         {coachDealt && team.coach && (
           <span className="res-chips">
             <ResourceChip kind="development" count={team.developmentPoints ?? 0} />
-            <ResourceChip kind="adjustments" count={matchupCardCountFor(team)} />
+            <ResourceChip kind="adjustments" count={MATCHUP_CARD_DRAW_COUNT} />
           </span>
         )}
         <b>{coachDealt ? team.coach?.archetype?.replace(/ Minded$/, '') || 'Open Slot' : 'Pending'}</b>
