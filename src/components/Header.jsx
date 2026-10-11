@@ -31,8 +31,8 @@ export default function Header({ state, myTeamId, overlay, pageLabel, onGlossary
         >
           <BallMark size={28} variant="onInk" />
         </button>
-        <AnimatedPageLabel key={pageLabel} page={pageLabel} />
         <div className="topbar-title">{team.name} {team.tricode && <span className="topbar-tricode">{team.tricode}</span>}</div>
+        <AnimatedPageLabel key={pageLabel} page={pageLabel} />
       </div>
       <div className="era-bar-wrap">
         <div className="era-bar-label">

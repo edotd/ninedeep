@@ -3476,3 +3476,7 @@ body:has(.trans-screen){padding-bottom:0;}
 .lineup-pairings-pop small{font:10px/1.4 var(--font-mono);color:#625A44;}
 button.lb-coachbox{cursor:pointer;}
 button.lb-coachbox:disabled{cursor:default;}
+
+/* Top bar: franchise name on the left beside the logo, page label / NINE DEEP wordmark on the right. */
+.topbar-lockup .topbar-title{text-align:left;min-width:0;}
+.topbar-lockup .topbar-wordmark{flex:none;margin-left:auto;text-align:right;}
