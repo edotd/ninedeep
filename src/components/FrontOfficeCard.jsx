@@ -2,8 +2,8 @@ import { formatCoins, gmCost, capArchitectBonus, shadyDealerBonus } from '../gam
 import { retentionBonus, relationshipBonus } from '../game/cards';
 import CardTypeMark from './CardTypeMark';
 import BallMark from './BallMark';
-import { offenseDieSize, defenseDieSize } from '../game/roster';
-import { RARITY_CORNERS, MATCHUP_CARD_DRAW_COUNT } from '../game/constants';
+import { offenseDieSize, defenseDieSize, matchupCardCountFor } from '../game/roster';
+import { RARITY_CORNERS } from '../game/constants';
 import RarityGhost from './RarityGhost';
 import { ensureCoachSystems } from '../game/strategyCards';
 
@@ -51,7 +51,7 @@ function coachContent(team) {
       { label: 'Def Bonus', value: `+${Math.round((coach.defBonus + bonus) * 100)}%`, tone: 'approved-ink' },
       { label: 'Player Relationships', value: coach.playerRelationship, tone: 'file' },
       { label: 'Development Points', value: team.developmentPoints || 0, tone: 'approved-ink' },
-      { label: 'In-Game Adjustments', value: `${MATCHUP_CARD_DRAW_COUNT} per match`, tone: 'approved-ink' },
+      { label: 'In-Game Adjustments', value: matchupCardCountFor(team), tone: 'approved-ink' },
     ],
     detail: `${coach.modifier} — ${coach.ability || 'Improves the coach’s base Offense and Defense bonuses.'}`,
     rarityLead: { label: 'Gameplans', lines: gameplanLines.length ? gameplanLines : ['None'] },
