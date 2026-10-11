@@ -110,9 +110,9 @@ export default function TeamMain({ team, readOnly, onOpen, committed, cap, budge
     <div className="tm-main">
       <div className="tm-tiles">
         <div className="tm-tile tm-lineup" role="button" tabIndex={0} aria-label="Team" onClick={() => onOpen('lineup')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen('lineup'); } }}>
-          <span className="tm-grade" style={{ color: seal.color }} aria-label={synergy ? `Team grade ${synergy.grade}` : 'No team grade yet'}>{synergy ? synergy.grade : '—'}</span>
           <span className="tm-tile-head"><svg className="tm-chev" viewBox="0 0 16 28" aria-hidden="true"><path d="M3 3l10 11L3 25" /></svg></span>
           <span className="tm-roster">
+            <span className="tm-grade" style={{ color: seal.color }} aria-label={synergy ? `Team grade ${synergy.grade}` : 'No team grade yet'}>{synergy ? synergy.grade : '—'}</span>
             <span className="tm-roster-row">
               {Array.from({ length: 5 }, (_, i) => <PlayerBox key={i} card={lineupReady ? starters[i] : null} top={i === topStarter} onPick={setPicked} />)}
             </span>
