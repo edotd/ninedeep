@@ -3416,9 +3416,12 @@ body:has(.trans-screen){padding-bottom:0;}
 /* The deck takes every touch itself so a swipe is never turned into a scroll. */
 .lb-picker .lb-deck{touch-action:none;}
 
-/* Unscouted draft prospects: stats and grade roll through a range like a slot reel. */
-.hs{display:block;height:1em;line-height:1;overflow:hidden;}
-.hs-reel{display:flex;flex-direction:column;animation:hs-roll linear infinite;will-change:transform;filter:blur(.35px);}
-.hs-reel i{display:block;height:1em;line-height:1;font-style:normal;}
-@keyframes hs-roll{to{transform:translateY(calc(var(--n) * -1em));}}
-@media (prefers-reduced-motion: reduce){.hs-reel{animation-duration:6s!important;filter:none;}}
+/* Unscouted draft prospects: each stat is a ghost — the low end of its range holds, dissolves into
+   the high end, and back again, never settling on the real number. */
+.gs{display:inline-grid;vertical-align:top;}
+.gs-v{grid-area:1/1;text-align:center;font:inherit;color:inherit;text-shadow:0 0 7px currentColor;animation-duration:4.4s;animation-timing-function:ease-in-out;animation-iteration-count:infinite;will-change:opacity,filter;}
+.gs-lo{animation-name:gs-lo;}
+.gs-hi{animation-name:gs-hi;}
+@keyframes gs-lo{0%,30%{opacity:.62;filter:blur(0);}43%{opacity:0;filter:blur(5px);}72%{opacity:0;filter:blur(5px);}85%,100%{opacity:.62;filter:blur(0);}}
+@keyframes gs-hi{0%,30%{opacity:0;filter:blur(5px);}43%,60%{opacity:.62;filter:blur(0);}72%,100%{opacity:0;filter:blur(5px);}}
+@media (prefers-reduced-motion: reduce){.gs-v{animation:none;}.gs-hi{display:none;}.gs-lo{opacity:.62;}}

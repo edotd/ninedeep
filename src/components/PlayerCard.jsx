@@ -8,7 +8,7 @@ import { cardTier, baseCardTier, jerseyNumber, playerGrade } from '../game/cards
 import { useIsDark } from '../hooks/useDarkMode';
 import { LEAGUE_ACCOLADES, RARITY_CORNERS } from '../game/constants';
 import CardTypeMark from './CardTypeMark';
-import { HiddenStat, HiddenGrade } from './HiddenStat';
+import { HiddenStat } from './HiddenStat';
 import BallMark from './BallMark';
 import RarityGhost from './RarityGhost';
 
@@ -119,7 +119,7 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
         )}
         <div className="pcard-header-right">
           {!compact && <span className={`pcard-rarity-label r-${rarity}`}>{rarity.toUpperCase()}</span>}
-          <span className="pcard-grade" aria-label={hideStats ? 'Player grade hidden until scouted' : `Player grade ${playerGrade(card)}`}>{hideStats && !compact ? <HiddenGrade grade={playerGrade(card)} seed={`${card.id}:grade`} /> : playerGrade(card)}</span>
+          <span className="pcard-grade" aria-label={hideStats ? 'Player grade hidden until scouted' : `Player grade ${playerGrade(card)}`}>{hideStats && !compact ? '?' : playerGrade(card)}</span>
         </div>
       </div>
       <div className="pcard-name-block">
