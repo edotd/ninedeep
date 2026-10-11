@@ -21,17 +21,22 @@ export default function PickerDeck({ roster, index, onIndex, fit, labelFor, onOp
   const lastDx = useRef(0);
   const moved = useRef(false);
   const raf = useRef(0);
+  const pressTimer = useRef(0);
+  // The press-in feedback (card scales down a touch) only shows once a finger has rested on the card
+  // without moving; the instant it starts to move it's a swipe, and the card follows it at full size.
+  const clearPress = () => { clearTimeout(pressTimer.current); setPressId(null); };
   const nRef = useRef(roster.length);
   const indexRef = useRef(index);
   nRef.current = roster.length;
   indexRef.current = index;
 
+  useEffect(() => () => clearTimeout(pressTimer.current), []);
   useEffect(() => {
     if (!drag.active) return undefined;
     const move = (e) => {
       const dx = e.clientX - start.current;
       lastDx.current = dx;
-      if (Math.abs(dx) > 6) moved.current = true;
+      if (Math.abs(dx) > 6 && !moved.current) { moved.current = true; clearPress(); }
       // At most one update per frame, however fast the pointer reports.
       if (!raf.current) raf.current = requestAnimationFrame(() => { raf.current = 0; setDrag({ dx: lastDx.current, active: true }); });
     };
@@ -40,7 +45,7 @@ export default function PickerDeck({ roster, index, onIndex, fit, labelFor, onOp
       raf.current = 0;
       const dx = lastDx.current;
       setDrag({ dx: 0, active: false });
-      setPressId(null);
+      clearPress();
       if (!commit) return;
       if (dx < -70 && indexRef.current < nRef.current - 1) onIndex(indexRef.current + 1);
       else if (dx > 70 && indexRef.current > 0) onIndex(indexRef.current - 1);
@@ -71,7 +76,9 @@ export default function PickerDeck({ roster, index, onIndex, fit, labelFor, onOp
         start.current = e.clientX;
         lastDx.current = 0;
         moved.current = false;
-        setPressId(roster[index]?.id ?? null);
+        clearTimeout(pressTimer.current);
+        const id = roster[index]?.id ?? null;
+        pressTimer.current = setTimeout(() => { if (!moved.current) setPressId(id); }, 110);
         setDrag({ dx: 0, active: true });
       }}
     >
@@ -101,13 +108,13 @@ export default function PickerDeck({ roster, index, onIndex, fit, labelFor, onOp
             style={{
               width: w, height: h, marginLeft: -w / 2, marginTop: -h / 2, transform,
               zIndex: gone ? n + 2 + idx : n - k,
-              transition: !live || drag.active ? 'none' : 'transform 400ms cubic-bezier(.16,.9,.24,1)',
+              transition: !live || (drag.active && drag.dx !== 0) ? 'none' : pressId === card.id ? 'transform 140ms ease' : 'transform 400ms cubic-bezier(.16,.9,.24,1)',
             }}
             aria-hidden={top ? undefined : true}
             role={top ? 'button' : undefined}
             tabIndex={top ? 0 : undefined}
             aria-label={top ? `${card.archetype} ${card.position}. Open card options.` : undefined}
-            onClick={top ? () => { if (!moved.current) onOpen(card); } : undefined}
+            onClick={top ? () => { if (moved.current) return; setPressId(card.id); setTimeout(() => setPressId(null), 150); onOpen(card); } : undefined}
             onKeyDown={top ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(card); } } : undefined}
           >
             {/* The top card plays only the finish of the reveal — the frame striking on and, for a
