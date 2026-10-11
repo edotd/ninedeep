@@ -298,17 +298,14 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
   const moved = useRef(false);
   const deckCount = useRef(0);
   const cardIndexRef = useRef(0);
-  const rosterRef = useRef([]);
   // Transitions stay off for the first frames after the picker opens, so nothing glides into place.
   const [deckLive, setDeckLive] = useState(false);
   // No wrap-around: the deck starts at the first card and ends at the last.
-  // Swipe right to throw the top card to the right and move on; swipe left and the previous card
-  // drops back onto the pile from above.
-  const [dropId, setDropId] = useState(null);
-  const stepDeck = (d, backId) => {
+  // Swipe left for the next card (this one is sent away to the left); swipe right and the previous
+  // card is drawn back in from the left while this one settles back into the stack.
+  const stepDeck = (d) => {
     const n = deckCount.current;
     if (!n) return;
-    setDropId(d < 0 ? backId ?? null : null);
     setCardIndex((i) => Math.max(0, Math.min(n - 1, i + d)));
   };
   // Tapping a card in the picker presses it in (scaled down while the finger is on it) and opens
@@ -342,7 +339,6 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
   useLayoutEffect(() => {
     if (!sheetSlot) { setDeckLive(false); return; }
     setCardIndex(Math.max(0, roster.findIndex((card) => slotOf(card.id) === sheetSlot)));
-    setDropId(null);
     setDeckLive(false);
     const raf = requestAnimationFrame(() => requestAnimationFrame(() => setDeckLive(true)));
     return () => cancelAnimationFrame(raf);
@@ -373,7 +369,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
       setPressId(null);
       if (!commit) return;
       if (dx < -70) stepDeck(1);
-      else if (dx > 70 && cardIndexRef.current > 0) stepDeck(-1, rosterRef.current[cardIndexRef.current - 1]?.id);
+      else if (dx > 70 && cardIndexRef.current > 0) stepDeck(-1);
     };
     const up = finish(true), cancel = finish(false);
     window.addEventListener('pointermove', move);
@@ -542,28 +538,39 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
               const n = roster.length;
               deckCount.current = n;
               cardIndexRef.current = cardIndex;
-              rosterRef.current = roster;
               const k = idx - cardIndex; // < 0: already swiped past (gone to the left)
               const where = slotOf(card.id);
               const top = k === 0;
               const gone = k < 0;
-              const kk = Math.min(Math.max(k, 0), DECK_DEPTH + 1);
-              const sc = 1 - kk * 0.055;
               const rawDx = deckDrag.dx;
+              // While dragging, the neighbouring cards follow the finger too: pulling right draws the
+              // previous card back in from the left while this one settles into the stack; pulling
+              // left sends this one away and brings the next card forward.
+              const clamp01 = (v) => Math.max(0, Math.min(1, v));
+              const pRight = deckDrag.active && rawDx > 0 && cardIndex > 0 ? clamp01(rawDx / 220) : 0;
+              const pLeft = deckDrag.active && rawDx < 0 && cardIndex < n - 1 ? clamp01(-rawDx / 220) : 0;
+              const fanAt = (depth) => `translateX(${depth * 16}px) translateY(${-depth * 8}px) rotate(${depth * 3.5}deg) scale(${1 - depth * 0.055})`;
+              const kEff = Math.min(Math.max(k, 0) + pRight - pLeft, DECK_DEPTH + 1);
               // Pulling past either end of the deck resists instead of moving freely.
               const dx = (cardIndex === 0 && rawDx > 0) || (cardIndex === n - 1 && rawDx < 0) ? rawDx / 4 : rawDx;
-              const transform = top
-                ? `translateX(${dx}px) rotate(${dx / 22}deg) scale(${pressId === card.id ? 0.955 : 1})`
-                : gone
-                  ? 'translateX(-460px) translateY(-30px) rotate(-16deg)'
-                  : `translateX(${kk * 16}px) translateY(${-kk * 8}px) rotate(${kk * 3.5}deg) scale(${sc})`;
-              const opacity = top ? 1 : gone ? 0 : k > DECK_DEPTH ? 0 : 1;
+              let transform, opacity;
+              if (top) {
+                transform = pRight > 0 ? fanAt(pRight) : `translateX(${dx}px) rotate(${dx / 22}deg) scale(${pressId === card.id ? 0.955 : 1})`;
+                opacity = 1;
+              } else if (gone) {
+                const back = k === -1 ? pRight : 0; // the previous card, being drawn back in
+                transform = `translateX(${-460 * (1 - back)}px) translateY(${-30 * (1 - back)}px) rotate(${-16 * (1 - back)}deg)`;
+                opacity = back;
+              } else {
+                transform = fanAt(kEff);
+                opacity = kEff > DECK_DEPTH ? Math.max(0, DECK_DEPTH + 1 - kEff) : 1;
+              }
               const w = 264 * pickerFit.s, h = pickerFit.h * pickerFit.s + 44;
               return (
                 <div
                   key={card.id}
-                  className={'lb-deck-card' + (top ? ' top' : '') + (top && dropId === card.id ? ' dropping' : '')}
-                  style={{ width: w, height: h, marginLeft: -w / 2, marginTop: -h / 2, transform, opacity, zIndex: gone ? n + 2 + idx : n - k, transition: !deckLive || (top && (deckDrag.active || dropId === card.id)) ? 'none' : gone ? 'transform 420ms cubic-bezier(.16,.9,.24,1), opacity 260ms ease 220ms' : 'transform 380ms cubic-bezier(.16,.9,.24,1), opacity 260ms ease' }}
+                  className={'lb-deck-card' + (top ? ' top' : '')}
+                  style={{ width: w, height: h, marginLeft: -w / 2, marginTop: -h / 2, transform, opacity, zIndex: gone ? n + 2 + idx : n - k, transition: !deckLive || deckDrag.active ? 'none' : gone ? 'transform 420ms cubic-bezier(.16,.9,.24,1), opacity 260ms ease 220ms' : 'transform 380ms cubic-bezier(.16,.9,.24,1), opacity 260ms ease' }}
                   aria-hidden={top ? undefined : true}
                   role={top ? 'button' : undefined}
                   tabIndex={top ? 0 : undefined}
@@ -576,7 +583,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
                   {top
                     ? <CardRevealPlayer key={'top' + card.id} card={card} up={pickerFit.s} cardHeight={pickerFit.h} finale delay={420} rosterLabel={roleLabel(where)} />
                     : k >= -1 && k <= DECK_DEPTH + 1 && <CardRevealPlayer key={'rest' + card.id} card={card} up={pickerFit.s} cardHeight={pickerFit.h} settled rosterLabel={roleLabel(where)} />}
-                  {!top && <div className="lb-deck-shade" style={{ opacity: Math.min(0.6, kk * 0.17) }} />}
+                  {(!top || pRight > 0) && <div className="lb-deck-shade" style={{ opacity: Math.min(0.6, (top ? pRight : kEff) * 0.17) }} />}
                 </div>
               );
             })}
@@ -599,7 +606,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
           {learnCard && createPortal(<CardReveal kind="player" card={learnCard} learn onContinue={() => setLearnCard(null)} />, document.body)}
           <div className="lb-picker-pager" aria-live="polite">
             <span>{Math.min(cardIndex + 1, roster.length)} / {roster.length}</span>
-            <i>{roster.map((card, index) => <b key={card.id} className={index === cardIndex ? 'on' : ''} onClick={() => { setDropId(null); setCardIndex(index); }} />)}</i>
+            <i>{roster.map((card, index) => <b key={card.id} className={index === cardIndex ? 'on' : ''} onClick={() => setCardIndex(index)} />)}</i>
           </div>
         </div>,
         document.body,
