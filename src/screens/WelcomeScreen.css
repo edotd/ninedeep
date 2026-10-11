@@ -37,14 +37,14 @@
 .welcome-copy h1{font-size:clamp(42px,8vw,68px);margin:0 0 20px;}
 .welcome-copy p{max-width:570px;margin:0 auto;font:clamp(14px,2.2vw,17px)/1.75 var(--font-mono);color:var(--file-body);}
 .welcome-continue{width:100%;margin-top:32px;}
-.welcome-actions{display:flex;flex-direction:column;gap:10px;width:100%;margin-top:32px;}
+.welcome-actions{display:flex;flex-direction:column;gap:10px;width:100%;margin-top:12px;}
 .welcome-actions button{width:100%;min-width:0;}
 .welcome-actions .welcome-learn{background:transparent;color:var(--ink);-webkit-text-fill-color:var(--ink);border:2px solid var(--ink);}
 .welcome-actions .welcome-learn:hover{background:var(--form-rule);}
 .welcome-onboarding{position:fixed;inset:0;z-index:925;background:var(--ink);overflow:auto;display:grid;place-items:center;}
 .welcome-onboarding .welcome-screen{width:100%;min-height:100dvh;}
 .welcome-franchise-name{color:var(--franchise);font-weight:inherit;}
-.welcome-card-fan{position:relative;height:250px;max-width:520px;margin:24px auto 0;}
+.welcome-card-fan{position:relative;height:185px;max-width:520px;margin:24px auto 0;}
 .welcome-mini-card{position:absolute;left:50%;top:38px;width:72px;height:102px;margin-left:-36px;border:2px solid var(--ink);background:var(--form);display:grid;place-items:center;font:13px var(--font-display);color:var(--ink);transform-origin:50% 190px;box-shadow:0 4px 10px rgba(11,17,30,.2);}
 .welcome-mini-card.player{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;transform:rotate(calc((var(--fan-index) - 3) * 10deg)) translateY(-18px);}
 .welcome-mini-card.player span{font:7px var(--font-label);letter-spacing:.1em;text-transform:uppercase;color:var(--file-muted);}
