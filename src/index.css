@@ -3436,3 +3436,9 @@ body:has(.trans-screen){padding-bottom:0;}
 .lb-bench-card .lb-tenure i{background:#C97F1E;}
 .lb-bench-card .lb-tenure i.more{color:#C97F1E;background:none;}
 
+
+/* Team page tiles: rounded, and pressed in while a finger rests on one (lifted again as soon as
+   the touch turns into a swipe — see TeamMain's usePressable). */
+.tm-lineup,.tm-budget,.tm-scout{border-radius:14px;transition:transform 140ms ease;touch-action:pan-y;}
+.tm-tile.pressed{transform:scale(.97);}
+@media (prefers-reduced-motion: reduce){.tm-lineup,.tm-budget,.tm-scout{transition:none;}}

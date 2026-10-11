@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { playerGrade } from '../game/cards';
 import PlayerCard from './PlayerCard';
 import { formatCoins } from '../game/economy';
@@ -58,11 +58,51 @@ function PlayerBox({ card, top, bench, onPick }) {
   );
 }
 
+// A touch only counts as a tap if the finger stays put. Once it travels past this many pixels it
+// is a swipe (page scroll, or the Team/League tab swipe): the press scale lifts and the click
+// that may follow is ignored.
+const TAP_SLOP = 10;
+
+// Press feedback + tap/swipe separation shared by every tile. Returns the props to spread on the
+// tile element; `onActivate` only fires for a real tap.
+function usePressable(onActivate) {
+  const [pressed, setPressed] = useState(false);
+  const origin = useRef(null);
+  const swiped = useRef(false);
+  return {
+    pressed,
+    props: {
+      onPointerDown: (event) => {
+        if (event.target.closest('.tm-num, .tm-pair-icon, .tm-pair-desc')) return;
+        origin.current = { x: event.clientX, y: event.clientY };
+        swiped.current = false;
+        setPressed(true);
+      },
+      onPointerMove: (event) => {
+        if (!origin.current || swiped.current) return;
+        if (Math.hypot(event.clientX - origin.current.x, event.clientY - origin.current.y) > TAP_SLOP) {
+          swiped.current = true;
+          setPressed(false);
+        }
+      },
+      onPointerUp: () => { origin.current = null; setPressed(false); },
+      onPointerCancel: () => { swiped.current = true; origin.current = null; setPressed(false); },
+      onPointerLeave: () => { origin.current = null; setPressed(false); },
+      onClick: (event) => {
+        if (swiped.current) { swiped.current = false; return; }
+        onActivate(event);
+      },
+    },
+  };
+}
+
 function Tile({ sub, onOpen, className = '', children, label }) {
-  return <button type="button" className={`tm-tile ${className}`} onClick={() => onOpen(sub)} aria-label={label}>{children}</button>;
+  const { pressed, props } = usePressable(() => onOpen(sub));
+  return <button type="button" className={`tm-tile ${className}${pressed ? ' pressed' : ''}`} aria-label={label} {...props}>{children}</button>;
 }
 
 export default function TeamMain({ team, readOnly, onOpen, committed, cap, budgetSources }) {
+  const lineupPress = usePressable(() => onOpen('lineup'));
   const [picked, setPicked] = useState(null);
   const [openPair, setOpenPair] = useState(null);
   const [lastPair, setLastPair] = useState(null);
@@ -109,8 +149,7 @@ export default function TeamMain({ team, readOnly, onOpen, committed, cap, budge
   return (
     <div className="tm-main">
       <div className="tm-tiles">
-        <div className="tm-tile tm-lineup" role="button" tabIndex={0} aria-label="Team" onClick={() => onOpen('lineup')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen('lineup'); } }}>
-          <span className="tm-tile-head"><svg className="tm-chev" viewBox="0 0 16 28" aria-hidden="true"><path d="M3 3l10 11L3 25" /></svg></span>
+        <div className={'tm-tile tm-lineup' + (lineupPress.pressed ? ' pressed' : '')} role="button" tabIndex={0} aria-label="Team" {...lineupPress.props} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen('lineup'); } }}>
           <span className="tm-roster">
             <span className="tm-grade" style={{ color: seal.color }} aria-label={synergy ? `Team grade ${synergy.grade}` : 'No team grade yet'}>{synergy ? synergy.grade : '—'}</span>
             <span className="tm-roster-row">
