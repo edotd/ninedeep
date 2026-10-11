@@ -3337,9 +3337,10 @@ body:has(.trans-screen){padding-bottom:0;}
 .pcard-budgethit.cost-low .pcard-coin{filter:sepia(1) saturate(2.4) hue-rotate(-18deg) brightness(.72);}
 .pcard-budgethit.cost-high .pcard-cost-num{background:linear-gradient(100deg,#9A6B07 0%,#E8B923 30%,#FFF1A8 50%,#E8B923 70%,#9A6B07 100%);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 5px rgba(240,190,50,.65)) drop-shadow(1px 2px 0 rgba(90,60,0,.35));animation:pcard-gold-shine 2.6s linear infinite;}
 /* The coin itself stays a real emoji (its detail would be lost under the clipped gradient); a glow makes it gleam. */
-.pcard-budgethit.cost-high .pcard-coin{filter:saturate(1.2) brightness(1.1) drop-shadow(0 0 4px rgba(240,190,50,.75));}
+.pcard-budgethit.cost-high .pcard-coin{filter:sepia(1) saturate(3.2) hue-rotate(-6deg) brightness(1.12) contrast(1.08);animation:coin-shine 2.6s ease-in-out infinite;}
+@keyframes coin-shine{0%,100%{filter:sepia(1) saturate(3.2) hue-rotate(-6deg) brightness(1.05) contrast(1.08);}50%{filter:sepia(1) saturate(2.6) hue-rotate(-4deg) brightness(1.5) contrast(1.05);}}
 .pcard-budgethit.cost-high .pcard-coin{-webkit-text-fill-color:initial;}
-@media (prefers-reduced-motion: reduce){.pcard-budgethit.cost-high .pcard-cost-num{animation:none;}}
+@media (prefers-reduced-motion: reduce){.pcard-budgethit.cost-high .pcard-cost-num,.pcard-budgethit.cost-high .pcard-coin{animation:none;}}
 
 /* Scouting Report page: a solid navy panel (its rows are light-on-dark) so nothing sits on the textured ground. */
 #team-scouting{background:var(--ink,#1E2B47);padding:16px;box-shadow:0 2px 0 rgba(30,43,71,.25);}
