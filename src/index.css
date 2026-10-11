@@ -3412,11 +3412,3 @@ body:has(.trans-screen){padding-bottom:0;}
 
 /* The deck takes every touch itself so a swipe is never turned into a scroll. */
 .lb-picker .lb-deck{touch-action:none;}
-
-/* Coin icon beside a cost. The cost figure itself keeps its bronze / shiny gold colouring. */
-.pcard-budgethit{display:inline-flex;align-items:center;gap:.14em;}
-.pcard-coin-svg{width:.78em;height:.78em;flex:none;display:block;overflow:visible;}
-.pcard-coin-svg .coin-gleam{animation:coin-gleam 2.6s linear infinite;}
-@keyframes coin-gleam{from{translate:-4px 0;}to{translate:34px 0;}}
-@media (prefers-reduced-motion: reduce){.pcard-coin-svg .coin-gleam{animation:none;opacity:.5;}}
-.pcard-budgethit.cost-high .pcard-coin-svg,.pcard-budgethit.cost-low .pcard-coin-svg{-webkit-text-fill-color:initial;}

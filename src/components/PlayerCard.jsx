@@ -1,6 +1,5 @@
 import { useContext, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import CoinIcon from './CoinIcon';
 import { LeagueStatsContext, RosterRolesContext, RosterCostsContext } from './LeagueStatsContext';
 import { skillsetFor, SKILLSETS, SKILLSET_PAIRS } from '../game/skillsets';
 import { formatCoins } from '../game/economy';
@@ -135,7 +134,7 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
         <span className="pcard-cost-group">
           <span className="pcard-microlabel">Cost</span>
           <span className={'pcard-budgethit' + (costRank ? ` cost-${costRank}` : '')} title={costRank === 'high' ? 'Highest cost on the team' : costRank === 'low' ? 'Lowest cost on the team' : undefined}>
-            <CoinIcon rank={costRank} />{formatCoins(card.salary).replace('🪙', '')}
+            <span className="pcard-coin" aria-hidden="true">🪙</span>{formatCoins(card.salary).replace('🪙', '')}
           </span>
         </span>
       </div>
