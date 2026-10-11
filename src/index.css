@@ -3360,3 +3360,27 @@ body:has(.trans-screen){padding-bottom:0;}
 .lb-slot-ring.selected{animation:lb-wire-pulse 1.6s ease-in-out infinite;}
 @keyframes lb-wire-pulse{0%,100%{opacity:1;}50%{opacity:.45;}}
 @media (prefers-reduced-motion: reduce){.lb-wires line.selected,.lb-slot-ring.selected{animation:none;}}
+
+/* Re-sign: the agent's ask and your offer side by side, same size; arrows change the highlighted term. */
+.neg-cols{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.neg-col{display:flex;flex-direction:column;gap:8px;padding:10px;background:rgba(230,220,196,.07);box-shadow:inset 0 0 0 1px rgba(230,220,196,.2);}
+.neg-col.offer{background:rgba(240,160,61,.08);box-shadow:inset 0 0 0 1px rgba(240,160,61,.45);}
+.neg-col-title{font:400 10px var(--font-label);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-muted);}
+.neg-col.offer .neg-col-title{color:var(--franchise);}
+.neg-field{display:flex;align-items:center;justify-content:space-between;gap:4px;min-height:64px;padding:6px 4px;box-sizing:border-box;box-shadow:inset 0 0 0 1px rgba(230,220,196,.18);}
+.neg-field.selected{box-shadow:inset 0 0 0 2px var(--franchise);background:rgba(240,160,61,.14);}
+.neg-field-body{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:0;padding:0;color:inherit;cursor:default;font:inherit;}
+.neg-col.offer .neg-field-body{cursor:pointer;}
+.neg-field-body small{font:9px var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);}
+.neg-field-body b{font:400 28px/.9 var(--font-display);color:var(--file);}
+.neg-field.selected .neg-field-body b{color:var(--franchise);}
+.neg-arrow{flex:none;width:26px;height:34px;display:flex;align-items:center;justify-content:center;border:0;background:transparent;color:var(--franchise);font-size:18px;line-height:1;padding:0;cursor:pointer;}
+.neg-arrow:disabled{opacity:.25;cursor:default;}
+.neg-arrow.ghost{visibility:hidden;}
+.neg-room-line{display:flex;align-items:baseline;gap:8px;font:10px var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-muted);}
+.neg-room-line b{font:400 18px var(--font-display);color:var(--file);letter-spacing:0;}
+.neg-was{margin-left:auto;text-transform:none;}
+.neg-die-btn{align-self:center;display:flex;flex-direction:column;align-items:center;gap:8px;padding:6px 18px 4px;border:0;background:transparent;color:var(--file);cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.neg-die-btn:disabled{cursor:default;opacity:.6;}
+.neg-die-btn:not(:disabled):active{transform:scale(.96);}
+.neg-die-caption{font:10px var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);}
