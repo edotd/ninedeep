@@ -18,7 +18,7 @@ import { guardedNavigate } from '../hooks/leaveGuard';
 // on the matching sub page.
 const subForSection = (section) => (section === 'office' ? 'coach' : section === 'gameplan' ? 'lineup' : section === 'ledger' || section === 'budget' ? 'budget' : null);
 // Page names for the title bar.
-const SUB_TITLES = { lineup: 'Team', coach: 'Coach', gm: 'GM', budget: 'Manage Budget', scouting: 'Scouting Report' };
+const SUB_TITLES = { lineup: 'Team', coach: 'Coach', gm: 'GM', budget: 'Budget', scouting: 'Scouting Report' };
 
 // The Team Summary screen — "the file the league keeps on you" (design brand handoff, 1a).
 // Serves two roles from the same markup: as the 'teamsummary' phase (shown once per season,

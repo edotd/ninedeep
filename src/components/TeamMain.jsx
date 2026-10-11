@@ -40,8 +40,8 @@ function bracketLayout(pairs) {
   return placed;
 }
 
-// Centre of starter box i in the centred row of five (box width --w, gap --g, set on .tm-roster).
-const colX = (i) => `calc((100% - (5 * var(--w) + 4 * var(--g))) / 2 + ${i} * (var(--w) + var(--g)) + var(--w) / 2)`;
+// Centre of starter box i in the left-aligned row of five (box width --w, gap --g, set on .tm-roster).
+const colX = (i) => `calc(${i} * (var(--w) + var(--g)) + var(--w) / 2)`;
 
 
 // One lineup box: empty outline until the lineup is set, then the player's letter grade — tap it
@@ -110,8 +110,8 @@ export default function TeamMain({ team, readOnly, onOpen, committed, cap, budge
     <div className="tm-main">
       <div className="tm-tiles">
         <div className="tm-tile tm-lineup" role="button" tabIndex={0} aria-label="Team" onClick={() => onOpen('lineup')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen('lineup'); } }}>
-          <span className="tm-seal" style={{ background: seal.color, color: seal.ink }}>{synergy ? synergy.grade : '—'}</span>
-          <span className="tm-tile-head"><b>Team</b><svg className="tm-chev" viewBox="0 0 16 28" aria-hidden="true"><path d="M3 3l10 11L3 25" /></svg></span>
+          <span className="tm-grade" style={{ color: seal.color }} aria-label={synergy ? `Team grade ${synergy.grade}` : 'No team grade yet'}>{synergy ? synergy.grade : '—'}</span>
+          <span className="tm-tile-head"><svg className="tm-chev" viewBox="0 0 16 28" aria-hidden="true"><path d="M3 3l10 11L3 25" /></svg></span>
           <span className="tm-roster">
             <span className="tm-roster-row">
               {Array.from({ length: 5 }, (_, i) => <PlayerBox key={i} card={lineupReady ? starters[i] : null} top={i === topStarter} onPick={setPicked} />)}
@@ -170,7 +170,7 @@ export default function TeamMain({ team, readOnly, onOpen, committed, cap, budge
         </Tile>
 
         <Tile onOpen={onOpen} sub="budget" className="tm-budget" label="Manage budget">
-          <span className="tm-tile-head"><b>MANAGE BUDGET</b><i>›</i></span>
+          <span className="tm-tile-head"><b>BUDGET</b><i>›</i></span>
           <span className={'tm-budget-nums' + (room < 0 ? ' over' : '')}><strong>{trim(committed)}</strong><em>/ {trim(cap)}</em></span>
           <span className="tm-budget-bar">
             {budgetSegments.map((s) => <i key={s.key} className={s.key} style={{ width: `${(s.amount / span) * 100}%` }} />)}

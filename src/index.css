@@ -2817,12 +2817,13 @@ body:has(.trans-screen){padding-bottom:0;}
 .tm-tile-head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:26px;}
 .tm-tile-head b{font:400 31px/.8 var(--font-display);text-transform:uppercase;letter-spacing:.01em;}
 .tm-tile-head i{font:400 28px/.7 var(--font-display);font-style:normal;color:#B5431F;}
-.tm-lineup .tm-tile-head{justify-content:flex-start;padding-right:70px;}
+.tm-lineup .tm-tile-head{justify-content:flex-end;min-height:14px;}
+.tm-lineup{padding-bottom:44px;}
+.tm-grade{position:absolute;right:14px;bottom:8px;font:400 40px/.8 var(--font-display);}
 .tm-budget .tm-tile-head b{font:400 11px var(--font-label);letter-spacing:.14em;}
 .tm-budget .tm-tile-head i{font-size:24px;}
-.tm-seal{position:absolute;top:0;right:0;width:70px;height:66px;border-radius:0 0 0 14px;box-shadow:-4px 4px 0 #E3D8BD;display:flex;align-items:center;justify-content:center;font:400 46px/.76 var(--font-display);}
 .tm-roster{--w:clamp(40px,13.6vw,54px);--g:8px;display:flex;flex-direction:column;padding-top:18px;}
-.tm-roster-row{display:flex;justify-content:center;gap:var(--g);align-items:flex-start;}
+.tm-roster-row{display:flex;justify-content:flex-start;gap:var(--g);align-items:flex-start;}
 .tm-bench-row{margin-top:12px;}
 .tm-num{flex:0 0 var(--w);width:var(--w);min-width:0;box-sizing:border-box;margin:0;padding:12px 0;min-height:60px;border:0;text-align:center;background:#1E2B47;color:#E6DCC4;font:400 38px/.84 var(--font-display);cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .tm-num.top{box-shadow:inset 0 -3px 0 #F0A03D;}
@@ -3435,3 +3436,4 @@ body:has(.trans-screen){padding-bottom:0;}
 .lb-bench-card .lb-tenure i.new{color:#625A44;}
 .lb-bench-card .lb-tenure i{background:#C97F1E;}
 .lb-bench-card .lb-tenure i.more{color:#C97F1E;background:none;}
+.tm-lineup .tm-chips{padding-right:52px;}
