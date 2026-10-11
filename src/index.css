@@ -3442,3 +3442,18 @@ body:has(.trans-screen){padding-bottom:0;}
 .tm-lineup,.tm-budget,.tm-scout{border-radius:14px;transition:transform 140ms ease;touch-action:pan-y;}
 .tm-tile.pressed{transform:scale(.97);}
 @media (prefers-reduced-motion: reduce){.tm-lineup,.tm-budget,.tm-scout{transition:none;}}
+
+/* Lineup page header: the coach (archetype + modifier) and a Gameplan button, each on a solid ground. */
+.lb-planbar{display:flex;gap:8px;}
+.lb-planbar>*{flex:1 1 0;min-width:0;min-height:56px;box-sizing:border-box;padding:8px 12px;display:flex;flex-direction:column;justify-content:center;gap:3px;border:0;text-align:left;font:inherit;}
+.lb-coachbox{background:#1E2B47;color:#E6DCC4;}
+.lb-coachbox strong{font:400 26px/.9 var(--font-display);text-transform:uppercase;letter-spacing:.02em;color:#F0A03D;}
+.lb-coachbox span{font:10px var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:#A9B4C9;}
+.lb-gameplanbox{background:#F0A03D;color:#1E2B47;cursor:pointer;}
+.lb-gameplanbox:disabled{cursor:default;opacity:.85;}
+.lb-gameplanbox span{font:10px var(--font-mono);letter-spacing:.14em;color:#4A3410;}
+.lb-gameplanbox strong{font:400 24px/.9 var(--font-display);text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+/* The Gameplan picker is a centered modal, not a bottom sheet. */
+.lb-sheet.plan{top:50%;bottom:auto;left:50%;right:auto;width:calc(100% - 32px);max-width:420px;margin:0;border:3px solid #1E2B47;transform:translate(-50%,-46%) scale(.96);opacity:0;pointer-events:none;transition:transform 200ms ease,opacity 200ms ease;}
+.lb-sheet.plan.open{transform:translate(-50%,-50%);opacity:1;pointer-events:auto;}
+@media (prefers-reduced-motion: reduce){.lb-sheet.plan{transition:none;}}

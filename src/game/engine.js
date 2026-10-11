@@ -182,6 +182,33 @@ export function saveLineup(state, teamIdx, activeIds, activeGameplanId, sixthMan
   return { valid: true };
 }
 
+// A lineup in progress: remembers which player sits in which slot (with open slots) so leaving
+// the page half-filled loses nothing. Never touches the saved five or lineupSet.
+export function saveLineupSlots(state, teamIdx, slots, activeGameplanId = null) {
+  const team = state.teams[teamIdx];
+  if (!team || !slots) return { valid: false, msg: 'Nothing to save yet.' };
+  const inHand = (id) => (id && team.hand.some((card) => card.id === id) ? id : null);
+  const starters = Array.from({ length: 5 }, (_, i) => inHand(slots.starters?.[i]));
+  const placed = new Set(starters.filter(Boolean));
+  const sixth = inHand(slots.sixth);
+  const depth = inHand(slots.depth);
+  team.lineupSlots = {
+    starters,
+    sixth: sixth && !placed.has(sixth) ? sixth : null,
+    depth: depth && !placed.has(depth) && depth !== sixth ? depth : null,
+  };
+  if (activeGameplanId !== null && activeGameplanId !== undefined) {
+    if (activeGameplanId) {
+      const result = setCoachGameplan(state, teamIdx, activeGameplanId);
+      if (result.ok === false) return { valid: false, msg: result.msg };
+    } else {
+      team.activeGameplanId = null;
+      syncSeasonGameplan(team);
+    }
+  }
+  return { valid: true };
+}
+
 // Empties the starting five so the Set Lineup screen can open onto nine empty-looking slots
 // instead of the auto-selected placeholder (see SetLineupScreen.jsx's mount effect) — only
 // ever called pre-season, before lineupSet is true, so there's nothing live to protect here

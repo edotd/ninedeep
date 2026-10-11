@@ -20,6 +20,7 @@ export const actionMap = {
   confirmLineup: engine.confirmLineup,
   markLineupSet: engine.markLineupSet,
   saveLineup: engine.saveLineup,
+  saveLineupSlots: engine.saveLineupSlots,
   clearLineup: engine.clearLineup,
   swapStarter: engine.swapStarter,
   promoteToStarter: engine.promoteToStarter,

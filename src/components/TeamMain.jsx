@@ -4,6 +4,7 @@ import PlayerCard from './PlayerCard';
 import { formatCoins } from '../game/economy';
 import { teamSynergy, SKILLSETS } from '../game/skillsets';
 import BonusIcon from './BonusIcon';
+import BallMark from './BallMark';
 
 // The Team page's main index (design: Team · Main) — one tile per sub page: Lineup & Chemistry,
 // Scouting Report and Manage Budget (Coach and GM live in the bottom bar). Each tile opens its page via `onOpen`. The design's header (franchise
@@ -151,7 +152,7 @@ export default function TeamMain({ team, readOnly, onOpen, committed, cap, budge
       <div className="tm-tiles">
         <div className={'tm-tile tm-lineup' + (lineupPress.pressed ? ' pressed' : '')} role="button" tabIndex={0} aria-label="Team" {...lineupPress.props} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen('lineup'); } }}>
           <span className="tm-roster">
-            <span className="tm-grade" style={{ color: seal.color }} aria-label={synergy ? `Team grade ${synergy.grade}` : 'No team grade yet'}>{synergy ? synergy.grade : '—'}</span>
+            <span className="tm-grade" style={{ color: seal.color }} aria-label={synergy ? `Team grade ${synergy.grade}` : 'No team grade yet'}>{synergy ? synergy.grade : <BallMark size={64} variant="onFile" />}</span>
             <span className="tm-roster-row">
               {Array.from({ length: 5 }, (_, i) => <PlayerBox key={i} card={lineupReady ? starters[i] : null} top={i === topStarter} onPick={setPicked} />)}
             </span>

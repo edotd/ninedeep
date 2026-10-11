@@ -13,7 +13,6 @@ import BonusIcon from './BonusIcon';
 import { BONUS_SIDE } from './bonusIcons';
 import { gameplanEffects } from '../game/strategyCards';
 import { completedTeamYears } from '../game/chemistry';
-import { setLeaveGuard } from '../hooks/leaveGuard';
 
 // Shown once per browser — the first time anyone opens this editor, not once per team/era, so
 // re-explaining after a fresh solo game or a new room would be redundant.
@@ -234,47 +233,25 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
 
   const complete = starterIds.length === 5;
   const depthCard = benchCards.BD || null;
-  const signature = JSON.stringify([starterIds, sixthMan?.id || null, depthCard?.id || null, planId]);
-  const [savedSignature, setSavedSignature] = useState(() => (team.lineupSet ? signature : null));
-  const dirty = signature !== savedSignature;
-  const canSave = canEdit && complete && dirty;
+  // Where every player sits right now, open slots included.
+  const slotSignature = JSON.stringify([starters.map((card) => card?.id || null), sixthMan?.id || null, depthCard?.id || null, planId]);
+  const [savedSignature, setSavedSignature] = useState(slotSignature);
 
-  // The lineup saves itself the moment all five starters are in place and anything changes.
-  const save = () => {
-    const check = validateLineup({ ...team, activeIds: starterIds });
-    if (!check.valid) return check;
-    const result = actions.saveLineup(myTeamId, starterIds, planId, sixthMan?.id || '', depthCard?.id || '');
-    return result && result.valid === false ? result : null;
-  };
+  // The lineup saves itself whenever a player is placed: a complete five is saved as the real
+  // lineup, anything less is remembered slot by slot so backing out loses nothing.
   useEffect(() => {
-    if (!canSave) return;
-    const failure = save();
-    if (failure) { flash(failure.msg); return; }
-    setSavedSignature(signature);
-    flash('LINEUP SAVED');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canSave, signature]);
-
-  // Leaving the page (another tab, the sidebar, closing the browser) with unsaved changes asks
-  // whether to save first. Navigation points go through hooks/leaveGuard.js's guardedNavigate.
-  const hasUnsaved = canEdit && dirty && (starterIds.length > 0 || Boolean(team.lineupSet));
-  const [leavePrompt, setLeavePrompt] = useState(null); // { proceed }
-  useEffect(() => {
-    if (!hasUnsaved) return undefined;
-    const release = setLeaveGuard((proceed) => setLeavePrompt({ proceed }));
-    const beforeUnload = (event) => { event.preventDefault(); event.returnValue = ''; };
-    window.addEventListener('beforeunload', beforeUnload);
-    return () => { release(); window.removeEventListener('beforeunload', beforeUnload); };
-  }, [hasUnsaved]);
-  const leaveWith = (doSave) => {
-    const { proceed } = leavePrompt;
-    if (doSave) {
-      const failure = save();
-      if (failure) { alert(failure.msg); return; }
+    if (!canEdit || slotSignature === savedSignature) return;
+    if (complete) {
+      const check = validateLineup({ ...team, activeIds: starterIds });
+      const result = check.valid ? actions.saveLineup(myTeamId, starterIds, planId, sixthMan?.id || '', depthCard?.id || '') : check;
+      if (result && result.valid === false) { flash(result.msg); return; }
+      flash('LINEUP SAVED');
+    } else {
+      actions.saveLineupSlots(myTeamId, { starters: COURT.map((slot, i) => starters[i]?.id || null), sixth: sixthMan?.id || null, depth: depthCard?.id || null }, planId);
     }
-    setLeavePrompt(null);
-    proceed();
-  };
+    setSavedSignature(slotSignature);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slotSignature]);
 
   const openSlot = (key) => {
     const card = cardFor(key);
@@ -358,12 +335,18 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
   return (
     <div className="lb" role="region" aria-label="Your Lineup">
       <div className="lb-body">
-        {plans.length > 0 && (
-          <button type="button" ref={gameplanBtnRef} className="lb-plan" disabled={!canEdit} onClick={() => setSheet({ type: 'plan' })}>
-            <span>GAMEPLAN</span>
-            <strong>{activePlan?.name || 'None'}<i>▾</i></strong>
-          </button>
-        )}
+        <div className="lb-planbar">
+          <div className="lb-coachbox">
+            <strong>{team.coach?.archetype?.replace(/ Minded$/, '') || 'No Coach'}</strong>
+            {team.coach?.modifier && <span>{team.coach.modifier}</span>}
+          </div>
+          {plans.length > 0 && (
+            <button type="button" ref={gameplanBtnRef} className="lb-gameplanbox" disabled={!canEdit} onClick={() => setSheet({ type: 'plan' })} aria-haspopup="dialog">
+              <span>GAMEPLAN</span>
+              <strong>{activePlan?.name || 'None'}</strong>
+            </button>
+          )}
+        </div>
 
         <div className="lb-court" ref={courtRef}>
           <div className="lb-key" />
@@ -526,21 +509,6 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
             ))}
           </div>
         </>,
-        document.body,
-      )}
-
-      {leavePrompt && createPortal(
-        <div className="lb-card-backdrop" role="dialog" aria-modal="true" aria-label="Unsaved lineup changes" onClick={() => setLeavePrompt(null)}>
-          <div className="lb-leave" onClick={(event) => event.stopPropagation()}>
-            <strong>Unsaved lineup changes</strong>
-            <p>{complete ? 'You have changes to your lineup that haven’t been saved. Save before leaving?' : 'Your lineup has changes that haven’t been saved, and it isn’t complete yet. Leave without saving?'}</p>
-            <div className="lb-leave-actions">
-              {complete && <button type="button" onClick={() => leaveWith(true)}>Save &amp; leave</button>}
-              <button type="button" className="secondary" onClick={() => leaveWith(false)}>Discard</button>
-              <button type="button" className="secondary" onClick={() => setLeavePrompt(null)}>Keep editing</button>
-            </div>
-          </div>
-        </div>,
         document.body,
       )}
 
