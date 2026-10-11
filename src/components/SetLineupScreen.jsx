@@ -556,7 +556,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
                 <div
                   key={card.id}
                   className={'lb-deck-card' + (top ? ' top' : '')}
-                  style={{ width: w, height: h, marginLeft: -w / 2, marginTop: -h / 2, transform, opacity, zIndex: n - k, transition: top && deckDrag.active ? 'none' : 'transform 380ms cubic-bezier(.16,.9,.24,1), opacity 260ms ease' }}
+                  style={{ width: w, height: h, marginLeft: -w / 2, marginTop: -h / 2, transform, opacity, zIndex: leaving ? n + 2 : n - k, transition: top && deckDrag.active ? 'none' : leaving ? 'transform 420ms cubic-bezier(.16,.9,.24,1), opacity 260ms ease 220ms' : 'transform 380ms cubic-bezier(.16,.9,.24,1), opacity 260ms ease' }}
                   aria-hidden={top ? undefined : true}
                   role={top ? 'button' : undefined}
                   tabIndex={top ? 0 : undefined}
@@ -577,19 +577,6 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
                 </div>
               );
             })}
-          </div>
-          <div className="lb-deck-status">
-            {(() => {
-              const card = roster[cardIndex];
-              if (!card) return null;
-              const where = slotOf(card.id);
-              const here = where === sheetSlot;
-              return <span className={where && !here ? 'warn' : ''}>{here ? 'IN THIS SLOT' : where ? `NOW AT ${slotLabel(where)} · WILL MOVE` : 'AVAILABLE'}</span>;
-            })()}
-          </div>
-          <div className="lb-deck-nav">
-            <button type="button" onClick={() => stepDeck(-1)}>BACK</button>
-            <button type="button" className="next" onClick={() => stepDeck(1, -1)}>NEXT CARD</button>
           </div>
           <div className="lb-measure" aria-hidden="true">{roster.map((card) => <div className="lb-natural" key={card.id} style={{ width: 264 }}><PlayerCard card={card} /></div>)}</div>
           {menu && (

@@ -3398,3 +3398,8 @@ body:has(.trans-screen){padding-bottom:0;}
 .lb-deck-nav button.next{flex:2;background:#1E2B47;color:#E6DCC4;box-shadow:none;}
 .lb-picker-pager b{cursor:pointer;}
 @media (prefers-reduced-motion: reduce){.lb-deck-card{transition:none!important;}}
+
+/* Picker pager: the 1/7 chiclets span the screen's width. */
+.lb-picker .lb-picker-pager{width:100%;box-sizing:border-box;padding:0 16px;gap:8px;}
+.lb-picker .lb-picker-pager i{width:100%;gap:4px;}
+.lb-picker .lb-picker-pager b{flex:1;width:auto;height:10px;}
