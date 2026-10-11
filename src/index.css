@@ -3409,3 +3409,6 @@ body:has(.trans-screen){padding-bottom:0;}
 .lb-deck-card.dropping{animation:lb-deck-drop .46s cubic-bezier(.2,.8,.2,1) both;}
 .lb-deck-back{box-shadow:inset 0 0 0 2px rgba(15,22,38,.22);}
 @media (prefers-reduced-motion: reduce){.lb-deck-card.dropping{animation:none;}}
+
+/* The deck takes every touch itself so a swipe is never turned into a scroll. */
+.lb-picker .lb-deck{touch-action:none;}

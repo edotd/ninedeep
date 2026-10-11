@@ -7,7 +7,6 @@ import { sortPlayers } from '../game/playerFilters';
 import PlayerCard from './PlayerCard';
 import CardReveal, { CardRevealPlayer } from './CardReveal';
 import PlayerCardMenu from './PlayerCardMenu';
-import BallMark from './BallMark';
 import CoachmarkTour from './CoachmarkTour';
 import BonusIcon from './BonusIcon';
 import { BONUS_SIDE } from './bonusIcons';
@@ -34,13 +33,8 @@ const COURT = [
   { key: 'S3', n: 4, x: 24, y: 22 },
   { key: 'S4', n: 5, x: 76, y: 22 },
 ];
-// Cards the player has already looked at in the lineup picker (for the session): their reveal
-// only plays the first time.
-const SEEN_CARDS = new Set();
 const BENCH = [{ key: 'B6', label: '6TH MAN' }, { key: 'BD', label: 'DEPTH' }];
 const SLOT_KEYS = [...COURT.map((s) => s.key), ...BENCH.map((b) => b.key)];
-// The card-back colour of each rarity — what the cards waiting in the deck look like.
-const DECK_COLOR = { Legendary: '#F0A03D', Signature: '#E8825C', Prime: '#8E9BB5', Core: '#6B7894' };
 const RARITY_COLOR = { Legendary: '#F0A03D', Signature: '#8E9BB5', Prime: '#C9BC9C', Core: '#A79A78' };
 const SORTS = [['Position', 'position'], ['Grade', 'grade'], ['Scoring', 'SCO'], ['Playmaking', 'PLM'], ['Rebounding', 'REB'], ['Defense', 'DEF'], ['Cost', 'cost']];
 
@@ -307,8 +301,6 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
   const rosterRef = useRef([]);
   // Transitions stay off for the first frames after the picker opens, so nothing glides into place.
   const [deckLive, setDeckLive] = useState(false);
-  // A card's first-time reveal starts only once it has moved into place on top of the deck.
-  const [revealGo, setRevealGo] = useState(false);
   // No wrap-around: the deck starts at the first card and ends at the last.
   // Swipe right to throw the top card to the right and move on; swipe left and the previous card
   // drops back onto the pile from above.
@@ -345,26 +337,6 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
     window.addEventListener('resize', fit);
     return () => window.removeEventListener('resize', fit);
   }, [sheetSlot]);
-  // A card plays the full onboarding reveal only the first time it's swiped to; after that it
-  // just shows finished. An unseen card is blank until it's the one in view, so you never see it
-  // finished before it plays. `reveal.live` is the card whose reveal is running now.
-  const [reveal, setReveal] = useState({ active: null, live: null });
-  useEffect(() => { if (!sheetSlot) setReveal({ active: null, live: null }); }, [sheetSlot]);
-  useEffect(() => {
-    if (!sheetSlot) return;
-    const card = roster[cardIndex];
-    if (!card) return;
-    const unseen = !SEEN_CARDS.has(card.id);
-    SEEN_CARDS.add(card.id);
-    setReveal((r) => ({ active: card.id, live: unseen ? card.id : (r.live === card.id ? card.id : null) }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sheetSlot, cardIndex]);
-  useEffect(() => {
-    if (!reveal.live) return undefined;
-    setRevealGo(false);
-    const timer = setTimeout(() => setRevealGo(true), 480);
-    return () => clearTimeout(timer);
-  }, [reveal.live]);
   // Start on the player already in this slot (or the first card), and keep the page behind the
   // picker from scrolling while it's up.
   useLayoutEffect(() => {
@@ -384,25 +356,30 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sheetSlot]);
 
-  // Drag the top card; letting go past 70px sends it to the back.
+  // Drag the top card: swipe left past 70px for the next card, right for the previous one. The
+  // last dx seen while moving is what counts on release (a cancelled pointer reports no usable x).
+  const lastDx = useRef(0);
   useEffect(() => {
     if (!deckDrag.active) return undefined;
     const move = (e) => {
       const dx = e.clientX - dragStart.current;
+      lastDx.current = dx;
       if (Math.abs(dx) > 6) moved.current = true;
       setDeckDrag({ dx, active: true });
     };
-    const up = (e) => {
-      const dx = e.clientX - dragStart.current;
+    const finish = (commit) => () => {
+      const dx = lastDx.current;
       setDeckDrag({ dx: 0, active: false });
       setPressId(null);
-      if (dx > 70) stepDeck(1);
-      else if (dx < -70 && cardIndexRef.current > 0) stepDeck(-1, rosterRef.current[cardIndexRef.current - 1]?.id);
+      if (!commit) return;
+      if (dx < -70) stepDeck(1);
+      else if (dx > 70 && cardIndexRef.current > 0) stepDeck(-1, rosterRef.current[cardIndexRef.current - 1]?.id);
     };
+    const up = finish(true), cancel = finish(false);
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
-    window.addEventListener('pointercancel', up);
-    return () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up); };
+    window.addEventListener('pointercancel', cancel);
+    return () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', cancel); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deckDrag.active]);
 
@@ -555,6 +532,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
             onPointerDown={(e) => {
               if (e.target.closest('button, select, a')) return;
               dragStart.current = e.clientX;
+              lastDx.current = 0;
               moved.current = false;
               setPressId(roster[cardIndex]?.id ?? null);
               setDeckDrag({ dx: 0, active: true });
@@ -573,14 +551,13 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
               const sc = 1 - kk * 0.055;
               const rawDx = deckDrag.dx;
               // Pulling past either end of the deck resists instead of moving freely.
-              const dx = (cardIndex === 0 && rawDx < 0) || (cardIndex === n - 1 && rawDx > 0) ? rawDx / 4 : rawDx;
+              const dx = (cardIndex === 0 && rawDx > 0) || (cardIndex === n - 1 && rawDx < 0) ? rawDx / 4 : rawDx;
               const transform = top
                 ? `translateX(${dx}px) rotate(${dx / 22}deg) scale(${pressId === card.id ? 0.955 : 1})`
                 : gone
-                  ? 'translateX(460px) translateY(-30px) rotate(16deg)'
+                  ? 'translateX(-460px) translateY(-30px) rotate(-16deg)'
                   : `translateX(${kk * 16}px) translateY(${-kk * 8}px) rotate(${kk * 3.5}deg) scale(${sc})`;
               const opacity = top ? 1 : gone ? 0 : k > DECK_DEPTH ? 0 : 1;
-              const seen = SEEN_CARDS.has(card.id);
               const w = 264 * pickerFit.s, h = pickerFit.h * pickerFit.s + 44;
               return (
                 <div
@@ -594,15 +571,11 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
                   onClick={top ? () => { if (!moved.current) setMenu(card); } : undefined}
                   onKeyDown={top ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMenu(card); } } : undefined}
                 >
-                  {top ? (
-                    reveal.live === card.id
-                      ? (revealGo
-                        ? <CardRevealPlayer key={'live' + card.id} card={card} up={pickerFit.s} cardHeight={pickerFit.h} rosterLabel={roleLabel(where)} />
-                        : <div className="lb-deck-back" style={{ background: DECK_COLOR[card.rarity] || DECK_COLOR.Core }}><BallMark size={64} variant="monoOutline" /></div>)
-                      : seen && <CardRevealPlayer key={'done' + card.id} card={card} up={pickerFit.s} cardHeight={pickerFit.h} settled rosterLabel={roleLabel(where)} />
-                  ) : (
-                    <div className="lb-deck-back" style={{ background: DECK_COLOR[card.rarity] || DECK_COLOR.Core }}><BallMark size={64} variant="monoOutline" /></div>
-                  )}
+                  {/* The top card plays only the finish of the reveal — frame, label and (Legendary) the
+                      sheen — once it has moved into place; every other card is simply the card. */}
+                  {top
+                    ? <CardRevealPlayer key={'top' + card.id} card={card} up={pickerFit.s} cardHeight={pickerFit.h} finale delay={420} rosterLabel={roleLabel(where)} />
+                    : k >= -1 && k <= DECK_DEPTH + 1 && <CardRevealPlayer key={'rest' + card.id} card={card} up={pickerFit.s} cardHeight={pickerFit.h} settled rosterLabel={roleLabel(where)} />}
                   {!top && <div className="lb-deck-shade" style={{ opacity: Math.min(0.6, kk * 0.17) }} />}
                 </div>
               );

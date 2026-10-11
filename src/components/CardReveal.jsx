@@ -111,7 +111,7 @@ function Chrome({ t, tm, rarity, cw, ch, onContinue, ctaLabel, bare, shift, onBa
   );
 }
 
-function BallReveal({ t, face, cardW, up, rarity, cardHeight, onContinue, ctaLabel, bare, shift, onBadge, quick }) {
+function BallReveal({ t, face, cardW, up, rarity, cardHeight, onContinue, ctaLabel, bare, shift, onBadge, quick, finale }) {
   const tm = BALL_T[rarity], L = rarity === 'Legendary';
   const cw = cardW * up, ch = cardHeight * up;
   const S = 132, pitch = S * 0.196, dot = S * 0.1;
@@ -119,7 +119,7 @@ function BallReveal({ t, face, cardW, up, rarity, cardHeight, onContinue, ctaLab
   const pop = back(P(t, tm.pop, 420));
   // `quick` skips the ball and its dots: the colour panel is already full-size and only the
   // final circle growing out into the card (and the frame strike) plays.
-  const ballOut = quick ? 1 : eio(P(t, tm.grow, 320));
+  const ballOut = quick || finale ? 1 : eio(P(t, tm.grow, 320));
   const spin = L ? lerp(-18, 0, eo(P(t, 0, 1700))) : lerp(-8, 0, eo(P(t, 0, 900)));
   const order = [0, 1, 2, 5, 8, 7, 6, 3, 4];
   // Legendary charge: the ball swells and shakes harder, then dips just before the burst.
@@ -133,8 +133,8 @@ function BallReveal({ t, face, cardW, up, rarity, cardHeight, onContinue, ctaLab
     sx = a * Math.sin(t / 11) + a * 0.5 * Math.sin(t / 5.3);
     sy = a * Math.cos(t / 13) + a * 0.4 * Math.cos(t / 4.7);
   }
-  const g = quick ? 1 : eio(P(t, tm.grow, 440));
-  const rv = eio(P(t, tm.reveal, 380));
+  const g = quick || finale ? 1 : eio(P(t, tm.grow, 440));
+  const rv = finale ? 1 : eio(P(t, tm.reveal, 380));
   const fly = eio(P(t, tm.fly, 440));
   const sk = P(t, tm.strike, 280);
   const sw = S * 0.022;
@@ -196,7 +196,7 @@ function BallReveal({ t, face, cardW, up, rarity, cardHeight, onContinue, ctaLab
           {L && <Sheen t={t} tm={tm} cw={cw} ch={ch} />}
         </div>
       )}
-      {!quick && dots}
+      {!quick && !finale && dots}
     </Chrome>
   );
 }
@@ -205,10 +205,11 @@ function BallReveal({ t, face, cardW, up, rarity, cardHeight, onContinue, ctaLab
 // optionally sped up by `speed`. `quick` plays only its last stretch — the circle growing out into
 // the full card — which is what the player picker uses. `delay` holds the start back a moment.
 // Remounting it (change its key) plays it again.
-export function CardRevealPlayer({ card, up, cardHeight, speed = 1, delay = 0, settled = false, quick = false, rosterLabel }) {
+export function CardRevealPlayer({ card, up, cardHeight, speed = 1, delay = 0, settled = false, quick = false, finale = false, rosterLabel }) {
   const rarity = RAR[card.rarity] ? card.rarity : 'Core';
   const total = BALL_T[rarity].total;
-  const t0 = quick ? BALL_T[rarity].reveal - 40 : 0;
+  // `finale`: the card is simply there; only the frame striking on, the label and the sheen play.
+  const t0 = finale ? BALL_T[rarity].strike - 30 : quick ? BALL_T[rarity].reveal - 40 : 0;
   const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const [clock, setClock] = useState(0);
   useEffect(() => {
@@ -226,7 +227,7 @@ export function CardRevealPlayer({ card, up, cardHeight, speed = 1, delay = 0, s
   const t = reduced || settled ? total : Math.min(total, t0 + Math.max(0, clock - delay) * speed);
   // One element for the card's whole life, so a frame of the animation never re-renders the card.
   const face = useMemo(() => <PlayerCard card={card} rosterLabel={rosterLabel} />, [card, rosterLabel]);
-  return <BallReveal t={t} face={face} cardW={264} up={up} rarity={rarity} cardHeight={cardHeight} bare quick={quick} />;
+  return <BallReveal t={t} face={face} cardW={264} up={up} rarity={rarity} cardHeight={cardHeight} bare quick={quick} finale={finale} />;
 }
 
 const HINT = 'Tap any part of the card to learn more';
