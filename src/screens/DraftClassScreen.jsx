@@ -19,7 +19,7 @@ export default function DraftClassScreen({ state, actions, myTeamId, onBack }) {
           <p className="lede">This year's actual prospects, set the moment the season began. Scout now — the pool won't change before the draft opens.</p>
           {sorted.length ? (
             <div className="fa-grid">
-              {sorted.map((card) => <PlayerCard key={card.id} card={card} scouted={state.teams[myTeamId].scoutingReport?.includes(card.id)} revealPeak={state.teams[myTeamId].gmTrait?.name === 'Third Eye' && state.teams[myTeamId].scoutingReport?.includes(card.id)} onScout={() => { const result = actions.toggleScouting(myTeamId, card.id); if (result?.ok === false) alert(result.msg); }} />)}
+              {sorted.map((card) => <PlayerCard key={card.id} card={card} hideStats={!state.teams[myTeamId].scoutingReport?.includes(card.id)} scouted={state.teams[myTeamId].scoutingReport?.includes(card.id)} revealPeak={state.teams[myTeamId].gmTrait?.name === 'Third Eye' && state.teams[myTeamId].scoutingReport?.includes(card.id)} onScout={() => { const result = actions.toggleScouting(myTeamId, card.id); if (result?.ok === false) alert(result.msg); }} />)}
             </div>
           ) : <p className="lede">The next class hasn't been drawn yet.</p>}
         </>

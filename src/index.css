@@ -3415,3 +3415,10 @@ body:has(.trans-screen){padding-bottom:0;}
 
 /* The deck takes every touch itself so a swipe is never turned into a scroll. */
 .lb-picker .lb-deck{touch-action:none;}
+
+/* Unscouted draft prospects: stats and grade roll through a range like a slot reel. */
+.hs{display:block;height:1em;line-height:1;overflow:hidden;}
+.hs-reel{display:flex;flex-direction:column;animation:hs-roll linear infinite;will-change:transform;filter:blur(.35px);}
+.hs-reel i{display:block;height:1em;line-height:1;font-style:normal;}
+@keyframes hs-roll{to{transform:translateY(calc(var(--n) * -1em));}}
+@media (prefers-reduced-motion: reduce){.hs-reel{animation-duration:6s!important;filter:none;}}

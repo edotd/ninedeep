@@ -96,9 +96,10 @@ export default function DraftScreen({ state, actions, myTeamId }) {
         {sortedPool.map((c) => {
           const priced = { ...c, salary: offseasonPrice(myTeam, c.salary) };
           const pick = () => actions.draftPick(myTeamId, c.id);
+          const isScouted = Boolean(myTeam.scoutingReport?.includes(c.id));
           return (
             <div key={c.id}>
-              <PlayerCard card={priced} onClick={onTheClock ? pick : undefined} />
+              <PlayerCard card={priced} onClick={onTheClock ? pick : undefined} scouted={isScouted} hideStats={!isScouted} />
               {onTheClock && <button className="pcard-renew" onClick={pick}>Select</button>}
             </div>
           );

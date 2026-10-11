@@ -8,6 +8,7 @@ import { cardTier, baseCardTier, jerseyNumber, playerGrade } from '../game/cards
 import { useIsDark } from '../hooks/useDarkMode';
 import { LEAGUE_ACCOLADES, RARITY_CORNERS } from '../game/constants';
 import CardTypeMark from './CardTypeMark';
+import { HiddenStat, HiddenGrade } from './HiddenStat';
 import BallMark from './BallMark';
 import RarityGhost from './RarityGhost';
 
@@ -24,7 +25,7 @@ const LEGACY_DEVELOPMENT_CHANGES = {
 const LONG_PRESS_MS = 500;
 const STAT_KEYS = ['SCO', 'PLM', 'REB', 'DEF'];
 
-export default function PlayerCard({ card, onClick, selected, rosterLabel, compact, onRelease, onDevelop, onScout, scouted, revealPeak, alwaysShowOptions, contractLabel, signingNote }) {
+export default function PlayerCard({ card, onClick, selected, rosterLabel, compact, onRelease, onDevelop, onScout, scouted, revealPeak, alwaysShowOptions, contractLabel, signingNote, hideStats }) {
   const leagueMax = useContext(LeagueStatsContext);
   const roles = useContext(RosterRolesContext);
   const costRank = useContext(RosterCostsContext)?.[card.id] || null; // 'high' | 'low' | null
@@ -118,7 +119,7 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
         )}
         <div className="pcard-header-right">
           {!compact && <span className={`pcard-rarity-label r-${rarity}`}>{rarity.toUpperCase()}</span>}
-          <span className="pcard-grade" aria-label={`Player grade ${playerGrade(card)}`}>{playerGrade(card)}</span>
+          <span className="pcard-grade" aria-label={hideStats ? 'Player grade hidden until scouted' : `Player grade ${playerGrade(card)}`}>{hideStats && !compact ? <HiddenGrade grade={playerGrade(card)} seed={`${card.id}:grade`} /> : playerGrade(card)}</span>
         </div>
       </div>
       <div className="pcard-name-block">
@@ -159,8 +160,8 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
             const isTop = value === topValue;
             // Gold + shine: only a stat that matches the league-high for that stat (ties with the
             // league-high included). The card's own top stat is just colored.
-            const gold = Boolean(leagueMax) && value > 0 && value >= leagueMax[stat];
-            return <div className={'pcard-stat' + (gold ? ' gold' : isTop ? ' top' : '')} key={stat}><div className="pcard-stat-value"><b>{value}</b>{developmentChanges[stat] > 0 && <em>+{developmentChanges[stat]}</em>}</div><span>{stat}</span></div>;
+            const gold = !hideStats && Boolean(leagueMax) && value > 0 && value >= leagueMax[stat];
+            return <div className={'pcard-stat' + (gold ? ' gold' : isTop && !hideStats ? ' top' : '')} key={stat}><div className="pcard-stat-value"><b>{hideStats ? <HiddenStat value={value} seed={`${card.id}:${stat}`} /> : value}</b>{developmentChanges[stat] > 0 && <em>+{developmentChanges[stat]}</em>}</div><span>{stat}</span></div>;
           })}
         </div>
       )}
