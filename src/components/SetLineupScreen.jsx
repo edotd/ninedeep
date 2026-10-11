@@ -9,7 +9,6 @@ import CardReveal from './CardReveal';
 import PlayerCardMenu from './PlayerCardMenu';
 import PickerDeck from './PickerDeck';
 import CoachmarkTour from './CoachmarkTour';
-import BonusIcon from './BonusIcon';
 import { BONUS_SIDE } from './bonusIcons';
 import { gameplanEffects } from '../game/strategyCards';
 import { completedTeamYears } from '../game/chemistry';
@@ -211,10 +210,16 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
       REB: Math.round(stats.REB * (1 + (effects.defPercent || 0) / 100) * 10) / 10,
       DEF: Math.round(stats.DEF * (1 + (effects.defPercent || 0) / 100) * 10) / 10,
     };
-    onPreviewChange?.({ teamId: team.id, stats: adjusted });
+    onPreviewChange?.({
+      teamId: team.id,
+      stats: adjusted,
+      bonuses: bonusRows.map(({ name, side, value }) => ({ name, side, value })),
+      selectedBonus: selBonus,
+      onSelectBonus: (name) => setSelBonus((v) => (v === name ? null : name)),
+    });
     // The player ids are the source of every stat total; card objects themselves remain stable.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [previewSignature, planId, team, team.id, onPreviewChange]);
+  }, [previewSignature, planId, team, team.id, onPreviewChange, bonusRows.map((row) => row.name).join('|'), selBonus]);
   useEffect(() => () => onPreviewChange?.(null), [onPreviewChange]);
 
   // Which slot (if any) currently holds a card.
@@ -330,8 +335,6 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sheetSlot]);
 
-  const pairNames = bonusRows.map((row) => row.name).join(' · ');
-
   return (
     <div className="lb" role="region" aria-label="Your Lineup">
       <div className="lb-body">
@@ -390,7 +393,6 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
         </div>
 
         <div className="lb-bench-wrap">
-          {bonusRows.length > 0 && <div className="lb-bench-head"><span className="lb-pairnames">{pairNames}</span></div>}
           <div className="lb-bench">
             {BENCH.map((b) => {
               const card = benchCards[b.key];
@@ -417,30 +419,6 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
           </div>
         </div>
 
-        <div className="lb-pairs">
-          <div className="lb-pairs-table">
-            <div className="lb-pairs-row head"><span>ACTIVE PAIRINGS</span><span>SKILLSETS</span></div>
-            {bonusRows.length ? bonusRows.map((row) => (
-              <div
-                className={'lb-pairs-row selectable' + (selBonus === row.name ? ' selected' : '')}
-                key={row.name}
-                role="button"
-                tabIndex={0}
-                aria-pressed={selBonus === row.name}
-                onClick={() => setSelBonus((v) => (v === row.name ? null : row.name))}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelBonus((v) => (v === row.name ? null : row.name)); } }}
-              >
-                <span className={'lb-bonus ' + row.side}>
-                  <BonusIcon name={row.name} size={40} />
-                  <span><b>{row.name}</b><em>{row.value}</em></span>
-                </span>
-                <span>{row.players}</span>
-              </div>
-            )) : (
-              <div className="lb-pairs-row"><span className="none">N/A</span><span>—</span></div>
-            )}
-          </div>
-        </div>
 
       </div>
 

@@ -2,6 +2,7 @@
 import { forwardRef } from 'react';
 import CardTypeMark from './CardTypeMark';
 import ResourceChip from './ResourceChip';
+import LineupPairingsRow from './LineupPairingsRow';
 import { matchupCardCountFor } from '../game/roster';
 import { scoutingLimit } from '../game/gm';
 import { formatCoins, remainingCap } from '../game/economy';
@@ -13,7 +14,7 @@ import { formatCoins, remainingCap } from '../game/economy';
 // one place those numbers change.
 const CAP_FOCUSED_PHASES = new Set(['contracts', 'draft']);
 
-const PersistentBar = forwardRef(function PersistentBar({ state, myTeamId, overlay, officeOpen, onToggleOffice, onNavigate, onFreeAgency, freeAgencyLocked, dealProgress }, ref) {
+const PersistentBar = forwardRef(function PersistentBar({ state, myTeamId, overlay, officeOpen, onToggleOffice, onNavigate, onFreeAgency, freeAgencyLocked, dealProgress, lineupPreview }, ref) {
   const team = state.teams[myTeamId];
   const capFocused = CAP_FOCUSED_PHASES.has(state.phase) || overlay === 'freeagency';
   if (capFocused) {
@@ -28,6 +29,14 @@ const PersistentBar = forwardRef(function PersistentBar({ state, myTeamId, overl
           <span>Total Budget</span>
           <b>{formatCoins(team.seasonCap || 0)}</b>
         </button>
+      </div>
+    );
+  }
+  // On the lineup page the bar is a single row: the lineup's active pairings.
+  if (lineupPreview?.bonuses) {
+    return (
+      <div className="persistent-bar persistent-bar-pairings" ref={ref}>
+        <LineupPairingsRow bonuses={lineupPreview.bonuses} selected={lineupPreview.selectedBonus} onSelect={lineupPreview.onSelectBonus} />
       </div>
     );
   }

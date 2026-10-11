@@ -5,6 +5,7 @@ import PlayerCard from './PlayerCard';
 import FrontOfficeCard from './FrontOfficeCard';
 import StrategyCard from './StrategyCard';
 import CardTypeMark from './CardTypeMark';
+import LineupPairingsRow from './LineupPairingsRow';
 
 // Full-width desktop persistent bar, per the brand handoff's "Component: Persistent Bar" —
 // web variant. Seven sections: starters, bench, front office, matchup, then the three
@@ -83,7 +84,7 @@ function StrategySlot({ card, onHover, onLeave, onSelect, picking }) {
   );
 }
 
-export default function DesktopBar({ state, myTeamId, actions, dealProgress }) {
+export default function DesktopBar({ state, myTeamId, actions, dealProgress, lineupPreview }) {
   const team = state.teams[myTeamId];
   // Each card type is written to state the instant its own dealing screen mounts, before
   // DealScreen's one-by-one reveal animation actually finishes — the bar has to deliberately
@@ -223,6 +224,11 @@ export default function DesktopBar({ state, myTeamId, actions, dealProgress }) {
           <FrontOfficeSlot label="GM" value={gm || null} kind="market" team={frontOfficeTeam} onHover={handleHover} onLeave={handleLeave} />
         </div>
       </div>
+      {lineupPreview?.bonuses && (
+        <div className="db-section db-slots-fixed db-pairings">
+          <LineupPairingsRow bonuses={lineupPreview.bonuses} selected={lineupPreview.selectedBonus} onSelect={lineupPreview.onSelectBonus} />
+        </div>
+      )}
       <div className="db-section db-slots-fixed">
         <div className="db-heading gameplan">Coach Development</div>
         <div className="db-slots">

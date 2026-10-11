@@ -366,7 +366,7 @@ function GameShellBody({ state, actions, myTeamId, onNewEra, onDeleteRoom, hostN
           <div className="desktop-persistent-top" ref={desktopTopRef}><FranchiseMasthead state={state} teamId={mastheadTeamId} lineupPreview={lineupPreview} /></div>
           {mainBody}
         </div>
-        {showBar && <DesktopBar state={state} myTeamId={myTeamId} actions={actions} dealProgress={dealProgress} />}
+        {showBar && <DesktopBar state={state} myTeamId={myTeamId} actions={actions} dealProgress={dealProgress} lineupPreview={lineupPreview} />}
         <ScrollToTopButton />
       </div>
     );
@@ -385,7 +385,7 @@ function GameShellBody({ state, actions, myTeamId, onNewEra, onDeleteRoom, hostN
       {showChrome && <div className="mobile-persistent-top" ref={mobileTopRef}><Header {...headerProps} /><FranchiseMasthead state={state} teamId={mastheadTeamId} lineupPreview={lineupPreview} /></div>}
       {mainBody}
       {showBar && office && <FrontOfficeOverlay state={state} actions={actions} myTeamId={myTeamId} which={office.which} leaving={office.leaving} />}
-      {showBar && <PersistentBar ref={persistentBarRef} state={state} myTeamId={myTeamId} overlay={overlay} officeOpen={office && !office.leaving ? office.which : null} onToggleOffice={toggleOffice} onNavigate={openTeamSection} onFreeAgency={openFreeAgency} freeAgencyLocked={freeAgencyLocked} dealProgress={dealProgress} />}
+      {showBar && <PersistentBar ref={persistentBarRef} state={state} myTeamId={myTeamId} overlay={overlay} officeOpen={office && !office.leaving ? office.which : null} onToggleOffice={toggleOffice} onNavigate={openTeamSection} onFreeAgency={openFreeAgency} freeAgencyLocked={freeAgencyLocked} dealProgress={dealProgress} lineupPreview={lineupPreview} />}
       <ScrollToTopButton />
     </div>
   );
