@@ -26,7 +26,7 @@ export default function WelcomeScreen({ teamName, onContinue, onStartPlaying, st
           {step === 'cards' && (
             <>
               <h1>The Cards</h1>
-              <p>At the start of the game each player receives nine cards. Five starters, two bench players, a coach and a GM.</p>
+              <p>Each player receives nine cards. Five starters, two bench players, a coach and a GM.</p>
               <div className="welcome-card-fan" aria-label="Seven player cards, one coach card, and one general manager card">
                 {Array.from({ length: 7 }, (_, index) => (
                   <div key={index} className="welcome-mini-card player" style={{ '--fan-index': index }}>
