@@ -298,15 +298,16 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
   // BACK / NEXT. `dir` is the side the card that just left flew off to.
   const DECK_DEPTH = 3;
   const [deckDrag, setDeckDrag] = useState({ dx: 0, active: false });
-  const [flyDir, setFlyDir] = useState(-1);
   const dragStart = useRef(null);
   const moved = useRef(false);
   const deckCount = useRef(0);
-  const stepDeck = (d, side) => {
+  // A card's first-time reveal starts only once it has moved into place on top of the deck.
+  const [revealGo, setRevealGo] = useState(false);
+  // No wrap-around: the deck starts at the first card and ends at the last.
+  const stepDeck = (d) => {
     const n = deckCount.current;
     if (!n) return;
-    if (d > 0 && side) setFlyDir(side);
-    setCardIndex((i) => (i + d + n) % n);
+    setCardIndex((i) => Math.max(0, Math.min(n - 1, i + d)));
   };
   // Tapping a card in the picker presses it in (scaled down while the finger is on it) and opens
   // its menu: Select, Develop, Release, Learn More (the onboarding card screen).
@@ -348,6 +349,12 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
     setReveal((r) => ({ active: card.id, live: unseen ? card.id : (r.live === card.id ? card.id : null) }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sheetSlot, cardIndex]);
+  useEffect(() => {
+    if (!reveal.live) return undefined;
+    setRevealGo(false);
+    const timer = setTimeout(() => setRevealGo(true), 430);
+    return () => clearTimeout(timer);
+  }, [reveal.live]);
   // Start on the player already in this slot (or the first card), and keep the page behind the
   // picker from scrolling while it's up.
   useEffect(() => {
@@ -371,7 +378,9 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
       const dx = e.clientX - dragStart.current;
       setDeckDrag({ dx: 0, active: false });
       setPressId(null);
-      if (Math.abs(dx) > 70) stepDeck(1, dx > 0 ? 1 : -1);
+      // Swipe left for the next card, right to bring the previous one back.
+      if (dx < -70) stepDeck(1);
+      else if (dx > 70) stepDeck(-1);
     };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
@@ -537,26 +546,28 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
             {roster.map((card, idx) => {
               const n = roster.length;
               deckCount.current = n;
-              const k = (idx - cardIndex + n) % n;
+              const k = idx - cardIndex; // < 0: already swiped past (gone to the left)
               const where = slotOf(card.id);
               const top = k === 0;
-              const leaving = n > 1 && k === n - 1;
-              const kk = Math.min(k, DECK_DEPTH + 1);
+              const gone = k < 0;
+              const kk = Math.min(Math.max(k, 0), DECK_DEPTH + 1);
               const sc = 1 - kk * 0.055;
-              const dx = deckDrag.dx;
+              const rawDx = deckDrag.dx;
+              // Pulling past either end of the deck resists instead of moving freely.
+              const dx = (cardIndex === 0 && rawDx > 0) || (cardIndex === n - 1 && rawDx < 0) ? rawDx / 4 : rawDx;
               const transform = top
                 ? `translateX(${dx}px) rotate(${dx / 22}deg) scale(${pressId === card.id ? 0.955 : 1})`
-                : leaving
-                  ? `translateX(${flyDir * 460}px) translateY(-30px) rotate(${flyDir * 16}deg)`
+                : gone
+                  ? 'translateX(-460px) translateY(-30px) rotate(-16deg)'
                   : `translateX(${kk * 16}px) translateY(${-kk * 8}px) rotate(${kk * 3.5}deg) scale(${sc})`;
-              const opacity = top ? 1 : leaving ? 0 : k > DECK_DEPTH ? 0 : 1;
+              const opacity = top ? 1 : gone ? 0 : k > DECK_DEPTH ? 0 : 1;
               const seen = SEEN_CARDS.has(card.id);
               const w = 264 * pickerFit.s, h = pickerFit.h * pickerFit.s + 44;
               return (
                 <div
                   key={card.id}
                   className={'lb-deck-card' + (top ? ' top' : '')}
-                  style={{ width: w, height: h, marginLeft: -w / 2, marginTop: -h / 2, transform, opacity, zIndex: leaving ? n + 2 : n - k, transition: top && deckDrag.active ? 'none' : leaving ? 'transform 420ms cubic-bezier(.16,.9,.24,1), opacity 260ms ease 220ms' : 'transform 380ms cubic-bezier(.16,.9,.24,1), opacity 260ms ease' }}
+                  style={{ width: w, height: h, marginLeft: -w / 2, marginTop: -h / 2, transform, opacity, zIndex: gone ? n + 2 + idx : n - k, transition: top && deckDrag.active ? 'none' : gone ? 'transform 420ms cubic-bezier(.16,.9,.24,1), opacity 260ms ease 220ms' : 'transform 380ms cubic-bezier(.16,.9,.24,1), opacity 260ms ease' }}
                   aria-hidden={top ? undefined : true}
                   role={top ? 'button' : undefined}
                   tabIndex={top ? 0 : undefined}
@@ -566,7 +577,9 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
                 >
                   {top ? (
                     reveal.live === card.id
-                      ? <CardRevealPlayer key={'live' + card.id} card={card} up={pickerFit.s} cardHeight={pickerFit.h} delay={150} rosterLabel={roleLabel(where)} />
+                      ? (revealGo
+                        ? <CardRevealPlayer key={'live' + card.id} card={card} up={pickerFit.s} cardHeight={pickerFit.h} rosterLabel={roleLabel(where)} />
+                        : <div className="lb-deck-back" style={{ boxShadow: `inset 0 0 0 3px ${RARITY_COLOR[card.rarity] || RARITY_COLOR.Core}` }}><BallMark size={64} variant="onInk" /></div>)
                       : seen && <CardRevealPlayer key={'done' + card.id} card={card} up={pickerFit.s} cardHeight={pickerFit.h} settled rosterLabel={roleLabel(where)} />
                   ) : k > DECK_DEPTH + 1 ? null : seen ? (
                     <CardRevealPlayer key={'done' + card.id} card={card} up={pickerFit.s} cardHeight={pickerFit.h} settled rosterLabel={roleLabel(where)} />
