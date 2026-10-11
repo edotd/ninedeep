@@ -7,6 +7,7 @@ import { sortPlayers } from '../game/playerFilters';
 import PlayerCard from './PlayerCard';
 import CardReveal, { CardRevealPlayer } from './CardReveal';
 import PlayerCardMenu from './PlayerCardMenu';
+import BallMark from './BallMark';
 import CoachmarkTour from './CoachmarkTour';
 import BonusIcon from './BonusIcon';
 import { BONUS_SIDE } from './bonusIcons';
@@ -293,6 +294,20 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
   const pickerOpen = sheet?.type === 'player' && !sheet.closing && !sheet.entering;
   const carouselRef = useRef(null);
   const [cardIndex, setCardIndex] = useState(0);
+  // The cards sit in a fanned deck: swipe either way to send the top card to the back, or use
+  // BACK / NEXT. `dir` is the side the card that just left flew off to.
+  const DECK_DEPTH = 3;
+  const [deckDrag, setDeckDrag] = useState({ dx: 0, active: false });
+  const [flyDir, setFlyDir] = useState(-1);
+  const dragStart = useRef(null);
+  const moved = useRef(false);
+  const deckCount = useRef(0);
+  const stepDeck = (d, side) => {
+    const n = deckCount.current;
+    if (!n) return;
+    if (d > 0 && side) setFlyDir(side);
+    setCardIndex((i) => (i + d + n) % n);
+  };
   // Tapping a card in the picker presses it in (scaled down while the finger is on it) and opens
   // its menu: Select, Develop, Release, Learn More (the onboarding card screen).
   const [pressId, setPressId] = useState(null);
@@ -309,8 +324,10 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
       const el = carouselRef.current;
       if (!el) return;
       const natural = [...document.querySelectorAll('.lb-measure .lb-natural')].reduce((m, node) => Math.max(m, node.offsetHeight), 0) || 405;
-      const availW = el.clientWidth - 28;
-      const availH = el.clientHeight - 44 - 104;
+      // The fan peeks out either side of the top card, so it leaves a little width; height is
+      // everything the deck area has (the status line and BACK/NEXT sit below it).
+      const availW = el.clientWidth - 40;
+      const availH = el.clientHeight - 44 - 18;
       setPickerFit({ s: Math.max(1, Math.min(availW / 264, availH / natural)), h: natural });
     };
     fit();
@@ -335,17 +352,33 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
   // picker from scrolling while it's up.
   useEffect(() => {
     if (!sheetSlot) return undefined;
-    const el = carouselRef.current;
-    if (el) {
-      const at = Math.max(0, roster.findIndex((card) => slotOf(card.id) === sheetSlot));
-      el.scrollLeft = at * el.clientWidth;
-      setCardIndex(at);
-    }
+    setCardIndex(Math.max(0, roster.findIndex((card) => slotOf(card.id) === sheetSlot)));
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = prev; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sheetSlot]);
+
+  // Drag the top card; letting go past 70px sends it to the back.
+  useEffect(() => {
+    if (!deckDrag.active) return undefined;
+    const move = (e) => {
+      const dx = e.clientX - dragStart.current;
+      if (Math.abs(dx) > 6) moved.current = true;
+      setDeckDrag({ dx, active: true });
+    };
+    const up = (e) => {
+      const dx = e.clientX - dragStart.current;
+      setDeckDrag({ dx: 0, active: false });
+      setPressId(null);
+      if (Math.abs(dx) > 70) stepDeck(1, dx > 0 ? 1 : -1);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
+    return () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deckDrag.active]);
 
   const missing = 5 - starterIds.length;
   const saveLabel = !complete ? `FILL ${missing} MORE` : dirty ? 'SAVE' : 'SAVED';
@@ -485,46 +518,78 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
           <div className="lb-picker-tools" style={{ width: 264 * pickerFit.s }}>
             <label className="lb-sort">
               <span>SORT BY</span>
-              <select value={sort} onChange={(event) => { setSort(event.target.value); if (carouselRef.current) carouselRef.current.scrollLeft = 0; setCardIndex(0); }}>
+              <select value={sort} onChange={(event) => { setSort(event.target.value); setCardIndex(0); }}>
                 {SORTS.map(([label, key]) => <option key={key} value={key}>{label}</option>)}
               </select>
             </label>
           </div>
           <div
-            className="lb-cards"
+            className="lb-deck"
             ref={carouselRef}
-            onScroll={(event) => { setCardIndex(Math.round(event.currentTarget.scrollLeft / (event.currentTarget.clientWidth || 1))) }}
+            onPointerDown={(e) => {
+              if (e.target.closest('button, select, a')) return;
+              dragStart.current = e.clientX;
+              moved.current = false;
+              setPressId(roster[cardIndex]?.id ?? null);
+              setDeckDrag({ dx: 0, active: true });
+            }}
           >
-            {roster.map((card) => {
+            {roster.map((card, idx) => {
+              const n = roster.length;
+              deckCount.current = n;
+              const k = (idx - cardIndex + n) % n;
               const where = slotOf(card.id);
-              const here = where === sheetSlot;
+              const top = k === 0;
+              const leaving = n > 1 && k === n - 1;
+              const kk = Math.min(k, DECK_DEPTH + 1);
+              const sc = 1 - kk * 0.055;
+              const dx = deckDrag.dx;
+              const transform = top
+                ? `translateX(${dx}px) rotate(${dx / 22}deg) scale(${pressId === card.id ? 0.955 : 1})`
+                : leaving
+                  ? `translateX(${flyDir * 460}px) translateY(-30px) rotate(${flyDir * 16}deg)`
+                  : `translateX(${kk * 16}px) translateY(${-kk * 8}px) rotate(${kk * 3.5}deg) scale(${sc})`;
+              const opacity = top ? 1 : leaving ? 0 : k > DECK_DEPTH ? 0 : 1;
+              const seen = SEEN_CARDS.has(card.id);
+              const w = 264 * pickerFit.s, h = pickerFit.h * pickerFit.s + 44;
               return (
-                <div className="lb-slide" key={card.id}>
-                  <div className="lb-slide-card" style={{ width: 264 * pickerFit.s }}>
-                    <div
-                      className={'lb-reveal-box tappable' + (pressId === card.id ? ' pressed' : '')}
-                      style={{ height: pickerFit.h * pickerFit.s + 44 }}
-                      role="button"
-                      tabIndex={0}
-                      aria-label={`${card.archetype} ${card.position}. Open card options.`}
-                      onPointerDown={() => setPressId(card.id)}
-                      onPointerUp={() => setPressId(null)}
-                      onPointerLeave={() => setPressId(null)}
-                      onPointerCancel={() => setPressId(null)}
-                      onClick={() => setMenu(card)}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMenu(card); } }}
-                    >
-                      {reveal.live === card.id
-                        ? <CardRevealPlayer key={'live' + card.id} card={card} up={pickerFit.s} cardHeight={pickerFit.h} delay={150} rosterLabel={roleLabel(where)} />
-                        : SEEN_CARDS.has(card.id) && <CardRevealPlayer key={'done' + card.id} card={card} up={pickerFit.s} cardHeight={pickerFit.h} settled rosterLabel={roleLabel(where)} />}
-                    </div>
-                    <div className="lb-card-foot">
-                      <span className={where && !here ? 'warn' : ''}>{here ? 'IN THIS SLOT' : where ? `NOW AT ${slotLabel(where)} · WILL MOVE` : 'AVAILABLE'}</span>
-                    </div>
-                  </div>
+                <div
+                  key={card.id}
+                  className={'lb-deck-card' + (top ? ' top' : '')}
+                  style={{ width: w, height: h, marginLeft: -w / 2, marginTop: -h / 2, transform, opacity, zIndex: n - k, transition: top && deckDrag.active ? 'none' : 'transform 380ms cubic-bezier(.16,.9,.24,1), opacity 260ms ease' }}
+                  aria-hidden={top ? undefined : true}
+                  role={top ? 'button' : undefined}
+                  tabIndex={top ? 0 : undefined}
+                  aria-label={top ? `${card.archetype} ${card.position}. Open card options.` : undefined}
+                  onClick={top ? () => { if (!moved.current) setMenu(card); } : undefined}
+                  onKeyDown={top ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMenu(card); } } : undefined}
+                >
+                  {top ? (
+                    reveal.live === card.id
+                      ? <CardRevealPlayer key={'live' + card.id} card={card} up={pickerFit.s} cardHeight={pickerFit.h} delay={150} rosterLabel={roleLabel(where)} />
+                      : seen && <CardRevealPlayer key={'done' + card.id} card={card} up={pickerFit.s} cardHeight={pickerFit.h} settled rosterLabel={roleLabel(where)} />
+                  ) : k > DECK_DEPTH + 1 ? null : seen ? (
+                    <CardRevealPlayer key={'done' + card.id} card={card} up={pickerFit.s} cardHeight={pickerFit.h} settled rosterLabel={roleLabel(where)} />
+                  ) : (
+                    <div className="lb-deck-back" style={{ boxShadow: `inset 0 0 0 3px ${RARITY_COLOR[card.rarity] || RARITY_COLOR.Core}` }}><BallMark size={64} variant="onInk" /></div>
+                  )}
+                  {!top && <div className="lb-deck-shade" style={{ opacity: Math.min(0.6, kk * 0.17) }} />}
                 </div>
               );
             })}
+          </div>
+          <div className="lb-deck-status">
+            {(() => {
+              const card = roster[cardIndex];
+              if (!card) return null;
+              const where = slotOf(card.id);
+              const here = where === sheetSlot;
+              return <span className={where && !here ? 'warn' : ''}>{here ? 'IN THIS SLOT' : where ? `NOW AT ${slotLabel(where)} · WILL MOVE` : 'AVAILABLE'}</span>;
+            })()}
+          </div>
+          <div className="lb-deck-nav">
+            <button type="button" onClick={() => stepDeck(-1)}>BACK</button>
+            <button type="button" className="next" onClick={() => stepDeck(1, -1)}>NEXT CARD</button>
           </div>
           <div className="lb-measure" aria-hidden="true">{roster.map((card) => <div className="lb-natural" key={card.id} style={{ width: 264 }}><PlayerCard card={card} /></div>)}</div>
           {menu && (
@@ -544,7 +609,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
           {learnCard && createPortal(<CardReveal kind="player" card={learnCard} learn onContinue={() => setLearnCard(null)} />, document.body)}
           <div className="lb-picker-pager" aria-live="polite">
             <span>{Math.min(cardIndex + 1, roster.length)} / {roster.length}</span>
-            <i>{roster.map((card, index) => <b key={card.id} className={index === cardIndex ? 'on' : ''} />)}</i>
+            <i>{roster.map((card, index) => <b key={card.id} className={index === cardIndex ? 'on' : ''} onClick={() => setCardIndex(index)} />)}</i>
           </div>
         </div>,
         document.body,

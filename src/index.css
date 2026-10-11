@@ -3384,3 +3384,17 @@ body:has(.trans-screen){padding-bottom:0;}
 .neg-die-btn:disabled{cursor:default;opacity:.6;}
 .neg-die-btn:not(:disabled):active{transform:scale(.96);}
 .neg-die-caption{font:10px var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);}
+
+/* Lineup picker: the cards sit in a fanned deck (swipe the top card to the back). */
+.lb-picker .lb-deck{flex:1;min-height:0;position:relative;overflow:hidden;touch-action:pan-y;cursor:grab;user-select:none;-webkit-user-select:none;}
+.lb-deck-card{position:absolute;left:50%;top:50%;transform-origin:50% 100%;cursor:pointer;-webkit-tap-highlight-color:transparent;outline:none;will-change:transform;}
+.lb-deck-card:not(.top){pointer-events:none;}
+.lb-deck-shade{position:absolute;inset:0;background:#0F1626;pointer-events:none;transition:opacity 300ms ease;}
+.lb-deck-back{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#1E2B47;}
+.lb-deck-status{flex:none;text-align:center;font:9px var(--font-mono);letter-spacing:.1em;color:#3F6B52;min-height:12px;}
+.lb-deck-status .warn{color:#9C3818;}
+.lb-deck-nav{flex:none;display:flex;gap:10px;padding:0 16px;}
+.lb-deck-nav button{flex:1;height:46px;border:0;background:transparent;box-shadow:inset 0 0 0 1px #1E2B47;color:#1E2B47;font:400 12px var(--font-label);letter-spacing:.14em;cursor:pointer;}
+.lb-deck-nav button.next{flex:2;background:#1E2B47;color:#E6DCC4;box-shadow:none;}
+.lb-picker-pager b{cursor:pointer;}
+@media (prefers-reduced-motion: reduce){.lb-deck-card{transition:none!important;}}
