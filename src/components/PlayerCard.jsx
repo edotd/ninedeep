@@ -4,7 +4,7 @@ import { LeagueStatsContext, RosterRolesContext, RosterCostsContext } from './Le
 import { skillsetFor, SKILLSETS, SKILLSET_PAIRS } from '../game/skillsets';
 import { formatCoins } from '../game/economy';
 import { careerLevel, careerMultiplier } from '../game/aging';
-import { cardTier, baseCardTier, jerseyNumber, playerGrade } from '../game/cards';
+import { cardTier, baseCardTier, playerGrade } from '../game/cards';
 import { useIsDark } from '../hooks/useDarkMode';
 import { LEAGUE_ACCOLADES, RARITY_CORNERS } from '../game/constants';
 import CardTypeMark from './CardTypeMark';
@@ -123,7 +123,7 @@ export default function PlayerCard({ card, onClick, selected, rosterLabel, compa
         </div>
       </div>
       <div className="pcard-name-block">
-        <div className="pcard-jersey" aria-label={`Jersey number ${jerseyNumber(card)}`}>#{jerseyNumber(card)}</div>
+        <div className="pcard-jersey" aria-label={`Player grade ${playerGrade(card)}`}>{playerGrade(card)}</div>
         <div className="pcard-name-col">
           <div className="pcard-name">{card.archetype}</div>
         </div>

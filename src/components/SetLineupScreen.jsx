@@ -5,6 +5,7 @@ import { playerGrade } from '../game/cards';
 import { validateLineup } from '../game/roster';
 import { sortPlayers } from '../game/playerFilters';
 import PlayerCard from './PlayerCard';
+import FrontOfficeCard from './FrontOfficeCard';
 import CardReveal from './CardReveal';
 import PlayerCardMenu from './PlayerCardMenu';
 import PickerDeck from './PickerDeck';
@@ -54,7 +55,7 @@ const roleLabel = (slot) => (!slot ? undefined : slot.startsWith('S') ? 'Starter
 
 const sortRoster = (cards, sort) => (sort === 'cost' ? [...cards].sort((a, b) => a.salary - b.salary) : sortPlayers(cards, sort));
 
-export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPreviewChange }) {
+export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPreviewChange, focusRequest, onFocusHandled }) {
   // slot key -> card id (S0..S4 starters, B6 sixth man, BD depth). A fresh season opens empty
   // because the generated active five is only a placeholder until a human reviews it; an
   // already-saved lineup opens with its current five intact.
@@ -83,6 +84,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
   const [sort, setSort] = useState('position');
   const [toast, setToast] = useState('');
   const [viewCard, setViewCard] = useState(null);
+  const [coachOpen, setCoachOpen] = useState(false);
   const toastTimer = useRef(null);
   const flash = (msg) => {
     setToast(msg);
@@ -213,7 +215,7 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
     onPreviewChange?.({
       teamId: team.id,
       stats: adjusted,
-      bonuses: bonusRows.map(({ name, side, value }) => ({ name, side, value })),
+      bonuses: bonusRows.map(({ name, side, value, players }) => ({ name, side, value, detail: players })),
       selectedBonus: selBonus,
       onSelectBonus: (name) => setSelBonus((v) => (v === name ? null : name)),
     });
@@ -257,6 +259,14 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
     setSavedSignature(slotSignature);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slotSignature]);
+
+  // Arriving from a player box on the Team page: open the player carousel on that slot's player.
+  useEffect(() => {
+    if (!focusRequest?.slot) return;
+    openSlot(focusRequest.slot);
+    onFocusHandled?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusRequest?.request]);
 
   const openSlot = (key) => {
     const card = cardFor(key);
@@ -339,10 +349,10 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
     <div className="lb" role="region" aria-label="Your Lineup">
       <div className="lb-body">
         <div className="lb-planbar">
-          <div className="lb-coachbox">
+          <button type="button" className="lb-coachbox" disabled={!team.coach} onClick={() => setCoachOpen(true)} aria-haspopup="dialog">
             <strong>{team.coach?.archetype?.replace(/ Minded$/, '') || 'No Coach'}</strong>
             {team.coach?.modifier && <span>{team.coach.modifier}</span>}
-          </div>
+          </button>
           {plans.length > 0 && (
             <button type="button" ref={gameplanBtnRef} className="lb-gameplanbox" disabled={!canEdit} onClick={() => setSheet({ type: 'plan' })} aria-haspopup="dialog">
               <span>GAMEPLAN</span>
@@ -491,6 +501,16 @@ export default function SetLineupScreen({ team, actions, myTeamId, canEdit, onPr
       )}
 
       <div className={'lb-toast' + (toast ? ' show' : '')} aria-live="polite">{toast}</div>
+
+      {coachOpen && team.coach && createPortal(
+        <div className="lb-card-backdrop" onClick={() => setCoachOpen(false)}>
+          <div className="lb-card-modal" role="dialog" aria-modal="true" aria-label="Coach card" onClick={(e) => e.stopPropagation()}>
+            <FrontOfficeCard kind="coach" team={team} />
+            <button type="button" className="secondary" onClick={() => setCoachOpen(false)}>Close</button>
+          </div>
+        </div>,
+        document.body,
+      )}
 
       {viewCard && (
         <div className="lb-card-backdrop" onClick={() => setViewCard(null)}>

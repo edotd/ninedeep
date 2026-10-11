@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { jerseyNumber } from '../game/cards';
+import { playerGrade } from '../game/cards';
 import { formatCoins, remainingCap, spendableRoom } from '../game/economy';
 import { negotiationBand, negotiationAcceptThreshold, negotiationAcceptChance, MAX_NEGOTIATION_ROLLS, SALARY_STEP } from '../game/negotiation';
 import { MAX_CONTRACT_YEARS, toBudget } from '../game/constants';
@@ -94,7 +94,7 @@ export default function NegotiationModal({ state, actions, myTeamId, card, onClo
         </div>
 
         <div className="neg-player">
-          <span className="neg-jersey">#{jerseyNumber(card)}</span>
+          <span className="neg-jersey">{playerGrade(card)}</span>
           <div>
             <div className="neg-player-tags">{card.tierName} · {card.position}</div>
             <div className="neg-player-name">{card.archetype}</div>

@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react';
 import { playerGrade } from '../game/cards';
-import PlayerCard from './PlayerCard';
 import { formatCoins } from '../game/economy';
 import { teamSynergy, SKILLSETS } from '../game/skillsets';
 import BonusIcon from './BonusIcon';
@@ -11,7 +10,6 @@ import BallMark from './BallMark';
 // name, era clock, titles, projected output / defense / bench) already lives in the persistent
 // masthead above every screen, so it isn't repeated here.
 
-const POSITION_ORDER = { Guard: 0, Forward: 1, Big: 2 };
 // The chemistry grades the game produces (game/chemistry.js), lowest to highest.
 const GRADE_SCALE = ['F', 'D−', 'D', 'D+', 'C−', 'C', 'C+', 'B−', 'B', 'B+', 'A−', 'A', 'A+'];
 
@@ -47,14 +45,14 @@ const colX = (i) => `calc(${i} * (var(--w) + var(--g)) + var(--w) / 2)`;
 
 // One lineup box: empty outline until the lineup is set, then the player's letter grade — tap it
 // to pull up their card.
-function PlayerBox({ card, top, bench, onPick }) {
+function PlayerBox({ card, top, bench, slot, onPick }) {
   if (!card) return <span className={'tm-num empty' + (bench ? ' bench' : '')} aria-hidden="true" />;
   return (
     <button
       type="button"
       className={'tm-num' + (top ? ' top' : '') + (bench ? ' bench' : '')}
-      aria-label={`${card.archetype} ${card.position}, grade ${playerGrade(card)}. Show card.`}
-      onClick={(event) => { event.stopPropagation(); onPick(card); }}
+      aria-label={`${card.archetype} ${card.position}, grade ${playerGrade(card)}. Show in the player carousel.`}
+      onClick={(event) => { event.stopPropagation(); onPick(slot); }}
     >{playerGrade(card)}</button>
   );
 }
@@ -104,13 +102,14 @@ function Tile({ sub, onOpen, className = '', children, label }) {
 
 export default function TeamMain({ team, readOnly, onOpen, committed, cap, budgetSources }) {
   const lineupPress = usePressable(() => onOpen('lineup'));
-  const [picked, setPicked] = useState(null);
+  // A player box jumps to that player in the lineup page's player carousel.
+  const openSlotInCarousel = (slot) => onOpen('lineup', { slot });
   const [openPair, setOpenPair] = useState(null);
   const [lastPair, setLastPair] = useState(null);
   const togglePair = (name) => { setLastPair(name); setOpenPair((v) => (v === name ? null : name)); };
   const activeSet = new Set(team.activeIds || []);
-  const starters = (team.hand || []).filter((card) => activeSet.has(card.id))
-    .sort((a, b) => (POSITION_ORDER[a.position] ?? 9) - (POSITION_ORDER[b.position] ?? 9));
+  // Slot order (S1..S5 on the lineup page), not position order.
+  const starters = (team.activeIds || []).map((id) => (team.hand || []).find((card) => card.id === id)).filter(Boolean);
   const bench = (team.hand || []).filter((card) => !activeSet.has(card.id));
   const sixth = bench.find((card) => card.id === team.sixthManId) || bench[0] || null;
   const depth = bench.find((card) => card !== sixth) || null;
@@ -151,10 +150,11 @@ export default function TeamMain({ team, readOnly, onOpen, committed, cap, budge
     <div className="tm-main">
       <div className="tm-tiles">
         <div className={'tm-tile tm-lineup' + (lineupPress.pressed ? ' pressed' : '')} role="button" tabIndex={0} aria-label="Team" {...lineupPress.props} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen('lineup'); } }}>
+          <span className="tm-tile-head"><b>LINEUP</b></span>
           <span className="tm-roster">
             <span className="tm-grade" style={{ color: seal.color }} aria-label={synergy ? `Team grade ${synergy.grade}` : 'No team grade yet'}>{synergy ? synergy.grade : <BallMark size={64} variant="onFile" />}</span>
             <span className="tm-roster-row">
-              {Array.from({ length: 5 }, (_, i) => <PlayerBox key={i} card={lineupReady ? starters[i] : null} top={i === topStarter} onPick={setPicked} />)}
+              {Array.from({ length: 5 }, (_, i) => <PlayerBox key={i} card={lineupReady ? starters[i] : null} top={i === topStarter} slot={`S${i}`} onPick={openSlotInCarousel} />)}
             </span>
             {brackets.length > 0 && (
               <span className="tm-brackets" style={{ height: 14 + maxLevel * 12 + 14 }}>
@@ -171,8 +171,8 @@ export default function TeamMain({ team, readOnly, onOpen, committed, cap, budge
               </span>
             )}
             <span className="tm-roster-row tm-bench-row">
-              <span className="tm-bench"><PlayerBox card={lineupReady ? sixth : null} bench onPick={setPicked} /><small>6TH</small></span>
-              <span className="tm-bench"><PlayerBox card={lineupReady ? depth : null} bench onPick={setPicked} /><small>DEPTH</small></span>
+              <span className="tm-bench"><PlayerBox card={lineupReady ? sixth : null} bench slot="B6" onPick={openSlotInCarousel} /><small>6TH</small></span>
+              <span className="tm-bench"><PlayerBox card={lineupReady ? depth : null} bench slot="BD" onPick={openSlotInCarousel} /><small>DEPTH</small></span>
             </span>
             <span className="tm-chips-wrap">
             <span className="tm-chips">
@@ -219,14 +219,6 @@ export default function TeamMain({ team, readOnly, onOpen, committed, cap, budge
         </Tile>
 
       </div>
-      {picked && (
-        <div className="tm-card-backdrop" role="presentation" onClick={() => setPicked(null)}>
-          <div className="tm-card-modal" role="dialog" aria-modal="true" aria-label={`${picked.archetype} card`} onClick={(event) => event.stopPropagation()}>
-            <PlayerCard card={picked} />
-            <button type="button" className="secondary" onClick={() => setPicked(null)}>Close</button>
-          </div>
-        </div>
-      )}
       {readOnly && <p className="tm-readonly">Viewing another franchise — read only.</p>}
     </div>
   );

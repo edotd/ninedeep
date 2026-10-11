@@ -1,5 +1,5 @@
 import { skillsetFor } from '../game/skillsets';
-import { jerseyNumber, playerGrade } from '../game/cards';
+import { playerGrade } from '../game/cards';
 import { formatCoins } from '../game/economy';
 
 // Shared with SeasonRecapScreen's "Contracts On The Books" section — same row shape as the
@@ -8,7 +8,6 @@ export function PlayerLedgerIdentity({ card, role }) {
   const skillset = skillsetFor(card);
   return (
     <div className="ts-ledger-identity">
-      <strong>#{jerseyNumber(card)}</strong>
       <span className="ts-ledger-grade">{playerGrade(card)}</span>
       <span>{skillset?.name || 'No Skillset'}</span>
       {role && <em>{role}</em>}

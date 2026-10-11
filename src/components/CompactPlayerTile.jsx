@@ -1,5 +1,6 @@
 import { skillsetFor } from '../game/skillsets';
-import { jerseyNumber, playerGrade } from '../game/cards';
+import { playerGrade } from '../game/cards';
+import CardTypeMark from './CardTypeMark';
 
 // The "Coach In Front" match-flow tile, per the design doc's 8A layout — a much denser card
 // than the full PlayerCard, sized to line an entire nine-card rotation up in one row: an
@@ -16,10 +17,10 @@ export default function CompactPlayerTile({ card, isStarter, edge = 'bottom', co
     <div className={'nd2-tile' + (edge === 'top' ? ' edge-top' : ' edge-bottom') + (contributing ? ' contributing' : '')}>
       <div className="nd2-tile-head">
         <span>{card.archetype}</span>
-        <span style={{ color: GRADE_TONE[grade] || 'var(--ink)' }}>{grade}</span>
+        <CardTypeMark type={card.archetype} size={14} color="var(--ink)" />
       </div>
       <div className="nd2-tile-body">
-        <div className="nd2-tile-jersey">#{jerseyNumber(card)}</div>
+        <div className="nd2-tile-jersey" style={{ color: GRADE_TONE[grade] || undefined }}>{grade}</div>
         <div className="nd2-tile-role">
           <div className="nd2-tile-pos">{card.position}</div>
           <div className="nd2-tile-status">{isStarter ? 'Starter' : 'Bench'}</div>

@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { cardTier, jerseyNumber } from '../game/cards';
+import { cardTier, playerGrade } from '../game/cards';
 import { validateLineup } from '../game/roster';
 import PlayerCard from './PlayerCard';
 import FrontOfficeCard from './FrontOfficeCard';
@@ -50,7 +50,7 @@ function PlayerSlot({ card, swap, onHover, onLeave, onSelect }) {
       onClick={(e) => onSelect(e.currentTarget, card)}
     >
       <div className="db-slot-tier-strip" />
-      <div className="db-slot-number">#{jerseyNumber(card)}</div>
+      <div className="db-slot-number">{playerGrade(card)}</div>
       <div className="db-slot-position">{card.position}</div>
     </div>
   );

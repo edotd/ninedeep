@@ -99,6 +99,45 @@ const PATHS = {
       <path d="M10 46h40" strokeWidth="2.5" />
     </>
   ),
+  // Player archetypes (game/constants.js's ARCHETYPES) — shown in a player card's upper right.
+  Scorer: (
+    <>
+      <circle cx="30" cy="30" r="21" strokeWidth="2.5" />
+      <circle cx="30" cy="30" r="11" strokeWidth="2.5" />
+      <circle cx="30" cy="30" r="3.5" fill="currentColor" stroke="none" />
+    </>
+  ),
+  'Pass-First': (
+    <>
+      <circle cx="13" cy="44" r="6" fill="currentColor" stroke="none" />
+      <path d="M13 36C16 20 30 14 44 16" strokeWidth="2.5" />
+      <path d="M36 8l10 8-10 8" strokeWidth="2.5" strokeLinejoin="round" />
+    </>
+  ),
+  Playmaker: (
+    <>
+      <circle cx="14" cy="44" r="7" strokeWidth="2.5" />
+      <path d="M44 10l10 10M54 10L44 20" strokeWidth="2.5" />
+      <path d="M21 40L40 23" strokeWidth="2.5" strokeDasharray="5 4" />
+      <path d="M30 50h22" strokeWidth="2.5" />
+    </>
+  ),
+  Balanced: (
+    <>
+      <path d="M30 8v42M18 52h24M12 16h36" strokeWidth="2.5" />
+      <path d="M12 16L5 34h14zM48 16l-7 18h14z" strokeWidth="2.5" strokeLinejoin="round" />
+    </>
+  ),
+  Rebounder: (
+    <>
+      <circle cx="30" cy="14" r="8" strokeWidth="2.5" />
+      <path d="M12 32h36" strokeWidth="2.5" />
+      <path d="M15 32l7 20M45 32l-7 20M30 32v20M18 42h24" strokeWidth="2.5" />
+    </>
+  ),
+  Defender: (
+    <path d="M30 6l20 8v14c0 14-9 22-20 26-11-4-20-12-20-26V14z" strokeWidth="2.5" strokeLinejoin="round" />
+  ),
   // Card rarity (game/constants.js's RARITIES) — one mark per tier, shown at low opacity in a
   // card's lower-right corner (see .rarity-icon-mark) alongside the frame's own border
   // color/weight and corner brackets, so rarity still reads even at a size too small for those.

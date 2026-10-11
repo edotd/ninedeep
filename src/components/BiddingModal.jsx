@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { jerseyNumber } from '../game/cards';
+import { playerGrade } from '../game/cards';
 import { formatCoins, spendableRoom } from '../game/economy';
 import { freeAgentPriority, pendingFaHoldTotal, winningValue, BID_SALARY_STEP } from '../game/bidding';
 import { MAX_CONTRACT_YEARS } from '../game/constants';
@@ -54,7 +54,7 @@ export default function BiddingModal({ state, actions, myTeamId, card, onClose, 
         </div>
 
         <div className="neg-player">
-          <span className="neg-jersey">#{jerseyNumber(card)}</span>
+          <span className="neg-jersey">{playerGrade(card)}</span>
           <div>
             <div className="neg-player-tags">{card.tierName} · {card.position}</div>
             <div className="neg-player-name">{card.archetype}</div>

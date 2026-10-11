@@ -9,7 +9,7 @@ import CoachmarkTour from '../components/CoachmarkTour';
 import TeamMain from '../components/TeamMain';
 import { teamOutput } from '../game/matchup';
 import { teamSynergy } from '../game/skillsets';
-import { jerseyNumber, playerGrade } from '../game/cards';
+import { playerGrade } from '../game/cards';
 import { guardedNavigate } from '../hooks/leaveGuard';
 
 // The Team page opens on its main index; its sub pages (lineup, coach, GM, budget) are dealt in
@@ -206,7 +206,10 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
 
   // A Team main tile: sub pages are dealt in over the main page on a phone;
   // on desktop everything is already stacked on one page, so the tile scrolls to its section.
-  const openSub = (target) => {
+  // `focus` ({ slot }) opens the lineup page's player carousel on that slot's player.
+  const [lineupFocus, setLineupFocus] = useState(null);
+  const openSub = (target, focus) => {
+    if (target === 'lineup' && focus?.slot) setLineupFocus({ slot: focus.slot, request: Date.now() });
     if (isDesktop) {
       const id = { lineup: 'team-lineup', coach: 'team-coach-card', gm: 'team-gm-card', budget: 'team-ledger', scouting: 'team-league' }[target];
       document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -219,7 +222,7 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
   const scoutingList = (
     scoutingRows.length ? <div className="scouting-report-list">{scoutingRows.map(({ cardId, card, history }) => (
                 <div className="scouting-report-row" key={cardId}>
-                  <strong>#{jerseyNumber(card)} · {playerGrade(card)} · {card.archetype} · {card.position}</strong>
+                  <strong>{playerGrade(card)} · {card.archetype} · {card.position}</strong>
                   {history.length ? history.map((entry) => <small key={`${entry.season}-${entry.game}`}>Season {entry.season}: Starter {entry.starterOutput} · Sixth Man {entry.sixthManOutput} · Depth {entry.depthOutput}</small>) : <small>Tracking begins with your next season simulation.</small>}
                 </div>
               ))}</div> : <div className="ts-ledger-empty">Add players from Teams, Free Agency, or Draft Class.</div>
@@ -291,6 +294,8 @@ export default function TeamSummaryScreen({ state, actions, myTeamId, viewTeamId
                     myTeamId={myTeamId}
                     canEdit={canEdit}
                     onPreviewChange={onLineupPreviewChange}
+                    focusRequest={lineupFocus}
+                    onFocusHandled={() => setLineupFocus(null)}
                   />
                 </div>
   );
