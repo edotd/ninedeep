@@ -77,20 +77,21 @@ export default function PickerDeck({ roster, index, onIndex, fit, labelFor, onOp
     >
       {roster.map((card, idx) => {
         const k = idx - index; // < 0: already swiped past (gone to the left)
+        // Only the cards near the top of the deck are on screen; the rest aren't drawn at all.
+        if (k < -1 || k > DEPTH + 1) return null;
         const top = k === 0;
         const gone = k < 0;
         const kEff = Math.min(Math.max(k, 0) + pRight - pLeft, DEPTH + 1);
-        let transform, opacity;
+        // Nothing fades: cards slide in and out of view at full opacity (a card that has been swiped
+        // away is simply off the left edge).
+        let transform;
         if (top) {
           transform = pRight > 0 ? fanAt(pRight) : `translateX(${dx}px) rotate(${dx / 22}deg) scale(${pressId === card.id ? 0.955 : 1})`;
-          opacity = 1;
         } else if (gone) {
           const back = k === -1 ? pRight : 0; // the previous card, being drawn back in
           transform = `translateX(${-460 * (1 - back)}px) translateY(${-30 * (1 - back)}px) rotate(${-16 * (1 - back)}deg)`;
-          opacity = back;
         } else {
           transform = fanAt(kEff);
-          opacity = kEff > DEPTH ? Math.max(0, DEPTH + 1 - kEff) : 1;
         }
         const shade = Math.min(0.6, (top ? pRight : kEff) * 0.17);
         return (
@@ -98,9 +99,9 @@ export default function PickerDeck({ roster, index, onIndex, fit, labelFor, onOp
             key={card.id}
             className={'lb-deck-card' + (top ? ' top' : '')}
             style={{
-              width: w, height: h, marginLeft: -w / 2, marginTop: -h / 2, transform, opacity,
+              width: w, height: h, marginLeft: -w / 2, marginTop: -h / 2, transform,
               zIndex: gone ? n + 2 + idx : n - k,
-              transition: !live || drag.active ? 'none' : gone ? 'transform 420ms cubic-bezier(.16,.9,.24,1), opacity 260ms ease 220ms' : 'transform 380ms cubic-bezier(.16,.9,.24,1), opacity 260ms ease',
+              transition: !live || drag.active ? 'none' : 'transform 400ms cubic-bezier(.16,.9,.24,1)',
             }}
             aria-hidden={top ? undefined : true}
             role={top ? 'button' : undefined}
@@ -114,7 +115,7 @@ export default function PickerDeck({ roster, index, onIndex, fit, labelFor, onOp
             {top
               ? <DeckFace key={'top' + card.id} card={card} up={fit.s} h={fit.h} label={labelFor(card)} finale />
               : k >= -1 && k <= DEPTH + 1 && <DeckFace key={'rest' + card.id} card={card} up={fit.s} h={fit.h} label={labelFor(card)} />}
-            {(!top || pRight > 0) && shade > 0 && <div className="lb-deck-shade" style={{ opacity: shade }} />}
+            {(!top || pRight > 0) && shade > 0 && <div className="lb-deck-shade" style={{ opacity: shade, transition: !live || drag.active ? 'none' : 'opacity 400ms cubic-bezier(.16,.9,.24,1)' }} />}
           </div>
         );
       })}
